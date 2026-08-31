@@ -1,0 +1,51 @@
+{
+  "quote": {
+    "id": "quo_01KBU2A",
+    "seller_agent_id": "agt_market_data",
+    "payee_account_id": "acct_atlas_data",
+    "item": { "name": "Southeast Asia commerce dataset", "delivery_type": "dataset_access" },
+    "amount": { "value": 3900, "currency": "CNY" },
+    "expires_at": "2026-09-01T08:00:00Z"
+  },
+  "payment_intent": {
+    "id": "pi_01KBU2C",
+    "quote_id": "quo_01KBU2A",
+    "payer_account_id": "acct_bu2_ventures",
+    "buyer_agent_id": "agt_research_copilot",
+    "payment_mandate_id": "mdt_research_04",
+    "amount": { "value": 3900, "currency": "CNY" },
+    "purpose": "Southeast Asia commerce dataset · 2026 Q2",
+    "status": "requires_authorization",
+    "external_context": { "type": "chatgpt_conversation", "id": "conv_external_8421" }
+  },
+  "authorization": {
+    "id": "auth_01KBU2B",
+    "decision": "review_required",
+    "reason_code": "first_time_payee",
+    "matched_rules": ["category:research_data", "amount_lte:5000"]
+  },
+  "transaction": {
+    "id": "txn_01KBU2D",
+    "payment_intent_id": "pi_01KBU2C",
+    "authorized_amount": { "value": 3900, "currency": "CNY" },
+    "reserved_amount": { "value": 3900, "currency": "CNY" },
+    "settled_amount": { "value": 3900, "currency": "CNY" },
+    "refunded_amount": { "value": 0, "currency": "CNY" },
+    "status": "settled"
+  },
+  "delivery": {
+    "id": "dlv_01KBU2E",
+    "transaction_id": "txn_01KBU2D",
+    "type": "dataset_access",
+    "evidence_hash": "sha256:9fc2a17e",
+    "accepted_at": "2026-09-01T06:41:06Z"
+  },
+  "receipt": {
+    "id": "rcpt_01KBU2F",
+    "transaction_id": "txn_01KBU2D",
+    "settlement_id": "stl_01KBU2G",
+    "signature_algorithm": "Ed25519",
+    "verification_key_id": "key_bu2_receipts_01",
+    "signature": "demo_signature_not_for_production"
+  }
+}

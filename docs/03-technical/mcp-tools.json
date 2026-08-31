@@ -1,0 +1,93 @@
+{
+  "name": "bu2-agent-payments",
+  "version": "0.1.0",
+  "description": "BU2 tools for agent-to-agent quotes, payments, delivery, and receipts.",
+  "tools": [
+    {
+      "name": "bu2_create_quote",
+      "description": "Create a seller quote for an agent-delivered product or service.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["seller_agent_id", "payee_account_id", "item_name", "delivery_type", "amount_value", "currency", "expires_at", "idempotency_key"],
+        "properties": {
+          "seller_agent_id": { "type": "string", "pattern": "^agt_" },
+          "payee_account_id": { "type": "string", "pattern": "^acct_" },
+          "item_name": { "type": "string", "minLength": 1 },
+          "delivery_type": { "type": "string", "minLength": 1 },
+          "amount_value": { "type": "integer", "minimum": 0, "description": "Minor currency units" },
+          "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
+          "expires_at": { "type": "string", "format": "date-time" },
+          "idempotency_key": { "type": "string", "minLength": 8 }
+        }
+      }
+    },
+    {
+      "name": "bu2_create_payment_intent",
+      "description": "Request payment for a quote. BU2 evaluates the buyer agent's mandate and returns allowed, review_required, or denied.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["quote_id", "payer_account_id", "buyer_agent_id", "payment_mandate_id", "amount_value", "currency", "purpose", "idempotency_key"],
+        "properties": {
+          "quote_id": { "type": "string", "pattern": "^quo_" },
+          "payer_account_id": { "type": "string", "pattern": "^acct_" },
+          "buyer_agent_id": { "type": "string", "pattern": "^agt_" },
+          "payment_mandate_id": { "type": "string", "pattern": "^mdt_" },
+          "amount_value": { "type": "integer", "minimum": 0 },
+          "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
+          "purpose": { "type": "string", "minLength": 1, "maxLength": 500 },
+          "external_context_type": { "type": "string", "enum": ["chatgpt_conversation", "codex_task", "agent_run", "automation", "other"] },
+          "external_context_id": { "type": "string" },
+          "idempotency_key": { "type": "string", "minLength": 8 }
+        }
+      }
+    },
+    {
+      "name": "bu2_get_payment_status",
+      "description": "Read current authorization, funds, delivery, settlement, and receipt state without changing it.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["payment_intent_id"],
+        "properties": { "payment_intent_id": { "type": "string", "pattern": "^pi_" } }
+      }
+    },
+    {
+      "name": "bu2_submit_delivery",
+      "description": "Submit delivery evidence after funds have been reserved. This does not itself guarantee settlement.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["transaction_id", "delivery_type", "evidence_hash", "idempotency_key"],
+        "properties": {
+          "transaction_id": { "type": "string", "pattern": "^txn_" },
+          "delivery_type": { "type": "string", "minLength": 1 },
+          "evidence_hash": { "type": "string", "pattern": "^sha256:" },
+          "summary": { "type": "string", "maxLength": 1000 },
+          "idempotency_key": { "type": "string", "minLength": 8 }
+        }
+      }
+    },
+    {
+      "name": "bu2_get_receipt",
+      "description": "Retrieve a machine-readable receipt for a settled transaction.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["receipt_id"],
+        "properties": { "receipt_id": { "type": "string", "pattern": "^rcpt_" } }
+      }
+    },
+    {
+      "name": "bu2_verify_receipt",
+      "description": "Verify receipt structure, signature metadata, transaction binding, and delivery evidence hash.",
+      "inputSchema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["receipt_id"],
+        "properties": { "receipt_id": { "type": "string", "pattern": "^rcpt_" } }
+      }
+    }
+  ]
+}

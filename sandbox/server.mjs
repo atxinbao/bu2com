@@ -1,0 +1,223 @@
+import { createServer } from "node:http";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import { SimulatedPaymentAdapter } from "./adapter.mjs";
+import { ApiError, Bu2Sandbox } from "./domain.mjs";
+import { SqliteLedger } from "./persistence.mjs";
+import { WebhookDispatcher } from "./webhooks.mjs";
+import { X402PaymentAdapter } from "./x402-adapter.mjs";
+import { ExactEvmScheme } from "@x402/evm/exact/client";
+import { wrapFetchWithPaymentFromConfig } from "@x402/fetch";
+import { privateKeyToAccount } from "viem/accounts";
+
+const requestId = () => `req_${crypto.randomUUID().replaceAll("-", "").slice(0, 16)}`;
+
+async function readJson(request) {
+  const chunks = [];
+  for await (const chunk of request) chunks.push(chunk);
+  if (chunks.length === 0) return {};
+  try {
+    return JSON.parse(Buffer.concat(chunks).toString("utf8"));
+  } catch {
+    throw new ApiError(400, "validation_error", "invalid_json", "Request body must be valid JSON.");
+  }
+}
+
+function send(response, status, body) {
+  response.writeHead(status, {
+    "content-type": "application/json; charset=utf-8",
+    "access-control-allow-origin": "*",
+  });
+  response.end(JSON.stringify(body, null, 2));
+}
+
+function errorBody(error, id) {
+  const known = error instanceof ApiError;
+  return {
+    status: known ? error.status : 500,
+    body: {
+      error: {
+        type: known ? error.type : "internal_error",
+        code: known ? error.code : "unexpected_error",
+        message: known ? error.message : "Unexpected sandbox error.",
+        request_id: id,
+        details: known ? error.details : {},
+      },
+    },
+  };
+}
+
+export function buildPaymentAdapter({ ledger, mode = "simulated", resourceUrl, buyerPrivateKey } = {}) {
+  if (mode === "simulated") return new SimulatedPaymentAdapter({ ledger });
+  if (mode !== "x402") {
+    throw new ApiError(400, "validation_error", "adapter_mode_invalid", `Unknown adapter: ${mode}`);
+  }
+  const paidFetch = buyerPrivateKey
+    ? wrapFetchWithPaymentFromConfig(fetch, {
+        schemes: [
+          {
+            network: "eip155:84532",
+            client: new ExactEvmScheme(privateKeyToAccount(buyerPrivateKey)),
+          },
+        ],
+      })
+    : null;
+  return new X402PaymentAdapter({
+    ledger,
+    resourceUrl: resourceUrl ?? "http://127.0.0.1:4021/premium-data",
+    paidFetch,
+  });
+}
+
+export function createBu2Server({ sandbox, ledger, dispatcher, adapter, initialWallet } = {}) {
+  const activeLedger = ledger ?? sandbox?.ledger ?? new SqliteLedger(":memory:");
+  const activeSandbox =
+    sandbox ??
+    new Bu2Sandbox({
+      ledger: activeLedger,
+      adapter: adapter ?? new SimulatedPaymentAdapter({ ledger: activeLedger }),
+      initialWallet,
+    });
+  const activeDispatcher = dispatcher ?? new WebhookDispatcher({ ledger: activeLedger });
+  const server = createServer(async (request, response) => {
+    const id = requestId();
+    const url = new URL(request.url, "http://127.0.0.1");
+    const segments = url.pathname.split("/").filter(Boolean);
+    const key = request.headers["idempotency-key"];
+    try {
+      if (request.method === "OPTIONS") return send(response, 204, {});
+      if (request.method === "GET" && url.pathname === "/health") {
+        return send(response, 200, {
+          status: "ok",
+          service: "bu2-reference-server",
+          version: "0.3.0",
+          persistence: activeLedger.path,
+          adapter: activeSandbox.adapter?.name ?? "none",
+          ledger_events: activeLedger.listLedgerEvents().length,
+        });
+      }
+      if (request.method === "GET" && url.pathname === "/v1/events") {
+        return send(response, 200, { data: activeLedger.listLedgerEvents() });
+      }
+      if (request.method === "GET" && url.pathname === "/v1/ledger") {
+        return send(response, 200, { data: activeLedger.listLedgerEvents() });
+      }
+      if (request.method === "GET" && url.pathname === "/v1/transactions") {
+        return send(response, 200, { data: activeSandbox.listTransactions() });
+      }
+      if (request.method === "GET" && url.pathname === "/v1/webhook_outbox") {
+        return send(response, 200, { data: activeLedger.outboxRows() });
+      }
+      if (request.method === "POST" && url.pathname === "/v1/webhook_subscriptions") {
+        const body = await readJson(request);
+        if (!body.id || !body.url || !body.secret)
+          throw new ApiError(
+            400,
+            "validation_error",
+            "missing_webhook_fields",
+            "id, url, and secret are required.",
+          );
+        return send(response, 201, activeLedger.addWebhookSubscription(body));
+      }
+      if (request.method === "POST" && url.pathname === "/v1/webhooks/dispatch") {
+        return send(response, 200, { data: await activeDispatcher.flush({ force: true }) });
+      }
+      if (request.method === "POST" && url.pathname === "/v1/quotes") {
+        return send(response, 201, activeSandbox.createQuote(await readJson(request), key));
+      }
+      if (request.method === "POST" && url.pathname === "/v1/payment_intents") {
+        return send(
+          response,
+          201,
+          await activeSandbox.createPaymentIntent(await readJson(request), key),
+        );
+      }
+      if (segments[0] === "v1" && segments[1] === "payment_intents" && segments[2]) {
+        if (request.method === "GET" && segments.length === 3) {
+          return send(response, 200, activeSandbox.getPaymentIntent(segments[2]));
+        }
+        if (request.method === "POST" && segments[3] === "authorization") {
+          return send(
+            response,
+            200,
+            await activeSandbox.decideAuthorization(segments[2], await readJson(request), key),
+          );
+        }
+      }
+      if (segments[0] === "v1" && segments[1] === "transactions" && segments[2]) {
+        if (request.method === "GET" && segments.length === 3) {
+          return send(response, 200, activeSandbox.getTransaction(segments[2]));
+        }
+        if (request.method === "POST" && segments[3] === "deliveries") {
+          return send(
+            response,
+            201,
+            activeSandbox.submitDelivery(segments[2], await readJson(request), key),
+          );
+        }
+        if (request.method === "POST" && segments[3] === "settlements") {
+          return send(
+            response,
+            201,
+            await activeSandbox.settle(segments[2], await readJson(request), key),
+          );
+        }
+      }
+      if (
+        request.method === "GET" &&
+        segments[0] === "v1" &&
+        segments[1] === "receipts" &&
+        segments[2]
+      ) {
+        if (segments[3] === "verify")
+          return send(response, 200, activeSandbox.verifyReceipt(segments[2]));
+        return send(response, 200, activeSandbox.getReceipt(segments[2]));
+      }
+      throw new ApiError(404, "resource_not_found", "route_not_found", "Route was not found.");
+    } catch (error) {
+      const result = errorBody(error, id);
+      send(response, result.status, result.body);
+    }
+  });
+  return { server, sandbox: activeSandbox, ledger: activeLedger, dispatcher: activeDispatcher };
+}
+
+export async function listen({
+  port = Number(process.env.BU2_SANDBOX_PORT ?? 3100),
+  host = "127.0.0.1",
+  dbPath = process.env.BU2_SANDBOX_DB ??
+    fileURLToPath(new URL("./data/bu2-sandbox.sqlite", import.meta.url)),
+  ledger,
+  dispatcher,
+  adapterMode = process.env.BU2_PAYMENT_ADAPTER ?? "simulated",
+  x402ResourceUrl = process.env.X402_RESOURCE_URL,
+  x402BuyerPrivateKey = process.env.X402_BUYER_PRIVATE_KEY,
+} = {}) {
+  const activeLedger = ledger ?? new SqliteLedger(dbPath);
+  const adapter = buildPaymentAdapter({
+    ledger: activeLedger,
+    mode: adapterMode,
+    resourceUrl: x402ResourceUrl,
+    buyerPrivateKey: x402BuyerPrivateKey,
+  });
+  const initialWallet =
+    adapterMode === "x402"
+      ? { id: "wal_x402_buyer", available: 10_000, reserved: 0, currency: "USD" }
+      : undefined;
+  const instance = createBu2Server({
+    ledger: activeLedger,
+    dispatcher,
+    adapter,
+    initialWallet,
+  });
+  await new Promise((resolve, reject) => {
+    instance.server.once("error", reject);
+    instance.server.listen(port, host, resolve);
+  });
+  const address = instance.server.address();
+  return { ...instance, url: `http://${host}:${address.port}` };
+}
+
+if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
+  const running = await listen();
+  console.log(`BU2 Reference Server v0.3 listening on ${running.url}`);
+}

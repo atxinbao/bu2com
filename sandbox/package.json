@@ -1,0 +1,28 @@
+{
+  "name": "@bu2/reference-sandbox",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test *.test.mjs",
+    "demo": "node demo-agents.mjs",
+    "demo:x402": "node demo-x402-agents.mjs",
+    "x402:merchant": "node x402-merchant.mjs",
+    "x402:probe": "node x402-probe.mjs",
+    "x402:wallet": "node x402-wallet-status.mjs",
+    "x402:probe:funded": "node x402-funded-probe.mjs",
+    "x402:server": "node x402-server.mjs"
+  },
+  "dependencies": {
+    "@x402/core": "2.24.0",
+    "@x402/evm": "2.24.0",
+    "@x402/express": "2.24.0",
+    "@x402/fetch": "2.24.0",
+    "express": "5.2.1",
+    "viem": "2.56.1"
+  }
+}

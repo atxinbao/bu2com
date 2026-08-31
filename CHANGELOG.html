@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="BU2.com 系统变更日志：记录代码、契约、数据、依赖、配置与金融业务行为的可审计变化。">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23073d3b'/%3E%3Ctext x='32' y='39' text-anchor='middle' font-family='Arial' font-size='18' font-weight='700' fill='%23e2bd79'%3EBU2%3C/text%3E%3C/svg%3E">
+  <title>BU2 系统变更日志</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #102a30;
+      --muted: #64787b;
+      --line: #d9e5e3;
+      --paper: #edf3f1;
+      --card: #fffefa;
+      --brand: #087f75;
+      --brand-dark: #073d3b;
+      --brand-deep: #052d2c;
+      --brand-soft: #e3f3ef;
+      --gold: #c99a49;
+      --gold-soft: #f6ecda;
+      --danger: #a64036;
+      --danger-soft: #f8e9e6;
+      --blue: #366f93;
+      --blue-soft: #e9f1f6;
+      --shadow: 0 28px 80px rgb(6 45 44 / 10%);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 6% 2%, rgb(8 127 117 / 12%), transparent 28rem),
+        radial-gradient(circle at 96% 30%, rgb(201 154 73 / 10%), transparent 25rem),
+        var(--paper);
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      line-height: 1.7;
+    }
+    a { color: inherit; }
+    .progress { position: fixed; z-index: 20; inset: 0 auto auto 0; width: 0; height: 3px; background: linear-gradient(90deg, var(--gold), #e7c988); }
+    .shell { display: grid; grid-template-columns: 270px minmax(0, 920px); gap: 44px; max-width: 1260px; margin: 0 auto; padding: 42px 28px 88px; }
+    aside { position: sticky; top: 24px; align-self: start; overflow: hidden; color: white; background: linear-gradient(155deg, var(--brand-deep), var(--brand-dark)); border-radius: 20px; box-shadow: 0 24px 64px rgb(5 45 44 / 18%); }
+    .identity { display: flex; align-items: center; gap: 13px; padding: 25px 22px 20px; }
+    .mark { display: grid; place-items: center; width: 46px; height: 46px; color: var(--brand-deep); background: linear-gradient(145deg, #f4ddb4, var(--gold)); border-radius: 13px; font-size: 13px; font-weight: 900; letter-spacing: .05em; }
+    .identity strong { display: block; font-size: 15px; }
+    .identity small { display: block; margin-top: 2px; color: rgb(232 246 243 / 58%); font-size: 10px; letter-spacing: .05em; }
+    nav { padding: 18px; border-top: 1px solid rgb(255 255 255 / 10%); }
+    nav a { display: block; margin: 3px 0; padding: 8px 10px; color: rgb(231 246 243 / 65%); border-left: 2px solid transparent; border-radius: 6px; font-size: 13px; text-decoration: none; }
+    nav a:hover, nav a.active { color: #f2d9aa; background: rgb(201 154 73 / 12%); border-left-color: var(--gold); }
+    .side-rule { margin: 4px 18px 20px; padding: 15px; color: rgb(238 248 246 / 78%); background: rgb(255 255 255 / 6%); border: 1px solid rgb(255 255 255 / 8%); border-radius: 12px; font-size: 11.5px; }
+    main { min-width: 0; }
+    .hero { position: relative; overflow: hidden; padding: 58px 64px 50px; color: white; background: linear-gradient(145deg, var(--brand-deep), var(--brand-dark)); border-radius: 24px; box-shadow: var(--shadow); }
+    .hero::after { content: ""; position: absolute; right: -80px; top: -100px; width: 300px; height: 300px; background: radial-gradient(circle, rgb(201 154 73 / 24%), transparent 68%); }
+    .eyebrow { position: relative; z-index: 1; margin: 0 0 16px; color: #e5c98f; font-size: 11px; font-weight: 800; letter-spacing: .18em; }
+    h1 { position: relative; z-index: 1; margin: 0; font-family: Georgia, "Songti SC", "STSong", serif; font-size: clamp(38px, 5vw, 58px); line-height: 1.08; letter-spacing: -.04em; }
+    .lead { position: relative; z-index: 1; max-width: 680px; margin: 20px 0 0; color: rgb(238 248 246 / 72%); font-size: 15px; }
+    .meta { position: relative; z-index: 1; display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
+    .meta span { padding: 6px 10px; color: #f2e3c8; background: rgb(255 255 255 / 8%); border: 1px solid rgb(255 255 255 / 10%); border-radius: 99px; font-size: 11px; }
+    .contract { margin: 24px 0; padding: 26px 30px; background: var(--card); border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 16px 44px rgb(6 45 44 / 6%); }
+    .contract h2 { margin-top: 0; }
+    h2 { margin: 52px 0 20px; color: var(--brand-dark); font-family: Georgia, "Songti SC", "STSong", serif; font-size: 27px; letter-spacing: -.02em; }
+    h3 { margin: 0; color: #173c3f; font-size: 19px; }
+    p, li { font-size: 14.5px; }
+    .rule-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 20px 0 0; }
+    .rule { padding: 16px; background: linear-gradient(145deg, #f5f9f7, #f7f3ea); border: 1px solid var(--line); border-radius: 13px; }
+    .rule b { display: block; margin-bottom: 5px; color: var(--brand); font-size: 12px; }
+    .rule p { margin: 0; color: var(--muted); font-size: 12.5px; }
+    .release { position: relative; margin: 0 0 18px; padding: 28px 30px 28px 34px; background: var(--card); border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 14px 38px rgb(6 45 44 / 5%); }
+    .release::before { content: ""; position: absolute; left: 0; top: 28px; bottom: 28px; width: 4px; background: linear-gradient(var(--gold), var(--brand)); border-radius: 0 99px 99px 0; }
+    .release-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin-bottom: 16px; }
+    .release time { display: block; margin-top: 3px; color: var(--muted); font-size: 12px; }
+    .status { flex: 0 0 auto; padding: 5px 10px; color: #17665f; background: var(--brand-soft); border-radius: 99px; font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+    .status.baseline { color: #815d20; background: var(--gold-soft); }
+    .summary { margin: 0 0 18px; color: var(--muted); }
+    .change-group { margin-top: 18px; }
+    .change-group h4 { margin: 0 0 8px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
+    .change-group ul { margin: 0; padding-left: 20px; }
+    .change-group li { margin: 5px 0; }
+    .tag { display: inline-block; margin-right: 7px; padding: 2px 7px; border-radius: 5px; font-size: 10px; font-weight: 800; vertical-align: 1px; }
+    .tag.added { color: #17665f; background: var(--brand-soft); }
+    .tag.changed { color: #2f6487; background: var(--blue-soft); }
+    .tag.governance { color: #815d20; background: var(--gold-soft); }
+    .tag.risk { color: var(--danger); background: var(--danger-soft); }
+    .evidence { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 20px; }
+    .evidence div { padding: 12px 14px; background: #f3f7f5; border: 1px solid var(--line); border-radius: 10px; }
+    .evidence b { display: block; color: var(--muted); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+    .evidence span { display: block; margin-top: 3px; font-size: 12.5px; }
+    code { padding: 2px 6px; color: #096f68; background: var(--brand-soft); border-radius: 5px; font-family: "SFMono-Regular", Consolas, monospace; font-size: 12px; }
+    .template { padding: 26px 30px; color: #d9efec; background: linear-gradient(145deg, #082b30, #0c3638); border-radius: 16px; }
+    .template h2 { margin-top: 0; color: #f0d7a7; }
+    pre { overflow: auto; margin: 0; white-space: pre-wrap; font: 12px/1.65 "SFMono-Regular", Consolas, monospace; }
+    footer { margin-top: 28px; padding: 20px 4px; color: var(--muted); border-top: 1px solid var(--line); font-size: 11px; letter-spacing: .05em; }
+    @media (max-width: 900px) {
+      .shell { display: block; padding: 18px 12px 48px; }
+      aside { position: static; margin: 0 4px 20px; }
+      nav, .side-rule { display: none; }
+      .hero { padding: 38px 24px 34px; border-radius: 17px; }
+      .contract, .release, .template { padding: 22px 20px; }
+      .rule-grid, .evidence { grid-template-columns: 1fr; }
+      .release-head { display: block; }
+      .status { display: inline-block; margin-top: 10px; }
+    }
+    @media print {
+      body { background: white; }
+      .shell { display: block; max-width: none; padding: 0; }
+      aside, .progress { display: none; }
+      .hero { color: var(--ink); background: white; border: 2px solid var(--brand-dark); box-shadow: none; }
+      .eyebrow, .lead { color: var(--ink); }
+      .meta span { color: var(--ink); border-color: var(--line); }
+      .contract, .release { box-shadow: none; break-inside: avoid; }
+      .template { color: var(--ink); background: white; border: 1px solid var(--line); }
+    }
+  </style>
+</head>
+<body>
+  <div class="progress" aria-hidden="true"></div>
+  <div class="shell">
+    <aside>
+      <div class="identity">
+        <span class="mark">BU2</span>
+        <div><strong>系统变更日志</strong><small>SYSTEM CHANGELOG</small></div>
+      </div>
+      <nav aria-label="页面目录">
+        <a href="#contract">变更对齐规则</a>
+        <a href="#unreleased">Unreleased</a>
+        <a href="#baseline">基线记录</a>
+        <a href="#template">记录模板</a>
+      </nav>
+      <p class="side-rule">代码、Schema、依赖、配置和业务行为的变化，必须与本文件在同一个变更中对齐。</p>
+    </aside>
+
+    <main>
+      <header class="hero">
+        <p class="eyebrow">BU2.COM · AUDITABLE CHANGE HISTORY</p>
+        <h1>系统变更日志</h1>
+        <p class="lead">记录 BU2 从代码到金融业务行为的每一次可观察变化，使人类与 Agent 都能回答：改了什么、为什么改、影响什么、如何验证、如何恢复。</p>
+        <div class="meta"><span>格式版本 1.0</span><span>最新更新 2026-09-01</span><span>维护者 BU2 Engineering / Codex</span></div>
+      </header>
+
+      <section class="contract" id="contract">
+        <h2>代码与日志对齐规则</h2>
+        <p>任何影响仓库内容或系统行为的修改，必须在同一个提交或变更集中更新本文件。未记录、记录与实现不一致、或缺少验证证据的修改，均视为未完成，不得交付或合并。</p>
+        <div class="rule-grid">
+          <div class="rule"><b>同步发生</b><p>代码和日志同时修改，不允许“以后补日志”。</p></div>
+          <div class="rule"><b>行为优先</b><p>描述用户、Agent、API、数据与资金行为变化，不堆砌文件名。</p></div>
+          <div class="rule"><b>证据闭环</b><p>每条变更写明风险、验证结果和恢复方式。</p></div>
+        </div>
+      </section>
+
+      <h2 id="unreleased">Unreleased</h2>
+      <article class="release">
+        <div class="release-head">
+          <div><h3>治理与变更追踪基线</h3><time datetime="2026-09-01">2026-09-01</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">建立金融系统 AI Agent 工程规则和项目级变更日志，形成架构、实施、验证与历史记录之间的强制闭环。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag added">Added</span>新增根目录 <code>AGENTS.md</code>，定义交易不变量、生产权限、风险等级和强制测试矩阵。</li>
+            <li><span class="tag added">Added</span>新增根目录 <code>CHANGELOG.html</code>，作为代码和系统行为变化的正式审计入口。</li>
+            <li><span class="tag added">Added</span>新增根目录 <code>PROJECT.html</code>，冻结 BU2 项目定位、四种执行模式、主体授权模型、监管能力注册表、账本边界与分阶段路线图。</li>
+            <li><span class="tag added">Added</span>新增根目录 <code>GOVERNANCE.html</code> 与 HTML 格式的 <code>docs/00-governance/index.html</code> 治理登记中心，规范权威层级、责任、Ready/Done、ADR、风险、例外、发布、事故与退役。</li>
+            <li><span class="tag changed">Changed</span>将“每次代码修改必须同步更新 CHANGELOG”写入 Agent 默认工作流和提交前检查清单。</li>
+            <li><span class="tag changed">Changed</span>更新根目录 <code>README.md</code>，增加项目总纲、系统变更日志与 AI Agent 工程规则入口。</li>
+            <li><span class="tag changed">Changed</span>更新 <code>AGENTS.md</code>，要求 Agent 在实施前读取并遵守项目总纲中的执行模式和准入门槛。</li>
+            <li><span class="tag changed">Changed</span>将治理制度加入 README、项目总纲和 Agent 规则的正式文档链路。</li>
+            <li><span class="tag changed">Changed</span>治理登记与模板统一采用可直接浏览的 HTML 格式，不保留 Markdown 副本；项目总纲由 <code>project.html</code> 规范为 <code>PROJECT.html</code>。</li>
+            <li><span class="tag changed">Changed</span>按当前实际文件重构 <code>docs/README.md</code>：移除已删除目录和文档入口，区分 Transaction-first 当前基线、产品支撑材料、Task-first 历史文档与技术验证证据。</li>
+            <li><span class="tag changed">Changed</span>对齐已删除的治理登记中心：移除根目录 README 与 <code>GOVERNANCE.html</code> 的失效入口，登记、发布和事故要求直接保留在治理正文中。</li>
+            <li><span class="tag governance">Governance</span>明确未对齐变更日志的代码不可视为完成、不可交付、不可合并。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R2 · 项目治理规则</span></div>
+          <div><b>金融行为影响</b><span>无资金移动或交易状态变化</span></div>
+          <div><b>验证</b><span>HTML 桌面/移动端检查；Sandbox 20/20；Prototype build 通过</span></div>
+          <div><b>恢复</b><span>恢复 AGENTS.md 与 README 对应段落，并移除此文件</span></div>
+        </div>
+      </article>
+
+      <h2 id="baseline">项目能力基线</h2>
+      <article class="release">
+        <div class="release-head">
+          <div><h3>当前可验证能力快照</h3><time datetime="2026-09-01">记录日期 2026-09-01</time></div>
+          <span class="status baseline">Baseline</span>
+        </div>
+        <p class="summary">此条仅记录建立变更日志时可观察到的项目基线，不代表此前版本的完整发布历史。</p>
+        <div class="change-group">
+          <h4>Observed baseline</h4>
+          <ul>
+            <li><span class="tag governance">Core</span>Reference Sandbox 版本 <code>0.3.0</code>，包含交易状态、SQLite 账本、幂等记录与 Webhook Outbox。</li>
+            <li><span class="tag governance">Adapter</span>存在 simulated 与 x402 Base Sepolia 适配路径。</li>
+            <li><span class="tag governance">Receipt</span>Sandbox 支持签名 Receipt 及独立验证流程。</li>
+            <li><span class="tag governance">Prototype</span>React/TypeScript 产品原型版本 <code>0.1.0</code>，使用 Vinext/Vite 构建。</li>
+            <li><span class="tag risk">Known</span>前端 lint 当前存在既有 UI 可访问性、React effect 与模板类型问题，尚未作为本条基线的一部分修复。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>Sandbox 验证</b><span><code>npm test</code> · 20/20 通过</span></div>
+          <div><b>Prototype 构建</b><span><code>npm run build</code> · 通过</span></div>
+          <div><b>Prototype lint</b><span><code>npm run lint</code> · 存在 19 个既有问题</span></div>
+          <div><b>生产证明</b><span>无；以上均为本地/Sandbox 证据</span></div>
+        </div>
+      </article>
+
+      <section class="template" id="template">
+        <h2>后续记录模板</h2>
+        <pre>版本或状态：Unreleased / vX.Y.Z
+日期：YYYY-MM-DD
+标题：一句话说明可观察变化
+风险等级：R0 / R1 / R2 / R3
+
+Added / Changed / Fixed / Deprecated / Removed / Security
+- 说明用户、Agent、API、数据或资金行为发生了什么变化。
+
+影响
+- 金额与币种：
+- 状态机与账本：
+- API / Event / Receipt：
+- 数据库与迁移：
+- Adapter / 外部通道：
+
+验证证据
+- 实际执行命令、测试数量和结果：
+- 未执行项目及原因：
+
+恢复方案
+- 回滚或前滚恢复步骤、停止条件与负责人：</pre>
+      </section>
+
+      <footer>BU2.com · System Changelog · 代码与变更历史必须保持一致</footer>
+    </main>
+  </div>
+  <script>
+    const progress = document.querySelector('.progress');
+    const links = [...document.querySelectorAll('nav a')];
+    const sections = links.map(link => document.querySelector(link.hash)).filter(Boolean);
+    const update = () => {
+      const available = document.documentElement.scrollHeight - window.innerHeight;
+      progress.style.width = `${available > 0 ? (window.scrollY / available) * 100 : 0}%`;
+      const active = [...sections].reverse().find(section => section.getBoundingClientRect().top <= 140) || sections[0];
+      links.forEach(link => link.classList.toggle('active', link.hash === `#${active.id}`));
+    };
+    document.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    update();
+  </script>
+</body>
+</html>
