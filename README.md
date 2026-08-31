@@ -25,10 +25,11 @@ BU2 作为支付层嵌入 ChatGPT、Codex、Claude 和自建 Agent 工作流，�
 
 ## 当前阶段
 
-- 项目状态：概念及商业验证阶段
+- 项目状态：Phase 0 开发（仅 Simulation / Testnet）
 - 当前版本：BP v0.1
 - 产品定义：Product v0.3 Transaction-first
-- 下一阶段：持久化账本、Webhook 投递与首个真实支付沙盒适配器
+- 当前基线：SQLite 追加账本、Webhook Outbox、模拟 Adapter 与 x402 Base Sepolia Adapter 已实现
+- 下一阶段：冻结首个正式开发 Epic，完善 Transaction API、通道可观测性与 Testnet 回归；Mainnet、真实资金托管仍为 NO-GO
 
 ---
 

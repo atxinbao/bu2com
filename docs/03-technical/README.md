@@ -13,4 +13,4 @@
 - [x402 Base Sepolia 测试钱包](X402_TEST_WALLET.md)
 - [x402 Base Sepolia 实结算证据](X402_LIVE_SETTLEMENT_EVIDENCE.md)
 
-Contract v0.1 已有本地内存 Reference Server 和端到端 Agent 交易示例；进入持久化或真实支付通道前仍需通过开发者评审。
+Contract v0.1 已具备本地 SQLite Reference Server、追加式账本、Webhook Outbox、签名 Receipt、模拟支付 Adapter，以及基于官方 x402 SDK 的 Base Sepolia Testnet Adapter。当前只允许 Simulation / Testnet；Mainnet、真实资金托管与生产密钥管理仍受项目治理约束，未经独立准入不得启用。
