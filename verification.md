@@ -168,12 +168,25 @@ Product v0.1 可作为客户访谈、交互原型和工程方案设计的输入�
 结论：**Phase 0 Development GO**。该 GO 仅覆盖 Simulation 与 Base Sepolia Testnet；Mainnet、真实资金托管和生产密钥仍为 **NO-GO**。
 # 金融业务 PR 模板验证
 
-日期：2026-09-01  
+日期：2026-09-01
 执行者：Codex
 
 - GitHub 默认 PR 模板路径有效。
 - 风险等级、金融不变量、权限与秘密、Schema 迁移、失败恢复、测试证据、运营发布、人工批准及 Changelog 对齐均已覆盖。
-- R2 明确要求独立人类审查；R3 明确要求至少两名相应职责的人类批准者，并将生产执行保留为单独授权。
+- R2 明确要求独立人类审查；当前单人治理阶段的 R3 由 Project Owner 明确批准。生产执行可以推进，但必须具备独立、限定范围的 Owner 授权并符合 `PROJECT.html` 阶段准入门槛。
 - 模板静态检查、Contract、Sandbox、Prototype lint 与构建全部通过。
 
 结论：PR 模板为 **GO**。
+# README 重构与单人 R3 治理验证
+
+日期：2026-09-01
+执行者：Codex
+
+- 根目录 README 已按定位、状态、交易闭环、能力、快速启动、仓库结构、开发规则和边界重新组织。
+- 23 个文档链接全部有效，README 中的本地启动命令已使用独立临时数据库真实验证。
+- 演示交易完成 Quote → PaymentIntent → Authorization → Reserve → Delivery → Settlement → Receipt，签名验证为 `valid=true`。
+- 当前单人治理阶段允许 Project Owner 明确批准 R3；双人复核与单人禁止执行条款均不存在。
+- R3 生产授权必须限定环境、目标、范围、窗口、停止条件和恢复方式，并符合 `PROJECT.html` 阶段门槛。
+- Contract 12 项、Sandbox 20/20、Prototype lint 与 build 全部通过。
+
+结论：本次 README 与治理变更为 **GO**，可以提交 PR。
