@@ -21,10 +21,11 @@
 | [预算与审批模型](POLICY_AND_APPROVAL_MODEL.md) | 如何确定性地限制 Agent 消费权限 |
 | [指标与验证计划](METRICS_AND_VALIDATION.md) | 如何判断需求、产品和付费是否成立 |
 | [协议引入计划](PROTOCOL_ADOPTION_PLAN.md) | AP2、x402 在什么阶段进入，以及如何控制范围 |
-| [页面与交互规格](INTERACTION_SPEC.md) | P0 原型的页面、状态、操作和验收标准 |
+| [页面与交互规格](INTERACTION_SPEC.md) | Transaction-first P0 的页面、状态、操作和验收标准 |
 | [Transaction-first P0 产品基线](P0_TRANSACTION_FIRST_BASELINE.md) | 当前正式定位、交易契约和原型验收路径 |
-| [Task-first P0 产品基线（已废止）](P0_TASK_FIRST_BASELINE.md) | 历史决策记录，不再指导产品实现 |
-| [正式用户测试方案](FORMAL_USER_TEST_PLAN.md) | 招募、主持脚本、任务卡、记录方式和 GO/ITERATE/STOP 门槛 |
+| [Transaction-first P0 验收方案](TRANSACTION_P0_ACCEPTANCE.md) | 当前主路径、辅助路径和 GO/ITERATE/STOP 门槛 |
+
+已废止的 Task-first 基线与用户测试方案保留为历史决策记录，不再作为产品导航或实现入口。
 
 ## 产品阶段
 
@@ -42,7 +43,7 @@ Agent 商业账户、信誉与服务网络
 
 ## 当前状态
 
-- 产品阶段：问题验证与 MVP 定义
+- 产品阶段：Phase 0 开发（Simulation / Testnet）
 - 产品版本：Product v0.3 Transaction-first
 - 对应商业计划：BP v0.1
 - 更新日期：2026-09-01

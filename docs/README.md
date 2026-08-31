@@ -52,11 +52,12 @@
 - [`METRICS_AND_VALIDATION.md`](02-product/METRICS_AND_VALIDATION.md)：指标、访谈与实验计划。
 - [`PROTOCOL_ADOPTION_PLAN.md`](02-product/PROTOCOL_ADOPTION_PLAN.md)：AP2、x402 的阶段门槛和范围控制。
 
-### 历史或待重写文档
+### 历史文档
 
 - [`P0_TASK_FIRST_BASELINE.md`](02-product/P0_TASK_FIRST_BASELINE.md)：已废止，只用于保留决策历史。
 - [`FORMAL_USER_TEST_PLAN.md`](02-product/FORMAL_USER_TEST_PLAN.md)：Task-first 测试方案，已废止。
-- [`INTERACTION_SPEC.md`](02-product/INTERACTION_SPEC.md)：仍为 Task-first 页面规格，尚未按 Transaction-first 重写，不作为当前验收依据。
+
+当前 Transaction-first 页面规格已纳入上方产品入口，不再属于历史或待重写文档。
 
 ## 03 · 技术契约与证据
 

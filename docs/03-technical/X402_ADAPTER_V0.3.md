@@ -19,9 +19,9 @@ Reference Server 已完成异步 Adapter 编排：授权、内部预留和结算
 | --- | --- | --- |
 | Mandate / PolicyDecision | BU2 内部判断 | 保持不变 |
 | Reserve preparation | 获取并校验 402 挑战 | 已实现 |
-| Settlement | 携带 `PAYMENT-SIGNATURE` 重试 | 需要有资金买方钱包 |
+| Settlement | 携带 `PAYMENT-SIGNATURE` 重试 | 已完成 Base Sepolia 实结算 |
 | Provider evidence | 解析 `PAYMENT-RESPONSE` | 已实现并用协议响应夹具验证 |
-| Receipt | 写入通道交易引用 | 核心对象保持不变，待通道启用 |
+| Receipt | 写入通道交易引用 | 已写入链上交易引用并完成签名验证 |
 
 x402 `exact` 的 402 挑战不等于链上资金预留。Adapter 将其标记为 `payment_required`，不能对外宣称已经锁定资金。
 
@@ -40,10 +40,9 @@ x402 `exact` 的 402 挑战不等于链上资金预留。Adapter 将其标记为
 
 ## 下一准入门槛
 
-1. 创建专用测试买方钱包并领取 Base Sepolia USDC。
-2. 以 `X402_BUYER_PRIVATE_KEY` 仅在进程环境中运行一次 paid probe。
-3. 保存 `PAYMENT-RESPONSE`、交易哈希和区块浏览器证据。
-4. 核对链上证据与 BU2 Receipt 后，再评估是否将测试环境默认 Adapter 切到 x402。
+1. 保持 x402 仅在独立 Testnet 环境显式启用，不替换 Simulation 默认通道。
+2. 为支付失败、链上确认延迟、Webhook 重投与 Receipt 校验建立可重复回归。
+3. 冻结生产密钥、Mainnet 与资金托管的独立治理门槛；在门槛通过前保持 NO-GO。
 
 ## 资料来源
 
