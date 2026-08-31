@@ -1,0 +1,330 @@
+openapi: 3.1.0
+info:
+  title: BU2 Agent Payment API
+  version: 0.1.0
+  description: Transaction-first API for agent-to-agent payment authorization, delivery, settlement, and receipts.
+servers:
+  - url: https://api.bu2.com/v1
+security:
+  - bearerAuth: []
+paths:
+  /quotes:
+    post:
+      operationId: createQuote
+      summary: Create a seller quote
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateQuote' }
+      responses:
+        '201':
+          description: Quote created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Quote' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /payment_intents:
+    post:
+      operationId: createPaymentIntent
+      summary: Create a buyer payment intent and evaluate its mandate
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreatePaymentIntent' }
+      responses:
+        '201':
+          description: Intent created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaymentIntent' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /payment_intents/{payment_intent_id}:
+    get:
+      operationId: getPaymentIntent
+      summary: Read payment and authorization state
+      parameters:
+        - $ref: '#/components/parameters/PaymentIntentId'
+      responses:
+        '200':
+          description: Current intent
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaymentIntent' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /payment_intents/{payment_intent_id}/authorization:
+    post:
+      operationId: decideAuthorization
+      summary: Record a human authorization decision
+      parameters:
+        - $ref: '#/components/parameters/PaymentIntentId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [decision]
+              properties:
+                decision: { type: string, enum: [authorize, decline] }
+                reason: { type: string, maxLength: 500 }
+      responses:
+        '200':
+          description: Decision recorded
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaymentIntent' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /transactions:
+    get:
+      operationId: listTransactions
+      summary: List transactions with payment, delivery, channel, and receipt context
+      responses:
+        '200':
+          description: Transactions ordered newest first
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/TransactionView' }
+  /transactions/{transaction_id}:
+    get:
+      operationId: getTransaction
+      summary: Read one transaction and its related payment evidence
+      parameters:
+        - $ref: '#/components/parameters/TransactionId'
+      responses:
+        '200':
+          description: Transaction detail
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TransactionView' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /transactions/{transaction_id}/deliveries:
+    post:
+      operationId: submitDelivery
+      summary: Submit machine-readable delivery evidence
+      parameters:
+        - $ref: '#/components/parameters/TransactionId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DeliveryEvidence' }
+      responses:
+        '201':
+          description: Delivery recorded
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Transaction' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /transactions/{transaction_id}/settlements:
+    post:
+      operationId: settleTransaction
+      summary: Settle a delivered transaction
+      parameters:
+        - $ref: '#/components/parameters/TransactionId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '201':
+          description: Settled and receipt issued
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [transaction, receipt]
+                properties:
+                  transaction: { $ref: '#/components/schemas/Transaction' }
+                  receipt: { $ref: '#/components/schemas/Receipt' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /receipts/{receipt_id}:
+    get:
+      operationId: getReceipt
+      summary: Read a verifiable receipt
+      parameters:
+        - name: receipt_id
+          in: path
+          required: true
+          schema: { type: string, pattern: '^rcpt_' }
+      responses:
+        '200':
+          description: Receipt
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Receipt' }
+        '404': { $ref: '#/components/responses/NotFound' }
+components:
+  securitySchemes:
+    bearerAuth: { type: http, scheme: bearer }
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema: { type: string, minLength: 8, maxLength: 255 }
+    PaymentIntentId:
+      name: payment_intent_id
+      in: path
+      required: true
+      schema: { type: string, pattern: '^pi_' }
+    TransactionId:
+      name: transaction_id
+      in: path
+      required: true
+      schema: { type: string, pattern: '^txn_' }
+  schemas:
+    Amount:
+      type: object
+      additionalProperties: false
+      required: [value, currency]
+      properties:
+        value: { type: integer, minimum: 0, description: Amount in minor units }
+        currency: { type: string, pattern: '^[A-Z]{3}$' }
+    CreateQuote:
+      type: object
+      additionalProperties: false
+      required: [seller_agent_id, payee_account_id, item, amount, expires_at]
+      properties:
+        seller_agent_id: { type: string, pattern: '^agt_' }
+        payee_account_id: { type: string, pattern: '^acct_' }
+        item:
+          type: object
+          required: [name, delivery_type]
+          properties:
+            name: { type: string, minLength: 1 }
+            delivery_type: { type: string, minLength: 1 }
+        amount: { $ref: '#/components/schemas/Amount' }
+        expires_at: { type: string, format: date-time }
+    Quote:
+      allOf:
+        - $ref: '#/components/schemas/CreateQuote'
+        - type: object
+          required: [id, status]
+          properties:
+            id: { type: string, pattern: '^quo_' }
+            status: { type: string, enum: [active, accepted, expired, canceled] }
+    ExternalContext:
+      type: object
+      additionalProperties: false
+      required: [type, id]
+      properties:
+        type: { type: string, enum: [chatgpt_conversation, codex_task, agent_run, automation, other] }
+        id: { type: string, minLength: 1, maxLength: 255 }
+    CreatePaymentIntent:
+      type: object
+      additionalProperties: false
+      required: [quote_id, payer_account_id, buyer_agent_id, payment_mandate_id, amount, purpose]
+      properties:
+        quote_id: { type: string, pattern: '^quo_' }
+        payer_account_id: { type: string, pattern: '^acct_' }
+        buyer_agent_id: { type: string, pattern: '^agt_' }
+        payment_mandate_id: { type: string, pattern: '^mdt_' }
+        amount: { $ref: '#/components/schemas/Amount' }
+        purpose: { type: string, minLength: 1, maxLength: 500 }
+        external_context: { $ref: '#/components/schemas/ExternalContext' }
+        metadata: { type: object, additionalProperties: { type: string }, maxProperties: 20 }
+    Authorization:
+      type: object
+      required: [id, decision, reason_code, matched_rules]
+      properties:
+        id: { type: string, pattern: '^auth_' }
+        decision: { type: string, enum: [allowed, review_required, denied] }
+        reason_code: { type: string }
+        matched_rules: { type: array, items: { type: string } }
+    PaymentIntent:
+      allOf:
+        - $ref: '#/components/schemas/CreatePaymentIntent'
+        - type: object
+          required: [id, status, authorization]
+          properties:
+            id: { type: string, pattern: '^pi_' }
+            status: { type: string, enum: [requires_authorization, authorized, funds_reserved, delivery_submitted, settled, declined, expired, canceled, refunded, disputed] }
+            authorization: { $ref: '#/components/schemas/Authorization' }
+            transaction_id: { type: [string, 'null'], pattern: '^txn_' }
+    DeliveryEvidence:
+      type: object
+      additionalProperties: false
+      required: [type, evidence_hash]
+      properties:
+        type: { type: string, minLength: 1 }
+        evidence_hash: { type: string, pattern: '^sha256:' }
+        summary: { type: string, maxLength: 1000 }
+    Transaction:
+      type: object
+      required: [id, payment_intent_id, status, authorized_amount, reserved_amount, settled_amount, refunded_amount]
+      properties:
+        id: { type: string, pattern: '^txn_' }
+        payment_intent_id: { type: string, pattern: '^pi_' }
+        status: { type: string, enum: [authorized, funds_reserved, delivery_submitted, settled, canceled, refunded, disputed] }
+        authorized_amount: { $ref: '#/components/schemas/Amount' }
+        reserved_amount: { $ref: '#/components/schemas/Amount' }
+        settled_amount: { $ref: '#/components/schemas/Amount' }
+        refunded_amount: { $ref: '#/components/schemas/Amount' }
+    TransactionView:
+      type: object
+      required: [transaction, payment_intent, quote, delivery, receipt, payment_channel]
+      properties:
+        transaction: { $ref: '#/components/schemas/Transaction' }
+        payment_intent:
+          anyOf:
+            - { $ref: '#/components/schemas/PaymentIntent' }
+            - { type: 'null' }
+        quote:
+          anyOf:
+            - { $ref: '#/components/schemas/Quote' }
+            - { type: 'null' }
+        delivery:
+          anyOf:
+            - { $ref: '#/components/schemas/DeliveryEvidence' }
+            - { type: 'null' }
+        receipt:
+          anyOf:
+            - { $ref: '#/components/schemas/Receipt' }
+            - { type: 'null' }
+        payment_channel: { type: string }
+    Receipt:
+      type: object
+      required: [id, transaction_id, settlement_id, signature_algorithm, verification_key_id, signature]
+      properties:
+        id: { type: string, pattern: '^rcpt_' }
+        transaction_id: { type: string, pattern: '^txn_' }
+        settlement_id: { type: string, pattern: '^stl_' }
+        signature_algorithm: { type: string, enum: [Ed25519] }
+        verification_key_id: { type: string }
+        signature: { type: string }
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [type, code, message, request_id]
+          properties:
+            type: { type: string }
+            code: { type: string }
+            message: { type: string }
+            request_id: { type: string }
+            details: { type: object, additionalProperties: true }
+  responses:
+    Conflict:
+      description: Idempotency or state conflict
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }

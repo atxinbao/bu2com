@@ -1,0 +1,155 @@
+# BU2 Product v0.1 验证结论
+
+日期：2026-09-01  
+执行者：Codex
+
+## 已验证
+
+- 产品战略、用户、PRD、信息架构、策略模型和指标形成完整闭环。
+- MVP 明确以虚拟预算、费用归因、策略和审批为范围。
+- x402 仅作为受控验证闭环，真实资金托管不在 MVP 范围。
+- 需求、对象、状态和验收标准可以支持下一步原型设计。
+- AP2 与 x402 已按 P0-P4 阶段拆分；MVP 不依赖任何真实支付协议。
+- x402 被限定为单场景沙盒和受控小额验证；AP2 被推迟到多商户、多支付方式的企业授权阶段。
+- P0 可点击原型已完成，覆盖总览、项目、Agents、预算、确定性策略、审批和任务账本。
+- 原型生产构建已通过，本地 HTTP 冒烟检查返回 200。
+- 私有站点版本 1 已保存并启动生产发布；截至本次验证结束，托管平台状态仍为 `publishing`。
+- Task-first v0.2 已通过生产构建；默认首页为 Tasks，并支持异常任务下钻和决策状态联动。
+- 三种治理模式已在任务列表与详情语义中区分，观察模式不承诺调用前拦截。
+- Task-first v0.2 私有生产站点发布成功。
+- 浏览器反馈的 5 项一致性问题已修复，中文/英文双语切换和站点图标已加入。
+- 本地根页面与图标请求均返回 HTTP 200，修订后生产构建通过。
+- 语言切换已修正为全中文/全英文界面；专有标识保持原文，生产构建再次通过。
+- 使用真实 Chromium 完成主路径回归：三个任务详情关联、两条异常选择、批准后费用口径和四处数量同步均通过。
+- 中文界面未发现不必要的英文 UI 词；英文界面除语言切换按钮“中文”外未检测到中文字符。
+- 新浏览器会话控制台错误数为 0，网站图标请求正常。
+
+## Task-first P0 浏览器验收（UT-01～UT-07）
+
+测试日期：2026-09-01  
+测试环境：全新 Playwright Chromium 会话，`http://localhost:3000/`
+
+| 用例 | 验收结果 | 得分 |
+| --- | --- | ---: |
+| UT-01 默认进入 Tasks，异常任务信息可识别 | 通过 | 2/2 |
+| UT-02 TASK-2048 任务摘要、时间线、费用和治理记录完整 | 通过 | 2/2 |
+| UT-03 强控制、观察模式及任务混合模式口径一致 | 通过 | 2/2 |
+| UT-04 两条异常可独立选择并显示各自详情 | 通过 | 2/2 |
+| UT-05 批准后实际成本、新增授权和预计最终成本正确拆分 | 通过 | 2/2 |
+| UT-06 三个任务详情关联及四处异常数量同步 | 通过 | 2/2 |
+| UT-07 全中文/全英文切换与控制台检查 | 通过；英文界面除语言按钮“中文”外无中文残留，控制台 0 error | 2/2 |
+
+总分：**14/14**。原型浏览器回归结论为 **GO**，可以进入 5～8 名目标用户的正式访谈测试。该结论只代表交互和数据口径达到测试准入标准，不代表市场需求已经验证。
+
+## 尚未验证
+
+- 尚未进行真实客户访谈。
+- 定价和转化目标仍是产品假设。
+- 尚未验证 SDK/MCP 的实际接入耗时。
+- 尚未完成合规法律意见和真实支付通道评估。
+- Task-first 原型仍使用模拟数据，尚未验证数据库持久化、API 幂等和真实费用接入。
+
+## 结论
+
+Product v0.1 可作为客户访谈、交互原型和工程方案设计的输入；不能视为市场需求已经成立。
+
+## Transaction-first P0 重构验收
+
+日期：2026-09-01  
+执行者：Codex
+
+- 默认首页已从 Tasks 改为 Transactions，界面不提供创建任务入口。
+- `PAY-8421` 正确展示 payer、payee、买卖双方 Agent、商品、金额和 ChatGPT 外部上下文。
+- 首次商户规则正确进入人工授权；授权后待授权数量由 1 变为 0。
+- 授权后交易仅进入“资金已预留”，Receipt 仍为空，未错误标记为已结算。
+- 确认交付后生成交付证据、结算事件、Receipt ID 和 Ed25519 验证标记。
+- 返回 Transactions 后 `PAY-8421` 同步显示为“已结算”。
+- Authorizations 授权后显示空队列。
+- 英文界面除语言切换按钮“中文”外无中文残留。
+- 生产构建通过，真实 Chromium 主路径通过。
+
+结论：Transaction-first P0 可点击闭环为 **GO**；真实 API、资金适配器和持久化尚未实现。
+
+## Agent Payment API Contract v0.1 验证
+
+日期：2026-09-01  
+执行者：Codex
+
+- OpenAPI 3.1 YAML 通过系统解析器语法检查。
+- Payment flow 示例通过 12 项绑定、金额和状态不变量检查。
+- 6 个 MCP 工具名称唯一，输入全部使用封闭对象 Schema。
+- 金额统一使用最小货币单位整数和 ISO 4217 币种。
+- Quote、PaymentIntent、Transaction、Delivery 和 Receipt ID 绑定关系通过。
+- `refunded ≤ settled ≤ reserved ≤ authorized` 金额不变量通过。
+- 原型 Developers 页面已加入核心端点、示例载荷和协议能力说明。
+- 生产构建和本地 HTTP 200 检查通过。
+
+结论：Contract v0.1 可进入开发者评审和沙盒适配器设计；尚未实现可运行服务端。
+
+## Reference Server v0.1 验证
+
+日期：2026-09-01  
+执行者：Codex
+
+- 领域与 HTTP 测试共 7 项，7 项通过，0 失败。
+- 实际 HTTP 完成卖方 Quote、买方 PaymentIntent、首次商户人工授权、资金预留、DeliveryEvidence、Settlement 和 Receipt。
+- 同一幂等键和相同载荷返回原资源，不重复创建 Quote。
+- 同一幂等键配合不同载荷返回 `409 idempotency_conflict`。
+- PaymentIntent 无法覆盖 Quote 金额。
+- 超过 Mandate 上限的交易直接拒绝且不创建 Transaction。
+- 交付前请求结算返回 `409 transaction_not_delivered`，预留资金保持不变。
+- 完成交易生成真实 Ed25519 签名，Receipt 验证返回 `valid=true`。
+- Reference Server 健康检查返回 200，事件流包含完整 7 个交易事件。
+
+结论（已由 v0.2 取代）：本地 Reference Server v0.1 为 **GO**；当时使用内存和演示资金，进程重启后数据会丢失。
+
+## Reference Server v0.2 验证
+
+日期：2026-09-01  
+执行者：Codex
+
+- 自动化测试由 7 项扩展为 11 项，11/11 通过。
+- SQLite WAL 数据库保存资源快照、追加账本、幂等记录、钱包、Adapter 操作与 Webhook Outbox。
+- 完整交易后重启服务，账本事件仍为 7 条，交易状态仍为 settled。
+- 重启后 Receipt `rcpt_89ba954811fb42ed` 验证仍返回 `valid=true`。
+- 重启后再次运行相同 Agent 演示，返回原 Transaction 与 Receipt，未产生重复事件或重复资金操作。
+- Webhook 对真实 HTTP 接收端第一次 503 后重试成功，两次投递保持相同 `webhook-id`，成功后不再投递。
+- 模拟支付 Adapter 对 reserve 和 settle 独立幂等，每种资金操作只生成一个 provider reference。
+- API 健康检查报告 SQLite 路径、Adapter 名称和账本事件数量。
+
+结论：Reference Server v0.2 为 **GO**。下一生产化门槛是持久化签名密钥、Webhook 死信与密钥轮换、真实支付沙盒 Adapter 和多进程一致性。
+
+## x402 Sandbox Adapter v0.3 验证
+
+日期：2026-09-01  
+执行者：Codex
+
+- 官方 x402 v2 SDK 已生成真实 HTTP 402 `PAYMENT-REQUIRED` 挑战。
+- 挑战要求为 `exact`、Base Sepolia、测试网 USDC、0.01 USD。
+- 公开 facilitator 实时能力查询确认支持 v2 exact `eip155:84532`。
+- Adapter 对网络、币种和 atomic amount 进行一致性校验，重复 reserve 不产生重复 provider operation。
+- 无签名钱包时 settlement 返回 `x402_signer_unavailable`，不会写入 settled 操作。
+- 自动化测试共 20 项，20/20 通过。
+- BU2 授权、预留和结算入口已支持异步 Adapter；通道失败可安全重试且不污染账本。
+- `BU2_PAYMENT_ADAPTER=x402` 显式模式已通过服务启动测试，默认模式仍为 simulated。
+
+阶段性结论：协议接入和本地商户先行通过；当时真实结算因测试钱包余额为 0 暂缓。该阻塞已在下方最终复测中解除。默认 3100 服务继续使用 SimulatedPaymentAdapter，3101 服务显式使用 x402 Adapter。
+
+最终补充：用户领取 10 Base Sepolia USDC 后，真实 paid probe 与完整 BU2 Agent x402 支付均成功。链上交易 `0xbaad90f8c6c8cf121d4913bdadf162dd2831a69be5d106a911655d62d3208b08` 状态为 success，BU2 Receipt `rcpt_7c0ac5450f4b4e39` 验证为 `valid=true`。x402 测试网闭环结论升级为 **GO**。
+
+产品页面补充：localhost:3000 已从静态演示升级为“真实 API + 演示回退”。Playwright 确认真实 x402 交易出现在列表首位，详情页展示链上交易与有效 Receipt，中英文切换正常，控制台 0 error。结论为 **GO**。
+# docs/README 当前目录对齐验证
+
+补充验证：已同步移除根目录 README 和 `GOVERNANCE.html` 对已删除治理中心的依赖；所有现存链接与内部锚点有效，移动端浏览器控制台无错误。
+
+日期：2026-09-01  
+执行者：Codex
+
+- `docs/README.md` 仅列出当前存在的 `01-business-plan`、`02-product` 与 `03-technical`。
+- 35 个相对链接全部解析成功，无失效目标。
+- Transaction-first 当前基线与 Task-first 历史文件已明确分区。
+- `INTERACTION_SPEC.md` 已标记为待按 Transaction-first 重写，不作为当前验收依据。
+- 技术索引覆盖契约、OpenAPI、MCP、示例、验证脚本、持久化/Webhook 与 x402 证据。
+- Contract 验证、Sandbox 20/20 与 Prototype 生产构建均通过。
+
+结论：本次文档索引修订为 **GO**；未对产品逻辑、交易状态或资金行为作出修改。

@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="BU2.com 项目总纲：Agent 支付控制平面的项目对齐、监管可演进架构与未来路线图。">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23073d3b'/%3E%3Ctext x='32' y='39' text-anchor='middle' font-family='Arial' font-size='18' font-weight='700' fill='%23e2bd79'%3EBU2%3C/text%3E%3C/svg%3E">
+  <title>BU2 项目总纲与未来规划</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #102a30;
+      --muted: #62777a;
+      --line: #d8e5e2;
+      --paper: #edf3f1;
+      --card: #fffefa;
+      --brand: #087f75;
+      --deep: #052d2c;
+      --dark: #073d3b;
+      --soft: #e3f3ef;
+      --gold: #c99a49;
+      --gold-soft: #f6ecda;
+      --blue: #3b718e;
+      --blue-soft: #e8f1f5;
+      --danger: #9b4339;
+      --danger-soft: #f8e8e5;
+      --shadow: 0 28px 80px rgb(6 45 44 / 10%);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 7% 3%, rgb(8 127 117 / 12%), transparent 28rem),
+        radial-gradient(circle at 95% 26%, rgb(201 154 73 / 10%), transparent 26rem),
+        var(--paper);
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      line-height: 1.72;
+    }
+    a { color: var(--brand); }
+    .progress { position: fixed; z-index: 30; inset: 0 auto auto 0; width: 0; height: 3px; background: linear-gradient(90deg, var(--gold), #e7c988); }
+    .shell { display: grid; grid-template-columns: 286px minmax(0, 920px); gap: 44px; max-width: 1280px; margin: 0 auto; padding: 42px 28px 88px; }
+    aside { position: sticky; top: 24px; align-self: start; max-height: calc(100vh - 48px); overflow: auto; color: white; background: linear-gradient(155deg, var(--deep), var(--dark)); border-radius: 20px; box-shadow: 0 24px 64px rgb(5 45 44 / 18%); scrollbar-width: thin; scrollbar-color: rgb(255 255 255 / 20%) transparent; }
+    .identity { display: flex; align-items: center; gap: 13px; padding: 25px 22px 20px; border-bottom: 1px solid rgb(255 255 255 / 10%); }
+    .mark { display: grid; flex: 0 0 auto; place-items: center; width: 46px; height: 46px; color: var(--deep); background: linear-gradient(145deg, #f4ddb4, var(--gold)); border-radius: 13px; font-size: 13px; font-weight: 900; letter-spacing: .05em; }
+    .identity strong { display: block; font-size: 15px; }
+    .identity small { display: block; margin-top: 2px; color: rgb(232 246 243 / 58%); font-size: 10px; letter-spacing: .05em; }
+    nav { padding: 16px 18px 18px; }
+    nav a { display: block; margin: 2px 0; padding: 7px 9px; color: rgb(231 246 243 / 62%); border-left: 2px solid transparent; border-radius: 6px; font-size: 12.5px; text-decoration: none; transition: .16s ease; }
+    nav a:hover, nav a.active { color: #f2d9aa; background: rgb(201 154 73 / 12%); border-left-color: var(--gold); }
+    .aside-status { margin: 0 18px 20px; padding: 14px 15px; color: rgb(238 248 246 / 78%); background: rgb(255 255 255 / 6%); border: 1px solid rgb(255 255 255 / 8%); border-radius: 12px; font-size: 11.5px; }
+    .aside-status b { display: block; margin-bottom: 4px; color: #f2d9aa; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; }
+    main { min-width: 0; }
+    .hero { position: relative; overflow: hidden; padding: 62px 66px 54px; color: white; background: linear-gradient(145deg, var(--deep), #0a4a46); border-radius: 24px; box-shadow: var(--shadow); }
+    .hero::after { content: ""; position: absolute; right: -90px; top: -110px; width: 360px; height: 360px; background: radial-gradient(circle, rgb(201 154 73 / 25%), transparent 67%); }
+    .eyebrow { position: relative; z-index: 1; margin: 0 0 17px; color: #e7ca91; font-size: 11px; font-weight: 850; letter-spacing: .18em; }
+    h1 { position: relative; z-index: 1; margin: 0; max-width: 760px; font-family: Georgia, "Songti SC", "STSong", serif; font-size: clamp(39px, 5vw, 59px); line-height: 1.08; letter-spacing: -.045em; }
+    .lead { position: relative; z-index: 1; max-width: 720px; margin: 21px 0 0; color: rgb(238 248 246 / 74%); font-size: 15.5px; }
+    .hero-meta { position: relative; z-index: 1; display: flex; flex-wrap: wrap; gap: 9px; margin-top: 29px; }
+    .hero-meta span { padding: 6px 10px; color: #f2e3c8; background: rgb(255 255 255 / 8%); border: 1px solid rgb(255 255 255 / 10%); border-radius: 99px; font-size: 11px; }
+    .decision { margin: 24px 0; padding: 28px 32px; background: linear-gradient(125deg, var(--card), #f7f3e9); border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 16px 44px rgb(6 45 44 / 6%); }
+    .decision .label { color: var(--brand); font-size: 10px; font-weight: 850; letter-spacing: .12em; text-transform: uppercase; }
+    .decision blockquote { margin: 10px 0 0; color: var(--dark); font-family: Georgia, "Songti SC", serif; font-size: 21px; font-weight: 700; line-height: 1.55; }
+    section { scroll-margin-top: 24px; }
+    .section { margin-top: 22px; padding: 34px 38px; background: var(--card); border: 1px solid var(--line); border-radius: 19px; box-shadow: 0 14px 38px rgb(6 45 44 / 5%); }
+    h2 { margin: 0 0 18px; color: var(--dark); font-family: Georgia, "Songti SC", "STSong", serif; font-size: 28px; letter-spacing: -.025em; }
+    h3 { margin: 27px 0 10px; color: #173c3f; font-size: 18px; }
+    p, li { font-size: 14.5px; }
+    .muted { color: var(--muted); }
+    .position-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; margin-top: 20px; }
+    .position-card { padding: 18px; border: 1px solid var(--line); border-radius: 13px; }
+    .position-card.yes { background: linear-gradient(145deg, #eef8f5, #f6faf8); }
+    .position-card.no { background: linear-gradient(145deg, #fbf3f1, #faf7f3); }
+    .position-card b { display: block; margin-bottom: 8px; color: var(--brand); }
+    .position-card.no b { color: var(--danger); }
+    .position-card ul { margin: 0; padding-left: 19px; }
+    .modes { display: grid; gap: 13px; margin-top: 22px; }
+    .mode { display: grid; grid-template-columns: 115px 1fr auto; gap: 18px; align-items: start; padding: 20px; background: #f6f9f7; border: 1px solid var(--line); border-radius: 14px; }
+    .mode-code { color: var(--brand); font: 750 11px/1.5 "SFMono-Regular", Consolas, monospace; word-break: break-word; }
+    .mode h3 { margin: 0 0 5px; font-size: 16px; }
+    .mode p { margin: 0; color: var(--muted); font-size: 13px; }
+    .state { padding: 5px 9px; border-radius: 99px; font-size: 9px; font-weight: 850; letter-spacing: .08em; text-transform: uppercase; }
+    .state.live { color: #17665f; background: var(--soft); }
+    .state.partner { color: #315f7b; background: var(--blue-soft); }
+    .state.off { color: var(--danger); background: var(--danger-soft); }
+    .flow { overflow: auto; margin: 20px 0 4px; padding: 22px 24px; color: #d9efec; background: linear-gradient(145deg, #082b30, #0c3638); border-radius: 14px; white-space: pre; font: 12px/1.65 "SFMono-Regular", Consolas, monospace; }
+    .principles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 20px; }
+    .principle { min-height: 150px; padding: 18px; background: linear-gradient(145deg, #f5f9f7, #f7f3ea); border: 1px solid var(--line); border-radius: 13px; }
+    .principle span { color: var(--gold); font-size: 10px; font-weight: 900; letter-spacing: .12em; }
+    .principle h3 { margin: 8px 0 7px; font-size: 15px; }
+    .principle p { margin: 0; color: var(--muted); font-size: 12.5px; }
+    .profile { margin-top: 18px; padding: 22px 24px; color: #d9efec; background: #082b30; border-radius: 14px; }
+    pre { overflow: auto; margin: 0; white-space: pre-wrap; font: 12px/1.65 "SFMono-Regular", Consolas, monospace; }
+    code { padding: 2px 6px; color: #096f68; background: var(--soft); border-radius: 5px; font: 12px "SFMono-Regular", Consolas, monospace; }
+    .ledger-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; margin-top: 18px; }
+    .ledger { padding: 20px; border: 1px solid var(--line); border-radius: 13px; }
+    .ledger:first-child { background: var(--soft); }
+    .ledger:last-child { background: var(--gold-soft); }
+    .ledger h3 { margin-top: 0; }
+    .ledger ul { margin-bottom: 0; padding-left: 19px; }
+    .roadmap { position: relative; margin-top: 22px; padding-left: 27px; }
+    .roadmap::before { content: ""; position: absolute; left: 8px; top: 8px; bottom: 8px; width: 2px; background: linear-gradient(var(--gold), var(--brand)); }
+    .phase { position: relative; margin: 0 0 15px; padding: 19px 21px; background: #f6f9f7; border: 1px solid var(--line); border-radius: 13px; }
+    .phase::before { content: ""; position: absolute; left: -25px; top: 25px; width: 11px; height: 11px; background: var(--card); border: 3px solid var(--brand); border-radius: 50%; }
+    .phase b { color: var(--brand); }
+    .phase p { margin: 5px 0 0; color: var(--muted); font-size: 13px; }
+    .gate-table { width: 100%; margin-top: 18px; border-collapse: collapse; font-size: 13px; }
+    .gate-table th, .gate-table td { padding: 11px 12px; text-align: left; vertical-align: top; border: 1px solid var(--line); }
+    .gate-table th { color: var(--dark); background: #edf5f2; }
+    .sources { padding-left: 19px; }
+    .sources li { margin: 8px 0; }
+    .notice { margin-top: 18px; padding: 14px 16px; color: #805d23; background: var(--gold-soft); border-left: 4px solid var(--gold); border-radius: 4px 10px 10px 4px; font-size: 12.5px; }
+    footer { margin-top: 28px; padding: 20px 4px; color: var(--muted); border-top: 1px solid var(--line); font-size: 11px; letter-spacing: .05em; }
+    .back-top { position: fixed; right: 24px; bottom: 24px; z-index: 20; display: grid; place-items: center; width: 42px; height: 42px; color: white; background: var(--dark); border-radius: 50%; box-shadow: 0 12px 28px rgb(5 45 44 / 22%); text-decoration: none; opacity: 0; transform: translateY(8px); pointer-events: none; transition: .2s ease; }
+    .back-top.visible { opacity: 1; transform: none; pointer-events: auto; }
+    @media (max-width: 900px) {
+      .shell { display: block; padding: 18px 12px 48px; }
+      aside { position: static; max-height: none; margin: 0 4px 20px; }
+      nav, .aside-status { display: none; }
+      .hero { padding: 39px 24px 35px; border-radius: 17px; }
+      .decision, .section { padding: 24px 21px; }
+      .position-grid, .principles, .ledger-grid { grid-template-columns: 1fr; }
+      .mode { grid-template-columns: 1fr; gap: 7px; }
+      .state { justify-self: start; }
+      .gate-table { display: block; overflow-x: auto; }
+      .back-top { right: 14px; bottom: 14px; }
+    }
+    @media print {
+      body { background: white; }
+      .shell { display: block; max-width: none; padding: 0; }
+      aside, .progress, .back-top { display: none; }
+      .hero { color: var(--ink); background: white; border: 2px solid var(--dark); box-shadow: none; }
+      .eyebrow, .lead { color: var(--ink); }
+      .hero-meta span { color: var(--ink); border-color: var(--line); }
+      .section, .decision { box-shadow: none; break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="progress" aria-hidden="true"></div>
+  <div class="shell">
+    <aside>
+      <div class="identity"><span class="mark">BU2</span><div><strong>项目总纲</strong><small>PROJECT ALIGNMENT · V1.0</small></div></div>
+      <nav aria-label="页面目录">
+        <a href="#position">项目定位</a>
+        <a href="#modes">执行模式</a>
+        <a href="#principal">主体与授权</a>
+        <a href="#registry">监管能力注册表</a>
+        <a href="#mandate">Agent 原生授权</a>
+        <a href="#ledger">账本事实模型</a>
+        <a href="#roadmap">未来路线图</a>
+        <a href="#gates">阶段准入门槛</a>
+        <a href="#sources">依据与边界</a>
+      </nav>
+      <div class="aside-status"><b>Current posture</b>默认非托管 · 能力逐级开放 · BU2 Custodial 禁用</div>
+    </aside>
+
+    <main>
+      <header class="hero">
+        <p class="eyebrow">BU2.COM · PROJECT ALIGNMENT &amp; FUTURE ROADMAP</p>
+        <h1>项目总纲与监管可演进模型</h1>
+        <p class="lead">在 AI Agent 支付法域仍然模糊的阶段，BU2 不等待一个全球统一答案，而是通过可配置的监管状态、有限授权与分层执行模式，在保持技术前进的同时控制真实资金边界。</p>
+        <div class="hero-meta"><span>版本 1.0</span><span>生效日期 2026-09-01</span><span>状态 Project Baseline</span><span>维护者 BU2 Engineering / Codex</span></div>
+      </header>
+
+      <div class="decision">
+        <span class="label">Frozen project decision</span>
+        <blockquote>BU2 是 Agent 支付授权、控制、执行编排和证据网络；默认不托管资金，通过非托管钱包或持牌合作方完成真实结算。</blockquote>
+      </div>
+
+      <section class="section" id="position">
+        <h2>一、项目定位</h2>
+        <p>Agent 不是独立法律主体。真实付款责任始终归属于可识别的人或企业，Agent 是通过 Credential 和 PaymentMandate 获得有限权限的软件执行者。</p>
+        <div class="position-grid">
+          <div class="position-card yes">
+            <b>BU2 初始定位</b>
+            <ul><li>支付意图和授权策略</li><li>确定性交易编排</li><li>Agent 身份与 Mandate</li><li>Receipt、审计和对账基础设施</li><li>支付 Provider 的统一控制层</li></ul>
+          </div>
+          <div class="position-card no">
+            <b>BU2 初期不是</b>
+            <ul><li>银行或稳定币发行方</li><li>客户资金托管机构</li><li>货币兑换商</li><li>Merchant of Record</li><li>可随意代客发起支付的机构</li></ul>
+          </div>
+        </div>
+        <p class="muted">产品界面应区分 Authorized Amount、Provider Balance、Reserved Amount 和 Available Spending Capacity，不把外部 Provider 或链上钱包中的资金描述为“BU2 客户余额”。</p>
+      </section>
+
+      <section class="section" id="modes">
+        <h2>二、四种支付执行模式</h2>
+        <p>监管边界不写死在 Transaction Core 中。真实能力通过 <code>ExecutionMode</code> 和有效的监管能力授权逐级开放。</p>
+        <div class="modes">
+          <div class="mode"><div class="mode-code">SIMULATED</div><div><h3>模拟与测试网</h3><p>用于原型、测试、Demo 与 Base Sepolia。禁止真实法币和主网资产，不形成真实支付义务。</p></div><span class="state live">Enabled now</span></div>
+          <div class="mode"><div class="mode-code">NON_CUSTODIAL</div><div><h3>用户控制资金</h3><p>用户或企业控制钱包/支付账户，BU2 验证 Mandate 和策略，Provider 或 Facilitator 执行，资金直接到商户。</p></div><span class="state partner">First live</span></div>
+          <div class="mode"><div class="mode-code">LICENSED_PARTNER</div><div><h3>持牌合作方执行</h3><p>银行卡、银行账户、法币钱包、稳定币托管与出入金由持牌 PSP、银行或托管机构完成。</p></div><span class="state partner">Partner gated</span></div>
+          <div class="mode"><div class="mode-code">BU2_CUSTODIAL</div><div><h3>BU2 自有托管</h3><p>仅保留接口和未来数据边界。在牌照、资产隔离、双式账本、合规与运营条件完成前永久禁止启用。</p></div><span class="state off">Disabled</span></div>
+        </div>
+        <div class="flow">用户控制的钱包 / 持牌 Provider
+              ↓ 有限授权
+        BU2 PaymentMandate
+              ↓ 确定性策略
+        Transaction Core
+              ↓ Adapter
+Provider / x402 Facilitator 执行
+              ↓
+商户收款 + BU2 Receipt + Reconciliation</div>
+      </section>
+
+      <section class="section" id="principal">
+        <h2>三、法律主体与责任链</h2>
+        <p>系统不允许 <code>AgentIdentity</code> 脱离法律主体成为独立付款人。每笔真实交易必须能够回到一个自然人或法人。</p>
+        <div class="flow">LegalPrincipal (natural_person | legal_entity)
+        ↓
+Account
+        ↓
+AgentIdentity
+        ↓
+Credential
+        ↓
+PaymentMandate
+        ↓
+PaymentIntent
+        ↓
+Provider Execution</div>
+        <div class="principles">
+          <div class="principle"><span>01</span><h3>责任可归属</h3><p>交易必须保存 legal_principal、account、agent、credential 和 mandate 标识。</p></div>
+          <div class="principle"><span>02</span><h3>授权可撤销</h3><p>Mandate 必须限定金额、商户、用途、资产、环境、有效期和转授权限。</p></div>
+          <div class="principle"><span>03</span><h3>职责可证明</h3><p>必须记录谁持有资金、谁签名、谁 KYC、谁负责争议和最终结算。</p></div>
+        </div>
+      </section>
+
+      <section class="section" id="registry">
+        <h2>四、监管能力注册表</h2>
+        <p>系统不使用简单的“国家允许/禁止”开关，而是根据主体、商户、资产、网络、Provider 和控制能力判断某条执行路径是否获得批准。</p>
+        <div class="profile"><pre>RegulatoryProfile
+├── principal_jurisdiction
+├── merchant_jurisdiction
+├── service_entity
+├── execution_mode
+├── asset + network
+├── execution_provider
+├── fund_controller
+├── signing_controller
+├── kyc_owner / aml_owner
+├── dispute_owner / reconciliation_owner
+├── limits
+├── legal_review_id
+└── expires_at</pre></div>
+        <p>每个 Adapter 必须绑定有效的 <code>CapabilityGrant</code>。当“法域 × 主体 × 商户 × 资产 × 网络 × Provider × 服务行为”没有有效授权时：</p>
+        <div class="flow">LIVE EXECUTION = DENIED
+SIMULATION     = ALLOWED</div>
+        <p>监管判断必须有版本和有效期；过期后自动降级为暂停真实执行，而不是继续沿用历史判断。</p>
+      </section>
+
+      <section class="section" id="mandate">
+        <h2>五、Agent 原生授权模型</h2>
+        <p>模型可以提出支付意图，但不得自行修改金额边界、扩大权限或改变 Mandate。所有资金判断由确定性系统完成。</p>
+        <div class="flow">Principal Mandate
+  → Agent Delegation
+    → Transaction Mandate
+      → Policy Decision
+        → Provider Authorization
+          → Settlement Evidence
+            → BU2 Receipt</div>
+        <p>Mandate 至少支持：单次/日/月限额、商户白名单、商品类别、环境、有效期、可退款要求、高风险工具限制、子 Agent 转授、一次性 nonce、授权版本和随时撤销。</p>
+        <p>这与 AP2 的 IntentMandate → PaymentMandate → PaymentReceipt 思路兼容，但 BU2 保留自己的稳定领域对象，不让外部协议重新定义核心交易状态。</p>
+      </section>
+
+      <section class="section" id="ledger">
+        <h2>六、双层账本事实模型</h2>
+        <p>非托管并不意味着不需要账本。BU2 必须保存自身交易事实和外部资金证据，但不得声称内部记录天然等于真实资金完成。</p>
+        <div class="ledger-grid">
+          <div class="ledger"><h3>BU2 交易事实</h3><ul><li>requested / authorized</li><li>provider_submitted</li><li>provider_unknown</li><li>provider_confirmed</li><li>delivery_verified</li><li>reconciled / refunded / disputed</li></ul></div>
+          <div class="ledger"><h3>外部资金事实</h3><ul><li>provider_transaction_id</li><li>network_transaction_hash</li><li>settlement_batch_id</li><li>bank_statement_reference</li><li>provider balance evidence</li><li>settlement finality evidence</li></ul></div>
+        </div>
+        <div class="flow">Provider Evidence
+      + Settlement Finality
+      + BU2 Reconciliation
+      = reconciled</div>
+        <p>当前阶段建设双式技术账本和清算账户；只有进入 BU2 Custodial 模式，才增加客户资产总账、资产隔离、会计关账和监管财务报告。</p>
+      </section>
+
+      <section class="section" id="roadmap">
+        <h2>七、未来路线图</h2>
+        <div class="roadmap">
+          <div class="phase"><b>Phase 0 · 当前</b><p>模拟资金、Base Sepolia、PaymentMandate、策略判断、Receipt、持久化账本和自动化测试；不接触真实生产资金。</p></div>
+          <div class="phase"><b>Phase 1 · 受限真实试点</b><p>邀请制、用户控制非托管钱包、单一 USDC、单一网络、低限额、商户白名单、每笔可验证 Receipt；禁止提现、换汇、资金归集和跨客户代付。</p></div>
+          <div class="phase"><b>Phase 2 · 持牌合作方</b><p>引入银行卡、银行账户和法币能力；合作方负责客户资金、KYC/KYB、AML 与真实结算，BU2 负责 Agent 授权和支付控制层。</p></div>
+          <div class="phase"><b>Phase 3 · 牌照评估</b><p>只有客户明确要求 BU2 持有余额、统一结算、跨客户调拨或直接出入金时，才启动自有牌照与托管能力评估。</p></div>
+        </div>
+      </section>
+
+      <section class="section" id="gates">
+        <h2>八、阶段准入门槛</h2>
+        <table class="gate-table">
+          <thead><tr><th>能力</th><th>当前状态</th><th>开放条件</th></tr></thead>
+          <tbody>
+            <tr><td>Simulation / Testnet</td><td>允许</td><td>明确模拟标识、测试资产、自动化测试和可重放证据</td></tr>
+            <tr><td>非托管主网支付</td><td>待批准</td><td>用户控制签名、低限额、白名单、CapabilityGrant、独立法律审查和完整对账</td></tr>
+            <tr><td>法币与托管支付</td><td>仅合作方</td><td>持牌 Provider、责任矩阵、KYC/KYB、AML、投诉和争议流程</td></tr>
+            <tr><td>BU2 内部可提现余额</td><td>禁止</td><td>对应牌照、客户资产隔离、双式客户总账、审计、准备金和监管报告</td></tr>
+            <tr><td>跨境/换汇/跨链</td><td>禁止</td><td>逐法域与逐通道批准、定价与汇率规则、制裁筛查、结算和失败恢复方案</td></tr>
+          </tbody>
+        </table>
+        <p class="notice">任何产品演示、收入压力或技术可行性都不能自动提升执行模式。能力升级必须由明确的准入证据触发。</p>
+      </section>
+
+      <section class="section" id="sources">
+        <h2>九、依据与解释边界</h2>
+        <ul class="sources">
+          <li><a href="https://www.fca.org.uk/firms/account-information-services-payment-initiation-services">英国 FCA：支付发起服务监管说明</a>——说明不持有账户本身并不自动排除支付发起监管。</li>
+          <li><a href="https://www.fincen.gov/resources/statutes-regulations/guidance/application-fincens-regulations-certain-business-models">美国 FinCEN：虚拟货币业务模型指引</a>——监管判断关注资产所有权、存储、交互路径与中间方控制能力。</li>
+          <li><a href="https://www.hkma.gov.hk/media/eng/doc/key-functions/finanical-infrastructure/infrastructure/retail-payment-initiatives/Explanatory_note_on_licensing_for_SVF.pdf">香港金管局：储值支付工具许可说明</a>——储存价值并用于第三方支付可能进入许可范围。</li>
+          <li><a href="https://developers.googleblog.com/en/developers-guide-to-ai-agent-protocols/">Google：Agent Payments Protocol</a>——提供 IntentMandate、PaymentMandate 和 PaymentReceipt 的授权审计思路。</li>
+          <li><a href="https://docs.cdp.coinbase.com/payments/overview">Coinbase：托管与非托管支付架构</a>、<a href="https://docs.cdp.coinbase.com/x402/core-concepts/facilitator">x402 Facilitator</a>——提供用户控制钱包、点对点支付与 Facilitator 边界参考。</li>
+        </ul>
+        <p class="notice">本文件是产品和技术边界方案，不构成任何司法辖区的法律意见。具体真实执行路径仍需结合目标市场、业务流程和合作方进行独立法律审查，并形成版本化 CapabilityGrant。</p>
+      </section>
+
+      <footer>BU2.com · Project Alignment v1.0 · 与 ARCHITECTURE.html、GOVERNANCE.html、AGENTS.md 和 CHANGELOG.html 协同生效</footer>
+    </main>
+  </div>
+  <a class="back-top" href="#" aria-label="返回顶部">↑</a>
+  <script>
+    const progress = document.querySelector('.progress');
+    const backTop = document.querySelector('.back-top');
+    const links = [...document.querySelectorAll('nav a')];
+    const sections = links.map(link => document.querySelector(link.hash)).filter(Boolean);
+    const update = () => {
+      const available = document.documentElement.scrollHeight - window.innerHeight;
+      progress.style.width = `${available > 0 ? (window.scrollY / available) * 100 : 0}%`;
+      backTop.classList.toggle('visible', window.scrollY > 650);
+      const active = [...sections].reverse().find(section => section.getBoundingClientRect().top <= 140) || sections[0];
+      links.forEach(link => link.classList.toggle('active', link.hash === `#${active.id}`));
+    };
+    document.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    update();
+  </script>
+</body>
+</html>
