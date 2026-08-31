@@ -1,0 +1,31 @@
+# macOS 与编辑器
+.DS_Store
+
+# 本地环境与密钥
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# 依赖与构建产物
+node_modules/
+.next/
+dist/
+coverage/
+output/
+
+# 本地运行数据
+sandbox/data/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+
+# Codex、浏览器与临时验证产物
+.codex/
+.playwright-cli/
+
+# Graphify 中间文件；保留可审计的最终图与报告
+graphify-out/.*
+graphify-out/manifest.json
+graphify-out/cost.json
