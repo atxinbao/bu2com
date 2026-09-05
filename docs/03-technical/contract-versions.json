@@ -1,0 +1,5 @@
+{
+  "agent_payment_api": "0.1.3",
+  "api_base_path": "/v1",
+  "mcp_tools": "0.1.0"
+}

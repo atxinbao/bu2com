@@ -1,9 +1,7 @@
 import { Client } from "@modelcontextprotocol/client";
-import {
-  StdioClientTransport,
-  getDefaultEnvironment,
-} from "@modelcontextprotocol/client/stdio";
+import { StdioClientTransport, getDefaultEnvironment } from "@modelcontextprotocol/client/stdio";
 import { fileURLToPath } from "node:url";
+import { validateBu2McpHandshake } from "./mcp-runtime.mjs";
 
 export class Bu2McpToolError extends Error {
   constructor(name, result) {
@@ -17,14 +15,16 @@ export class Bu2McpToolError extends Error {
 
 export async function connectBu2McpClient({
   baseUrl,
+  environment = "simulation",
   onDiagnostic = () => {},
 } = {}) {
   const transport = new StdioClientTransport({
     command: process.execPath,
-    args: [fileURLToPath(new URL("./mcp-server.mjs", import.meta.url))],
+    args: [fileURLToPath(new URL("../bin/bu2-mcp.mjs", import.meta.url))],
     env: {
       ...getDefaultEnvironment(),
-      BU2_SANDBOX_URL: baseUrl ?? "http://127.0.0.1:3100",
+      BU2_ENDPOINT: baseUrl ?? "http://127.0.0.1:3100",
+      BU2_ENVIRONMENT: environment,
     },
     stderr: "pipe",
   });
@@ -32,8 +32,20 @@ export async function connectBu2McpClient({
 
   const client = new Client({ name: "bu2-external-agent-sample", version: "0.1.0" });
   await client.connect(transport);
+  let handshake;
+  try {
+    handshake = validateBu2McpHandshake(
+      client.getServerVersion(),
+      client.getServerCapabilities(),
+      environment,
+    );
+  } catch (error) {
+    await client.close();
+    throw error;
+  }
 
   return {
+    handshake,
     async listTools() {
       return (await client.listTools()).tools;
     },

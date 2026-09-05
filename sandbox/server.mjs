@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { createServer } from "node:http";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { SimulatedPaymentAdapter } from "./adapter.mjs";
@@ -24,6 +25,9 @@ import {
 
 const requestId = () => `req_${crypto.randomUUID().replaceAll("-", "").slice(0, 16)}`;
 const MAX_JSON_BODY_BYTES = 1_048_576;
+const contractVersions = JSON.parse(
+  readFileSync(new URL("../docs/03-technical/contract-versions.json", import.meta.url), "utf8"),
+);
 
 async function readJson(request) {
   if (!request.headers["content-type"]?.toLowerCase().startsWith("application/json")) {
@@ -186,6 +190,13 @@ export function createBu2Server({
               : "healthy",
           service: "bu2-reference-server",
           version: "0.8.0",
+          api_contract_version: contractVersions.agent_payment_api,
+          api_base_path: contractVersions.api_base_path,
+          mcp_contract_versions: [contractVersions.mcp_tools],
+          environment:
+            activeSandbox.adapter?.name === "x402_exact_base_sepolia"
+              ? "testnet"
+              : "simulation",
           persistence: activeLedger.path,
           adapter: activeSandbox.adapter?.name ?? "none",
           ledger_events: activeLedger.listLedgerEvents().length,

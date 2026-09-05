@@ -59,29 +59,35 @@ BU2_SANDBOX_URL=http://127.0.0.1:3100 npm --prefix sandbox run demo:external
 
 ## 4. MCP Host 配置
 
-将绝对路径替换为本机仓库路径：
+先启动 Reference Server，再将绝对路径替换为本机仓库路径。Host 必须使用稳定入口 `sandbox/bin/bu2-mcp.mjs`，不要直接绑定内部实现文件：
 
 ```json
 {
   "mcpServers": {
     "bu2-simulation": {
+      "type": "stdio",
       "command": "node",
-      "args": ["/absolute/path/to/bu2com/sandbox/external-agents/mcp-server.mjs"],
+      "args": ["/absolute/path/to/bu2com/sandbox/bin/bu2-mcp.mjs"],
       "env": {
-        "BU2_SANDBOX_URL": "http://127.0.0.1:3100"
+        "BU2_ENDPOINT": "http://127.0.0.1:3100",
+        "BU2_ENVIRONMENT": "simulation"
       }
     }
   }
 }
 ```
 
-MCP stdio 的标准输出是协议通道；运行诊断只写标准错误。6 个工具及输入 Schema 的唯一来源仍是 [`mcp-tools.json`](mcp-tools.json)。
+稳定入口会在打开 stdio 会话前探测 `/health`，验证 API contract version、`/v1` base path、环境和 MCP contract version。MCP initialize 还会通过标准 `serverInfo` 与 `capabilities.experimental["com.bu2.agent-payments"]` 返回版本、contract SHA-256、工具数量和重试边界。不兼容时进程会在第一次资金工具调用前停止。
+
+MCP stdio 的标准输出是协议通道；运行诊断只写标准错误。6 个工具及输入 Schema 的唯一来源仍是 [`mcp-tools.json`](mcp-tools.json)。Codex、Claude Desktop 与通用 Host 的版本化示例见 [`integrations/mcp`](../../integrations/mcp/README.md)。
 
 ## 5. 样例代码
 
 - [`seller-agent.mjs`](../../sandbox/external-agents/seller-agent.mjs)：创建 Quote、提交 DeliveryEvidence。
 - [`buyer-agent.mjs`](../../sandbox/external-agents/buyer-agent.mjs)：创建 PaymentIntent、查询状态、读取并验证 Receipt。
 - [`mcp-server.mjs`](../../sandbox/external-agents/mcp-server.mjs)：基于官方 MCP TypeScript SDK 2.0 的 stdio 薄适配层。
+- [`mcp-runtime.mjs`](../../sandbox/external-agents/mcp-runtime.mjs)：契约指纹、initialize capability 与 endpoint preflight。
+- [`bu2-mcp.mjs`](../../sandbox/bin/bu2-mcp.mjs)：供 Host 使用的稳定 stdio 入口。
 - [`demo.mjs`](../../sandbox/external-agents/demo.mjs)：编排本地 Simulation 演示，明确区分 Agent、Account Owner 与 BU2 Control Plane。
 
 ## 6. 验证与限制
@@ -90,6 +96,6 @@ MCP stdio 的标准输出是协议通道；运行诊断只写标准错误。6 �
 npm --prefix sandbox test
 ```
 
-专项测试会验证：冻结工具清单、幂等重放与冲突、MCP/HTTP 共享同一 Transaction Core、完整交易关联、签名 Receipt，以及单命令演示耗时。
+专项测试会验证：冻结工具清单、幂等重放与冲突、MCP/HTTP 共享同一 Transaction Core、完整交易关联、签名 Receipt、标准 initialize 握手、Host 配置、endpoint/API/环境不兼容前置阻断，以及单命令演示耗时。
 
 此样例不启用 Mainnet、真实资金、托管、生产密钥、提现、退款或第二个支付通道。它只证明本地 Simulation 接入与交易契约，不构成生产准入证据。

@@ -1,12 +1,16 @@
-import { readFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 import { McpServer, fromJsonSchema } from "@modelcontextprotocol/server";
 import { serveStdio } from "@modelcontextprotocol/server/stdio";
 import { Bu2HttpError, bu2Request } from "./bu2-http-client.mjs";
-
-const contract = JSON.parse(
-  readFileSync(new URL("../../docs/03-technical/mcp-tools.json", import.meta.url), "utf8"),
-);
+import {
+  BU2_MCP_CAPABILITY_NAMESPACE,
+  Bu2McpCompatibilityError,
+  bu2McpCapability,
+  bu2McpMetadata,
+  loadBu2McpConfiguration,
+  mcpContract,
+  preflightBu2Endpoint,
+} from "./mcp-runtime.mjs";
 
 const amount = (args) => ({
   value: args.amount_value,
@@ -49,9 +53,7 @@ export async function executeBu2McpTool(baseUrl, name, args) {
           payment_mandate_id: args.payment_mandate_id,
           amount: amount(args),
           purpose: args.purpose,
-          ...(externalContext(args)
-            ? { external_context: externalContext(args) }
-            : {}),
+          ...(externalContext(args) ? { external_context: externalContext(args) } : {}),
         },
       });
     case "bu2_get_payment_status":
@@ -74,15 +76,9 @@ export async function executeBu2McpTool(baseUrl, name, args) {
         },
       );
     case "bu2_get_receipt":
-      return bu2Request(
-        baseUrl,
-        `/v1/receipts/${encodeURIComponent(args.receipt_id)}`,
-      );
+      return bu2Request(baseUrl, `/v1/receipts/${encodeURIComponent(args.receipt_id)}`);
     case "bu2_verify_receipt":
-      return bu2Request(
-        baseUrl,
-        `/v1/receipts/${encodeURIComponent(args.receipt_id)}/verify`,
-      );
+      return bu2Request(baseUrl, `/v1/receipts/${encodeURIComponent(args.receipt_id)}/verify`);
     default:
       throw new Error(`Unsupported BU2 MCP tool: ${name}`);
   }
@@ -100,17 +96,27 @@ function toolError(error) {
 }
 
 export function createBu2McpServer({
-  baseUrl = process.env.BU2_SANDBOX_URL ?? "http://127.0.0.1:3100",
+  baseUrl = process.env.BU2_ENDPOINT ?? process.env.BU2_SANDBOX_URL ?? "http://127.0.0.1:3100",
+  environment = process.env.BU2_ENVIRONMENT ?? "simulation",
 } = {}) {
+  const configuration = loadBu2McpConfiguration({
+    BU2_ENDPOINT: baseUrl,
+    BU2_ENVIRONMENT: environment,
+  });
   const server = new McpServer(
-    { name: contract.name, version: contract.version },
+    { name: mcpContract.name, version: mcpContract.version, title: "BU2 Agent Payments" },
     {
+      capabilities: {
+        experimental: {
+          [BU2_MCP_CAPABILITY_NAMESPACE]: bu2McpCapability(configuration.environment),
+        },
+      },
       instructions:
-        "BU2 is the transaction boundary. Use idempotency keys for every write. Authorization and settlement remain explicit human or BU2 control-plane actions and are not exposed as Agent tools.",
+        "BU2 is the transaction boundary. Use idempotency keys for every write. Authorization and settlement remain explicit human or BU2 control-plane actions and are not exposed as Agent tools. Inspect the com.bu2.agent-payments capability before calling a tool.",
     },
   );
 
-  for (const tool of contract.tools) {
+  for (const tool of mcpContract.tools) {
     server.registerTool(
       tool.name,
       {
@@ -119,7 +125,7 @@ export function createBu2McpServer({
       },
       async (args) => {
         try {
-          const result = await executeBu2McpTool(baseUrl, tool.name, args);
+          const result = await executeBu2McpTool(configuration.endpoint, tool.name, args);
           return {
             content: [{ type: "text", text: JSON.stringify(result) }],
             structuredContent: result,
@@ -139,7 +145,97 @@ export function createBu2McpServer({
   return server;
 }
 
+function cliError(error) {
+  if (error instanceof Bu2McpCompatibilityError) {
+    return {
+      event: "bu2.mcp.startup.failed",
+      code: error.code,
+      message: error.message,
+      recovery: error.recovery,
+      details: error.details,
+    };
+  }
+  return {
+    event: "bu2.mcp.startup.failed",
+    code: "mcp_startup_failed",
+    message: error instanceof Error ? error.message : "BU2 MCP startup failed.",
+    recovery: "fix_configuration",
+  };
+}
+
+function helpText() {
+  return [
+    "BU2 MCP Server v0.1",
+    "",
+    "Usage: node sandbox/bin/bu2-mcp.mjs [--metadata | --preflight | --version | --help]",
+    "",
+    "Environment:",
+    "  BU2_ENDPOINT       BU2 Reference Server base URL (default http://127.0.0.1:3100)",
+    "  BU2_ENVIRONMENT    simulation or testnet (default simulation)",
+    "  BU2_SANDBOX_URL    deprecated alias for BU2_ENDPOINT",
+  ].join("\n");
+}
+
+export async function runBu2McpCli({
+  args = process.argv.slice(2),
+  environment = process.env,
+  fetchImpl = fetch,
+  stdout = console.log,
+  stderr = console.error,
+} = {}) {
+  const knownFlags = new Set(["--help", "--metadata", "--preflight", "--version"]);
+  if (args.length > 1 || (args.length === 1 && !knownFlags.has(args[0]))) {
+    throw new Bu2McpCompatibilityError(
+      "cli_argument_invalid",
+      "Use one of --metadata, --preflight, --version, or --help.",
+    );
+  }
+  if (args[0] === "--help") {
+    stdout(helpText());
+    return null;
+  }
+  if (args[0] === "--version") {
+    stdout(mcpContract.version);
+    return null;
+  }
+  const configuration = loadBu2McpConfiguration(environment);
+  if (args[0] === "--metadata") {
+    stdout(JSON.stringify(bu2McpMetadata(configuration.environment), null, 2));
+    return null;
+  }
+  const preflight = await preflightBu2Endpoint(configuration, { fetchImpl });
+  if (args[0] === "--preflight") {
+    stdout(JSON.stringify({ status: "compatible", ...preflight }, null, 2));
+    return null;
+  }
+  stderr(JSON.stringify({ event: "bu2.mcp.preflight.ok", ...preflight }));
+  const handle = serveStdio(() =>
+    createBu2McpServer({
+      baseUrl: configuration.endpoint,
+      environment: configuration.environment,
+    }),
+  );
+  stderr(
+    JSON.stringify({
+      event: "bu2.mcp.started",
+      transport: "stdio",
+      server: `${mcpContract.name}@${mcpContract.version}`,
+    }),
+  );
+  return handle;
+}
+
+export async function main(options) {
+  try {
+    return await runBu2McpCli(options);
+  } catch (error) {
+    const stderr = options?.stderr ?? console.error;
+    stderr(JSON.stringify(cliError(error)));
+    process.exitCode = 1;
+    return null;
+  }
+}
+
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
-  serveStdio(() => createBu2McpServer());
-  console.error("BU2 MCP Server v0.1 running on stdio");
+  await main();
 }

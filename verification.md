@@ -209,7 +209,27 @@ Product v0.1 可作为客户访谈、交互原型和工程方案设计的输入�
 - SDK 质量门禁：生成漂移、oxfmt、oxlint、严格类型、build 和 8/8 单元/HTTP 集成全部通过。
 - UI 浏览器回归未执行；本变更不修改 Prototype UI，生产 build 作为本轮前端回归证据。
 
-结论：E2.1 实现满足冻结范围并通过全项目 R2 本地验证，可以进入人工审查；不构成公开包发布、生产凭证、Mainnet 或托管授权。
+结论：E2.1 实现满足冻结范围并通过全项目 R2 本地验证，已经 PR #10 人工合并；不构成公开包发布、生产凭证、Mainnet 或托管授权。
+
+## MCP 分发与 Host 配置 E2.2 验证
+
+日期：2026-09-06
+执行者：Codex
+
+- 前置状态：PR #10 已合并，本地 `main` 已同步到 merge commit `d4fd32b`，已合并 E2.1 分支已删除。
+- 稳定入口：`sandbox/bin/bu2-mcp.mjs` 可输出静态 metadata、执行 endpoint preflight 或启动 stdio；`sandbox/package.json` 通过 `bin` 与 `npm run mcp` 指向同一入口。
+- 唯一工具契约：原有 6 个工具继续从 `mcp-tools.json` 注册，没有复制 Schema 或新增授权、结算工具。
+- 版本清单：`contract-versions.json` 将 OpenAPI `0.1.3`、`/v1` 与 MCP `0.1.0` 关联，契约验证自动检查三者一致。
+- API preflight：启动前验证 Reference Server、API contract、base path、`simulation`/`testnet` 环境和兼容 MCP contract；不兼容时 stdout 保持为空并返回稳定恢复错误。
+- MCP initialize：标准 `serverInfo` 和 `capabilities.experimental["com.bu2.agent-payments"]` 返回 API/MCP version、contract SHA-256、环境、工具数量、无自动 mutation retry、无 Agent 授权/结算工具边界。
+- Host 配置：Codex TOML、Claude Desktop JSON 与通用 JSON 均指向稳定入口；JSON 配置已由测试解析。当前机器未安装 `claude` CLI，因此未执行 Claude 客户端真实注册；命令和 JSON 字段已按官方 Host 文档对齐。
+- E2.2 专项：8/8 通过，覆盖 metadata、真实 endpoint preflight、真实 stdio initialize 与握手拒绝、API/环境/MCP contract 错配、Mainnet 拒绝和 Host 配置解析。
+- 契约：32 项不变量与 6/6 MCP 工具通过。
+- Sandbox：52/52 通过，包含既有交易、幂等、并发、持久化、Webhook、x402、Receipt 与新增 MCP 分发回归。
+- TypeScript SDK：生成漂移、格式、lint、严格类型、build 和 8/8 测试通过。
+- Prototype：lint 与生产 build 通过；本轮无 UI 变更，未运行浏览器回归。
+
+结论：E2.2 满足冻结范围并通过 R2 本地验证，可以进入人工审查；不构成远程 MCP 托管、公开包发布、生产凭证、Mainnet 或托管授权。
 
 ## Phase 0 开发准入结论
 

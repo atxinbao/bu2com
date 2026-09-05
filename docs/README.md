@@ -68,7 +68,9 @@
 - [`API_CONTRACT_V0.1.md`](03-technical/API_CONTRACT_V0.1.md)：Agent Payment API 的资源、状态、金额、幂等、错误和 Receipt 契约。
 - [`openapi.yaml`](03-technical/openapi.yaml)：OpenAPI 3.1 接口定义。
 - [`mcp-tools.json`](03-technical/mcp-tools.json)：Agent 原生 MCP 工具定义。
+- [`contract-versions.json`](03-technical/contract-versions.json)：API 与 MCP 可机读版本清单。
 - [`EXTERNAL_AGENT_QUICKSTART.md`](03-technical/EXTERNAL_AGENT_QUICKSTART.md)：外部 Buyer/Seller Agent 的 MCP + HTTP Simulation 快速接入。
+- [`../integrations/mcp/README.md`](../integrations/mcp/README.md)：Codex、Claude Desktop 与通用 MCP Host 配置。
 - [`../packages/typescript-sdk/README.md`](../packages/typescript-sdk/README.md)：TypeScript SDK v0.1 的中英文接入、错误恢复与契约生成说明。
 - [`examples/payment-flow.json`](03-technical/examples/payment-flow.json)：完整交易示例载荷。
 - [`validate-contract.mjs`](03-technical/validate-contract.mjs)：本地契约一致性验证脚本。

@@ -13,6 +13,7 @@ BU2.com 是 Agent 的 AI 收付平台。它嵌入 ChatGPT、Codex、Claude 和�
 | API 契约 | Agent Payment API v0.1 |
 | Reference Server | Sandbox v0.8 · Node.js + SQLite WAL + MCP |
 | TypeScript SDK | `@bu2/sdk` v0.1 · Monorepo private package |
+| MCP 分发 | stdio v0.1 · Codex / Claude Desktop / Generic Host |
 | 支付通道 | Simulated Adapter + x402 Base Sepolia Adapter |
 | 产品界面 | React 19 + TypeScript 双语原型 |
 | 生产边界 | Mainnet、客户资金托管和法币能力尚未开放 |
@@ -54,6 +55,7 @@ BU2 将授权、资金预留、交付、结算和退款保存为不同事实。�
 - SimulatedPaymentAdapter 与官方 x402 v2 Base Sepolia Adapter。
 - x402 challenge 全字段校验、未知结算冻结、显式恢复查询与恢复审计。
 - 官方 MCP TypeScript SDK 2.0 stdio Server，以及独立 Buyer/Seller Agent Simulation 样例。
+- 稳定 MCP CLI、endpoint preflight、initialize 版本/能力握手，以及三类 Host 配置。
 - OpenAPI 生成类型的 `@bu2/sdk` v0.1 薄客户端；显式幂等、无自动重试和错误恢复分类。
 - Ed25519 签名 Receipt 及独立验证。
 - 中英文 Transaction-first 产品界面，可展示真实 Sandbox API 数据并在离线时降级到演示数据。
@@ -85,7 +87,7 @@ npm --prefix prototype run build
 npm --prefix packages/typescript-sdk test
 ```
 
-当前基线应得到：Contract 29 项不变量通过、6 个 MCP 工具有效、Sandbox 44/44 通过、TypeScript SDK 8/8 通过、Prototype lint 与 build 通过。
+当前基线应得到：Contract 32 项不变量通过、6 个 MCP 工具有效、Sandbox 52/52 通过、TypeScript SDK 8/8 通过、Prototype lint 与 build 通过。
 
 ### 一条命令运行外部 Agent 样例
 
@@ -95,7 +97,7 @@ npm --prefix packages/typescript-sdk test
 npm --prefix sandbox run demo:external
 ```
 
-完整 MCP Host 配置、角色边界和代码入口见 [`外部 Buyer / Seller Agent 快速接入`](docs/03-technical/EXTERNAL_AGENT_QUICKSTART.md)。
+完整角色边界和代码入口见 [`外部 Buyer / Seller Agent 快速接入`](docs/03-technical/EXTERNAL_AGENT_QUICKSTART.md)；Codex、Claude Desktop 与通用配置见 [`MCP Host 配置`](integrations/mcp/README.md)。
 
 ### 启动本地交易演示
 
@@ -131,6 +133,8 @@ bu2com/
 ├── sandbox/          # Reference Server、SQLite、Webhook 与支付 Adapter
 ├── packages/
 │   └── typescript-sdk/ # OpenAPI 生成类型的内部 TypeScript SDK v0.1
+├── integrations/
+│   └── mcp/           # Codex、Claude Desktop 与通用 stdio Host 配置
 ├── docs/
 │   ├── 01-business-plan/
 │   ├── 02-product/
@@ -165,6 +169,7 @@ bu2com/
 - [Base Sepolia 实结算证据](docs/03-technical/X402_LIVE_SETTLEMENT_EVIDENCE.md)
 - [Phase 0 Epic 2：开发者接入规模化](docs/03-technical/PHASE0_EPIC2_DEVELOPER_INTEGRATION_SCALE.md)
 - [TypeScript SDK v0.1](packages/typescript-sdk/README.md)
+- [MCP Host 配置](integrations/mcp/README.md)
 
 ### 商业计划
 
