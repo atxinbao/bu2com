@@ -1,4 +1,4 @@
-# BU2 Reference Server v0.10 / x402 Sandbox v0.4
+# BU2 Reference Server v0.11 / x402 Sandbox v0.5
 
 日期：2026-09-06
 执行者：Codex
@@ -73,7 +73,7 @@ npm --prefix sandbox run acceptance:clean-room
 node --test sandbox/*.test.mjs
 ```
 
-覆盖完整闭环、数据库幂等 Claim、并发预留、状态 CAS、原子提交故障注入、报价金额篡改、Mandate 拒绝、交付前非法结算、SQLite 重启恢复、Adapter 防重复、Webhook HTTP 超时/5xx、有限重试、死信、审计重放、并发租约、Secret 轮换、端到端关联、日志脱敏、健康快照、MCP 外部 Agent 接入、doctor 故障注入、clean-room 证据约束、x402 未知结果恢复和 Receipt 签名验证。
+覆盖完整闭环、数据库幂等 Claim、并发预留、状态 CAS、原子提交故障注入、报价金额篡改、Mandate 拒绝、交付前非法结算、SQLite 重启恢复、Adapter 防重复、Webhook HTTP 超时/5xx、有限重试、死信、审计重放、并发租约、Secret 轮换、端到端关联、日志脱敏、健康快照、MCP 外部 Agent 接入、doctor 故障注入、clean-room 证据约束、x402 签名前条款漂移、调用前 Payment Attempt、重启只查询恢复和 Receipt 签名验证。
 
 ## x402 沙盒商户
 
@@ -115,7 +115,7 @@ npm start
 npm run demo:x402
 ```
 
-领域入口已经支持异步 Adapter。明确失败不会扣减内部余额、改变 Delivery 状态或签发 Receipt；可能已支付但结果未知时保存 `provider_unknown` 并阻断普通重试，只能通过显式恢复查询收口。
+领域入口已经支持异步 Adapter。预检时会持久化完整 x402 授权条款；正式钱包路径通过官方 x402 Client 的签名前 hook 再次比较 amount、asset、network、resource 和 `payTo`。Adapter 会在任何对外支付调用前，以同一数据库事务写入 `adapter_operation` 和唯一 Payment Attempt。明确失败不会扣减内部余额、改变 Delivery 状态或签发 Receipt；可能已支付、进程中断或只留下 `prepared/submitting` 尝试时统一阻断普通重试，只能通过显式恢复查询收口。
 
 ### 恢复未知 x402 结算
 
@@ -126,7 +126,7 @@ curl -X POST http://127.0.0.1:3101/v1/transactions/txn_.../settlement_recoveries
   -d '{}'
 ```
 
-恢复查询不会发起第二次付款。只有注入的 Provider 查询器明确返回 `settled`，BU2 才释放内部预留并签发 Receipt；未配置查询器或链上结果仍不确定时保持 `delivery_submitted`。详见 [x402 Adapter v0.4](../docs/03-technical/X402_ADAPTER_V0.4.md)。
+恢复查询不会发起第二次付款。只有注入的 Provider 查询器明确返回 `settled`，BU2 才释放内部预留并签发 Receipt；未配置查询器或链上结果仍不确定时保持 `delivery_submitted`。详见 [x402 Testnet 可信执行 v0.1](../docs/03-technical/X402_TRUSTED_EXECUTION_V0.1.md)。
 
 ### 本机测试钱包
 

@@ -327,9 +327,9 @@ export class Bu2Sandbox {
     return event;
   }
 
-  async executeAdapter(operation, transactionId, amount) {
+  async executeAdapter(operation, transactionId, amount, context = undefined) {
     try {
-      return await this.adapter?.[operation](transactionId, amount);
+      return await this.adapter?.[operation](transactionId, amount, context);
     } catch (error) {
       this.observer?.record(
         classifyOperationalError(error),
@@ -600,6 +600,13 @@ export class Bu2Sandbox {
       "reserve",
       transaction.id,
       intent.amount,
+      {
+        payment_intent_id: intent.id,
+        quote_id: intent.quote_id,
+        authorization_id: intent.authorization.id,
+        payment_mandate_id: intent.payment_mandate_id,
+        payee_account_id: intent.payee_account_id,
+      },
     );
     if (provider) transaction.reserve_provider_reference = provider.provider_reference;
     if (emitAuthorization) this.event("payment_intent.authorized", intent);

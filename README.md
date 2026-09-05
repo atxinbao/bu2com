@@ -9,10 +9,10 @@ BU2.com 是 Agent 的 AI 收付平台。它嵌入 ChatGPT、Codex、Claude 和�
 | 项目 | 当前基线 |
 | --- | --- |
 | 项目阶段 | Phase 0 · Simulation / Testnet |
-| 当前工程关卡 | Transaction Trust Gate 2 · Database Idempotency & Atomicity |
+| 当前工程关卡 | Transaction Trust Gate 3 · x402 Testnet Trusted Execution |
 | 产品定义 | Product v0.3 · Transaction-first |
 | API 契约 | Agent Payment API v0.1 |
-| Reference Server | Sandbox v0.10 · Node.js + SQLite WAL + MCP |
+| Reference Server | Sandbox v0.11 · Node.js + SQLite WAL + MCP |
 | TypeScript SDK | `@bu2/sdk` v0.1 · Monorepo private package |
 | MCP 分发 | stdio v0.1 · Codex / Claude Desktop / Generic Host |
 | 接入诊断 | `bu2-doctor` v0.1 · 本地执行 / 零远程遥测 |
@@ -195,7 +195,7 @@ bu2com/
 - [Transaction P0 验收方案](docs/02-product/TRANSACTION_P0_ACCEPTANCE.md)
 - [Agent Payment API 契约](docs/03-technical/API_CONTRACT_V0.1.md)
 - [OpenAPI 3.1](docs/03-technical/openapi.yaml)
-- [x402 Sandbox Adapter v0.4](docs/03-technical/X402_ADAPTER_V0.4.md)
+- [x402 Testnet 可信执行 v0.1](docs/03-technical/X402_TRUSTED_EXECUTION_V0.1.md)
 - [Base Sepolia 实结算证据](docs/03-technical/X402_LIVE_SETTLEMENT_EVIDENCE.md)
 - [Phase 0 Epic 2：开发者接入规模化](docs/03-technical/PHASE0_EPIC2_DEVELOPER_INTEGRATION_SCALE.md)
 - [Phase 0 Epic 3：外部试点准备与证据](docs/03-technical/PHASE0_EPIC3_EXTERNAL_PILOT_EVIDENCE.md)
