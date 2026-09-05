@@ -13,7 +13,7 @@ import { SqliteLedger } from "./persistence.mjs";
 import { WebhookDispatcher } from "./webhooks.mjs";
 import { X402PaymentAdapter } from "./x402-adapter.mjs";
 import { ExactEvmScheme } from "@x402/evm/exact/client";
-import { wrapFetchWithPaymentFromConfig } from "@x402/fetch";
+import { wrapFetchWithPayment, x402Client } from "@x402/fetch";
 import { privateKeyToAccount } from "viem/accounts";
 import {
   paginateTransactions,
@@ -98,23 +98,23 @@ export function buildPaymentAdapter({
   if (mode !== "x402") {
     throw new ApiError(400, "validation_error", "adapter_mode_invalid", `Unknown adapter: ${mode}`);
   }
-  const activePaidFetch =
-    paidFetch ??
-    (buyerPrivateKey
-      ? wrapFetchWithPaymentFromConfig(fetch, {
-          schemes: [
-            {
-              network: "eip155:84532",
-              client: new ExactEvmScheme(privateKeyToAccount(buyerPrivateKey)),
-            },
-          ],
-        })
-      : null);
+  const paidFetchFactory = buyerPrivateKey
+    ? ({ beforePaymentCreation }) => {
+        const client = new x402Client()
+          .register(
+            "eip155:84532",
+            new ExactEvmScheme(privateKeyToAccount(buyerPrivateKey)),
+          )
+          .onBeforePaymentCreation(beforePaymentCreation);
+        return wrapFetchWithPayment(fetch, client);
+      }
+    : null;
   return new X402PaymentAdapter({
     ledger,
     observer,
     resourceUrl: resourceUrl ?? "http://127.0.0.1:4021/premium-data",
-    paidFetch: activePaidFetch,
+    paidFetch,
+    paidFetchFactory,
     recoveryQuery,
   });
 }

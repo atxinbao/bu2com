@@ -424,3 +424,19 @@ Product v0.1 可作为客户访谈、交互原型和工程方案设计的输入�
 - UI 浏览器回归未执行，因为本轮没有修改 Prototype 或公开响应结构；Trust Gate 总验收仍保留浏览器回归门槛。
 
 结论：Gate 2 本地实现达到 **GO for R2 review**。Adapter 的外部调用前 Payment Attempt 与授权条款仍属于 Gate 3；Epic 3、Mainnet、真实资金与托管继续 NO-GO。
+
+## Transaction Trust Gate 3 验证
+
+日期：2026-09-06
+执行者：Codex
+
+- Reference Sandbox 升级为 v0.11.0；公开 Agent Payment API、事件、Receipt、TypeScript SDK 与 MCP 契约保持不变。
+- SQLite Schema v7 纯追加 `x402_authorizations` 与 `payment_attempts`；完整预检条款使用 RFC 8785 JCS 和 SHA-256 指纹保存，并关联 PaymentIntent、Quote、Authorization、PaymentMandate 与 Payee Account。
+- 正式钱包路径使用官方 x402 v2.24.0 Client 的 `onBeforePaymentCreation` hook；amount、asset、network、resource 或 `payTo` 在预检后发生变化时，签名前失败关闭且不发送支付请求。
+- Adapter operation 与 Payment Attempt 在 Provider 调用前同事务写入；签名前进入 submitting，确定成功、未知和拒绝同步更新。
+- prepared/submitting/provider_unknown 在重启后均阻断普通 Settlement，只能查询或对账；恢复不会调用 `paidFetch` 或创建第二个 Attempt。
+- 确定成功响应缺少真实 Provider 引用时保持 unknown，不再用本地散列替代结算证据。
+- x402 专项 25/25、Sandbox 88/88、Contract 42 项与 MCP 6 个、SDK 8/8、clean-room 3/3、Prototype lint/build 全部通过。
+- Playwright CLI 使用 Google Chrome 验证 `http://localhost:3000/`：真实 API 的 funds_reserved 交易未显示虚构 Receipt；中英文、桌面与 390×844 移动视口通过；当前回归会话控制台 0 error、0 warning。该浏览器证据连接本地 Simulation API，不是链上结算证明。
+
+结论：Gate 3 本地实现达到 **GO for R2 review**。必须经独立人工审查并合并后，Transaction Trust Gate 才可标记完成并进入 Epic 3；Mainnet、真实资金、托管和生产密钥仍为 NO-GO。

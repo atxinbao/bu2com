@@ -140,6 +140,11 @@ export class SqliteLedger {
         name: "transaction_atomicity",
         apply: () => this.migrateTransactionAtomicity(),
       },
+      {
+        version: 7,
+        name: "x402_trusted_execution",
+        apply: () => this.migrateX402TrustedExecution(),
+      },
     ];
     for (const migration of migrations) {
       if (applied.has(migration.version)) continue;
@@ -348,6 +353,48 @@ export class SqliteLedger {
         )
         .run(wallet.id, wallet.available, wallet.reserved, wallet.currency);
     }
+  }
+
+  migrateX402TrustedExecution() {
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS x402_authorizations (
+        transaction_id TEXT PRIMARY KEY,
+        payment_intent_id TEXT,
+        quote_id TEXT,
+        authorization_id TEXT,
+        payment_mandate_id TEXT,
+        payee_account_id TEXT,
+        x402_version INTEGER NOT NULL,
+        scheme TEXT NOT NULL,
+        network TEXT NOT NULL,
+        asset TEXT NOT NULL,
+        amount_atomic TEXT NOT NULL,
+        pay_to TEXT NOT NULL,
+        resource_url TEXT NOT NULL,
+        terms_json TEXT NOT NULL,
+        terms_fingerprint TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS payment_attempts (
+        id TEXT PRIMARY KEY,
+        operation_key TEXT UNIQUE NOT NULL,
+        transaction_id TEXT NOT NULL,
+        authorization_fingerprint TEXT NOT NULL,
+        request_nonce TEXT UNIQUE NOT NULL,
+        status TEXT NOT NULL CHECK (
+          status IN ('prepared', 'submitting', 'provider_unknown', 'settled', 'rejected')
+        ),
+        provider_reference TEXT,
+        reason_code TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        request_id TEXT,
+        trace_id TEXT,
+        FOREIGN KEY (transaction_id) REFERENCES x402_authorizations(transaction_id)
+      );
+      CREATE INDEX IF NOT EXISTS idx_payment_attempts_transaction
+        ON payment_attempts(transaction_id, created_at);
+    `);
   }
 
   registerReceiptVerificationKey({
@@ -1139,7 +1186,10 @@ export class SqliteLedger {
     const unknown = this.db
       .prepare(
         `SELECT COUNT(*) AS count FROM adapter_operations
-         WHERE status IN ('unknown', 'provider_unknown', 'result_unknown')`,
+         WHERE status IN (
+           'unknown', 'provider_unknown', 'result_unknown',
+           'payment_prepared', 'payment_submitting'
+         )`,
       )
       .get();
     return {
@@ -1202,6 +1252,186 @@ export class SqliteLedger {
 
   adapterOperations() {
     return this.db.prepare("SELECT * FROM adapter_operations ORDER BY created_at").all();
+  }
+
+  saveX402Authorization(authorization) {
+    const existing = this.getX402Authorization(authorization.transaction_id);
+    if (existing) {
+      if (existing.terms_fingerprint !== authorization.terms_fingerprint) {
+        throw new ApiError(
+          409,
+          "idempotency_conflict",
+          "x402_authorization_conflict",
+          "The x402 authorization terms changed for this transaction.",
+        );
+      }
+      return existing;
+    }
+    this.db
+      .prepare(`
+        INSERT INTO x402_authorizations(
+          transaction_id, payment_intent_id, quote_id, authorization_id,
+          payment_mandate_id, payee_account_id, x402_version, scheme, network,
+          asset, amount_atomic, pay_to, resource_url, terms_json,
+          terms_fingerprint, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `)
+      .run(
+        authorization.transaction_id,
+        authorization.payment_intent_id ?? null,
+        authorization.quote_id ?? null,
+        authorization.authorization_id ?? null,
+        authorization.payment_mandate_id ?? null,
+        authorization.payee_account_id ?? null,
+        authorization.x402_version,
+        authorization.scheme,
+        authorization.network,
+        authorization.asset,
+        authorization.amount_atomic,
+        authorization.pay_to,
+        authorization.resource_url,
+        authorization.terms_json,
+        authorization.terms_fingerprint,
+        authorization.created_at,
+      );
+    return this.getX402Authorization(authorization.transaction_id);
+  }
+
+  getX402Authorization(transactionId) {
+    const row = this.db
+      .prepare("SELECT * FROM x402_authorizations WHERE transaction_id=?")
+      .get(transactionId);
+    return row ? { ...row } : null;
+  }
+
+  prepareX402PaymentAttempt({
+    operation_key,
+    transaction_id,
+    authorization_fingerprint,
+    amount_value,
+    currency,
+    provider_reference,
+    created_at = new Date().toISOString(),
+  }) {
+    const correlation = this.observer?.context({ transaction_id }) ?? {
+      transaction_id,
+    };
+    return immediateTransaction(this.db, () => {
+      const existing = this.getPaymentAttempt(operation_key);
+      if (existing) return existing;
+      const id = `pat_${randomUUID().replaceAll("-", "").slice(0, 16)}`;
+      const requestNonce = randomUUID();
+      this.db
+        .prepare(`
+          INSERT INTO adapter_operations(
+            idempotency_key, operation, provider_reference, amount_value,
+            currency, status, created_at, request_id, trace_id, transaction_id,
+            last_error, updated_at, resolved_at
+          ) VALUES (?, 'settle', ?, ?, ?, 'payment_prepared', ?, ?, ?, ?, NULL, ?, NULL)
+        `)
+        .run(
+          operation_key,
+          provider_reference,
+          amount_value,
+          currency,
+          created_at,
+          correlation.request_id ?? null,
+          correlation.trace_id ?? null,
+          transaction_id,
+          created_at,
+        );
+      this.db
+        .prepare(`
+          INSERT INTO payment_attempts(
+            id, operation_key, transaction_id, authorization_fingerprint,
+            request_nonce, status, provider_reference, reason_code, created_at,
+            updated_at, request_id, trace_id
+          ) VALUES (?, ?, ?, ?, ?, 'prepared', NULL, NULL, ?, ?, ?, ?)
+        `)
+        .run(
+          id,
+          operation_key,
+          transaction_id,
+          authorization_fingerprint,
+          requestNonce,
+          created_at,
+          created_at,
+          correlation.request_id ?? null,
+          correlation.trace_id ?? null,
+        );
+      return this.getPaymentAttempt(operation_key);
+    });
+  }
+
+  getPaymentAttempt(operationKey) {
+    const row = this.db
+      .prepare("SELECT * FROM payment_attempts WHERE operation_key=?")
+      .get(operationKey);
+    return row ? { ...row } : null;
+  }
+
+  paymentAttempts(transactionId = null) {
+    if (transactionId) {
+      return this.db
+        .prepare("SELECT * FROM payment_attempts WHERE transaction_id=? ORDER BY created_at")
+        .all(transactionId);
+    }
+    return this.db.prepare("SELECT * FROM payment_attempts ORDER BY created_at").all();
+  }
+
+  transitionX402PaymentAttempt(
+    operationKey,
+    { from, status, provider_reference = null, reason_code = null },
+  ) {
+    const updatedAt = new Date().toISOString();
+    return immediateTransaction(this.db, () => {
+      const result = this.db
+        .prepare(`
+          UPDATE payment_attempts
+          SET status=?, provider_reference=?, reason_code=?, updated_at=?
+          WHERE operation_key=? AND status=?
+        `)
+        .run(status, provider_reference, reason_code, updatedAt, operationKey, from);
+      if (result.changes !== 1) {
+        const current = this.getPaymentAttempt(operationKey);
+        throw new ApiError(
+          409,
+          "invalid_state_transition",
+          "x402_payment_attempt_transition_conflict",
+          "The x402 payment attempt is no longer in the expected state.",
+          { expected: from, current: current?.status ?? null },
+        );
+      }
+      const adapterStatus =
+        status === "prepared" ? "payment_prepared" : status === "submitting" ? "payment_submitting" : status;
+      const adapterResult = this.db
+        .prepare(`
+          UPDATE adapter_operations
+          SET status=?, provider_reference=COALESCE(?, provider_reference),
+              last_error=?, updated_at=?, resolved_at=?
+          WHERE idempotency_key=?
+        `)
+        .run(
+          adapterStatus,
+          provider_reference,
+          reason_code,
+          updatedAt,
+          status === "settled" || status === "rejected" ? updatedAt : null,
+          operationKey,
+        );
+      if (adapterResult.changes !== 1) {
+        throw new ApiError(
+          500,
+          "internal_error",
+          "x402_adapter_operation_missing",
+          "The x402 Adapter operation is missing for the persisted payment attempt.",
+        );
+      }
+      return {
+        attempt: this.getPaymentAttempt(operationKey),
+        operation: this.getAdapterOperation(operationKey),
+      };
+    });
   }
 
   recordAdapterRecovery({
@@ -1270,15 +1500,31 @@ export class SqliteLedger {
             UPDATE adapter_operations
             SET status='settled', provider_reference=?, last_error=NULL,
                 updated_at=?, resolved_at=?
-            WHERE idempotency_key=? AND status='provider_unknown'
+            WHERE idempotency_key=?
+              AND status IN ('payment_prepared', 'payment_submitting', 'provider_unknown')
           `)
           .run(provider_reference, created_at, created_at, operation_key);
+        this.db
+          .prepare(`
+            UPDATE payment_attempts
+            SET status='settled', provider_reference=?, reason_code=NULL, updated_at=?
+            WHERE operation_key=? AND status IN ('prepared', 'submitting', 'provider_unknown')
+          `)
+          .run(provider_reference, created_at, operation_key);
       } else {
         this.db
           .prepare(`
             UPDATE adapter_operations
-            SET last_error=?, updated_at=?
-            WHERE idempotency_key=? AND status='provider_unknown'
+            SET status='provider_unknown', last_error=?, updated_at=?
+            WHERE idempotency_key=?
+              AND status IN ('payment_prepared', 'payment_submitting', 'provider_unknown')
+          `)
+          .run(reason_code, created_at, operation_key);
+        this.db
+          .prepare(`
+            UPDATE payment_attempts
+            SET status='provider_unknown', reason_code=?, updated_at=?
+            WHERE operation_key=? AND status IN ('prepared', 'submitting', 'provider_unknown')
           `)
           .run(reason_code, created_at, operation_key);
       }

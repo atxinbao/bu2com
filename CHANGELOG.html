@@ -152,6 +152,32 @@
       <h2 id="unreleased">Unreleased</h2>
       <article class="release">
         <div class="release-head">
+          <div><h3>Transaction Trust Gate 3 · x402 Testnet 可信执行</h3><time datetime="2026-09-06">2026-09-06</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">关闭审计 F03/F04：把预检授权与实际 x402 签名条款绑定，并在任何外部支付前持久化唯一 Payment Attempt；Epic 3 继续冻结，等待本变更独立 R2 审查。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag added">Added</span>SQLite Schema v7 纯追加 <code>x402_authorizations</code> 与 <code>payment_attempts</code>，保存业务关联、完整支付要求、JCS 指纹、稳定 nonce 和执行状态。</li>
+            <li><span class="tag changed">Changed</span>正式 Testnet 钱包路径改用官方 x402 Client 的 <code>onBeforePaymentCreation</code> hook；签名前重新比较 amount、asset、network、resource 与 <code>payTo</code>，任一漂移均失败关闭且不发送支付签名。</li>
+            <li><span class="tag changed">Changed</span>Adapter operation 与 Payment Attempt 在 Provider 调用前同事务进入 <code>prepared</code>，签名前进入 <code>submitting</code>；确定成功、未知或拒绝同步更新两个投影。</li>
+            <li><span class="tag removed">Removed</span>确定结算响应缺少真实 Provider 引用时不再生成本地替代引用，统一进入 <code>provider_unknown</code>。</li>
+            <li><span class="tag added">Added</span>新增官方签名 hook 收款方漂移、五类条款篡改、调用前持久化，以及 prepared 状态重启后只对账不重付的自动化测试。</li>
+            <li><span class="tag changed">Changed</span>Reference Sandbox 升至 <code>v0.11.0</code>；公开 Agent Payment API、事件、Receipt、SDK 与 MCP 契约版本保持不变。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R2 · 支付授权、签名边界、Adapter 状态与数据库迁移，必须独立人工审查后合并</span></div>
+          <div><b>金融行为影响</b><span>只允许实际签名已授权的 Testnet 条款；崩溃遗留 prepared/submitting 视为结果未知，禁止自动再次付款</span></div>
+          <div><b>兼容性</b><span>Schema v7 纯追加；旧历史交易继续可读，缺少新授权快照的旧未结算 x402 交易失败关闭；公开契约不变</span></div>
+          <div><b>验证</b><span>x402 Gate 3 专项 25/25、Sandbox 88/88、Contract 42 项、MCP 6 个、SDK 8/8、clean-room 3/3、Prototype lint/build、Chrome 桌面/移动与中英文回归全部通过，控制台 0 error/warning</span></div>
+          <div><b>恢复</b><span>回退应用并保留 v7 追加表；停止 x402 Adapter，将未完成 Payment Attempt 保持只读查询/对账，禁止自动支付</span></div>
+        </div>
+      </article>
+
+      <article class="release">
+        <div class="release-head">
           <div><h3>Transaction Trust Gate 2 · 数据库幂等与交易原子性</h3><time datetime="2026-09-06">2026-09-06</time></div>
           <span class="status">Unreleased</span>
         </div>

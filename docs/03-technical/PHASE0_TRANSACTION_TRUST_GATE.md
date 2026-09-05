@@ -4,7 +4,7 @@
 
 执行者：Codex
 
-状态：In progress · Gate 1 merged · Gate 2 implemented locally
+状态：In progress · Gate 1–2 merged · Gate 3 implemented locally
 
 风险等级：R2
 
@@ -31,7 +31,7 @@
 - 状态、余额、LedgerEvent、Webhook Outbox 与幂等终态在同一数据库事务提交。
 - 通过并发请求、进程中断和故障注入验证不会重复预留或留下部分状态。
 
-当前状态：本地实现完成，等待独立 R2 PR 人工审查；不得与 Gate 3 混入同一审查。
+当前状态：已通过 PR #16 人工审查并合并。
 
 ### Gate 3：x402 Testnet 可信执行
 
@@ -40,7 +40,7 @@
 - 崩溃恢复只允许查询或对账，不得自动重新付款。
 - 仅覆盖 Base Sepolia Testnet；Mainnet 仍为 NO-GO。
 
-当前状态：未开始；依赖 Gate 2 的事务边界。
+当前状态：本地实现完成，等待独立 R2 PR 人工审查；不得据此启动 Mainnet 或真实资金。
 
 ## 3. Epic 3 准入
 

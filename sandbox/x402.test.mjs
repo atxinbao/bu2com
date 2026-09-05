@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
+import { createServer } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -12,7 +13,8 @@ import { SqliteLedger } from "./persistence.mjs";
 import { Bu2Sandbox } from "./domain.mjs";
 import { X402PaymentAdapter } from "./x402-adapter.mjs";
 import { listenX402Merchant } from "./x402-merchant.mjs";
-import { listen } from "./server.mjs";
+import { buildPaymentAdapter, listen } from "./server.mjs";
+import { generatePrivateKey } from "viem/accounts";
 
 const payTo = "0x1111111111111111111111111111111111111111";
 const facilitatorClient = {
@@ -96,6 +98,70 @@ async function post(base, path, key) {
   return { status: response.status, body: await response.json() };
 }
 
+function persistAuthorization(ledger, transactionId, resourceUrl, amount = 1) {
+  return ledger.saveX402Authorization({
+    transaction_id: transactionId,
+    x402_version: 2,
+    scheme: "exact",
+    network: "eip155:84532",
+    asset: "0x036cbd53842c5426634e7929541ec2318f3dcf7e",
+    amount_atomic: String(amount * 10_000),
+    pay_to: payTo,
+    resource_url: new URL(resourceUrl).href,
+    terms_json: JSON.stringify({ transaction_id: transactionId }),
+    terms_fingerprint: `fingerprint_${transactionId}`,
+    created_at: new Date().toISOString(),
+  });
+}
+
+function paymentRequired(resourceUrl, overrides = {}) {
+  return {
+    x402Version: 2,
+    error: "Payment Required",
+    resource: {
+      url: resourceUrl,
+      description: "BU2 trusted execution test",
+      mimeType: "application/json",
+    },
+    accepts: [
+      {
+        scheme: "exact",
+        network: "eip155:84532",
+        amount: "10000",
+        asset: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+        payTo,
+        maxTimeoutSeconds: 60,
+        extra: { name: "USDC", version: "2" },
+        ...overrides,
+      },
+    ],
+  };
+}
+
+async function rotatingChallengeServer(context) {
+  let requests = 0;
+  let url;
+  const server = createServer((_request, response) => {
+    requests += 1;
+    const challenge = paymentRequired(url, {
+      payTo:
+        requests === 1
+          ? payTo
+          : "0x9999999999999999999999999999999999999999",
+    });
+    response.writeHead(402, {
+      "content-type": "application/json",
+      "payment-required": encodePaymentRequiredHeader(challenge),
+    });
+    response.end(JSON.stringify(challenge));
+  });
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const address = server.address();
+  url = `http://127.0.0.1:${address.port}/premium-data`;
+  context.after(() => new Promise((resolve) => server.close(resolve)));
+  return { url, requests: () => requests };
+}
+
 test("official middleware emits an x402 v2 exact Base Sepolia challenge", async (context) => {
   const running = await merchant(context);
   const response = await fetch(`${running.url}/premium-data`, {
@@ -123,6 +189,174 @@ test("BU2 x402 adapter validates the challenge and keeps reserve idempotent", as
   assert.equal(first.status, "payment_required");
   assert.equal(replay.provider_reference, first.provider_reference);
   assert.equal(ledger.adapterOperations().length, 1);
+  const authorization = ledger.getX402Authorization("txn_x402");
+  assert.equal(authorization.amount_atomic, "10000");
+  assert.equal(authorization.pay_to, payTo.toLowerCase());
+  assert.equal(authorization.resource_url, `${running.url}/premium-data`);
+});
+
+test("official x402 signing hook rejects changed payTo before a payment is sent", async (context) => {
+  const merchant = await rotatingChallengeServer(context);
+  const ledger = new SqliteLedger(":memory:");
+  context.after(() => ledger.close());
+  const adapter = buildPaymentAdapter({
+    ledger,
+    mode: "x402",
+    resourceUrl: merchant.url,
+    buyerPrivateKey: generatePrivateKey(),
+  });
+  await adapter.reserve("txn_rotating_payee", { value: 1, currency: "USD" });
+  await assert.rejects(
+    adapter.settle("txn_rotating_payee", { value: 1, currency: "USD" }),
+    (error) => error.code === "x402_authorization_terms_changed",
+  );
+  assert.equal(merchant.requests(), 2);
+  assert.equal(ledger.getPaymentAttempt("settle:txn_rotating_payee").status, "rejected");
+  assert.equal(ledger.getAdapterOperation("settle:txn_rotating_payee").status, "rejected");
+});
+
+test("signing boundary rejects amount, asset, network, resource, and payTo drift", async (context) => {
+  const cases = {
+    amount: (challenge) => {
+      challenge.accepts[0].amount = "20000";
+    },
+    asset: (challenge) => {
+      challenge.accepts[0].asset = "0x8888888888888888888888888888888888888888";
+    },
+    network: (challenge) => {
+      challenge.accepts[0].network = "eip155:1";
+    },
+    resource: (challenge) => {
+      challenge.resource.url = "https://merchant.example/other-resource";
+    },
+    payTo: (challenge) => {
+      challenge.accepts[0].payTo = "0x9999999999999999999999999999999999999999";
+    },
+  };
+  for (const [field, mutate] of Object.entries(cases)) {
+    await context.test(field, async () => {
+      const ledger = new SqliteLedger(":memory:");
+      const transactionId = `txn_drift_${field}`;
+      const resourceUrl = "https://merchant.example/premium-data";
+      persistAuthorization(ledger, transactionId, resourceUrl);
+      let providerCalls = 0;
+      const adapter = new X402PaymentAdapter({
+        ledger,
+        resourceUrl,
+        paidFetchFactory: ({ beforePaymentCreation }) => async () => {
+          const challenge = paymentRequired(resourceUrl);
+          mutate(challenge);
+          await beforePaymentCreation({
+            paymentRequired: challenge,
+            selectedRequirements: challenge.accepts[0],
+          });
+          providerCalls += 1;
+          throw new Error("must not reach the provider");
+        },
+      });
+      await assert.rejects(
+        adapter.settle(transactionId, { value: 1, currency: "USD" }),
+        (error) => error.code === "x402_authorization_terms_changed",
+      );
+      assert.equal(providerCalls, 0);
+      assert.equal(ledger.getPaymentAttempt(`settle:${transactionId}`).status, "rejected");
+      ledger.close();
+    });
+  }
+});
+
+test("payment attempt is durable before the provider execution boundary", async () => {
+  const ledger = new SqliteLedger(":memory:");
+  const transactionId = "txn_attempt_before_call";
+  const resourceUrl = "https://merchant.example/premium-data";
+  persistAuthorization(ledger, transactionId, resourceUrl);
+  const paymentResponse = encodePaymentResponseHeader({
+    success: true,
+    transaction: "0xdurable-attempt",
+    network: "eip155:84532",
+    payer: "0x3333333333333333333333333333333333333333",
+  });
+  let observedAttempt;
+  const adapter = new X402PaymentAdapter({
+    ledger,
+    resourceUrl,
+    paidFetchFactory: ({ beforePaymentCreation, paymentAttempt }) => async () => {
+      observedAttempt = ledger.getPaymentAttempt(paymentAttempt.operation_key);
+      assert.equal(observedAttempt.status, "prepared");
+      const challenge = paymentRequired(resourceUrl);
+      await beforePaymentCreation({
+        paymentRequired: challenge,
+        selectedRequirements: challenge.accepts[0],
+      });
+      assert.equal(
+        ledger.getPaymentAttempt(paymentAttempt.operation_key).status,
+        "submitting",
+      );
+      return new Response("{}", {
+        status: 200,
+        headers: { "payment-response": paymentResponse },
+      });
+    },
+  });
+  const result = await adapter.settle(transactionId, { value: 1, currency: "USD" });
+  assert.ok(observedAttempt.id.startsWith("pat_"));
+  assert.equal(result.provider_reference, "0xdurable-attempt");
+  assert.equal(ledger.getPaymentAttempt(`settle:${transactionId}`).status, "settled");
+  ledger.close();
+});
+
+test("restart after preparation reconciles and never creates a second payment attempt", async () => {
+  const directory = mkdtempSync(join(tmpdir(), "bu2-x402-prepared-"));
+  const path = join(directory, "sandbox.sqlite");
+  const transactionId = "txn_prepared_restart";
+  const operationKey = `settle:${transactionId}`;
+  const resourceUrl = "https://merchant.example/premium-data";
+  try {
+    const first = new SqliteLedger(path);
+    const authorization = persistAuthorization(first, transactionId, resourceUrl);
+    first.prepareX402PaymentAttempt({
+      operation_key: operationKey,
+      transaction_id: transactionId,
+      authorization_fingerprint: authorization.terms_fingerprint,
+      amount_value: 1,
+      currency: "USD",
+      provider_reference: "x402_attempt_prepared_restart",
+    });
+    first.close();
+
+    let paidCalls = 0;
+    let recoveryCalls = 0;
+    const restored = new SqliteLedger(path);
+    const adapter = new X402PaymentAdapter({
+      ledger: restored,
+      resourceUrl,
+      paidFetch: async () => {
+        paidCalls += 1;
+        throw new Error("must not execute");
+      },
+      recoveryQuery: async (query) => {
+        recoveryCalls += 1;
+        assert.equal(query.payment_attempt_id, restored.getPaymentAttempt(operationKey).id);
+        assert.equal(query.pay_to, payTo.toLowerCase());
+        return { status: "provider_unknown", reason_code: "chain_result_pending" };
+      },
+    });
+    await assert.rejects(
+      adapter.settle(transactionId, { value: 1, currency: "USD" }),
+      (error) => error.code === "x402_settlement_unknown",
+    );
+    const recovered = await adapter.recoverSettlement(transactionId, {
+      value: 1,
+      currency: "USD",
+    });
+    assert.equal(recovered.status, "provider_unknown");
+    assert.equal(paidCalls, 0);
+    assert.equal(recoveryCalls, 1);
+    assert.equal(restored.paymentAttempts(transactionId).length, 1);
+    restored.close();
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
 });
 
 test("adapter rejects a merchant amount that differs from BU2 authorization", async (context) => {
@@ -203,6 +437,7 @@ test("adapter maps a verified paid response to a settlement provider reference",
         headers: { "payment-response": paymentResponse },
       }),
   });
+  persistAuthorization(ledger, "txn_paid", "https://merchant.example/premium-data");
   const settled = await adapter.settle("txn_paid", { value: 1, currency: "USD" });
   assert.equal(settled.status, "settled");
   assert.equal(settled.provider_reference, "0xabc123");
@@ -221,6 +456,7 @@ test("timeout freezes settlement as provider_unknown and blocks repeat payment",
       throw new DOMException("facilitator timeout", "AbortError");
     },
   });
+  persistAuthorization(ledger, "txn_timeout", "https://merchant.example/premium-data");
   await assert.rejects(
     adapter.settle("txn_timeout", { value: 1, currency: "USD" }),
     (error) => error.code === "x402_settlement_unknown",
@@ -245,11 +481,41 @@ test("successful HTTP response without PAYMENT-RESPONSE remains unknown", async 
     resourceUrl: "https://merchant.example/premium-data",
     paidFetch: async () => new Response("{}", { status: 200 }),
   });
+  persistAuthorization(ledger, "txn_response_lost", "https://merchant.example/premium-data");
   await assert.rejects(
     adapter.settle("txn_response_lost", { value: 1, currency: "USD" }),
     (error) => error.details.reason_code === "x402_payment_response_missing",
   );
   assert.equal(ledger.healthSnapshot().adapter_operations.unknown_results, 1);
+  ledger.close();
+});
+
+test("successful provider response without a real transaction reference remains unknown", async () => {
+  const ledger = new SqliteLedger(":memory:");
+  const transactionId = "txn_reference_missing";
+  const resourceUrl = "https://merchant.example/premium-data";
+  persistAuthorization(ledger, transactionId, resourceUrl);
+  const adapter = new X402PaymentAdapter({
+    ledger,
+    resourceUrl,
+    paidFetch: async () =>
+      new Response("{}", {
+        status: 200,
+        headers: {
+          "payment-response": encodePaymentResponseHeader({
+            success: true,
+            transaction: "",
+            network: "eip155:84532",
+            payer: "0x3333333333333333333333333333333333333333",
+          }),
+        },
+      }),
+  });
+  await assert.rejects(
+    adapter.settle(transactionId, { value: 1, currency: "USD" }),
+    (error) => error.details.reason_code === "x402_provider_reference_missing",
+  );
+  assert.equal(ledger.getPaymentAttempt(`settle:${transactionId}`).status, "provider_unknown");
   ledger.close();
 });
 
@@ -264,6 +530,7 @@ test("facilitator 5xx freezes settlement instead of retrying payment", async () 
       return new Response("upstream unavailable", { status: 503 });
     },
   });
+  persistAuthorization(ledger, "txn_facilitator_5xx", "https://merchant.example/premium-data");
   await assert.rejects(
     adapter.settle("txn_facilitator_5xx", { value: 1, currency: "USD" }),
     (error) => error.details.reason_code === "x402_facilitator_unavailable",
@@ -285,6 +552,7 @@ test("recovery without a provider query remains unknown and is audited", async (
       throw new DOMException("timeout", "AbortError");
     },
   });
+  persistAuthorization(ledger, "txn_no_recovery_query", "https://merchant.example/premium-data");
   await assert.rejects(
     adapter.settle("txn_no_recovery_query", { value: 1, currency: "USD" }),
     (error) => error.code === "x402_settlement_unknown",
@@ -518,6 +786,7 @@ test("concurrent settlements make one provider call and issue one receipt", asyn
     ledger.listLedgerEvents().filter((event) => event.type === "receipt.issued").length,
     1,
   );
+  assert.equal(ledger.paymentAttempts(transactionId).length, 1);
 });
 
 test("BU2 core objects complete an asynchronous x402 adapter transaction", async (context) => {
@@ -571,6 +840,12 @@ test("BU2 core objects complete an asynchronous x402 adapter transaction", async
     "x402-core-authorize",
   );
   assert.equal(authorized.status, "funds_reserved");
+  const x402Authorization = ledger.getX402Authorization(authorized.transaction_id);
+  assert.equal(x402Authorization.payment_intent_id, intent.id);
+  assert.equal(x402Authorization.quote_id, quote.id);
+  assert.equal(x402Authorization.authorization_id, intent.authorization.id);
+  assert.equal(x402Authorization.payment_mandate_id, "mdt_x402_test");
+  assert.equal(x402Authorization.payee_account_id, "acct_x402_merchant");
   await sandbox.submitDelivery(
     authorized.transaction_id,
     { type: "dataset_access", evidence_hash: "sha256:x402core" },
