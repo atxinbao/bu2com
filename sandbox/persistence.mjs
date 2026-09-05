@@ -129,6 +129,11 @@ export class SqliteLedger {
         name: "x402_failure_recovery",
         apply: () => this.migrateX402FailureRecovery(),
       },
+      {
+        version: 5,
+        name: "receipt_verification_keys",
+        apply: () => this.migrateReceiptVerificationKeys(),
+      },
     ];
     for (const migration of migrations) {
       if (applied.has(migration.version)) continue;
@@ -281,6 +286,61 @@ export class SqliteLedger {
         FOREIGN KEY (operation_key) REFERENCES adapter_operations(idempotency_key)
       );
     `);
+  }
+
+  migrateReceiptVerificationKeys() {
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS receipt_verification_keys (
+        key_id TEXT PRIMARY KEY,
+        algorithm TEXT NOT NULL,
+        public_key TEXT NOT NULL,
+        status TEXT NOT NULL CHECK (status IN ('trusted', 'revoked')),
+        registered_at TEXT NOT NULL,
+        revoked_at TEXT
+      );
+    `);
+  }
+
+  registerReceiptVerificationKey({
+    key_id,
+    algorithm,
+    public_key,
+    registered_at = new Date().toISOString(),
+  }) {
+    return immediateTransaction(this.db, () => {
+      const existing = this.getReceiptVerificationKey(key_id);
+      if (existing) {
+        if (
+          existing.algorithm !== algorithm ||
+          existing.public_key !== public_key
+        ) {
+          throw new ApiError(
+            409,
+            "idempotency_conflict",
+            "receipt_verification_key_conflict",
+            "Receipt verification key ID already belongs to different key material.",
+          );
+        }
+        return existing;
+      }
+      this.db
+        .prepare(
+          `INSERT INTO receipt_verification_keys(
+            key_id, algorithm, public_key, status, registered_at, revoked_at
+          ) VALUES (?, ?, ?, 'trusted', ?, NULL)`,
+        )
+        .run(key_id, algorithm, public_key, registered_at);
+      return this.getReceiptVerificationKey(key_id);
+    });
+  }
+
+  getReceiptVerificationKey(keyId) {
+    return this.db
+      .prepare(
+        `SELECT key_id, algorithm, public_key, status, registered_at, revoked_at
+         FROM receipt_verification_keys WHERE key_id=?`,
+      )
+      .get(keyId);
   }
 
   loadState() {

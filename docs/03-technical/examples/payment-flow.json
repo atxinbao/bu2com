@@ -42,10 +42,30 @@
   },
   "receipt": {
     "id": "rcpt_01KBU2F",
+    "version": "0.2",
+    "schema_version": "0.2",
+    "canonicalization_version": "RFC8785-JCS-1",
     "transaction_id": "txn_01KBU2D",
     "settlement_id": "stl_01KBU2G",
+    "quote_id": "quo_01KBU2A",
+    "payment_intent_id": "pi_01KBU2B",
+    "payer_account_id": "acct_bu2_ventures",
+    "payee_account_id": "acct_atlas_data",
+    "buyer_agent_id": "agt_research_copilot",
+    "seller_agent_id": "agt_market_data",
+    "amount": { "value": 3900, "currency": "CNY" },
+    "authorization_id": "auth_01KBU2C",
+    "payment_mandate_id": "mdt_research_04",
+    "delivery_id": "dlv_01KBU2E",
+    "delivery_evidence_hash": "sha256:9fc2a17e",
+    "environment": "simulation",
+    "payment_channel": "bu2_simulated_provider",
+    "provider_reference": "sim_01KBU2H",
+    "signed_at": "2026-09-01T06:41:09Z",
+    "issued_at": "2026-09-01T06:41:09Z",
     "signature_algorithm": "Ed25519",
     "verification_key_id": "key_bu2_receipts_01",
-    "signature": "demo_signature_not_for_production"
+    "signature": "demo_signature_not_for_production",
+    "public_key": "demo_public_key_not_for_production"
   }
 }

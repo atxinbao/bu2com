@@ -152,6 +152,31 @@
       <h2 id="unreleased">Unreleased</h2>
       <article class="release">
         <div class="release-head">
+          <div><h3>Transaction Trust Gate 1 · Receipt v0.2 与界面真实性</h3><time datetime="2026-09-06">2026-09-06</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">修复审计发现的 Receipt 嵌套字段未进入签名和真实 API 状态被前端投影为成功的问题；Epic 3 保持冻结，必须先完成三段 Transaction Trust Gate。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag changed">Changed</span>Reference Sandbox v0.9 使用标准 <code>canonicalize@4.0.0</code> 实现 RFC 8785 JCS；Receipt v0.2 签名覆盖金额、币种、环境、双方身份、Mandate、交付、通道、Provider 引用和时间。</li>
+            <li><span class="tag added">Added</span>新增 SQLite Schema v5 公开验证键归档；验证结果拆分为 <code>signature_valid</code>、<code>issuer_trusted</code>、<code>settlement_confirmed</code>，三者同时成立才允许 <code>valid=true</code>。</li>
+            <li><span class="tag changed">Changed</span>Agent Payment API 升至 v0.1.4，并重新生成 TypeScript SDK 类型；v0.1 Receipt 继续可读取和解释，但不能作为新的可信凭证。</li>
+            <li><span class="tag changed">Changed</span>真实 API 页面保留 Transaction 原始状态；无 Receipt、未知或验证失败不再显示成功，Simulation Provider 引用不再伪装成 Base Sepolia 链上哈希。</li>
+            <li><span class="tag governance">Governance</span>新增 Transaction Trust Gate，明确数据库原子性与 x402 Testnet 可信执行是 Epic 3 外部试点的后续前置。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R2 · Receipt 契约、验证语义、数据库追加迁移和交易界面变化，必须人工审查后合并</span></div>
+          <div><b>金融行为影响</b><span>不改变交易金额和状态机；收紧成功判定，旧版、未知签发方或结算不匹配的 Receipt 统一失败关闭</span></div>
+          <div><b>兼容性</b><span>旧交易与 Receipt 可读；新签发固定 v0.2；API v0.1.4、Sandbox v0.9.0、MCP v0.1.0</span></div>
+          <div><b>验证</b><span>Contract 42 项、Sandbox 70/70、SDK 8/8、Prototype lint/build、Chrome 桌面与移动回归均通过，控制台 0 error/warning</span></div>
+          <div><b>恢复</b><span>回退应用与契约即可恢复旧行为；Schema v5 为纯追加公钥归档表，可保留且不会改写交易历史</span></div>
+        </div>
+      </article>
+
+      <article class="release">
+        <div class="release-head">
           <div><h3>Phase 0 Epic 3 外部试点证据范围冻结</h3><time datetime="2026-09-06">2026-09-06</time></div>
           <span class="status">Unreleased</span>
         </div>

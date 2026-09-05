@@ -12,7 +12,7 @@ BU2.com 是 Agent 的 AI 收付平台。它嵌入 ChatGPT、Codex、Claude 和�
 | 当前 Epic | Epic 3 · External Pilot Readiness & Evidence |
 | 产品定义 | Product v0.3 · Transaction-first |
 | API 契约 | Agent Payment API v0.1 |
-| Reference Server | Sandbox v0.8 · Node.js + SQLite WAL + MCP |
+| Reference Server | Sandbox v0.9 · Node.js + SQLite WAL + MCP |
 | TypeScript SDK | `@bu2/sdk` v0.1 · Monorepo private package |
 | MCP 分发 | stdio v0.1 · Codex / Claude Desktop / Generic Host |
 | 接入诊断 | `bu2-doctor` v0.1 · 本地执行 / 零远程遥测 |
@@ -62,7 +62,7 @@ BU2 将授权、资金预留、交付、结算和退款保存为不同事实。�
 - 本地 `bu2-doctor`：Node、endpoint、环境、契约、MCP 启动和 Receipt 验证诊断；支持 JSON 与中英文恢复提示。
 - OpenAPI 生成类型的 `@bu2/sdk` v0.1 薄客户端；显式幂等、无自动重试和错误恢复分类。
 - HTTP、SDK tarball 和 MCP stdio 三条全新临时项目接入证据；均在 15 分钟内生成有效 Simulation Receipt。
-- Ed25519 签名 Receipt 及独立验证。
+- Receipt v0.2：Ed25519、RFC 8785 JCS、持久化公开验证键，以及签名、签发方和结算绑定三项独立验证。
 - 中英文 Transaction-first 产品界面，可展示真实 Sandbox API 数据并在离线时降级到演示数据。
 - OpenAPI 3.1、Agent 原生 MCP 工具和完整交易示例。
 
@@ -93,7 +93,7 @@ npm --prefix packages/typescript-sdk test
 npm --prefix sandbox run acceptance:clean-room
 ```
 
-当前基线应得到：Contract 39 项不变量通过、6 个 MCP 工具有效、Sandbox 68/68 通过、TypeScript SDK 8/8 通过、三条 clean-room 路径全部生成有效 Simulation Receipt、Prototype lint 与 build 通过。
+当前基线应得到：Contract 42 项不变量通过、6 个 MCP 工具有效、Sandbox 70/70 通过、TypeScript SDK 8/8 通过、三条 clean-room 路径全部生成有效 Simulation Receipt、Prototype lint 与 build 通过。
 
 ### 运行接入诊断
 

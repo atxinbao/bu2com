@@ -189,7 +189,7 @@ export function createBu2Server({
               ? "attention_required"
               : "healthy",
           service: "bu2-reference-server",
-          version: "0.8.0",
+          version: "0.9.0",
           api_contract_version: contractVersions.agent_payment_api,
           api_base_path: contractVersions.api_base_path,
           mcp_contract_versions: [contractVersions.mcp_tools],
@@ -474,5 +474,5 @@ export async function listen({
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
   const running = await listen({ logSink: (line) => console.log(line) });
-  console.log(`BU2 Reference Server v0.8 listening on ${running.url}`);
+  console.log(`BU2 Reference Server v0.9 listening on ${running.url}`);
 }

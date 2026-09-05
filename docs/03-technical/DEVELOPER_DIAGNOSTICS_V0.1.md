@@ -50,7 +50,7 @@ npm --prefix sandbox run doctor -- --receipt-id rcpt_...
 | `configuration` | endpoint 合法，环境为 `simulation` 或 `testnet` | 否 |
 | `endpoint` | `/health` 可达且属于 BU2 Reference Server | 否 |
 | `environment` | 配置与 Server 报告环境一致 | 否 |
-| `contract` | API v0.1.3、`/v1` 与 MCP v0.1.0 兼容 | 否 |
+| `contract` | API v0.1.4、`/v1` 与 MCP v0.1.0 兼容 | 否 |
 | `mcp_startup` | 真实 stdio initialize、能力握手和 6 个冻结工具一致 | 否 |
 | `receipt_verification` | 验证工具可用，或对显式 Receipt ID 执行只读验证 | 否 |
 
@@ -123,7 +123,7 @@ Without `--receipt-id`, the doctor only confirms that MCP exposes and can call `
 | `configuration` | Endpoint is valid and environment is `simulation` or `testnet` | No |
 | `endpoint` | `/health` is reachable and identifies a BU2 Reference Server | No |
 | `environment` | Configured and server-reported environments match | No |
-| `contract` | API v0.1.3, `/v1`, and MCP v0.1.0 are compatible | No |
+| `contract` | API v0.1.4, `/v1`, and MCP v0.1.0 are compatible | No |
 | `mcp_startup` | Real stdio initialize, capability handshake, and six frozen tools match | No |
 | `receipt_verification` | Verification tool is available, or a supplied Receipt ID is verified read-only | No |
 

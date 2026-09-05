@@ -53,7 +53,90 @@ test("full payment flow separates authorization, reservation, delivery, and sett
   assert.equal(result.transaction.status, "settled");
   assert.equal(result.transaction.settled_amount.value, 3900);
   assert.equal(sandbox.wallet.reserved, 0);
-  assert.equal(sandbox.verifyReceipt(result.receipt.id).valid, true);
+  const verification = sandbox.verifyReceipt(result.receipt.id);
+  assert.deepEqual(
+    {
+      valid: verification.valid,
+      signature_valid: verification.signature_valid,
+      issuer_trusted: verification.issuer_trusted,
+      settlement_confirmed: verification.settlement_confirmed,
+      schema_version: verification.schema_version,
+      canonicalization_version: verification.canonicalization_version,
+    },
+    {
+      valid: true,
+      signature_valid: true,
+      issuer_trusted: true,
+      settlement_confirmed: true,
+      schema_version: "0.2",
+      canonicalization_version: "RFC8785-JCS-1",
+    },
+  );
+});
+
+test("Receipt v0.2 rejects tampering of every signed payment and delivery binding", async () => {
+  const sandbox = new Bu2Sandbox();
+  const { intent } = await createReviewIntent(sandbox);
+  const authorized = await sandbox.decideAuthorization(
+    intent.id,
+    { decision: "authorize" },
+    "tamper-authorize-key",
+  );
+  sandbox.submitDelivery(
+    authorized.transaction_id,
+    { type: "dataset_access", evidence_hash: "sha256:tamper-proof" },
+    "tamper-delivery-key",
+  );
+  const { receipt } = await sandbox.settle(
+    authorized.transaction_id,
+    {},
+    "tamper-settlement-key",
+  );
+  const original = structuredClone(receipt);
+  const tamperedValues = [
+    ["amount", { value: 999_999, currency: "CNY" }],
+    ["amount", { value: 3900, currency: "USD" }],
+    ["payee_account_id", "acct_attacker"],
+    ["payment_mandate_id", "mdt_attacker"],
+    ["delivery_evidence_hash", "sha256:attacker"],
+    ["environment", "mainnet"],
+    ["provider_reference", "provider_attacker"],
+  ];
+  for (const [field, value] of tamperedValues) {
+    sandbox.receipts.set(receipt.id, { ...structuredClone(original), [field]: value });
+    const verification = sandbox.verifyReceipt(receipt.id);
+    assert.equal(verification.signature_valid, false, `expected ${field} tamper to fail`);
+    assert.equal(verification.valid, false, `expected ${field} tamper to be invalid`);
+  }
+});
+
+test("Receipt verification fails closed when the issuer is unknown", async () => {
+  const sandbox = new Bu2Sandbox();
+  const { intent } = await createReviewIntent(sandbox);
+  const authorized = await sandbox.decideAuthorization(
+    intent.id,
+    { decision: "authorize" },
+    "unknown-issuer-authorize-key",
+  );
+  sandbox.submitDelivery(
+    authorized.transaction_id,
+    { type: "dataset_access", evidence_hash: "sha256:unknown-issuer" },
+    "unknown-issuer-delivery-key",
+  );
+  const { receipt } = await sandbox.settle(
+    authorized.transaction_id,
+    {},
+    "unknown-issuer-settlement-key",
+  );
+  sandbox.receipts.set(receipt.id, {
+    ...receipt,
+    verification_key_id: "key_unknown",
+  });
+  const verification = sandbox.verifyReceipt(receipt.id);
+  assert.equal(verification.signature_valid, true);
+  assert.equal(verification.issuer_trusted, false);
+  assert.equal(verification.settlement_confirmed, true);
+  assert.equal(verification.valid, false);
 });
 
 test("same idempotency key and body returns the original resource", () => {
