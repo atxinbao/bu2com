@@ -141,10 +141,11 @@
   <div class="progress" aria-hidden="true"></div>
   <div class="shell">
     <aside>
-      <div class="identity"><span class="mark">BU2</span><div><strong>项目总纲</strong><small>PROJECT ALIGNMENT · V1.0</small></div></div>
+      <div class="identity"><span class="mark">BU2</span><div><strong>项目总纲</strong><small>PROJECT ALIGNMENT · V1.1</small></div></div>
       <nav aria-label="页面目录">
         <a href="#position">项目定位</a>
         <a href="#modes">执行模式</a>
+        <a href="#environments">系统环境</a>
         <a href="#principal">主体与授权</a>
         <a href="#registry">监管能力注册表</a>
         <a href="#mandate">Agent 原生授权</a>
@@ -161,7 +162,7 @@
         <p class="eyebrow">BU2.COM · PROJECT ALIGNMENT &amp; FUTURE ROADMAP</p>
         <h1>项目总纲与监管可演进模型</h1>
         <p class="lead">在 AI Agent 支付法域仍然模糊的阶段，BU2 不等待一个全球统一答案，而是通过可配置的监管状态、有限授权与分层执行模式，在保持技术前进的同时控制真实资金边界。</p>
-        <div class="hero-meta"><span>版本 1.0</span><span>生效日期 2026-09-01</span><span>状态 Project Baseline</span><span>维护者 BU2 Engineering / Codex</span></div>
+        <div class="hero-meta"><span>版本 1.1</span><span>生效日期 2026-09-06</span><span>状态 F01 / ENV-01 Proposed</span><span>维护者 BU2 Engineering / Codex</span></div>
       </header>
 
       <div class="decision">
@@ -189,7 +190,7 @@
         <h2>二、四种支付执行模式</h2>
         <p>监管边界不写死在 Transaction Core 中。真实能力通过 <code>ExecutionMode</code> 和有效的监管能力授权逐级开放。</p>
         <div class="modes">
-          <div class="mode"><div class="mode-code">SIMULATED</div><div><h3>模拟与测试网</h3><p>用于原型、测试、Demo 与 Base Sepolia。禁止真实法币和主网资产，不形成真实支付义务。</p></div><span class="state live">Enabled now</span></div>
+          <div class="mode"><div class="mode-code">SIMULATED</div><div><h3>本地模拟执行</h3><p>仅用于 local 开发、自动化测试与故障注入；不是对外 Sandbox，也不形成链上支付证据。</p></div><span class="state live">Local only</span></div>
           <div class="mode"><div class="mode-code">NON_CUSTODIAL</div><div><h3>用户控制资金</h3><p>用户或企业控制钱包/支付账户，BU2 验证 Mandate 和策略，Provider 或 Facilitator 执行，资金直接到商户。</p></div><span class="state partner">First live</span></div>
           <div class="mode"><div class="mode-code">LICENSED_PARTNER</div><div><h3>持牌合作方执行</h3><p>银行卡、银行账户、法币钱包、稳定币托管与出入金由持牌 PSP、银行或托管机构完成。</p></div><span class="state partner">Partner gated</span></div>
           <div class="mode"><div class="mode-code">BU2_CUSTODIAL</div><div><h3>BU2 自有托管</h3><p>仅保留接口和未来数据边界。在牌照、资产隔离、双式账本、合规与运营条件完成前永久禁止启用。</p></div><span class="state off">Disabled</span></div>
@@ -205,8 +206,23 @@ Provider / x402 Facilitator 执行
 商户收款 + BU2 Receipt + Reconciliation</div>
       </section>
 
+      <section class="section" id="environments">
+        <h2>三、Sandbox / Live 系统环境</h2>
+        <p>对外服务环境只有 <code>sandbox</code> 与 <code>live</code>；内部开发环境为 <code>local</code>。环境、执行后端和资金准入相互独立，不能从 Adapter 名称推导环境，也不能用 <code>live</code> 字符串代替主网付款许可。</p>
+        <div class="position-grid">
+          <div class="position-card yes"><b>Sandbox</b><ul><li>Base Sepolia · 84532</li><li><code>eip155:84532</code></li><li>x402 测试资产</li><li>托管开放需独立验收</li></ul></div>
+          <div class="position-card no"><b>Live</b><ul><li>Base Mainnet · 8453</li><li><code>eip155:8453</code></li><li>初始 <code>execution_disabled</code></li><li>G-L 前禁止签名和广播</li></ul></div>
+        </div>
+        <p>Sandbox 与 Live 复用同一不可变软件制品，但数据库、API key、Signer、Receipt 信任域、Webhook、队列、存储、备份和运行身份必须隔离。现有运行时仍使用 legacy <code>simulation/testnet</code>；本决策由 ENV-02/03 分步实现，旧 Receipt 保留原字段和原签名解释。</p>
+        <div class="flow">local + simulated
+sandbox + x402 + 84532
+live + x402 + 8453 + execution_disabled
+
+任何其他组合 = DENIED</div>
+      </section>
+
       <section class="section" id="principal">
-        <h2>三、法律主体与责任链</h2>
+        <h2>四、法律主体与责任链</h2>
         <p>系统不允许 <code>AgentIdentity</code> 脱离法律主体成为独立付款人。每笔真实交易必须能够回到一个自然人或法人。</p>
         <div class="flow">LegalPrincipal (natural_person | legal_entity)
         ↓
@@ -229,7 +245,7 @@ Provider Execution</div>
       </section>
 
       <section class="section" id="registry">
-        <h2>四、监管能力注册表</h2>
+        <h2>五、监管能力注册表</h2>
         <p>系统不使用简单的“国家允许/禁止”开关，而是根据主体、商户、资产、网络、Provider 和控制能力判断某条执行路径是否获得批准。</p>
         <div class="profile"><pre>RegulatoryProfile
 ├── principal_jurisdiction
@@ -246,13 +262,13 @@ Provider Execution</div>
 ├── legal_review_id
 └── expires_at</pre></div>
         <p>每个 Adapter 必须绑定有效的 <code>CapabilityGrant</code>。当“法域 × 主体 × 商户 × 资产 × 网络 × Provider × 服务行为”没有有效授权时：</p>
-        <div class="flow">LIVE EXECUTION = DENIED
-SIMULATION     = ALLOWED</div>
+        <div class="flow">LIVE EXECUTION  = DENIED
+LOCAL SIMULATION = ALLOWED</div>
         <p>监管判断必须有版本和有效期；过期后自动降级为暂停真实执行，而不是继续沿用历史判断。</p>
       </section>
 
       <section class="section" id="mandate">
-        <h2>五、Agent 原生授权模型</h2>
+        <h2>六、Agent 原生授权模型</h2>
         <p>模型可以提出支付意图，但不得自行修改金额边界、扩大权限或改变 Mandate。所有资金判断由确定性系统完成。</p>
         <div class="flow">Principal Mandate
   → Agent Delegation
@@ -266,7 +282,7 @@ SIMULATION     = ALLOWED</div>
       </section>
 
       <section class="section" id="ledger">
-        <h2>六、双层账本事实模型</h2>
+        <h2>七、双层账本事实模型</h2>
         <p>非托管并不意味着不需要账本。BU2 必须保存自身交易事实和外部资金证据，但不得声称内部记录天然等于真实资金完成。</p>
         <div class="ledger-grid">
           <div class="ledger"><h3>BU2 交易事实</h3><ul><li>requested / authorized</li><li>provider_submitted</li><li>provider_unknown</li><li>provider_confirmed</li><li>delivery_verified</li><li>reconciled / refunded / disputed</li></ul></div>
@@ -280,9 +296,9 @@ SIMULATION     = ALLOWED</div>
       </section>
 
       <section class="section" id="roadmap">
-        <h2>七、未来路线图</h2>
+        <h2>八、未来路线图</h2>
         <div class="roadmap">
-          <div class="phase"><b>Phase 0 · 当前</b><p>模拟资金、Base Sepolia、PaymentMandate、策略判断、Receipt、持久化账本和自动化测试；不接触真实生产资金。</p></div>
+          <div class="phase"><b>Phase 0 · 当前</b><p>Local Simulation、隔离 Sandbox、Base Sepolia、PaymentMandate、策略判断、Receipt、持久化账本和自动化测试；Live 仅纳入架构且 execution disabled。</p></div>
           <div class="phase"><b>Phase 1 · 受限真实试点</b><p>邀请制、用户控制非托管钱包、单一 USDC、单一网络、低限额、商户白名单、每笔可验证 Receipt；禁止提现、换汇、资金归集和跨客户代付。</p></div>
           <div class="phase"><b>Phase 2 · 持牌合作方</b><p>引入银行卡、银行账户和法币能力；合作方负责客户资金、KYC/KYB、AML 与真实结算，BU2 负责 Agent 授权和支付控制层。</p></div>
           <div class="phase"><b>Phase 3 · 牌照评估</b><p>只有客户明确要求 BU2 持有余额、统一结算、跨客户调拨或直接出入金时，才启动自有牌照与托管能力评估。</p></div>
@@ -290,12 +306,14 @@ SIMULATION     = ALLOWED</div>
       </section>
 
       <section class="section" id="gates">
-        <h2>八、阶段准入门槛</h2>
+        <h2>九、阶段准入门槛</h2>
         <table class="gate-table">
           <thead><tr><th>能力</th><th>当前状态</th><th>开放条件</th></tr></thead>
           <tbody>
-            <tr><td>Simulation / Testnet</td><td>允许</td><td>明确模拟标识、测试资产、自动化测试和可重放证据</td></tr>
-            <tr><td>非托管主网支付</td><td>待批准</td><td>用户控制签名、低限额、白名单、CapabilityGrant、独立法律审查和完整对账</td></tr>
+            <tr><td>Local Simulation</td><td>允许内部使用</td><td>明确 local + simulated，不计作 Sandbox 链上验收</td></tr>
+            <tr><td>Sandbox</td><td>建设中</td><td>固定 Base Sepolia、环境隔离、受限凭证、托管验收和真实测试网证据</td></tr>
+            <tr><td>G-F 基础系统准入</td><td>未通过</td><td>F/ENV 对应身份、授权、收付、账本、对账与运营证据完整</td></tr>
+            <tr><td>Live 非托管主网支付</td><td>execution disabled</td><td>G-F 后另经 G-L、有效 CapabilityGrant、租户启用、低限额、白名单、法律审查和完整对账</td></tr>
             <tr><td>法币与托管支付</td><td>仅合作方</td><td>持牌 Provider、责任矩阵、KYC/KYB、AML、投诉和争议流程</td></tr>
             <tr><td>BU2 内部可提现余额</td><td>禁止</td><td>对应牌照、客户资产隔离、双式客户总账、审计、准备金和监管报告</td></tr>
             <tr><td>跨境/换汇/跨链</td><td>禁止</td><td>逐法域与逐通道批准、定价与汇率规则、制裁筛查、结算和失败恢复方案</td></tr>
@@ -305,18 +323,19 @@ SIMULATION     = ALLOWED</div>
       </section>
 
       <section class="section" id="sources">
-        <h2>九、依据与解释边界</h2>
+        <h2>十、依据与解释边界</h2>
         <ul class="sources">
           <li><a href="https://www.fca.org.uk/firms/account-information-services-payment-initiation-services">英国 FCA：支付发起服务监管说明</a>——说明不持有账户本身并不自动排除支付发起监管。</li>
           <li><a href="https://www.fincen.gov/resources/statutes-regulations/guidance/application-fincens-regulations-certain-business-models">美国 FinCEN：虚拟货币业务模型指引</a>——监管判断关注资产所有权、存储、交互路径与中间方控制能力。</li>
           <li><a href="https://www.hkma.gov.hk/media/eng/doc/key-functions/finanical-infrastructure/infrastructure/retail-payment-initiatives/Explanatory_note_on_licensing_for_SVF.pdf">香港金管局：储值支付工具许可说明</a>——储存价值并用于第三方支付可能进入许可范围。</li>
           <li><a href="https://developers.googleblog.com/en/developers-guide-to-ai-agent-protocols/">Google：Agent Payments Protocol</a>——提供 IntentMandate、PaymentMandate 和 PaymentReceipt 的授权审计思路。</li>
           <li><a href="https://docs.cdp.coinbase.com/payments/overview">Coinbase：托管与非托管支付架构</a>、<a href="https://docs.cdp.coinbase.com/x402/core-concepts/facilitator">x402 Facilitator</a>——提供用户控制钱包、点对点支付与 Facilitator 边界参考。</li>
+          <li><a href="https://docs.base.org/base-chain/api-reference/ethereum-json-rpc-api/eth_chainId">Base：eth_chainId</a>、<a href="https://developers.circle.com/stablecoins/usdc-contract-addresses">Circle：USDC 合约地址</a>——确认 Base Mainnet/Sepolia 的链标识、资产地址与测试资产边界。</li>
         </ul>
         <p class="notice">本文件是产品和技术边界方案，不构成任何司法辖区的法律意见。具体真实执行路径仍需结合目标市场、业务流程和合作方进行独立法律审查，并形成版本化 CapabilityGrant。</p>
       </section>
 
-      <footer>BU2.com · Project Alignment v1.0 · 与 ARCHITECTURE.html、GOVERNANCE.html、AGENTS.md 和 CHANGELOG.html 协同生效</footer>
+      <footer>BU2.com · Project Alignment v1.1 · 与 ARCHITECTURE.html、GOVERNANCE.html、AGENTS.md、SYSTEM_ENVIRONMENTS_V1.md 和 CHANGELOG.html 协同生效</footer>
     </main>
   </div>
   <a class="back-top" href="#" aria-label="返回顶部">↑</a>

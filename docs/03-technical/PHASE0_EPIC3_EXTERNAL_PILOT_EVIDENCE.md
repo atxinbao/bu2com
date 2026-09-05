@@ -2,7 +2,7 @@
 
 日期：2026-09-06
 执行者：Codex
-状态：Blocked by Transaction Trust Gate · scope frozen
+状态：Ready after Transaction Trust Gate · waiting for ENV-02/03 and hosted Sandbox prerequisites
 Epic 风险等级：R2（外部试点会执行现有交易路径，不包含生产资金）
 本次范围冻结风险等级：R0（仅文档与状态对齐）
 
@@ -12,7 +12,7 @@ Epic 风险等级：R2（外部试点会执行现有交易路径，不包含生�
 
 本 Epic 不再证明“仓库内代码能否运行”，而是回答三个产品问题：
 
-1. 外部团队能否在不修改 BU2 源码的情况下完成第一笔有效 Simulation Receipt？
+1. 外部团队能否在不修改 BU2 源码的情况下，通过托管 Sandbox 完成第一笔有效 Base Sepolia Receipt？
 2. 接入失败时，团队能否依靠版本信息、`doctor`、稳定错误码和恢复建议自行定位问题？
 3. 团队是否愿意继续进入受限真实支付评估，并能指出 BU2 对其 Agent 收付流程的具体价值？
 
@@ -20,7 +20,9 @@ Epic 风险等级：R2（外部试点会执行现有交易路径，不包含生�
 
 ## 2. 前置状态
 
-- Transaction Trust Gate 的 Receipt v0.2、数据库原子性与 x402 Testnet 可信执行必须全部通过并合并；在此之前不得开始外部团队试点。
+- Transaction Trust Gate 的 Receipt v0.2、数据库原子性与 x402 Testnet 可信执行已经 PR #15–#17 通过并合并。
+- F01/ENV-01 必须先冻结 `local/sandbox/live` 语义；ENV-02 环境注册表与链隔离、ENV-03 客户端和 Receipt 环境契约迁移必须在正式外部团队试点前完成。
+- 托管 Sandbox 的访问、租户、限额测试凭证、隔离数据、回调和运营门槛必须满足后，才能邀请外部团队；不能为了取证公开无认证 Reference Server。
 - Epic 1 已通过 PR #8 合并并标记 Done。
 - Epic 2 的 E2.1–E2.4 已通过 PR #10–#13 合并，TypeScript SDK、MCP Host、`doctor` 和三路径 clean-room 证据均已建立。
 - HTTP、SDK 与 MCP 三条自动 clean-room 路径已在独立 Local Simulation 环境生成有效 Receipt。
@@ -46,8 +48,8 @@ AI Agent 可以实现、验证和整理证据，但不得伪造外部团队、�
 ```text
 外部团队选择自己的 Agent 与真实业务样例
   → 在本地读取版本化 Pilot Manifest
-  → 使用 HTTP、TypeScript SDK 或 MCP 连接 BU2 Simulation
-  → 运行 doctor，确认 endpoint、环境、契约与 Receipt 能力
+  → 使用 HTTP、TypeScript SDK 或 MCP 连接 BU2 Sandbox
+  → 运行 doctor，确认受信 endpoint、sandbox、Base Sepolia、契约、执行状态与 Receipt issuer
   → 外部 Agent 提交 Quote / PaymentIntent
   → 人类或既有 Mandate 完成明确授权
   → Seller Agent 提交 DeliveryEvidence
@@ -68,11 +70,11 @@ BU2 不要求试点团队复制 Prompt、上传私人会话、迁移任务或把
 - 明确自动化证据与外部用户证据的区别。
 - 保持 Phase 0，不把范围冻结解释为 Phase 1 或真实资金准入。
 
-### E3.1 — Pilot Manifest 与本地启动门槛
+### E3.1 — Pilot Manifest 与 Sandbox 启动门槛
 
 - 新增版本化 Pilot Manifest，声明 API、SDK、MCP、doctor、Evidence Schema、环境和支持的接入路径。
 - 提供单一预检入口，复用现有 `doctor` 和 clean-room，不复制健康检查或交易语义。
-- 在发生交易 mutation 前验证环境、契约版本、MCP 能力与 Receipt 验证能力。
+- 在发送敏感凭证或发生交易 mutation 前验证受信 endpoint、Sandbox、Base Sepolia、环境契约版本、MCP 能力、execution status 与 Receipt issuer。
 - Manifest 不包含 API Key、私钥、钱包地址、客户数据或动态授权值。
 
 ### E3.2 — 最小 Pilot Evidence 与显式共享
@@ -92,8 +94,8 @@ BU2 不要求试点团队复制 Prompt、上传私人会话、迁移任务或把
 ### E3.4 — 三团队外部试点与阶段决策
 
 - 由至少 3 个相互独立的外部团队在各自环境完成试点；自动化 Agent 或 BU2 内部重复运行不能计作外部团队。
-- 每个团队至少让一个现有 Agent 完成一笔完整 Simulation 交易并验证 Receipt；整个样本至少覆盖两种接入路径。
-- Base Sepolia 仅在参与者明确同意测试网资产边界后作为可选附加路径；不得成为试点通过的必要条件。
+- 每个团队至少让一个现有 Agent 在托管 Sandbox 完成一笔真实 Base Sepolia 双向收付并验证 Receipt；整个样本至少覆盖两种接入路径。
+- 参与者在开始前确认测试资产无真实金融价值、测试钱包与数据边界；运行过程中不得要求 Owner 逐笔代操作或临时批准。
 - Product Owner 汇总完成率、接入耗时、失败阶段、人工协助、价值反馈和继续试点意愿，并给出 Go / Iterate / Stop 结论。
 
 ## 6. 核心对象与契约
@@ -127,7 +129,7 @@ Pilot Manifest + Doctor Result + Pilot Evidence
 ### 接入有效性
 
 - 至少 3 个外部团队完成试点。
-- 每个团队都从自身 Agent 环境生成至少 1 个 `receipt_valid=true` 的 Simulation Receipt。
+- 每个团队都从自身 Agent 环境通过托管 Sandbox 生成至少 1 个 `receipt_valid=true` 的 Base Sepolia Receipt，并保存 network、Provider 与链上引用证据。
 - 整个样本至少覆盖 HTTP、SDK、MCP 中的 2 条路径。
 - 接入不要求修改 BU2 源码，也不要求在 BU2 创建 Task。
 
@@ -168,15 +170,15 @@ E3.4 必须提供真实外部团队证据。自动化测试只能证明工具正
 - 不把用户任务、工作流、Prompt 或完整 Agent 项目迁移到 BU2。
 - 不建设 BU2 Task 工作台、通用 Agent Runtime、Agent 市场或插件市场。
 - 不公开发布 npm 包、不托管远程 MCP、不开放公网生产 Reference Server。
-- 不增加 Python SDK、第二支付协议、第二资产、第二网络或第二真实支付通道。
-- 不开放 Mainnet、真实资金、法币、托管、提现、换汇、跨链、资金归集或跨客户代付。
+- 不增加 Python SDK、第二支付协议、第二资产或第二真实支付通道。
+- Live/Base Mainnet 仅作为隔离架构目标，保持 `execution_disabled`；不开放主网付款、真实资金、法币、托管、提现、换汇、跨链、资金归集或跨客户代付。
 - 不发放生产 API Key，不收集生产客户数据，不建立默认远程遥测。
 - 不把测试网成功、用户意向或 PR 合并描述为法律合规或生产准入。
 
 ## 10. 失败、停止与恢复
 
 - Manifest、API、SDK 或 MCP 版本不兼容：在任何交易 mutation 前停止。
-- 环境无法证明为 Simulation/Testnet：默认拒绝继续。
+- endpoint、环境、chain、execution status 或 Receipt issuer 无法证明为批准的 Sandbox 配置：在发送凭证或 mutation 前拒绝继续。
 - 交易结果未知：停止自动动作，按 Transaction ID、request/trace ID 或 Provider reference 查询与对账。
 - Receipt 无效：试点失败，保留最小证据，不将交易计入完成指标。
 - 证据含敏感字段或共享范围不明确：禁止导出或上传，先完成本地清理与重新预览。
@@ -190,7 +192,7 @@ E3.4 必须提供真实外部团队证据。自动化测试只能证明工具正
 - Pilot 上下文与交易真相的所有权边界明确。
 - E3.1–E3.4 顺序、指标、失败、恢复和人工证据要求明确。
 - 数据字段、显式共享、脱敏与零默认上传边界明确。
-- Phase 0、Simulation/Testnet 和禁止能力边界明确。
+- Phase 0、Local Simulation、Sandbox Testnet、Live execution disabled 和禁止能力边界明确。
 
 ## 12. Definition of Done
 
@@ -201,6 +203,6 @@ E3.4 必须提供真实外部团队证据。自动化测试只能证明工具正
 3. 试点指标、失败、人工协助、价值反馈和未覆盖路径已进入版本化报告。
 4. API、SDK、MCP、doctor、Pilot Manifest、Evidence Schema、文档和 Changelog 保持一致。
 5. Product Owner 和 Project Owner 对 Go / Iterate / Stop 结论完成人工审查。
-6. 没有开放 Mainnet、真实资金、托管、生产 Secret、公开分发或远程 MCP。
+6. Live 保持 execution disabled，没有开放 Mainnet、真实资金、托管、生产 Secret、公开分发或远程 MCP。
 
-结论：Epic 3 达到 **Ready**。下一实现项为 E3.1 Pilot Manifest 与本地启动门槛；本文件不构成 Phase 1、公开分发、Mainnet、真实资金、托管或生产部署授权。
+结论：Epic 3 的产品目标和证据要求达到 **Ready**，但实施顺序调整为先完成 F01/ENV-01、ENV-02/03 和托管 Sandbox 前置，再进入 E3.1。Local Simulation 继续作为自动化工具证据，不能计作正式 Sandbox 外部试点；本文件不构成 Phase 1、公开分发、Live/Mainnet、真实资金、托管或生产部署授权。

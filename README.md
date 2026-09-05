@@ -8,22 +8,31 @@ BU2.com 是 Agent 的 AI 收付平台。它嵌入 ChatGPT、Codex、Claude 和�
 
 | 项目 | 当前基线 |
 | --- | --- |
-| 项目阶段 | Phase 0 · Simulation / Testnet |
-| 当前工程关卡 | Transaction Trust Gate 3 · x402 Testnet Trusted Execution |
+| 项目阶段 | Phase 0 · local execution / Sandbox architecture |
+| 当前工程关卡 | F01 / ENV-01 · Sandbox / Live 环境决策冻结 |
 | 产品定义 | Product v0.3 · Transaction-first |
 | API 契约 | Agent Payment API v0.1 |
-| Reference Server | Sandbox v0.11 · Node.js + SQLite WAL + MCP |
+| Reference Server | v0.11 · Node.js + SQLite WAL + MCP（legacy package 名称含 sandbox） |
 | TypeScript SDK | `@bu2/sdk` v0.1 · Monorepo private package |
 | MCP 分发 | stdio v0.1 · Codex / Claude Desktop / Generic Host |
 | 接入诊断 | `bu2-doctor` v0.1 · 本地执行 / 零远程遥测 |
 | Clean-room 验收 | HTTP / TypeScript SDK / MCP · 3/3 Simulation 通过 |
-| 支付通道 | Simulated Adapter + x402 Base Sepolia Adapter |
+| 支付通道 | local Simulated Adapter + x402 Base Sepolia Adapter |
 | 产品界面 | React 19 + TypeScript 双语原型 |
-| 生产边界 | Mainnet、客户资金托管和法币能力尚未开放 |
+| 环境契约 | 对外 `sandbox / live`；内部 `local`；运行时迁移待 ENV-02/03 |
+| 生产边界 | Live 初始 `execution_disabled`；客户资金托管和法币能力尚未开放 |
 
-当前代码已经形成可运行的 Agent 收付闭环，但仍是本地与测试网证据，不是生产支付系统或法律合规结论。
+当前代码已经形成可运行的 Agent 收付闭环，但仍是本地与 Base Sepolia 测试网证据，不是生产支付系统或法律合规结论。当前运行时仍输出 legacy `simulation/testnet` 环境值；F01/ENV-01 只冻结目标契约，不代表 ENV-02/03 的运行时隔离已经实现。
 
-[Phase 0 Epic 1：External Agent Transaction Integration & Reliability](docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md) 已经 PR #8 合并并完成。[Phase 0 Epic 2：Developer Integration Scale](docs/03-technical/PHASE0_EPIC2_DEVELOPER_INTEGRATION_SCALE.md) 已经 PR #10–#13 合并并完成。当前正式开发项为 [Phase 0 Epic 3：External Pilot Readiness & Evidence](docs/03-technical/PHASE0_EPIC3_EXTERNAL_PILOT_EVIDENCE.md)：验证真实外部团队能否在自己的 Agent 工作流中完成 BU2 Simulation 收付闭环，不把任务迁移到 BU2，也不自动进入 Phase 1。
+[Phase 0 Epic 1：External Agent Transaction Integration & Reliability](docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md) 与 [Phase 0 Epic 2：Developer Integration Scale](docs/03-technical/PHASE0_EPIC2_DEVELOPER_INTEGRATION_SCALE.md) 已完成。Transaction Trust Gate 1–3 已经 PR #15–#17 合并。当前先执行 [F01 / ENV-01 系统环境契约](docs/03-technical/SYSTEM_ENVIRONMENTS_V1.md)，再由 ENV-02/03 落实环境注册表、跨链拒绝和客户端契约迁移。[Phase 0 Epic 3](docs/03-technical/PHASE0_EPIC3_EXTERNAL_PILOT_EVIDENCE.md) 保持 Ready，但正式外部证据升级为托管 Sandbox 的真实 Base Sepolia 双向收付，不再以 Local Simulation 代替。
+
+## 环境定义
+
+- `local`：内部开发环境，只允许 `simulated` 执行，用于单元测试、故障注入和 clean-room 工具证明。
+- `sandbox`：对外测试环境，固定 Base Sepolia（84532）与 x402；测试资产没有真实金融价值。
+- `live`：对外主网环境，固定 Base Mainnet（8453）；初始 `execution_disabled`，配置存在不等于获准付款。
+
+服务环境、执行后端和资金准入是三个独立维度。完整定义、迁移边界与验收见 [系统环境契约 v1](docs/03-technical/SYSTEM_ENVIRONMENTS_V1.md)、[ADR-0001](docs/03-technical/ADR_0001_SANDBOX_LIVE_ENVIRONMENT_ISOLATION.md) 和[环境验收矩阵 v1](docs/03-technical/ENVIRONMENT_ACCEPTANCE_MATRIX_V1.md)。
 
 ## Agent 支付闭环
 
@@ -62,9 +71,9 @@ BU2 将授权、资金预留、交付、结算和退款保存为不同事实。�
 - 稳定 MCP CLI、endpoint preflight、initialize 版本/能力握手，以及三类 Host 配置。
 - 本地 `bu2-doctor`：Node、endpoint、环境、契约、MCP 启动和 Receipt 验证诊断；支持 JSON 与中英文恢复提示。
 - OpenAPI 生成类型的 `@bu2/sdk` v0.1 薄客户端；显式幂等、无自动重试和错误恢复分类。
-- HTTP、SDK tarball 和 MCP stdio 三条全新临时项目接入证据；均在 15 分钟内生成有效 Simulation Receipt。
+- HTTP、SDK tarball 和 MCP stdio 三条全新临时项目接入证据；均在 15 分钟内生成有效 Local Simulation Receipt。
 - Receipt v0.2：Ed25519、RFC 8785 JCS、持久化公开验证键，以及签名、签发方和结算绑定三项独立验证。
-- 中英文 Transaction-first 产品界面，可展示真实 Sandbox API 数据并在离线时降级到演示数据。
+- 中英文 Transaction-first 产品界面，可展示真实 Reference API 数据并在离线时降级到演示数据。
 - OpenAPI 3.1、Agent 原生 MCP 工具和完整交易示例。
 
 ## 快速开始
@@ -94,7 +103,7 @@ npm --prefix packages/typescript-sdk test
 npm --prefix sandbox run acceptance:clean-room
 ```
 
-当前基线应得到：Contract 42 项不变量通过、6 个 MCP 工具有效、Sandbox 78/78 通过、TypeScript SDK 8/8 通过、三条 clean-room 路径全部生成有效 Simulation Receipt、Prototype lint 与 build 通过。
+当前基线应得到：Contract 42 项不变量通过、6 个 MCP 工具有效、Reference Server 88/88 通过、TypeScript SDK 8/8 通过、三条 clean-room 路径全部生成有效 Local Simulation Receipt、Prototype lint 与 build 通过。
 
 ### 运行接入诊断
 
@@ -120,7 +129,7 @@ npm --prefix sandbox run demo:external
 
 ### 运行三路径 clean-room 验收
 
-以下命令会在三个全新临时项目中分别验证 HTTP、TypeScript SDK tarball 和 MCP stdio 接入，并要求每条路径在 15 分钟内得到有效 Simulation Receipt：
+以下命令会在三个全新临时项目中分别验证 HTTP、TypeScript SDK tarball 和 MCP stdio 接入，并要求每条路径在 15 分钟内得到有效 Local Simulation Receipt：
 
 ```bash
 npm --prefix sandbox run acceptance:clean-room
@@ -196,6 +205,9 @@ bu2com/
 - [Agent Payment API 契约](docs/03-technical/API_CONTRACT_V0.1.md)
 - [OpenAPI 3.1](docs/03-technical/openapi.yaml)
 - [x402 Testnet 可信执行 v0.1](docs/03-technical/X402_TRUSTED_EXECUTION_V0.1.md)
+- [系统环境契约 v1](docs/03-technical/SYSTEM_ENVIRONMENTS_V1.md)
+- [ADR-0001：Sandbox 与 Live 环境隔离](docs/03-technical/ADR_0001_SANDBOX_LIVE_ENVIRONMENT_ISOLATION.md)
+- [环境验收矩阵 v1](docs/03-technical/ENVIRONMENT_ACCEPTANCE_MATRIX_V1.md)
 - [Base Sepolia 实结算证据](docs/03-technical/X402_LIVE_SETTLEMENT_EVIDENCE.md)
 - [Phase 0 Epic 2：开发者接入规模化](docs/03-technical/PHASE0_EPIC2_DEVELOPER_INTEGRATION_SCALE.md)
 - [Phase 0 Epic 3：外部试点准备与证据](docs/03-technical/PHASE0_EPIC3_EXTERNAL_PILOT_EVIDENCE.md)
@@ -220,8 +232,9 @@ bu2com/
 
 ## 当前边界
 
-- Simulation 与 Base Sepolia Testnet：允许。
-- 非托管 Mainnet 支付：待满足 CapabilityGrant、低限额、白名单、法律审查和完整对账。
+- Local Simulation：仅内部开发与自动化验证。
+- Sandbox：固定 Base Sepolia；对外托管开放仍需 ENV-02–07 和相应资金能力门槛。
+- Live：固定 Base Mainnet，初始 `execution_disabled`；只有 G-L、有效 CapabilityGrant、租户启用与 Mandate 同时成立后，才能申请限定范围的非托管执行。
 - 法币与托管支付：只能通过持牌合作方评估。
 - BU2 内部可提现余额：当前禁止。
 - 跨境、换汇和跨链：当前禁止。

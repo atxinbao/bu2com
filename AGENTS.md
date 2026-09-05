@@ -1,7 +1,7 @@
 # AGENTS.md — BU2 金融系统 AI Agent 工程规则
 
-> 版本：1.0  
-> 生效日期：2026-09-01  
+> 版本：1.1
+> 生效日期：2026-09-06
 > 制定与维护：BU2 Engineering / Codex  
 > 适用范围：本文件所在目录及全部子目录。子目录可以增加更严格的规则，不得削弱本文件。
 
@@ -103,7 +103,7 @@ Agent 在修改交易、资金、账本、授权、结算、退款、Receipt、W
 - Adapter 必须验证金额、币种、收款方、网络、通道引用和返回结果，不得让外部协议重新定义 BU2 核心状态。
 - Adapter 不得直接写 Transaction Core 数据库，不得绕过 PaymentMandate、幂等、交付证据、Receipt 或对账。
 - 通道原始响应应保留为证据，但不得直接作为已结算事实。
-- 新 Adapter 必须先在 simulated/sandbox 环境完成契约、故障注入和对账测试，才可申请生产接入。
+- 新 Adapter 必须先在 local simulated 完成契约与故障注入，再在隔离 Sandbox 完成真实测试网对账，才可申请 Live 接入。
 
 ### 3.8 Receipt、签名与凭证
 
@@ -120,7 +120,18 @@ Agent 在修改交易、资金、账本、授权、结算、退款、Receipt、W
 - 迁移必须说明前向步骤、回滚或前滚恢复方案、锁表风险、数据量影响、校验查询和旧版本兼容期。
 - 不得删除列、表、事件类型或历史数据，除非存在批准的 ADR、归档证明、迁移验证和恢复演练。
 - 数据修复必须可重复、可审计、限量执行，并在执行前后生成校验结果；禁止无条件全表更新。
-- 开发、Sandbox 和 Production 必须使用隔离的数据、凭证、密钥和支付账户。
+- local、Sandbox 和 Live 必须使用隔离的数据、凭证、密钥和支付账户。
+
+### 4.1 系统环境契约
+
+- 对外服务环境只有 `sandbox` 与 `live`；内部本地执行环境为 `local`。Mainnet 是 Live 的网络属性，Simulation 是 local 的执行后端，均不得另建对外环境枚举。
+- `local + simulated`、`sandbox + x402 + eip155:84532`、`live + x402 + eip155:8453` 是唯一批准组合；其他组合必须失败关闭，不得跨链或降级为模拟成功。
+- 服务环境、执行后端和资金准入相互独立。不得从 Adapter 名称猜测环境，不得把 `live`、配置文件或布尔开关解释成资金许可。
+- Live 初始为 `execution_disabled`。只有 G-L、有效 CapabilityGrant、租户启用和 PaymentMandate 同时成立，才可在独立授权范围内启用签名或广播。
+- Sandbox 与 Live 必须使用独立数据库、API 凭证、Signer、Receipt 信任域、Webhook、队列、存储、备份、Provider/RPC 和运行身份；只允许复用同一已验证软件制品与版本化模板。
+- 数据库环境 metadata、RPC chain id、资产、Signer、Provider 和 Receipt issuer 任一不一致时，停止资金启动并保留只读查询、观察与对账。
+- 旧 Receipt 的 `simulation/testnet` 字段、签名字节、schema 和 canonicalization 必须原样保留并按原版本验证；不得批量改名或重签历史。
+- 详细契约以 `docs/03-technical/SYSTEM_ENVIRONMENTS_V1.md`、ADR-0001 和环境验收矩阵为准。ENV-02/03 合并前，不得宣称现有运行时已经实现新环境语义。
 
 ## 5. API、事件和版本兼容
 
@@ -136,8 +147,8 @@ Agent 在修改交易、资金、账本、授权、结算、退款、Receipt、W
 ### 6.1 Agent 可以自主执行
 
 - 阅读代码、文档、Schema、测试和非敏感日志；
-- 在本地或隔离 Sandbox 中修改代码并运行自动化测试；
-- 使用模拟支付通道、测试钱包和测试凭证；
+- 在 local 或隔离 Sandbox 中修改代码并运行与该环境相符的自动化测试；
+- 在 local 使用模拟支付通道，或在已批准 Sandbox 使用限额测试钱包和测试凭证；
 - 生成迁移草案、回滚方案、风险分析和只读对账报告；
 - 修复不会触碰真实资金、生产数据或生产凭证的普通缺陷。
 
