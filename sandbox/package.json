@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "bin": {
+    "bu2-doctor": "bin/bu2-doctor.mjs",
     "bu2-mcp": "bin/bu2-mcp.mjs"
   },
   "engines": {
@@ -15,6 +16,7 @@
     "demo": "node demo-agents.mjs",
     "demo:external": "node external-agents/demo.mjs",
     "demo:x402": "node demo-x402-agents.mjs",
+    "doctor": "node bin/bu2-doctor.mjs",
     "mcp": "node bin/bu2-mcp.mjs",
     "x402:merchant": "node x402-merchant.mjs",
     "x402:probe": "node x402-probe.mjs",

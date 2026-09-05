@@ -229,7 +229,27 @@ Product v0.1 可作为客户访谈、交互原型和工程方案设计的输入�
 - TypeScript SDK：生成漂移、格式、lint、严格类型、build 和 8/8 测试通过。
 - Prototype：lint 与生产 build 通过；本轮无 UI 变更，未运行浏览器回归。
 
-结论：E2.2 满足冻结范围并通过 R2 本地验证，可以进入人工审查；不构成远程 MCP 托管、公开包发布、生产凭证、Mainnet 或托管授权。
+结论：E2.2 满足冻结范围并通过 R2 本地验证，已经 PR #11 人工合并；不构成远程 MCP 托管、公开包发布、生产凭证、Mainnet 或托管授权。
+
+## 接入诊断与最小分析 E2.3 验证
+
+日期：2026-09-06
+执行者：Codex
+
+- 前置状态：PR #11 已合并，本地 `main` 已同步到 merge commit `f9a20ab`，已合并 E2.2 分支已删除。
+- 稳定入口：`sandbox/bin/bu2-doctor.mjs`、package `bin` 与 `npm run doctor` 指向同一 CLI；默认输出中文，也支持 `--language en` 全英文和 `--format json` 机器结果。
+- 固定阶段：Node runtime、configuration、endpoint、environment、contract、真实 MCP stdio startup 与 Receipt verification 共 7 阶段；失败后后续检查明确标记 `blocked`。
+- Receipt 语义：未提供 ID 时只验证 `bu2_verify_receipt` 工具存在并报告 `capability_available`；显式提供 Receipt ID 且服务端返回 `valid=true` 后才报告 `verified`。
+- 机器契约：`doctor-result.schema.json` v0.1.0 禁止未知字段，固定检查顺序、结果类别、失败恢复和最小分析边界；版本进入 `contract-versions.json` 和自动契约校验。
+- 失败恢复：稳定输出错误码、`retry_safe` / `retry_after_fix` / `query_before_retry`、恢复代码以及合法 request/trace ID；人类提示由固定文案生成，不回显原始异常。
+- 数据边界：最小分析仅包含阶段、耗时、结果类别和错误码；固定 remote disabled、upload not attempted、persistence none、process lifetime，不存在远程删除动作。
+- Doctor 专项：12/12 通过，覆盖真实 endpoint、真实 MCP initialize、真实 Receipt 验证、Node/Mainnet/endpoint/environment/contract/tool 漂移故障注入、Schema、敏感值不泄漏和中英双语。
+- 契约：35 项不变量与 6/6 MCP 工具通过。
+- Sandbox：64/64 通过，包含既有交易、幂等、并发、持久化、Webhook、x402、Receipt、MCP 分发与新增 doctor 回归。
+- TypeScript SDK：生成漂移、格式、lint、严格类型、build 和 8/8 测试通过。
+- Prototype：lint 与生产 build 通过；本轮无 UI 变更，未运行浏览器回归。
+
+结论：E2.3 满足冻结范围并通过 R2 本地验证，可以进入人工审查；不构成远程遥测、公开分发、生产凭证、Mainnet 或托管授权。
 
 ## Phase 0 开发准入结论
 

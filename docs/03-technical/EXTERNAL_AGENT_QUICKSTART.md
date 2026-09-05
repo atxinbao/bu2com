@@ -61,6 +61,16 @@ BU2_SANDBOX_URL=http://127.0.0.1:3100 npm --prefix sandbox run demo:external
 
 先启动 Reference Server，再将绝对路径替换为本机仓库路径。Host 必须使用稳定入口 `sandbox/bin/bu2-mcp.mjs`，不要直接绑定内部实现文件：
 
+连接 Host 前先运行只读接入诊断：
+
+```bash
+BU2_ENDPOINT=http://127.0.0.1:3100 \
+BU2_ENVIRONMENT=simulation \
+npm --prefix sandbox run doctor
+```
+
+doctor 检查 Node、endpoint、环境、契约、真实 MCP stdio 和 Receipt 验证能力；失败时给出稳定错误码与恢复建议。机器结果和零远程遥测边界见 [`开发者接入诊断 v0.1`](DEVELOPER_DIAGNOSTICS_V0.1.md)。
+
 ```json
 {
   "mcpServers": {

@@ -161,20 +161,24 @@ export async function preflightBu2Endpoint(
     clearTimeout(timer);
   }
   let health;
+  const correlation = {
+    request_id: response.headers.get("x-request-id"),
+    trace_id: response.headers.get("x-trace-id"),
+  };
   try {
     health = await response.json();
   } catch {
     throw new Bu2McpCompatibilityError(
       "endpoint_response_invalid",
       "BU2 endpoint health response must be valid JSON.",
-      { status: response.status },
+      { status: response.status, ...correlation },
     );
   }
   if (!response.ok || health.status !== "ok" || health.service !== "bu2-reference-server") {
     throw new Bu2McpCompatibilityError(
       "endpoint_incompatible",
       "BU2 endpoint did not identify a compatible Reference Server.",
-      { status: response.status },
+      { status: response.status, ...correlation },
     );
   }
   if (
@@ -187,6 +191,7 @@ export async function preflightBu2Endpoint(
       {
         expected: contractVersions.agent_payment_api,
         actual: health.api_contract_version ?? null,
+        ...correlation,
       },
     );
   }
@@ -194,7 +199,7 @@ export async function preflightBu2Endpoint(
     throw new Bu2McpCompatibilityError(
       "environment_mismatch",
       "BU2 endpoint environment does not match BU2_ENVIRONMENT.",
-      { expected: environment, actual: health.environment ?? null },
+      { expected: environment, actual: health.environment ?? null, ...correlation },
     );
   }
   if (
@@ -204,7 +209,7 @@ export async function preflightBu2Endpoint(
     throw new Bu2McpCompatibilityError(
       "mcp_contract_version_unsupported",
       "BU2 endpoint does not advertise support for this MCP contract version.",
-      { expected: mcpContract.version },
+      { expected: mcpContract.version, ...correlation },
     );
   }
   return {
@@ -215,5 +220,6 @@ export async function preflightBu2Endpoint(
     api_contract_version: health.api_contract_version,
     mcp_contract_version: mcpContract.version,
     adapter: health.adapter,
+    ...correlation,
   };
 }

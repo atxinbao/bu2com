@@ -14,6 +14,7 @@ BU2.com 是 Agent 的 AI 收付平台。它嵌入 ChatGPT、Codex、Claude 和�
 | Reference Server | Sandbox v0.8 · Node.js + SQLite WAL + MCP |
 | TypeScript SDK | `@bu2/sdk` v0.1 · Monorepo private package |
 | MCP 分发 | stdio v0.1 · Codex / Claude Desktop / Generic Host |
+| 接入诊断 | `bu2-doctor` v0.1 · 本地执行 / 零远程遥测 |
 | 支付通道 | Simulated Adapter + x402 Base Sepolia Adapter |
 | 产品界面 | React 19 + TypeScript 双语原型 |
 | 生产边界 | Mainnet、客户资金托管和法币能力尚未开放 |
@@ -56,6 +57,7 @@ BU2 将授权、资金预留、交付、结算和退款保存为不同事实。�
 - x402 challenge 全字段校验、未知结算冻结、显式恢复查询与恢复审计。
 - 官方 MCP TypeScript SDK 2.0 stdio Server，以及独立 Buyer/Seller Agent Simulation 样例。
 - 稳定 MCP CLI、endpoint preflight、initialize 版本/能力握手，以及三类 Host 配置。
+- 本地 `bu2-doctor`：Node、endpoint、环境、契约、MCP 启动和 Receipt 验证诊断；支持 JSON 与中英文恢复提示。
 - OpenAPI 生成类型的 `@bu2/sdk` v0.1 薄客户端；显式幂等、无自动重试和错误恢复分类。
 - Ed25519 签名 Receipt 及独立验证。
 - 中英文 Transaction-first 产品界面，可展示真实 Sandbox API 数据并在离线时降级到演示数据。
@@ -87,7 +89,19 @@ npm --prefix prototype run build
 npm --prefix packages/typescript-sdk test
 ```
 
-当前基线应得到：Contract 32 项不变量通过、6 个 MCP 工具有效、Sandbox 52/52 通过、TypeScript SDK 8/8 通过、Prototype lint 与 build 通过。
+当前基线应得到：Contract 35 项不变量通过、6 个 MCP 工具有效、Sandbox 64/64 通过、TypeScript SDK 8/8 通过、Prototype lint 与 build 通过。
+
+### 运行接入诊断
+
+启动 Reference Server 后，在发生任何资金工具调用前运行：
+
+```bash
+BU2_ENDPOINT=http://127.0.0.1:3100 \
+BU2_ENVIRONMENT=simulation \
+npm --prefix sandbox run doctor
+```
+
+使用 `--format json` 获取机器可读结果，使用 `--language en` 获取全英文提示。若已有 Receipt，可追加 `--receipt-id rcpt_...` 执行实际只读验证；否则只确认验证能力可用。诊断分析只存在于当前进程，不写文件、不写数据库，也不远程上传。完整契约见 [`开发者接入诊断 v0.1`](docs/03-technical/DEVELOPER_DIAGNOSTICS_V0.1.md)。
 
 ### 一条命令运行外部 Agent 样例
 
@@ -170,6 +184,7 @@ bu2com/
 - [Phase 0 Epic 2：开发者接入规模化](docs/03-technical/PHASE0_EPIC2_DEVELOPER_INTEGRATION_SCALE.md)
 - [TypeScript SDK v0.1](packages/typescript-sdk/README.md)
 - [MCP Host 配置](integrations/mcp/README.md)
+- [开发者接入诊断 v0.1](docs/03-technical/DEVELOPER_DIAGNOSTICS_V0.1.md)
 
 ### 商业计划
 

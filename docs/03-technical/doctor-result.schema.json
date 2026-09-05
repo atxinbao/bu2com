@@ -1,0 +1,124 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://bu2.com/schemas/doctor-result-v0.1.json",
+  "title": "BU2 Doctor Result v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "result",
+    "started_at",
+    "duration_ms",
+    "environment",
+    "versions",
+    "receipt_verification",
+    "checks",
+    "analytics"
+  ],
+  "properties": {
+    "schema_version": { "const": "0.1.0" },
+    "result": { "enum": ["passed", "failed"] },
+    "started_at": { "type": "string", "format": "date-time" },
+    "duration_ms": { "type": "integer", "minimum": 0 },
+    "environment": { "type": ["string", "null"], "enum": ["simulation", "testnet", null] },
+    "versions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["node", "minimum_node", "api_contract", "mcp_contract"],
+      "properties": {
+        "node": { "type": "string" },
+        "minimum_node": { "type": "string" },
+        "api_contract": { "type": "string" },
+        "mcp_contract": { "type": "string" }
+      }
+    },
+    "receipt_verification": { "enum": ["blocked", "capability_available", "verified", "failed"] },
+    "checks": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": { "$ref": "#/definitions/check" }
+    },
+    "analytics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "remote_enabled",
+        "upload_attempted",
+        "persistence",
+        "retention",
+        "deletion",
+        "records"
+      ],
+      "properties": {
+        "remote_enabled": { "const": false },
+        "upload_attempted": { "const": false },
+        "persistence": { "const": "none" },
+        "retention": { "const": "process_lifetime" },
+        "deletion": { "const": "not_applicable_no_persistence" },
+        "records": {
+          "type": "array",
+          "minItems": 7,
+          "maxItems": 7,
+          "items": { "$ref": "#/definitions/analyticsRecord" }
+        }
+      }
+    },
+    "failure": { "$ref": "#/definitions/failure" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "result": { "const": "failed" } } },
+      "then": { "required": ["failure"] },
+      "else": { "not": { "required": ["failure"] } }
+    }
+  ],
+  "definitions": {
+    "stage": {
+      "enum": [
+        "node_runtime",
+        "configuration",
+        "endpoint",
+        "environment",
+        "contract",
+        "mcp_startup",
+        "receipt_verification"
+      ]
+    },
+    "check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stage", "result_category", "duration_ms", "error_code"],
+      "properties": {
+        "stage": { "$ref": "#/definitions/stage" },
+        "result_category": { "enum": ["passed", "failed", "blocked"] },
+        "duration_ms": { "type": "integer", "minimum": 0 },
+        "error_code": { "type": ["string", "null"] }
+      }
+    },
+    "analyticsRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stage", "duration_ms", "result_category", "error_code"],
+      "properties": {
+        "stage": { "$ref": "#/definitions/stage" },
+        "duration_ms": { "type": "integer", "minimum": 0 },
+        "result_category": { "enum": ["passed", "failed", "blocked"] },
+        "error_code": { "type": ["string", "null"] }
+      }
+    },
+    "failure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stage", "code", "retry", "recovery"],
+      "properties": {
+        "stage": { "$ref": "#/definitions/stage" },
+        "code": { "type": "string" },
+        "retry": { "enum": ["retry_safe", "retry_after_fix", "query_before_retry"] },
+        "recovery": { "type": "string" },
+        "request_id": { "type": "string", "pattern": "^req_[A-Za-z0-9_-]+$" },
+        "trace_id": { "type": "string", "pattern": "^trc_[A-Za-z0-9_-]{8,251}$" }
+      }
+    }
+  }
+}

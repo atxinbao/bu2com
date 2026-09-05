@@ -43,13 +43,27 @@ npm run mcp
 
 `npm run mcp` 使用稳定入口 `bin/bu2-mcp.mjs`，先校验 endpoint、API contract、环境和 MCP contract compatibility，再打开 stdio。Agent 只获得冻结的 6 个 MCP 工具；人工授权和 BU2 结算仍留在 HTTP 控制面。MCP 层只转发 `/v1`，不会直接修改领域状态或账本。完整配置、角色边界和五分钟快速开始见 [外部 Agent 快速接入](../docs/03-technical/EXTERNAL_AGENT_QUICKSTART.md)；Codex、Claude Desktop 与通用 Host 示例见 [MCP Host 配置](../integrations/mcp/README.md)。
 
+## 接入诊断
+
+Reference Server 启动后运行本地 doctor：
+
+```bash
+BU2_ENDPOINT=http://127.0.0.1:3100 \
+BU2_ENVIRONMENT=simulation \
+npm run doctor
+```
+
+doctor 会按顺序检查 Node、配置、endpoint、环境、API/MCP 契约、真实 stdio 启动以及 Receipt 验证能力。`--format json` 返回受 Schema 约束的机器结果；`--language zh|en` 控制人类提示语言；`--receipt-id rcpt_...` 对一张已存在的 Receipt 执行只读验证。未提供 Receipt ID 时只报告验证能力可用，不声称任何 Receipt 已通过。
+
+接入分析只返回阶段、耗时、结果类别和稳定错误码，并固定为进程内、无持久化、无远程上传。详见 [开发者接入诊断 v0.1](../docs/03-technical/DEVELOPER_DIAGNOSTICS_V0.1.md)。
+
 ## 测试
 
 ```bash
 node --test sandbox/*.test.mjs
 ```
 
-覆盖完整闭环、幂等冲突、报价金额篡改、Mandate 拒绝、交付前非法结算、SQLite 重启恢复、Adapter 防重复、Webhook HTTP 超时/5xx、有限重试、死信、审计重放、并发租约、Secret 轮换、端到端关联、日志脱敏、健康快照、MCP 外部 Agent 接入、x402 未知结果恢复和 Receipt 签名验证。
+覆盖完整闭环、幂等冲突、报价金额篡改、Mandate 拒绝、交付前非法结算、SQLite 重启恢复、Adapter 防重复、Webhook HTTP 超时/5xx、有限重试、死信、审计重放、并发租约、Secret 轮换、端到端关联、日志脱敏、健康快照、MCP 外部 Agent 接入、doctor 故障注入、x402 未知结果恢复和 Receipt 签名验证。
 
 ## x402 沙盒商户
 

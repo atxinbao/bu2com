@@ -19,6 +19,20 @@ npm ci --prefix sandbox
 npm --prefix sandbox start
 ```
 
+在添加 Host 配置前运行 doctor：
+
+Use the doctor before adding the Host configuration:
+
+```bash
+BU2_ENDPOINT=http://127.0.0.1:3100 \
+BU2_ENVIRONMENT=simulation \
+npm --prefix sandbox run doctor
+```
+
+它会检查本地运行时、endpoint、环境、契约、真实 MCP stdio 和 Receipt 验证能力。完整说明见 [开发者接入诊断 v0.1](../../docs/03-technical/DEVELOPER_DIAGNOSTICS_V0.1.md)。
+
+It checks the local runtime, endpoint, environment, contracts, real MCP stdio startup, and Receipt verification capability. See [Developer Integration Doctor v0.1](../../docs/03-technical/DEVELOPER_DIAGNOSTICS_V0.1.md).
+
 稳定 MCP 入口：
 
 Stable MCP entrypoint:
