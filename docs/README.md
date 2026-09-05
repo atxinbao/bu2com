@@ -69,6 +69,7 @@
 - [`openapi.yaml`](03-technical/openapi.yaml)：OpenAPI 3.1 接口定义。
 - [`mcp-tools.json`](03-technical/mcp-tools.json)：Agent 原生 MCP 工具定义。
 - [`EXTERNAL_AGENT_QUICKSTART.md`](03-technical/EXTERNAL_AGENT_QUICKSTART.md)：外部 Buyer/Seller Agent 的 MCP + HTTP Simulation 快速接入。
+- [`../packages/typescript-sdk/README.md`](../packages/typescript-sdk/README.md)：TypeScript SDK v0.1 的中英文接入、错误恢复与契约生成说明。
 - [`examples/payment-flow.json`](03-technical/examples/payment-flow.json)：完整交易示例载荷。
 - [`validate-contract.mjs`](03-technical/validate-contract.mjs)：本地契约一致性验证脚本。
 

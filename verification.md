@@ -191,6 +191,26 @@ Product v0.1 可作为客户访谈、交互原型和工程方案设计的输入�
 
 结论：Epic 2 已定义目标、非目标、Owner、接口与兼容规则、测试、验收和恢复方案，并通过本地门禁，达到 **Ready**。下一实现项为 E2.1 TypeScript SDK v0.1；不构成公开包发布、Mainnet 或生产资金执行授权。
 
+## TypeScript SDK v0.1 E2.1 验证
+
+日期：2026-09-06
+执行者：Codex
+
+- 前置状态：PR #9 已合并，Epic 2 范围达到 Ready；本地已同步 `main` 并删除已合并分支。
+- 包：`@bu2/sdk` v0.1.0，保持 `private: true`，未发布到 npm registry。
+- 标准化依赖：`openapi-typescript` 7.13.0 从冻结 OpenAPI 生成类型，`openapi-fetch` 0.17.0 提供 typed fetch；TypeScript 5.9.3 与现有项目基线一致。
+- 契约漂移：`npm --prefix packages/typescript-sdk run check:generated` 通过，生成类型与 `openapi.yaml` 一致。
+- 类型：严格 `tsc` 通过；写操作缺少显式幂等键、Mainnet 环境均在类型测试中被拒绝。
+- SDK 专项：8/8 通过，覆盖完整 Simulation 交易、PaymentIntent 查询、Receipt 验证、幂等重放/冲突、无效输入、settlement recovery、网络失败、超时和 5xx。
+- 失败恢复：SDK 没有自动重试；读取失败为 `retry_safe`，写入未知结果为 `query_before_retry`，服务端关联 ID 与稳定错误字段不丢失。
+- 包结构：`npm pack --dry-run --json` 通过，22 个文件、约 16.9 KB；只包含 README、构建输出和 package metadata。
+- 首轮测试失败：断言混淆 `type=idempotency_conflict` 与 `code=idempotency_key_reused`；修正测试后通过，未改变 API 行为。
+- 全项目门禁：Contract 29 项与 MCP 6/6、Sandbox 44/44、Prototype lint 与 build 全部通过。
+- SDK 质量门禁：生成漂移、oxfmt、oxlint、严格类型、build 和 8/8 单元/HTTP 集成全部通过。
+- UI 浏览器回归未执行；本变更不修改 Prototype UI，生产 build 作为本轮前端回归证据。
+
+结论：E2.1 实现满足冻结范围并通过全项目 R2 本地验证，可以进入人工审查；不构成公开包发布、生产凭证、Mainnet 或托管授权。
+
 ## Phase 0 开发准入结论
 
 日期：2026-09-01

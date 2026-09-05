@@ -1,0 +1,42 @@
+{
+  "name": "@bu2/sdk",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Typed Agent Payment API v1 client for BU2 Simulation and Testnet integrations.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "generate": "node scripts/generate-openapi.mjs",
+    "check:generated": "node scripts/generate-openapi.mjs --check",
+    "format": "oxfmt src/client.ts src/errors.ts src/index.ts src/types.ts test scripts README.md",
+    "format:check": "oxfmt --check src/client.ts src/errors.ts src/index.ts src/types.ts test scripts README.md",
+    "lint": "oxlint src test scripts",
+    "typecheck": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.build.json",
+    "test:unit": "node --test test/*.test.mjs",
+    "test": "npm run check:generated && npm run format:check && npm run lint && npm run typecheck && npm run build && npm run test:unit"
+  },
+  "dependencies": {
+    "openapi-fetch": "0.17.0"
+  },
+  "devDependencies": {
+    "openapi-typescript": "7.13.0",
+    "oxfmt": "0.61.0",
+    "oxlint": "1.76.0",
+    "typescript": "5.9.3"
+  }
+}

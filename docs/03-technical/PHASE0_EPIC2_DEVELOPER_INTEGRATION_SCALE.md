@@ -2,7 +2,7 @@
 
 日期：2026-09-06
 执行者：Codex
-状态：Ready · pending implementation
+状态：E2.1 implemented locally · pending R2 review
 风险等级：R2（交易接入边界，不包含生产资金）
 
 ## 1. 目标
@@ -39,20 +39,22 @@ BU2 只接收完成交易所需的结构化对象和外部上下文引用，不�
 
 ## 4. 工作包与顺序
 
-### E2.0 — 冻结开发者接入契约（本文件）
+### E2.0 — 冻结开发者接入契约（已完成）
 
 - 冻结 SDK、MCP、诊断与接入证据的职责边界。
 - 明确唯一语义来源仍是 Agent Payment API v1；SDK 和 MCP 都是薄客户端。
 - 固定版本兼容、错误透传、幂等、超时与结果未知规则。
 - 定义 E2.1–E2.4 的验收、恢复和阶段禁区。
 
-### E2.1 — TypeScript SDK v0.1
+### E2.1 — TypeScript SDK v0.1（已完成本地实现）
 
 - 建立独立、可测试的 TypeScript 包，覆盖 Quote、PaymentIntent、Transaction、DeliveryEvidence、Authorization、Settlement 与 Receipt 查询/验证。
 - 类型与运行时输入约束来源于冻结契约，不手写第二套资源定义。
 - 每个写操作显式要求 `Idempotency-Key`；SDK 不替调用方静默生成业务幂等语义。
 - 网络错误返回稳定 SDK Error，保留 HTTP 状态、BU2 `code`、`request_id` 与可恢复性分类。
 - 首轮只在 Monorepo 内以 workspace/local package 验证；公开 registry 发布另行审批。
+
+完成证据：Monorepo 新增私有包 `@bu2/sdk` v0.1.0。请求与响应类型由 `openapi-typescript` 7.13.0 从冻结的 `openapi.yaml` 生成，运行时 HTTP 使用 `openapi-fetch` 0.17.0；公开方法覆盖 Quote、PaymentIntent、Authorization、Transaction、DeliveryEvidence、Settlement、Settlement Recovery 与 Receipt。SDK 不自动重试；读取传输错误标记 `retry_safe`，写入超时、网络错误和 5xx 标记 `query_before_retry`，并保留服务端 `type`、`code`、`request_id`、`trace_id` 与 details。8 项专项测试覆盖完整 Simulation 交易、类型/生成漂移、幂等、无效输入、传输失败、超时、5xx 和恢复端点。包保持 `private: true`，未公开发布。
 
 ### E2.2 — MCP 分发与 Host 配置
 
@@ -159,4 +161,4 @@ npm --prefix prototype run build
 - E2.1–E2.4 依赖顺序、验收、测试与恢复方案已经明确。
 - 生产资金、公开分发、远程托管和数据采集边界已经明确排除。
 
-结论：Epic 2 达到 **Ready**。下一项实现是 E2.1 TypeScript SDK v0.1；开始前不得扩大到 Python SDK、公开分发、远程 MCP 或 Mainnet。
+结论：Epic 2 达到 **Ready**。E2.1 已完成本地实现，仍需 R2 人工审查并合并后才算完成；合并后下一项为 E2.2 MCP 分发。不得扩大到 Python SDK、公开分发、远程 MCP 或 Mainnet。
