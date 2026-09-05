@@ -2,7 +2,7 @@
 
 日期：2026-09-06
 执行者：Codex
-状态：E2.3 implemented locally · pending R2 review
+状态：E2.4 implemented locally · pending R2 review
 风险等级：R2（交易接入边界，不包含生产资金）
 
 ## 1. 目标
@@ -65,7 +65,7 @@ BU2 只接收完成交易所需的结构化对象和外部上下文引用，不�
 
 完成证据：新增稳定 `sandbox/bin/bu2-mcp.mjs` stdio 入口，并继续从唯一 `mcp-tools.json` 注册原有 6 个工具。Reference Server `/health` 以加法字段报告 Agent Payment API contract、base path、活动环境和兼容 MCP contract；CLI 在打开 stdio 前完成 endpoint preflight，不兼容时返回稳定错误并停止。MCP initialize 使用标准 `serverInfo` 与 `capabilities.experimental["com.bu2.agent-payments"]` 公开 API/MCP version、contract SHA-256、环境、工具数量和无自动 mutation retry 边界。Codex、Claude Desktop 与通用 Host 配置均指向稳定入口。8 项专项测试覆盖静态元数据、实际 endpoint preflight、真实 initialize 握手及握手拒绝、API/环境/MCP 版本不兼容、Mainnet 拒绝和配置解析。
 
-### E2.3 — 接入诊断与最小分析（已完成本地实现）
+### E2.3 — 接入诊断与最小分析（已完成 · PR #12）
 
 - 提供本地 `doctor`：检查 Node 版本、BU2 endpoint、环境模式、契约版本、MCP 启动和 Receipt 验证能力。
 - 输出机器可读诊断结果和人类可读恢复建议，所有敏感值必须脱敏。
@@ -74,12 +74,14 @@ BU2 只接收完成交易所需的结构化对象和外部上下文引用，不�
 
 完成证据：新增稳定 `sandbox/bin/bu2-doctor.mjs` 和 `npm run doctor`，按固定顺序检查 Node、配置、endpoint、环境、API/MCP contract、真实 stdio initialize 与 Receipt 验证能力。无 Receipt ID 时只报告 `capability_available`，显式提供 ID 且服务端返回 `valid=true` 时才报告 `verified`。机器输出由 `doctor-result.schema.json` 冻结，人类输出支持全中文或全英文固定恢复建议。最小分析严格只包含阶段、耗时、结果类别和稳定错误码，并固定 `remote_enabled=false`、`upload_attempted=false`、`persistence=none`；12 项专项测试覆盖真实 endpoint/MCP/Receipt、故障注入、结果 Schema、敏感值不泄漏和 CLI 行为。
 
-### E2.4 — 外部 clean-room 接入证据
+### E2.4 — 外部 clean-room 接入证据（已完成本地实现）
 
 - 在三个全新临时项目中分别验证 HTTP、TypeScript SDK 和 MCP 路径。
 - 每条路径从文档入口到有效 Simulation Receipt 不超过 15 分钟，不允许人工修改 BU2 源码。
 - 记录失败步骤、恢复动作、耗时和最终 Receipt 验证结果。
 - 只有三条路径全部通过，Epic 2 才能标记 Done。
+
+完成证据：新增三个独立客户端样例与 `npm --prefix sandbox run acceptance:clean-room` 自动验收入口。验收器在三个空系统临时目录中分别运行原生 HTTP、从本地 tarball 安装的 `@bu2/sdk`、以及只依赖官方 MCP Client 的 stdio Host；每条路径使用独立内存 Simulation Server，并完成 Quote、PaymentIntent、显式授权、DeliveryEvidence、Settlement 和 Receipt 验证。最终实测 HTTP 101ms、SDK 1472ms、MCP 609ms，均为 `settled`、`receipt_valid=true`、源码哈希前后一致且临时目录已删除。机器结果由 `clean-room-evidence.schema.json` 冻结，只记录阶段、耗时、结果、稳定错误码与恢复动作，不持久化或上传原始载荷。
 
 ## 5. 明确不做
 
@@ -165,4 +167,4 @@ npm --prefix prototype run build
 - E2.1–E2.4 依赖顺序、验收、测试与恢复方案已经明确。
 - 生产资金、公开分发、远程托管和数据采集边界已经明确排除。
 
-结论：Epic 2 达到 **Ready**。E2.1 已经 PR #10 合并，E2.2 已经 PR #11 合并；E2.3 已完成本地实现，仍需 R2 人工审查并合并后才算完成。合并后下一项为 E2.4 外部 clean-room 接入证据。不得扩大到 Python SDK、公开分发、远程 MCP 或 Mainnet。
+结论：Epic 2 的 E2.1–E2.3 已分别经 PR #10–#12 合并，E2.4 已完成本地实现和 3/3 clean-room 自动验收。当前达到 **GO for R2 review**；只有本次 E2.4 PR 经 Project Owner 人工审查并合并后，Epic 2 才能标记 **Done**。不得扩大到 Python SDK、公开分发、远程 MCP 或 Mainnet。

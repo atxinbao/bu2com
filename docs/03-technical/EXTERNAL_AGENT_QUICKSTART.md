@@ -109,3 +109,23 @@ npm --prefix sandbox test
 专项测试会验证：冻结工具清单、幂等重放与冲突、MCP/HTTP 共享同一 Transaction Core、完整交易关联、签名 Receipt、标准 initialize 握手、Host 配置、endpoint/API/环境不兼容前置阻断，以及单命令演示耗时。
 
 此样例不启用 Mainnet、真实资金、托管、生产密钥、提现、退款或第二个支付通道。它只证明本地 Simulation 接入与交易契约，不构成生产准入证据。
+
+## 7. 三路径 clean-room 验收
+
+若要验证一个全新项目是否能通过文档入口完成接入，请在仓库根目录运行：
+
+```bash
+npm ci --prefix sandbox
+npm ci --prefix packages/typescript-sdk
+npm --prefix sandbox run acceptance:clean-room
+```
+
+该命令在三个全新临时项目中分别执行 HTTP、TypeScript SDK tarball 和 MCP stdio 路径。每个项目使用独立内存 Simulation Server，必须在 15 分钟内完成交易并获得 `receipt_valid=true`。结果只记录阶段、耗时、状态、稳定错误码和恢复动作；不上传或持久化 Prompt、交易载荷、Secret、私钥或个人数据。
+
+样例源码与双语运行说明见 [`integrations/clean-room`](../../integrations/clean-room/README.md)，本次可审计结果见 [E2.4 clean-room 接入证据](CLEAN_ROOM_ACCEPTANCE_EVIDENCE.md)。
+
+## 8. Three-path clean-room acceptance
+
+Run the same command above to verify the documented HTTP, local TypeScript SDK tarball, and MCP stdio paths from three fresh temporary projects. Each project uses an independent in-memory Simulation Server and must produce a valid Receipt within 15 minutes. The result contains only bounded stage, duration, status, stable error-code, and recovery-action fields. It does not upload or persist prompts, transaction payloads, secrets, private keys, or personal data.
+
+See the [clean-room integration samples](../../integrations/clean-room/README.md) and the [E2.4 acceptance evidence](CLEAN_ROOM_ACCEPTANCE_EVIDENCE.md).

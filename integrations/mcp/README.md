@@ -127,7 +127,17 @@ The MCP initialize response also advertises the API version, MCP version, contra
 
 `mainnet` is rejected before the MCP process starts. The six Agent tools do not expose human authorization or direct settlement; an unknown mutation result must not be retried automatically.
 
-## 7. 参考 / References
+## 7. Clean-room 验收 / Clean-room acceptance
+
+E2.4 会把一个只依赖官方 MCP Client 的 Host 样例复制到全新临时项目，通过上述稳定 stdio 入口完成 Simulation 交易并验证 Receipt。该路径不会导入仓库内的示例 Client，也不会公开发布或远程托管 MCP Server。
+
+E2.4 copies a host sample that depends only on the official MCP Client into a fresh temporary project, then completes a Simulation transaction and verifies its Receipt through the stable stdio entrypoint above. The path does not import the repository sample Client and does not publish or remotely host the MCP Server.
+
+运行方式与结果见 [clean-room 样例](../clean-room/README.md) 和 [E2.4 验收证据](../../docs/03-technical/CLEAN_ROOM_ACCEPTANCE_EVIDENCE.md)。
+
+See the [clean-room samples](../clean-room/README.md) and [E2.4 acceptance evidence](../../docs/03-technical/CLEAN_ROOM_ACCEPTANCE_EVIDENCE.md).
+
+## 8. 参考 / References
 
 - [MCP lifecycle and capability negotiation](https://modelcontextprotocol.io/specification/2025-06-18/basic/lifecycle)
 - [OpenAI Codex configuration schema](https://github.com/openai/codex/blob/main/codex-rs/core/config.schema.json)

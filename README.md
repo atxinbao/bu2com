@@ -15,13 +15,14 @@ BU2.com 是 Agent 的 AI 收付平台。它嵌入 ChatGPT、Codex、Claude 和�
 | TypeScript SDK | `@bu2/sdk` v0.1 · Monorepo private package |
 | MCP 分发 | stdio v0.1 · Codex / Claude Desktop / Generic Host |
 | 接入诊断 | `bu2-doctor` v0.1 · 本地执行 / 零远程遥测 |
+| Clean-room 验收 | HTTP / TypeScript SDK / MCP · 3/3 Simulation 通过 |
 | 支付通道 | Simulated Adapter + x402 Base Sepolia Adapter |
 | 产品界面 | React 19 + TypeScript 双语原型 |
 | 生产边界 | Mainnet、客户资金托管和法币能力尚未开放 |
 
 当前代码已经形成可运行的 Agent 收付闭环，但仍是本地与测试网证据，不是生产支付系统或法律合规结论。
 
-[Phase 0 Epic 1：External Agent Transaction Integration & Reliability](docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md) 已经 PR #8 合并并完成。当前正式开发项为 [Phase 0 Epic 2：Developer Integration Scale](docs/03-technical/PHASE0_EPIC2_DEVELOPER_INTEGRATION_SCALE.md)：按 TypeScript SDK、MCP 分发、接入诊断和三条 clean-room 接入证据推进，继续复用已经冻结的 Transaction API v1。
+[Phase 0 Epic 1：External Agent Transaction Integration & Reliability](docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md) 已经 PR #8 合并并完成。[Phase 0 Epic 2：Developer Integration Scale](docs/03-technical/PHASE0_EPIC2_DEVELOPER_INTEGRATION_SCALE.md) 的 E2.1–E2.3 已经 PR #10–#12 合并，E2.4 已完成三条 clean-room 本地验收并等待 R2 人工审查；继续复用已经冻结的 Transaction API v1。
 
 ## Agent 支付闭环
 
@@ -59,6 +60,7 @@ BU2 将授权、资金预留、交付、结算和退款保存为不同事实。�
 - 稳定 MCP CLI、endpoint preflight、initialize 版本/能力握手，以及三类 Host 配置。
 - 本地 `bu2-doctor`：Node、endpoint、环境、契约、MCP 启动和 Receipt 验证诊断；支持 JSON 与中英文恢复提示。
 - OpenAPI 生成类型的 `@bu2/sdk` v0.1 薄客户端；显式幂等、无自动重试和错误恢复分类。
+- HTTP、SDK tarball 和 MCP stdio 三条全新临时项目接入证据；均在 15 分钟内生成有效 Simulation Receipt。
 - Ed25519 签名 Receipt 及独立验证。
 - 中英文 Transaction-first 产品界面，可展示真实 Sandbox API 数据并在离线时降级到演示数据。
 - OpenAPI 3.1、Agent 原生 MCP 工具和完整交易示例。
@@ -87,9 +89,10 @@ npm --prefix sandbox test
 npm --prefix prototype run lint
 npm --prefix prototype run build
 npm --prefix packages/typescript-sdk test
+npm --prefix sandbox run acceptance:clean-room
 ```
 
-当前基线应得到：Contract 35 项不变量通过、6 个 MCP 工具有效、Sandbox 64/64 通过、TypeScript SDK 8/8 通过、Prototype lint 与 build 通过。
+当前基线应得到：Contract 39 项不变量通过、6 个 MCP 工具有效、Sandbox 68/68 通过、TypeScript SDK 8/8 通过、三条 clean-room 路径全部生成有效 Simulation Receipt、Prototype lint 与 build 通过。
 
 ### 运行接入诊断
 
@@ -112,6 +115,16 @@ npm --prefix sandbox run demo:external
 ```
 
 完整角色边界和代码入口见 [`外部 Buyer / Seller Agent 快速接入`](docs/03-technical/EXTERNAL_AGENT_QUICKSTART.md)；Codex、Claude Desktop 与通用配置见 [`MCP Host 配置`](integrations/mcp/README.md)。
+
+### 运行三路径 clean-room 验收
+
+以下命令会在三个全新临时项目中分别验证 HTTP、TypeScript SDK tarball 和 MCP stdio 接入，并要求每条路径在 15 分钟内得到有效 Simulation Receipt：
+
+```bash
+npm --prefix sandbox run acceptance:clean-room
+```
+
+可审计结果与字段边界见 [`E2.4 clean-room 接入证据`](docs/03-technical/CLEAN_ROOM_ACCEPTANCE_EVIDENCE.md)，客户端样例见 [`integrations/clean-room`](integrations/clean-room/README.md)。
 
 ### 启动本地交易演示
 
@@ -148,7 +161,8 @@ bu2com/
 ├── packages/
 │   └── typescript-sdk/ # OpenAPI 生成类型的内部 TypeScript SDK v0.1
 ├── integrations/
-│   └── mcp/           # Codex、Claude Desktop 与通用 stdio Host 配置
+│   ├── mcp/           # Codex、Claude Desktop 与通用 stdio Host 配置
+│   └── clean-room/    # HTTP、SDK 与 MCP 独立接入样例
 ├── docs/
 │   ├── 01-business-plan/
 │   ├── 02-product/
@@ -185,6 +199,7 @@ bu2com/
 - [TypeScript SDK v0.1](packages/typescript-sdk/README.md)
 - [MCP Host 配置](integrations/mcp/README.md)
 - [开发者接入诊断 v0.1](docs/03-technical/DEVELOPER_DIAGNOSTICS_V0.1.md)
+- [E2.4 clean-room 接入证据](docs/03-technical/CLEAN_ROOM_ACCEPTANCE_EVIDENCE.md)
 
 ### 商业计划
 

@@ -152,6 +152,30 @@
       <h2 id="unreleased">Unreleased</h2>
       <article class="release">
         <div class="release-head">
+          <div><h3>三路径 clean-room 接入证据 E2.4</h3><time datetime="2026-09-06">2026-09-06</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">完成 Epic 2 E2.4 本地实现：HTTP、TypeScript SDK 和 MCP 三条路径均从全新临时项目完成独立 Simulation 交易，在 15 分钟内获得可验证 Receipt，并证明执行没有修改 BU2 源码。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag added">Added</span>新增三个独立客户端样例与单命令 clean-room 编排器；每条路径拥有独立临时项目、<code>package.json</code> 和内存 Reference Server。</li>
+            <li><span class="tag added">Added</span>SDK 路径从临时 npm tarball 安装 <code>@bu2/sdk</code>；MCP 路径只依赖官方 Client 并通过稳定 stdio 入口连接。</li>
+            <li><span class="tag added">Added</span>新增版本化 Clean-room Evidence Schema，固定三路径、15 分钟上限、Receipt 结果、源码完整性、失败码和恢复动作。</li>
+            <li><span class="tag governance">Governance</span>证据仅存在于当前进程，不上传、不持久化原始交易载荷、Prompt、Secret、私钥或个人数据；临时项目结束即删除。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R2 · 外部交易接入证据，不包含生产资金</span></div>
+          <div><b>金融行为影响</b><span>不改变金额、状态机、授权、账本、Webhook、Adapter 或 Receipt 契约</span></div>
+          <div><b>兼容性</b><span>API v0.1.3、SDK v0.1、MCP v0.1 与 6 个工具不变；仅新增验收 Schema</span></div>
+          <div><b>验证</b><span>HTTP 101ms、SDK 1472ms、MCP 609ms；3/3 settled 且 Receipt valid=true</span></div>
+          <div><b>恢复</b><span>移除样例、编排器、Schema 与证据文档即可；无数据库迁移、外部分发或交易历史变更</span></div>
+        </div>
+      </article>
+
+      <article class="release">
+        <div class="release-head">
           <div><h3>接入诊断与最小分析 E2.3</h3><time datetime="2026-09-06">2026-09-06</time></div>
           <span class="status">Unreleased</span>
         </div>

@@ -249,7 +249,31 @@ Product v0.1 可作为客户访谈、交互原型和工程方案设计的输入�
 - TypeScript SDK：生成漂移、格式、lint、严格类型、build 和 8/8 测试通过。
 - Prototype：lint 与生产 build 通过；本轮无 UI 变更，未运行浏览器回归。
 
-结论：E2.3 满足冻结范围并通过 R2 本地验证，可以进入人工审查；不构成远程遥测、公开分发、生产凭证、Mainnet 或托管授权。
+结论：E2.3 满足冻结范围并通过 R2 本地验证，已经 PR #12 人工合并；不构成远程遥测、公开分发、生产凭证、Mainnet 或托管授权。
+
+## 外部 clean-room 接入证据 E2.4 验证
+
+日期：2026-09-06
+执行者：Codex
+
+- 前置状态：PR #12 已合并，本地 `main` 已同步到 merge commit `6780921`，已合并 E2.3 分支已删除。
+- 三个项目：验收器分别创建 HTTP、SDK 与 MCP 三个空系统临时目录，为每个项目写入独立 `package.json` 和客户端入口，并在结束后递归删除临时目录。
+- 环境隔离：每条路径使用独立 `:memory:` SQLite Simulation Reference Server，不共享交易、策略、钱包或 Receipt 状态。
+- HTTP：只使用 Node.js 原生 `fetch`，101ms 完成交易，Receipt `rcpt_0b8c4ada737e4e2a` 且 `valid=true`。
+- SDK：构建后将 `@bu2/sdk` 打为临时 npm tarball，由全新项目安装并通过包名导入；1472ms 完成交易，Receipt `rcpt_d5d04ae5e0d14ea6` 且 `valid=true`。
+- MCP：全新项目只安装官方 `@modelcontextprotocol/client@2.0.0`，通过稳定 `sandbox/bin/bu2-mcp.mjs` stdio 入口完成 initialize、6 工具检查和交易；609ms 完成，Receipt `rcpt_52eb5bd9cc4d4825` 且 `valid=true`。
+- 完整性：三条路径均从空目录开始，相关 BU2 源码执行前后 SHA-256 一致，且低于 900000ms 上限。
+- 失败恢复：最终验收 0 失败；Schema 支持记录失败阶段、稳定错误码和固定恢复动作，失败路径不会自动重放资金 mutation。
+- 机器契约：`clean-room-evidence.schema.json` v0.1.0 固定三路径、Simulation、15 分钟、Receipt、源码完整性、失败/恢复与零远程遥测字段。
+- Clean-room 专项：4/4 通过，覆盖三路径成功门槛、Schema 成功/失败结果、依赖边界和 Mainnet/遥测/源码 mutation 禁区。
+- 契约：39 项不变量与 6/6 MCP 工具通过。
+- Sandbox：68/68 通过，包含既有交易、幂等、并发、持久化、Webhook、x402、Receipt、MCP、doctor 与新增 clean-room 回归。
+- TypeScript SDK：生成漂移、格式、lint、严格类型、build 和 8/8 测试通过；npm tarball 22 个文件且不包含源码外数据。
+- Prototype：lint 与生产 build 通过；本轮无 UI 变化，因此未运行浏览器回归。
+- 文档与凭证：10 份关联 Markdown 的 145 个本地链接通过；变更内容敏感信息扫描与 `git diff --check` 通过。
+- 未执行：未运行 funded Base Sepolia；本轮不修改 x402 Adapter、签名、结算或支付通道，只证明 Local Simulation 接入。
+
+结论：E2.4 满足冻结范围并完成 3/3 clean-room 本地验收，达到 **GO for R2 review**。只有本 PR 经 Project Owner 人工审查并合并后，Epic 2 才能标记 Done；结果不构成公开 npm 发布、远程 MCP 托管、Production、Mainnet、真实资金或托管授权。
 
 ## Phase 0 开发准入结论
 

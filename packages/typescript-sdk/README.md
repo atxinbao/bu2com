@@ -20,6 +20,8 @@ npm --prefix packages/typescript-sdk test
 
 构建产物位于 `packages/typescript-sdk/dist/`，已被 Git 忽略。此包设置了 `private: true`，代码完成不代表允许公开发布。
 
+E2.4 会先构建本包，将 npm tarball 写入系统临时目录，再由一个全新项目安装和运行。该路径证明 SDK 消费者不依赖 Monorepo 相对源码 import；命令与结果见 [clean-room 样例](../../integrations/clean-room/README.md) 和 [验收证据](../../docs/03-technical/CLEAN_ROOM_ACCEPTANCE_EVIDENCE.md)。
+
 ### 创建客户端
 
 ```ts
@@ -113,6 +115,8 @@ npm --prefix packages/typescript-sdk test
 ```
 
 Build output is written to `packages/typescript-sdk/dist/` and ignored by Git. The package is marked `private: true`; implementation does not authorize public registry publication.
+
+E2.4 builds this package, writes an npm tarball into an operating-system temporary directory, and installs it into a fresh project. This proves that an SDK consumer does not rely on relative Monorepo source imports. See the [clean-room samples](../../integrations/clean-room/README.md) and [acceptance evidence](../../docs/03-technical/CLEAN_ROOM_ACCEPTANCE_EVIDENCE.md).
 
 ### Create a client
 
