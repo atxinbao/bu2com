@@ -18,7 +18,7 @@ BU2.com 是 Agent 的 AI 收付平台。它嵌入 ChatGPT、Codex、Claude 和�
 
 当前代码已经形成可运行的 Agent 收付闭环，但仍是本地与测试网证据，不是生产支付系统或法律合规结论。
 
-当前正式开发项为 [Phase 0 Epic 1：External Agent Transaction Integration & Reliability](docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md)：先冻结外部 Transaction API，再闭合 Webhook 死信/重放/Secret 轮换、交易可观测性与 x402 Testnet 失败恢复，最后提供首个外部 Agent 接入样例。
+[Phase 0 Epic 1：External Agent Transaction Integration & Reliability](docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md) 已经 PR #8 合并并完成。当前正式开发项为 [Phase 0 Epic 2：Developer Integration Scale](docs/03-technical/PHASE0_EPIC2_DEVELOPER_INTEGRATION_SCALE.md)：按 TypeScript SDK、MCP 分发、接入诊断和三条 clean-room 接入证据推进，继续复用已经冻结的 Transaction API v1。
 
 ## Agent 支付闭环
 
@@ -157,6 +157,7 @@ bu2com/
 - [OpenAPI 3.1](docs/03-technical/openapi.yaml)
 - [x402 Sandbox Adapter v0.4](docs/03-technical/X402_ADAPTER_V0.4.md)
 - [Base Sepolia 实结算证据](docs/03-technical/X402_LIVE_SETTLEMENT_EVIDENCE.md)
+- [Phase 0 Epic 2：开发者接入规模化](docs/03-technical/PHASE0_EPIC2_DEVELOPER_INTEGRATION_SCALE.md)
 
 ### 商业计划
 
@@ -184,5 +185,5 @@ bu2com/
 
 ---
 
-更新日期：2026-09-05
+更新日期：2026-09-06
 维护者：BU2 Engineering / Codex

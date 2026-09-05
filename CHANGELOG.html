@@ -136,7 +136,7 @@
         <p class="eyebrow">BU2.COM · AUDITABLE CHANGE HISTORY</p>
         <h1>系统变更日志</h1>
         <p class="lead">记录 BU2 从代码到金融业务行为的每一次可观察变化，使人类与 Agent 都能回答：改了什么、为什么改、影响什么、如何验证、如何恢复。</p>
-        <div class="meta"><span>格式版本 1.0</span><span>最新更新 2026-09-05</span><span>维护者 BU2 Engineering / Codex</span></div>
+        <div class="meta"><span>格式版本 1.0</span><span>最新更新 2026-09-06</span><span>维护者 BU2 Engineering / Codex</span></div>
       </header>
 
       <section class="contract" id="contract">
@@ -150,6 +150,29 @@
       </section>
 
       <h2 id="unreleased">Unreleased</h2>
+      <article class="release">
+        <div class="release-head">
+          <div><h3>Phase 0 Epic 2 开发者接入规模化范围冻结</h3><time datetime="2026-09-06">2026-09-06</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">Epic 1 经 PR #8 合并后标记 Done；冻结 Epic 2 的 TypeScript SDK、MCP 分发、接入诊断与 clean-room 证据边界，使既有 Agent Payment API v1 可以被外部开发者重复接入，而不新增交易语义或支付通道。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag governance">Governance</span>将 Epic 1 状态更新为 <code>Done</code>，保留 R2 合并证据与原生产边界。</li>
+            <li><span class="tag added">Added</span>新增 Epic 2 范围文件，按 E2.1 TypeScript SDK、E2.2 MCP 分发、E2.3 接入诊断与最小分析、E2.4 三路径 clean-room 证据顺序推进。</li>
+            <li><span class="tag changed">Changed</span>冻结 API v1 为 SDK 与 MCP 的唯一交易语义来源；客户端不得拥有交易状态、使用浮点金额、静默重试结果未知的资金动作或自批授权。</li>
+            <li><span class="tag governance">Governance</span>Python SDK、公开 npm 发布、远程 MCP 托管、生产 API Key、Mainnet 与托管均排除在本 Epic 之外，需独立需求证据与阶段批准。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R2 · 冻结外部交易接入边界，本次仅文档</span></div>
+          <div><b>金融行为影响</b><span>无金额、状态机、账本、数据库、Webhook 或 Adapter 变化</span></div>
+          <div><b>验证</b><span>契约、Sandbox、Prototype、文档链接、格式与敏感信息扫描</span></div>
+          <div><b>恢复</b><span>移除 Epic 2 入口并恢复 Epic 1 后续门槛；现有 API/MCP 与交易历史不受影响</span></div>
+        </div>
+      </article>
+
       <article class="release">
         <div class="release-head">
           <div><h3>治理与变更追踪基线</h3><time datetime="2026-09-01">2026-09-01</time></div>
