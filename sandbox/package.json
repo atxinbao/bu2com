@@ -16,6 +16,7 @@
     "demo": "node demo-agents.mjs",
     "demo:external": "node external-agents/demo.mjs",
     "demo:x402": "node demo-x402-agents.mjs",
+    "acceptance:clean-room": "node clean-room.mjs",
     "doctor": "node bin/bu2-doctor.mjs",
     "mcp": "node bin/bu2-mcp.mjs",
     "x402:merchant": "node x402-merchant.mjs",

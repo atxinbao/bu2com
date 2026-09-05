@@ -70,6 +70,9 @@
 - [`mcp-tools.json`](03-technical/mcp-tools.json)：Agent 原生 MCP 工具定义。
 - [`contract-versions.json`](03-technical/contract-versions.json)：API 与 MCP 可机读版本清单。
 - [`EXTERNAL_AGENT_QUICKSTART.md`](03-technical/EXTERNAL_AGENT_QUICKSTART.md)：外部 Buyer/Seller Agent 的 MCP + HTTP Simulation 快速接入。
+- [`CLEAN_ROOM_ACCEPTANCE_EVIDENCE.md`](03-technical/CLEAN_ROOM_ACCEPTANCE_EVIDENCE.md)：HTTP、SDK 与 MCP 三条全新临时项目接入证据。
+- [`clean-room-evidence.schema.json`](03-technical/clean-room-evidence.schema.json)：E2.4 机器结果、计时、失败与恢复字段约束。
+- [`../integrations/clean-room/README.md`](../integrations/clean-room/README.md)：三条独立客户端样例与自动验收入口。
 - [`../integrations/mcp/README.md`](../integrations/mcp/README.md)：Codex、Claude Desktop 与通用 MCP Host 配置。
 - [`../packages/typescript-sdk/README.md`](../packages/typescript-sdk/README.md)：TypeScript SDK v0.1 的中英文接入、错误恢复与契约生成说明。
 - [`examples/payment-flow.json`](03-technical/examples/payment-flow.json)：完整交易示例载荷。

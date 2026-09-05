@@ -1,0 +1,126 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://bu2.com/schemas/clean-room-evidence-v0.1.json",
+  "title": "BU2 Clean-room Evidence v0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "generated_at",
+    "environment",
+    "max_elapsed_ms",
+    "paths",
+    "summary",
+    "analytics"
+  ],
+  "properties": {
+    "schema_version": { "const": "0.1.0" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "environment": { "const": "simulation" },
+    "max_elapsed_ms": { "const": 900000 },
+    "paths": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": { "$ref": "#/definitions/pathResult" }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total", "passed", "failed"],
+      "properties": {
+        "total": { "const": 3 },
+        "passed": { "type": "integer", "minimum": 0, "maximum": 3 },
+        "failed": { "type": "integer", "minimum": 0, "maximum": 3 }
+      }
+    },
+    "analytics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["remote_enabled", "upload_attempted", "persistence", "retention"],
+      "properties": {
+        "remote_enabled": { "const": false },
+        "upload_attempted": { "const": false },
+        "persistence": { "const": "none" },
+        "retention": { "const": "process_lifetime" }
+      }
+    }
+  },
+  "definitions": {
+    "step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "status", "duration_ms"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["passed", "failed"] },
+        "duration_ms": { "type": "integer", "minimum": 0 },
+        "error_code": { "type": "string", "pattern": "^[a-z0-9_]+$" }
+      }
+    },
+    "failure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stage", "error_code"],
+      "properties": {
+        "stage": { "type": "string", "minLength": 1 },
+        "error_code": { "type": "string", "pattern": "^[a-z0-9_]+$" }
+      }
+    },
+    "recoveryAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stage", "action"],
+      "properties": {
+        "stage": { "type": "string", "minLength": 1 },
+        "action": {
+          "enum": ["stop_and_inspect_stage_evidence", "stop_and_restore_source_baseline"]
+        }
+      }
+    },
+    "pathResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "status",
+        "environment",
+        "started_at",
+        "finished_at",
+        "elapsed_ms",
+        "within_limit",
+        "project_fresh",
+        "source_unchanged",
+        "temp_project_removed",
+        "transaction_status",
+        "receipt_id",
+        "receipt_valid",
+        "steps",
+        "failures",
+        "recovery_actions"
+      ],
+      "properties": {
+        "path": { "enum": ["http", "sdk", "mcp"] },
+        "status": { "enum": ["passed", "failed"] },
+        "environment": { "const": "simulation" },
+        "started_at": { "type": "string", "format": "date-time" },
+        "finished_at": { "type": "string", "format": "date-time" },
+        "elapsed_ms": { "type": "integer", "minimum": 0 },
+        "within_limit": { "type": "boolean" },
+        "project_fresh": { "type": "boolean" },
+        "source_unchanged": { "type": "boolean" },
+        "temp_project_removed": { "type": "boolean" },
+        "transaction_status": { "type": ["string", "null"] },
+        "receipt_id": { "type": ["string", "null"], "pattern": "^rcpt_" },
+        "receipt_valid": { "type": ["boolean", "null"] },
+        "steps": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/step" } },
+        "failures": { "type": "array", "items": { "$ref": "#/definitions/failure" } },
+        "recovery_actions": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/recoveryAction" }
+        },
+        "stopped_after_failure": { "const": true }
+      }
+    }
+  }
+}

@@ -57,13 +57,23 @@ doctor 会按顺序检查 Node、配置、endpoint、环境、API/MCP 契约、�
 
 接入分析只返回阶段、耗时、结果类别和稳定错误码，并固定为进程内、无持久化、无远程上传。详见 [开发者接入诊断 v0.1](../docs/03-technical/DEVELOPER_DIAGNOSTICS_V0.1.md)。
 
+## 三路径 clean-room 验收
+
+在仓库根目录安装 Sandbox 与 SDK 依赖后运行：
+
+```bash
+npm --prefix sandbox run acceptance:clean-room
+```
+
+验收器会在三个全新临时项目中分别通过原生 HTTP、`@bu2/sdk` 本地 tarball 和稳定 MCP stdio 入口完成独立 Simulation 交易。每条路径必须在 15 分钟内得到 `settled` 交易和 `valid=true` Receipt，并证明相关 BU2 源码未变化、临时项目已删除。样例和双语说明见 [`integrations/clean-room`](../integrations/clean-room/README.md)，实际结果见 [E2.4 clean-room 接入证据](../docs/03-technical/CLEAN_ROOM_ACCEPTANCE_EVIDENCE.md)。
+
 ## 测试
 
 ```bash
 node --test sandbox/*.test.mjs
 ```
 
-覆盖完整闭环、幂等冲突、报价金额篡改、Mandate 拒绝、交付前非法结算、SQLite 重启恢复、Adapter 防重复、Webhook HTTP 超时/5xx、有限重试、死信、审计重放、并发租约、Secret 轮换、端到端关联、日志脱敏、健康快照、MCP 外部 Agent 接入、doctor 故障注入、x402 未知结果恢复和 Receipt 签名验证。
+覆盖完整闭环、幂等冲突、报价金额篡改、Mandate 拒绝、交付前非法结算、SQLite 重启恢复、Adapter 防重复、Webhook HTTP 超时/5xx、有限重试、死信、审计重放、并发租约、Secret 轮换、端到端关联、日志脱敏、健康快照、MCP 外部 Agent 接入、doctor 故障注入、clean-room 证据约束、x402 未知结果恢复和 Receipt 签名验证。
 
 ## x402 沙盒商户
 

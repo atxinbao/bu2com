@@ -13,6 +13,9 @@ const versions = JSON.parse(
 const doctor = JSON.parse(
   readFileSync(join(here, 'doctor-result.schema.json'), 'utf8'),
 );
+const cleanRoom = JSON.parse(
+  readFileSync(join(here, 'clean-room-evidence.schema.json'), 'utf8'),
+);
 const openapi = readFileSync(join(here, 'openapi.yaml'), 'utf8');
 
 let assertions = 0;
@@ -91,6 +94,24 @@ assert(
   doctor.properties.analytics.properties.remote_enabled.const === false &&
     doctor.properties.analytics.properties.persistence.const === 'none',
   'Doctor analytics must keep remote upload and persistence disabled',
+);
+assert(
+  cleanRoom.properties.schema_version.const === versions.clean_room_evidence,
+  'Clean-room evidence schema version must match the runtime manifest',
+);
+assert(
+  cleanRoom.properties.paths.minItems === 3 && cleanRoom.properties.paths.maxItems === 3,
+  'Clean-room evidence must preserve exactly three integration paths',
+);
+assert(
+  cleanRoom.properties.environment.const === 'simulation' &&
+    cleanRoom.properties.max_elapsed_ms.const === 900000,
+  'Clean-room evidence must remain Simulation-only and bounded to 15 minutes',
+);
+assert(
+  cleanRoom.properties.analytics.properties.remote_enabled.const === false &&
+    cleanRoom.properties.analytics.properties.persistence.const === 'none',
+  'Clean-room evidence must keep remote upload and persistence disabled',
 );
 assert(
   openapi.includes('x-bu2-contract-status: phase0-frozen'),
