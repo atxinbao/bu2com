@@ -15,5 +15,6 @@
 - [x402 Base Sepolia 测试钱包](X402_TEST_WALLET.md)
 - [x402 Base Sepolia 实结算证据](X402_LIVE_SETTLEMENT_EVIDENCE.md)
 - [Phase 0 Epic 1：外部 Agent 交易接入与可靠性](PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md)
+- [Phase 0 Epic 2：开发者接入规模化](PHASE0_EPIC2_DEVELOPER_INTEGRATION_SCALE.md)
 
-Contract v0.1 已具备本地 SQLite Reference Server、追加式账本、Webhook Outbox、有限重试与死信、审计重放、Secret 版本轮换、端到端交易关联、结构化观测、健康快照、签名 Receipt、模拟支付 Adapter、基于官方 MCP SDK 的外部 Buyer/Seller Agent 样例，以及基于官方 x402 SDK 的 Base Sepolia Testnet Adapter。当前只允许 Simulation / Testnet；Mainnet、真实资金托管与生产密钥管理仍受项目治理约束，未经独立准入不得启用。
+Contract v0.1 已具备本地 SQLite Reference Server、追加式账本、Webhook Outbox、有限重试与死信、审计重放、Secret 版本轮换、端到端交易关联、结构化观测、健康快照、签名 Receipt、模拟支付 Adapter、基于官方 MCP SDK 的外部 Buyer/Seller Agent 样例，以及基于官方 x402 SDK 的 Base Sepolia Testnet Adapter。Epic 1 已经 PR #8 合并并完成；当前正式开发基线进入 Epic 2，先将既有交易契约产品化为可重复接入的 TypeScript SDK、MCP 分发、诊断和 clean-room 证据。当前只允许 Simulation / Testnet；Mainnet、真实资金托管与生产密钥管理仍受项目治理约束，未经独立准入不得启用。

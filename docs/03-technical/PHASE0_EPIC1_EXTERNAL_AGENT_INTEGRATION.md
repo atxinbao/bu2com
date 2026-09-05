@@ -2,7 +2,7 @@
 
 日期：2026-09-05
 执行者：Codex
-状态：E1.4 implemented locally · pending R2 review
+状态：Done · merged via PR #8
 风险等级：R2（交易相关，不包含生产资金）
 
 ## 1. 目标
@@ -159,4 +159,4 @@ npm --prefix prototype run build
 
 Epic 1 完成后，才评估 Epic 2：开发者接入规模化，包括 SDK 包装、MCP 分发、示例 Agent 和接入分析。Epic 1 不会自动提升 Mainnet、托管或生产执行模式。
 
-E1.0–E1.4 已完成本地实现。Epic 1 仍需通过 R2 人工审查并合并后才能标记 Done。
+E1.0–E1.4 已完成本地实现，并已通过 R2 人工审查后由 PR #8 合并。Epic 1 状态为 Done；后续开发进入 Epic 2，不反向扩大本 Epic 的支付或生产边界。

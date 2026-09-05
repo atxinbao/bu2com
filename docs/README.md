@@ -79,6 +79,7 @@
 - [`X402_TEST_WALLET.md`](03-technical/X402_TEST_WALLET.md)：Base Sepolia 测试钱包边界和操作记录。
 - [`X402_LIVE_SETTLEMENT_EVIDENCE.md`](03-technical/X402_LIVE_SETTLEMENT_EVIDENCE.md)：真实测试网结算及 Receipt 验证证据，不等同于生产可用性证明。
 - [`PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md`](03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md)：首个正式开发 Epic 的范围、Owner、可靠性工作包和完成门槛。
+- [`PHASE0_EPIC2_DEVELOPER_INTEGRATION_SCALE.md`](03-technical/PHASE0_EPIC2_DEVELOPER_INTEGRATION_SCALE.md)：开发者接入规模化 Epic 的 SDK、MCP 分发、诊断、试点证据与阶段边界。
 
 ## 可运行实现
 

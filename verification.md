@@ -171,6 +171,26 @@ Product v0.1 可作为客户访谈、交互原型和工程方案设计的输入�
 
 结论：Epic 1 定义达到 **Ready**，可以从 E1.0 Transaction API v1 契约冻结开始实施；不构成 Mainnet 或生产资金执行授权。
 
+## Phase 0 Epic 2 冻结验证
+
+日期：2026-09-06
+执行者：Codex
+
+- 前置状态：PR #8 已合并，Epic 1 的 E1.0–E1.4 已满足完成门槛并标记 Done。
+- Epic：`Developer Integration Scale`。
+- 风险等级：R2；本轮只冻结外部交易接入边界，不改变金额、状态机、账本、数据库、Webhook、Adapter 或 Receipt 行为。
+- 顺序：E2.1 TypeScript SDK、E2.2 MCP 分发、E2.3 接入诊断与最小分析、E2.4 HTTP/SDK/MCP 三路径 clean-room 证据。
+- 唯一语义来源：Agent Payment API v1；SDK 与 MCP 只能作为薄客户端，不拥有交易状态。
+- 边界：Python SDK、公开 npm 发布、远程 MCP、生产 API Key、Mainnet、托管和第二支付通道不在范围内。
+- 恢复：任一接入层失败可退回现有 HTTP API，不修改历史交易；兼容无法保持时停止并提新版本，而非隐藏差异。
+- 契约：`node docs/03-technical/validate-contract.mjs` 通过，29 项不变量、6 个 MCP 工具有效。
+- Sandbox：`npm --prefix sandbox test` 通过，44/44，0 失败。
+- Prototype：`npm --prefix prototype run lint` 通过，0 error；`npm --prefix prototype run build` 通过。
+- 文档：5 个变更相关 Markdown 入口共 77 个本地链接有效。
+- 格式与凭证：`git diff --check` 通过；新增行未发现凭证样式值。
+
+结论：Epic 2 已定义目标、非目标、Owner、接口与兼容规则、测试、验收和恢复方案，并通过本地门禁，达到 **Ready**。下一实现项为 E2.1 TypeScript SDK v0.1；不构成公开包发布、Mainnet 或生产资金执行授权。
+
 ## Phase 0 开发准入结论
 
 日期：2026-09-01
