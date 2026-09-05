@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="BU2.com 系统架构宪法 v1.0：长期领域、一致性、版本、迁移、稳定性与治理原则。">
+  <meta name="description" content="BU2.com 系统架构宪法 v1.1：长期领域、一致性、版本、环境隔离、迁移、稳定性与治理原则。">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23073d3b'/%3E%3Ctext x='32' y='39' text-anchor='middle' font-family='Arial' font-size='18' font-weight='700' fill='%23e2bd79'%3EBU2%3C/text%3E%3C/svg%3E">
-  <title>BU2 系统架构宪法 v1.0</title>
+  <title>BU2 系统架构宪法 v1.1</title>
   <style>
     :root {
       color-scheme: light;
@@ -104,12 +104,12 @@
   <div class="progress" aria-hidden="true"></div>
   <div class="shell">
     <aside aria-label="文档目录">
-      <div class="brand"><span class="mark">BU2</span><div><strong>架构宪法</strong><small>Architecture Constitution v1.0</small></div></div>
+      <div class="brand"><span class="mark">BU2</span><div><strong>架构宪法</strong><small>Architecture Constitution v1.1</small></div></div>
       <ol id="toc"></ol>
     </aside>
     <article>
 <h1>BU2 系统架构宪法</h1>
-<p>版本：1.0<br>生效日期：2026-09-01<br>制定者：Codex<br>适用范围：BU2.com 产品、API、SDK、MCP、Worker、支付适配器、账本、数据平台及其后续替代系统</p>
+<p>版本：1.1<br>生效日期：2026-09-06<br>制定者：Codex<br>适用范围：BU2.com 产品、API、SDK、MCP、Worker、支付适配器、账本、数据平台及其后续替代系统</p>
 <h2>序言</h2>
 <p>BU2.com 是 Agent 的 AI 收付平台。系统的长期目标不是让同一套代码、语言、数据库或云平台运行一百年，而是保证：</p>
 <blockquote>
@@ -476,7 +476,9 @@ provider_reference
 <hr>
 <h2>第十二章：发布、测试和质量门槛</h2>
 <h3>第三十二条：环境隔离</h3>
-<p>Development、Sandbox 和 Production 必须使用独立的：</p>
+<p>BU2 对外服务环境只有 <code>sandbox</code>（Base Sepolia，84532）与 <code>live</code>（Base Mainnet，8453）；内部本地执行环境为 <code>local</code>。Mainnet 是 Live 的网络属性，不是第三个环境；Simulation 是 local 的执行后端，不是对外环境。</p>
+<p>服务环境、执行后端和资金准入必须正交。不得从 Adapter 名称推导环境，不得用 <code>live</code> 字符串代替 CapabilityGrant、租户启用和 Mandate，也不得在环境故障时跨链或降级为模拟成功。Live 初始必须为 <code>execution_disabled</code>。</p>
+<p>Sandbox 和 Live 复用同一不可变软件制品，但必须使用独立的：</p>
 <ul>
 <li>数据库；</li>
 <li>凭证；</li>
@@ -486,12 +488,16 @@ provider_reference
 <li>域名；</li>
 <li>监控和告警。</li>
 </ul>
+<p>数据库必须保存不可静默改变的环境 metadata；配置、数据库、RPC、Signer、Provider 或 Receipt issuer 不一致时，资金路径必须失败关闭。旧 Receipt 保留原始环境字段、签名和版本化验证算法，不得通过改名或重签改变历史含义。详细决策见 <a href="docs/03-technical/ADR_0001_SANDBOX_LIVE_ENVIRONMENT_ISOLATION.md">ADR-0001</a>。</p>
 <h3>第三十三条：发布顺序</h3>
 <p>生产变化应经过：</p>
-<pre><code class="language-text">单元测试
+<pre><code class="language-text">Local Simulation 单元与故障测试
 → 状态机与契约测试
-→ Sandbox 端到端测试
+→ 隔离 Sandbox 部署与 Base Sepolia 端到端测试
 → 数据库迁移检查
+→ G-F 基础系统准入
+→ 同一制品 + 独立 Live 配置（execution disabled）
+→ G-L / CapabilityGrant / 租户与 Mandate 检查
 → 小流量 Canary
 → 逐步扩大
 → 可验证回滚
@@ -509,6 +515,9 @@ provider_reference
 <li>Webhook 可以重复投递但接收结果不重复；</li>
 <li>Receipt 可以脱离主系统验证；</li>
 <li>Ledger 可以重建关键状态。</li>
+<li>Sandbox 配成 8453、Live 配成 84532 或部署环境使用 simulated 时必须拒绝；</li>
+<li>错环境数据库、凭证、Mandate、Signer、Provider 或 Receipt 不得被自动路由；</li>
+<li>Live 未通过 G-L 时只读和对账可用，但不得签名或广播资金指令。</li>
 </ul>
 <hr>
 <h2>第十三章：架构治理</h2>
@@ -581,7 +590,7 @@ Worker           Signing       Delivery
 <p>稳定的领域模型、不可覆盖的交易事实、开放且版本化的契约、可独立验证的 Receipt，以及持续迁移、对账、恢复和重建的能力。</p>
 </blockquote>
 </div>
-      <p class="constitution-note">BU2.com · Architecture Constitution v1.0 · 2026-09-01</p>
+      <p class="constitution-note">BU2.com · Architecture Constitution v1.1 · 2026-09-06</p>
     </article>
   </div>
   <a class="back-top" href="#" aria-label="返回顶部">↑</a>

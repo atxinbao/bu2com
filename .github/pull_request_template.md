@@ -36,6 +36,7 @@
 - [ ] Payment Adapter / Provider / x402 / AP2
 - [ ] Receipt / Signature / Key
 - [ ] Observability / Operations
+- [ ] Environment / Deployment / Chain isolation
 - [ ] Documentation / Governance
 - [ ] 其他：
 
@@ -60,6 +61,7 @@
 | 金额与币种 |  |  |  |
 | 数据与账本 |  |  |  |
 | Provider / 外部系统 |  |  |  |
+| Environment / Chain / Execution status |  |  |  |
 
 ## 5. 金融不变量检查
 
@@ -88,9 +90,22 @@
 - [ ] 使用官方且经过审查的密码学或支付 SDK，没有自研加密算法。
 - [ ] 不适用；原因：
 
+环境与执行边界（所有 PR 必填）：
+
+- 影响环境：`none / local / sandbox / live`
+- 执行后端：`none / simulated / x402 / other`
+- Chain ID / Network：
+- `execution_status` 是否变化：
+- 数据库、凭证、Signer、Receipt issuer、Webhook 和 Provider 是否保持环境隔离：
+- 本 PR 是否可能签名或广播资金指令：
+- [ ] 没有从 Adapter 名称推导环境，没有将环境值或布尔开关解释成资金许可。
+- [ ] 没有把 Local Simulation 证据描述为 Sandbox 链上验收。
+- [ ] Live 保持 `execution_disabled`；若不保持，已按 R3 提供独立、限定范围的明确授权。
+
 ## 7. API、事件、Schema 与迁移
 
 - API / Event / Receipt / Policy / Adapter 版本影响：
+- Environment contract / client handshake 版本影响：
 - 向后兼容策略：
 - 数据所有者与事务边界：
 - 迁移方式：`无 / expand → migrate → verify → switch → contract`
@@ -140,6 +155,7 @@
 - [ ] Ledger 可验证或重建关键状态，Receipt 可独立验证。
 - [ ] 旧 API、事件、Receipt 和历史数据仍可解释。
 - [ ] 日志与错误输出不包含秘密或敏感支付数据。
+- [ ] 错环境、错链、错库、错 Signer、错 Provider 和跨环境凭证均失败关闭。
 
 未执行项及风险：
 
@@ -163,7 +179,7 @@
 
 ### R3 追加门槛
 
-- [ ] 已提供 Sandbox 端到端证据。
+- [ ] 已提供真实隔离 Sandbox / Base Sepolia 端到端证据；Local Simulation 不计入本项。
 - [ ] 已定义 Canary、低限额、白名单和自动停止条件。
 - [ ] 已确认监控、对账、备份与恢复演练结果。
 - [ ] 已确定生产变更窗口与逐步确认流程。
@@ -209,5 +225,6 @@ Changelog 条目名称：
 - [ ] 变更范围与批准需求一致，没有夹带无关重构或依赖升级。
 - [ ] 没有通过放宽校验、删除断言或跳过测试掩盖问题。
 - [ ] 没有把 Local、Sandbox 或 Testnet 结果描述为生产证明。
+- [ ] 已明确区分服务环境、执行后端与资金准入；Live 配置不等同于 Mainnet 执行授权。
 - [ ] 所有失败、未覆盖路径、未知结果和恢复责任均已披露。
 - [ ] 本 PR 满足对应风险等级的 Definition of Done，可以进入审查。

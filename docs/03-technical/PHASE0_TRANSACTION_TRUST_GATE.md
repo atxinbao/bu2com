@@ -4,7 +4,7 @@
 
 执行者：Codex
 
-状态：In progress · Gate 1–2 merged · Gate 3 implemented locally
+状态：Done · Gate 1–3 merged
 
 风险等级：R2
 
@@ -40,10 +40,12 @@
 - 崩溃恢复只允许查询或对账，不得自动重新付款。
 - 仅覆盖 Base Sepolia Testnet；Mainnet 仍为 NO-GO。
 
-当前状态：本地实现完成，等待独立 R2 PR 人工审查；不得据此启动 Mainnet 或真实资金。
+当前状态：已通过 PR #17 人工审查并合并；不得据此启动 Live、Mainnet 或真实资金。
 
 ## 3. Epic 3 准入
 
-Gate 1–3 均通过本地自动化、篡改、并发、重启与浏览器回归，并经各自 R2 PR 人工审查合并后，Epic 3 才能执行 Pilot Manifest、外部证据共享和三团队试点。否则任何 `receipt_valid=true` 都不能作为可信试点证据。
+Gate 1–3 已通过本地自动化、篡改、并发、重启与浏览器回归，并分别经 PR #15–#17 人工审查合并。交易可信度 Gate 已关闭。
+
+F01/ENV-01 将对外环境重新定义为 Sandbox/Live，并把正式 Epic 3 证据升级为托管 Sandbox 的真实 Base Sepolia 双向收付。因此，Epic 3 在执行 Pilot Manifest、外部证据共享和三团队试点前，还必须完成 ENV-02 环境注册表与链隔离、ENV-03 客户端/Receipt 环境契约迁移，以及对外暴露所需的环境与访问门槛。Local Simulation `receipt_valid=true` 继续是工具回归证据，不能替代正式 Sandbox 试点证据。
 
 审计报告中的界面性能项不阻塞交易可信度 Gate；公网化相关控制只在 Sandbox endpoint 对外暴露前进入准入。

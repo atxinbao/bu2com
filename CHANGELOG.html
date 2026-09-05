@@ -152,6 +152,31 @@
       <h2 id="unreleased">Unreleased</h2>
       <article class="release">
         <div class="release-head">
+          <div><h3>F01 / ENV-01 · Sandbox / Live 环境决策冻结</h3><time datetime="2026-09-06">2026-09-06</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">冻结 BU2 对外 Sandbox/Live、内部 local execution 的唯一环境语义，把服务环境、执行后端与资金准入拆成正交维度；Live 进入架构目标但初始 execution disabled，本变更不修改运行时代码或启用主网。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag governance">Governance</span>新增系统环境契约、Sandbox/Live 隔离 ADR 与 E-T01–E-T16 验收矩阵；对外环境只允许 <code>sandbox/live</code>，Simulation 仅为 <code>local</code> 的执行后端。</li>
+            <li><span class="tag changed">Changed</span>项目总纲、架构宪法、治理制度和 Agent 规则明确环境、Adapter 与 CapabilityGrant/Mandate 不互相替代；Live 必须保持 <code>execution_disabled</code> 直至 G-F/G-L 独立准入。</li>
+            <li><span class="tag changed">Changed</span>Epic 3 的正式外部证据由 Simulation Receipt 升级为托管 Sandbox 的真实 Base Sepolia 双向收付；Local Simulation 继续用于自动化工具证明，不能代替外部团队证据。</li>
+            <li><span class="tag changed">Changed</span>PR 模板新增环境、链、执行状态、跨环境隔离和证据真实性检查；R3 Sandbox 证据明确必须来自隔离 Base Sepolia，而非 Local Simulation。</li>
+            <li><span class="tag governance">Boundary</span>当前 API、SDK、MCP、Doctor、Receipt 和服务器仍使用 legacy <code>simulation/testnet</code>；ENV-02/03 合并前不得宣称运行时已执行新契约。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R2 · 环境、授权、Receipt 兼容和阶段准入语义，必须独立人类审查后合并</span></div>
+          <div><b>金融行为影响</b><span>无运行时资金行为变化；Live/Mainnet 不签名、不广播，Sandbox/Live 不能通过文档或配置自动获得付款许可</span></div>
+          <div><b>兼容性</b><span>不修改交易、数据库或旧 Receipt；legacy 环境值保留，后续采用 ENV-02/03 的 expand/backfill/verify/switch 迁移</span></div>
+          <div><b>验证</b><span>89 个本地 Markdown 链接、4 份 HTML 解析、环境决策断言、Contract 42 项、MCP 6 个、Reference Server 88/88、SDK 8/8、clean-room 3/3、Prototype lint/build、Chrome 桌面/移动渲染和控制台 0 error/warning 全部通过</span></div>
+          <div><b>恢复</b><span>移除新增环境入口并恢复上层文档；无需回滚交易、账本、数据库、Adapter 或 Receipt 历史</span></div>
+        </div>
+      </article>
+
+      <article class="release">
+        <div class="release-head">
           <div><h3>Transaction Trust Gate 3 · x402 Testnet 可信执行</h3><time datetime="2026-09-06">2026-09-06</time></div>
           <span class="status">Unreleased</span>
         </div>

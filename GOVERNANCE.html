@@ -83,12 +83,12 @@
   <div class="progress" aria-hidden="true"></div>
   <div class="shell">
     <aside>
-      <div class="identity"><span class="mark">BU2</span><div><strong>项目治理制度</strong><small>GOVERNANCE · V1.0</small></div></div>
+      <div class="identity"><span class="mark">BU2</span><div><strong>项目治理制度</strong><small>GOVERNANCE · V1.1</small></div></div>
       <nav aria-label="页面目录"><a href="#authority">权威层级</a><a href="#lifecycle">项目生命周期</a><a href="#roles">责任与批准</a><a href="#gates">Ready / Done</a><a href="#decisions">决策与例外</a><a href="#release">发布制度</a><a href="#incident">事故与恢复</a><a href="#retirement">退役与债务</a><a href="#cadence">治理节奏</a></nav>
       <div class="aside-note">AI 可以起草、实现和验证，但不能成为 R2/R3 变更的唯一批准者。</div>
     </aside>
     <main>
-      <header class="hero"><p class="eyebrow">BU2.COM · PROJECT GOVERNANCE SYSTEM</p><h1>项目治理制度</h1><p class="lead">建立从需求、决策、实施、验证、发布、运营到退役的完整责任链，让每项能力不仅“能做出来”，还能够被批准、追溯、运营和安全退出。</p><div class="meta"><span>版本 1.0</span><span>生效日期 2026-09-01</span><span>状态 Governance Baseline</span><span>维护者 BU2 Engineering / Codex</span></div></header>
+      <header class="hero"><p class="eyebrow">BU2.COM · PROJECT GOVERNANCE SYSTEM</p><h1>项目治理制度</h1><p class="lead">建立从需求、决策、实施、验证、发布、运营到退役的完整责任链，让每项能力不仅“能做出来”，还能够被批准、追溯、运营和安全退出。</p><div class="meta"><span>版本 1.1</span><span>生效日期 2026-09-06</span><span>状态 F01 / ENV-01 Proposed</span><span>维护者 BU2 Engineering / Codex</span></div></header>
       <div class="manifesto"><b>Governance principle</b><p>没有所有者的能力不得上线；没有证据的变更不得完成；没有到期时间的例外不得存在。</p></div>
 
       <section class="section" id="authority"><h2>一、文档权威层级</h2><p>项目文件发生冲突时按以下顺序处理，低层文件不得静默覆盖高层决策。</p><div class="authority"><div><b>法律与外部约束</b><span>监管、支付通道、合同和生产运行限制</span></div><div><b>AGENTS.md</b><span>所有 AI Agent 的强制行为规则</span></div><div><b>PROJECT.html</b><span>项目定位、执行模式和阶段准入门槛</span></div><div><b>ARCHITECTURE.html</b><span>长期业务事实与系统不变量</span></div><div><b>GOVERNANCE.html</b><span>决策、责任、变更、发布和运营制度</span></div><div><b>ADR / Contracts</b><span>具体决策、API、事件、Schema 和迁移</span></div><div><b>CHANGELOG.html</b><span>实际变更与验证历史</span></div><div><b>模块文档与代码</b><span>实现细节，不得重新定义上层原则</span></div></div></section>
@@ -101,7 +101,7 @@
 
       <section class="section" id="decisions"><h2>五、决策、风险与例外</h2><p>重大决策、未消除风险和临时例外必须进入独立登记，不允许只存在于聊天、Prompt 或口头共识。</p><div class="registers"><div class="register"><h3>ADR</h3><p>记录背景、候选方案、选择、后果和重新评估条件。</p><span class="inline-status">要求已内置</span></div><div class="register"><h3>Decision Register</h3><p>项目所有有效决定的索引、Owner、状态和替代关系。</p><span class="inline-status">要求已内置</span></div><div class="register"><h3>Risk Register</h3><p>概率、影响、控制、残余风险、Owner 和复审日期。</p><span class="inline-status">要求已内置</span></div><div class="register"><h3>Exception Register</h3><p>规则例外必须有范围、补偿控制、批准人与自动到期日。</p><span class="inline-status">要求已内置</span></div></div><p class="warning danger">永久例外无效。例外到期时系统必须恢复原规则、获得新批准或停止相关能力。</p></section>
 
-      <section class="section" id="release"><h2>六、发布与变更制度</h2><p>发布单位是可观察行为及其证据，不只是代码提交。每次发布必须能回答“改变了什么、风险是什么、如何停止、如何恢复”。</p><table class="gate-table"><thead><tr><th>等级</th><th>最低批准</th><th>最低证据</th></tr></thead><tbody><tr><td>R0 文档/展示</td><td>Owner 或维护者</td><td>格式、链接、渲染</td></tr><tr><td>R1 普通逻辑</td><td>模块 Owner</td><td>Lint、类型、单元测试、构建</td></tr><tr><td>R2 交易相关</td><td>Domain + Architecture</td><td>不变量、集成、并发、恢复、兼容和回滚</td></tr><tr><td>R3 真实资金</td><td>Project Owner 明确批准（受阶段准入门槛约束）</td><td>Sandbox E2E、Canary、监控、对账、备份和人工执行窗口</td></tr></tbody></table></section>
+      <section class="section" id="release"><h2>六、发布与变更制度</h2><p>发布单位是可观察行为及其证据，不只是代码提交。每次发布必须能回答“改变了什么、风险是什么、如何停止、如何恢复”。</p><table class="gate-table"><thead><tr><th>等级</th><th>最低批准</th><th>最低证据</th></tr></thead><tbody><tr><td>R0 文档/展示</td><td>Owner 或维护者</td><td>格式、链接、渲染</td></tr><tr><td>R1 普通逻辑</td><td>模块 Owner</td><td>Lint、类型、单元测试、构建</td></tr><tr><td>R2 交易相关</td><td>Domain + Architecture</td><td>不变量、集成、并发、恢复、兼容和回滚</td></tr><tr><td>R3 真实资金</td><td>Project Owner 明确批准（受阶段准入门槛约束）</td><td>Sandbox E2E、Canary、监控、对账、备份和人工执行窗口</td></tr></tbody></table><p class="warning">环境建设与资金启用是两个决定。Sandbox/Live 配置、部署模板或只读入口可以在对应 R2 审查后建设；Live 必须保持 <code>execution_disabled</code>，直至 G-F、G-L、有效 CapabilityGrant、租户启用和 Mandate 全部满足。PR 合并、环境字符串或单一布尔值均不构成主网执行授权。</p></section>
 
       <section class="section" id="incident"><h2>七、事故与恢复制度</h2><div class="flow">Detect → Contain → Preserve Evidence → Reconcile
        → Recover → Communicate → Postmortem
@@ -111,7 +111,7 @@
 
       <section class="section" id="cadence"><h2>九、治理节奏</h2><div class="cadence"><div><b>每次变更</b><p>Ready、风险分级、测试证据、Changelog 和 Done。</p></div><div><b>每周</b><p>风险、例外、未知交易、死信、依赖和技术债复审。</p></div><div><b>每月</b><p>项目路线、SLO、对账、容量、密钥和 CapabilityGrant 复审。</p></div><div><b>每季度</b><p>灾备恢复、账本重建、Provider 退出和旧版本退役演练。</p></div><div><b>每次事故</b><p>证据保全、对账恢复、复盘和永久回归测试。</p></div><div><b>每次阶段升级</b><p>重新批准 PROJECT.html 中的阶段准入门槛。</p></div></div></section>
 
-      <footer>BU2.com · Governance v1.0 · 决策有 Owner，例外有期限，发布有证据，事故可恢复</footer>
+      <footer>BU2.com · Governance v1.1 · 决策有 Owner，环境与资金准入分离，发布有证据，事故可恢复</footer>
     </main>
   </div>
   <a class="back-top" href="#" aria-label="返回顶部">↑</a>

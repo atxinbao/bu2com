@@ -440,3 +440,22 @@ Product v0.1 可作为客户访谈、交互原型和工程方案设计的输入�
 - Playwright CLI 使用 Google Chrome 验证 `http://localhost:3000/`：真实 API 的 funds_reserved 交易未显示虚构 Receipt；中英文、桌面与 390×844 移动视口通过；当前回归会话控制台 0 error、0 warning。该浏览器证据连接本地 Simulation API，不是链上结算证明。
 
 结论：Gate 3 本地实现达到 **GO for R2 review**。必须经独立人工审查并合并后，Transaction Trust Gate 才可标记完成并进入 Epic 3；Mainnet、真实资金、托管和生产密钥仍为 NO-GO。
+
+## F01 / ENV-01 系统环境决策冻结验证
+
+日期：2026-09-06
+执行者：Codex
+
+- 输入文档：`BU2_SYSTEM_ENVIRONMENTS_V1_1.md` 与 `BU2_F01_ENV01_PR_BRIEF_V1_1.md`；两份输入均按建议实施基线处理，不作为已经部署或已经验收的事实。
+- 当前基线：PR #17 已合并，Transaction Trust Gate 1–3 均为 Done；输入文档中的 Gate 3 pending 状态已按当前 `main` 修正。
+- 决策：对外服务环境只允许 `sandbox/live`，内部本地执行环境为 `local`；`simulated/x402` 是执行后端，环境值不构成资金许可。
+- 网络：Sandbox 固定 Base Sepolia `eip155:84532`；Live 固定 Base Mainnet `eip155:8453` 且初始 `execution_disabled`。Base/Circle 官方资料已于本轮重新核对。
+- 交付：新增系统环境契约 v1、ADR-0001 与 E-T01–E-T16 环境验收矩阵，并对齐 PROJECT、ARCHITECTURE、GOVERNANCE、AGENTS、README、Epic 3、Trust Gate、技术索引、PR 模板与 Changelog。
+- Epic 3：正式外部试点证据升级为托管 Sandbox 的真实 Base Sepolia 双向收付；Local Simulation 只作为工具与故障测试证据。
+- 兼容：不修改 API、SDK、MCP、Doctor、数据库或 Receipt；legacy `simulation/testnet` 保留，ENV-02/03 采用分步迁移并保留旧 Receipt 原始签名语义。
+- 静态验证：89 个本地 Markdown 链接有效，PROJECT/ARCHITECTURE/GOVERNANCE/CHANGELOG 均可解析，环境决策断言与 `git diff --check` 通过，变更内容未发现秘密样式值。
+- 全项目门禁：Contract 42 项不变量与 MCP 6/6、Reference Server 88/88、TypeScript SDK 8/8、HTTP/SDK/MCP clean-room 3/3、Prototype lint 与 Vinext build 全部通过。
+- 浏览器：Playwright CLI 使用 Google Chrome 验证 PROJECT、ARCHITECTURE、GOVERNANCE 的桌面渲染及 PROJECT 390×844 移动视口；新环境章节、版本和治理警告可见，控制台 0 error、0 warning。
+- 未执行：没有创建 DNS、云资源或部署，没有修改运行时环境枚举，没有执行 Base Sepolia 或 Mainnet 支付，没有加载钱包或生产凭证。
+
+结论：F01/ENV-01 达到 **GO for R2 review**。它冻结的是目标环境与迁移契约，不代表 ENV-02/03 已实现，也不构成 Live/Mainnet 执行授权。下一实现项为 ENV-02 环境注册表与链隔离。
