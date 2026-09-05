@@ -2,7 +2,7 @@
 
 日期：2026-09-06
 执行者：Codex
-状态：E2.1 implemented locally · pending R2 review
+状态：E2.2 implemented locally · pending R2 review
 风险等级：R2（交易接入边界，不包含生产资金）
 
 ## 1. 目标
@@ -46,7 +46,7 @@ BU2 只接收完成交易所需的结构化对象和外部上下文引用，不�
 - 固定版本兼容、错误透传、幂等、超时与结果未知规则。
 - 定义 E2.1–E2.4 的验收、恢复和阶段禁区。
 
-### E2.1 — TypeScript SDK v0.1（已完成本地实现）
+### E2.1 — TypeScript SDK v0.1（已完成 · PR #10）
 
 - 建立独立、可测试的 TypeScript 包，覆盖 Quote、PaymentIntent、Transaction、DeliveryEvidence、Authorization、Settlement 与 Receipt 查询/验证。
 - 类型与运行时输入约束来源于冻结契约，不手写第二套资源定义。
@@ -56,12 +56,14 @@ BU2 只接收完成交易所需的结构化对象和外部上下文引用，不�
 
 完成证据：Monorepo 新增私有包 `@bu2/sdk` v0.1.0。请求与响应类型由 `openapi-typescript` 7.13.0 从冻结的 `openapi.yaml` 生成，运行时 HTTP 使用 `openapi-fetch` 0.17.0；公开方法覆盖 Quote、PaymentIntent、Authorization、Transaction、DeliveryEvidence、Settlement、Settlement Recovery 与 Receipt。SDK 不自动重试；读取传输错误标记 `retry_safe`，写入超时、网络错误和 5xx 标记 `query_before_retry`，并保留服务端 `type`、`code`、`request_id`、`trace_id` 与 details。8 项专项测试覆盖完整 Simulation 交易、类型/生成漂移、幂等、无效输入、传输失败、超时、5xx 和恢复端点。包保持 `private: true`，未公开发布。
 
-### E2.2 — MCP 分发与 Host 配置
+### E2.2 — MCP 分发与 Host 配置（已完成本地实现）
 
 - 将现有 stdio Server 包装为稳定入口，提供 Codex、Claude Desktop 和通用 MCP Host 配置示例。
 - 6 个现有工具继续读取 `mcp-tools.json`，不复制 Schema，不增加 Agent 自批授权或直接结算能力。
 - 提供版本与能力握手，使 Host 能识别 API/MCP 不兼容，而不是在资金动作中猜测。
 - 不建设插件市场、远程 MCP 托管或新的身份系统。
+
+完成证据：新增稳定 `sandbox/bin/bu2-mcp.mjs` stdio 入口，并继续从唯一 `mcp-tools.json` 注册原有 6 个工具。Reference Server `/health` 以加法字段报告 Agent Payment API contract、base path、活动环境和兼容 MCP contract；CLI 在打开 stdio 前完成 endpoint preflight，不兼容时返回稳定错误并停止。MCP initialize 使用标准 `serverInfo` 与 `capabilities.experimental["com.bu2.agent-payments"]` 公开 API/MCP version、contract SHA-256、环境、工具数量和无自动 mutation retry 边界。Codex、Claude Desktop 与通用 Host 配置均指向稳定入口。8 项专项测试覆盖静态元数据、实际 endpoint preflight、真实 initialize 握手及握手拒绝、API/环境/MCP 版本不兼容、Mainnet 拒绝和配置解析。
 
 ### E2.3 — 接入诊断与最小分析
 
@@ -161,4 +163,4 @@ npm --prefix prototype run build
 - E2.1–E2.4 依赖顺序、验收、测试与恢复方案已经明确。
 - 生产资金、公开分发、远程托管和数据采集边界已经明确排除。
 
-结论：Epic 2 达到 **Ready**。E2.1 已完成本地实现，仍需 R2 人工审查并合并后才算完成；合并后下一项为 E2.2 MCP 分发。不得扩大到 Python SDK、公开分发、远程 MCP 或 Mainnet。
+结论：Epic 2 达到 **Ready**。E2.1 已经 PR #10 合并；E2.2 已完成本地实现，仍需 R2 人工审查并合并后才算完成。合并后下一项为 E2.3 接入诊断与最小分析。不得扩大到 Python SDK、公开分发、远程 MCP 或 Mainnet。

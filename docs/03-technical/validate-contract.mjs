@@ -7,6 +7,9 @@ const flow = JSON.parse(
   readFileSync(join(here, 'examples/payment-flow.json'), 'utf8'),
 );
 const mcp = JSON.parse(readFileSync(join(here, 'mcp-tools.json'), 'utf8'));
+const versions = JSON.parse(
+  readFileSync(join(here, 'contract-versions.json'), 'utf8'),
+);
 const openapi = readFileSync(join(here, 'openapi.yaml'), 'utf8');
 
 let assertions = 0;
@@ -63,6 +66,15 @@ assert(
   'MCP inputs must be closed object schemas',
 );
 assert(mcp.contract_status === 'phase0-frozen', 'MCP contract must be Phase 0 frozen');
+assert(
+  mcp.version === versions.mcp_tools,
+  'MCP runtime version manifest must match mcp-tools.json',
+);
+assert(
+  openapi.includes(`version: ${versions.agent_payment_api}`),
+  'API runtime version manifest must match OpenAPI',
+);
+assert(versions.api_base_path === '/v1', 'API base path must remain /v1');
 assert(
   openapi.includes('x-bu2-contract-status: phase0-frozen'),
   'OpenAPI contract must be Phase 0 frozen',

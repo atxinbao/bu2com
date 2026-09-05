@@ -36,10 +36,12 @@ npm run demo:external
 也可以把 MCP Server 连接到已运行的本地 BU2：
 
 ```bash
-BU2_SANDBOX_URL=http://127.0.0.1:3100 npm run mcp
+BU2_ENDPOINT=http://127.0.0.1:3100 \
+BU2_ENVIRONMENT=simulation \
+npm run mcp
 ```
 
-Agent 只获得冻结的 6 个 MCP 工具；人工授权和 BU2 结算仍留在 HTTP 控制面。MCP 层只转发 `/v1`，不会直接修改领域状态或账本。完整配置、角色边界和五分钟快速开始见 [外部 Agent 快速接入](../docs/03-technical/EXTERNAL_AGENT_QUICKSTART.md)。
+`npm run mcp` 使用稳定入口 `bin/bu2-mcp.mjs`，先校验 endpoint、API contract、环境和 MCP contract compatibility，再打开 stdio。Agent 只获得冻结的 6 个 MCP 工具；人工授权和 BU2 结算仍留在 HTTP 控制面。MCP 层只转发 `/v1`，不会直接修改领域状态或账本。完整配置、角色边界和五分钟快速开始见 [外部 Agent 快速接入](../docs/03-technical/EXTERNAL_AGENT_QUICKSTART.md)；Codex、Claude Desktop 与通用 Host 示例见 [MCP Host 配置](../integrations/mcp/README.md)。
 
 ## 测试
 
@@ -116,7 +118,7 @@ npm run x402:server
 
 ## 沙盒调试端点
 
-- `GET /health`：服务、数据库、Adapter、账本事件，以及 Outbox 与 Adapter 未知结果健康快照。
+- `GET /health`：服务、API/MCP 兼容版本、环境、数据库、Adapter、账本事件，以及 Outbox 与 Adapter 未知结果健康快照。
 - `GET /v1/transactions?limit=20&cursor=...`：按时间倒序返回交易及其支付、交付、通道和 Receipt 上下文，使用不透明 cursor 分页。
 - `GET /v1/transactions/{id}`：返回单笔完整交易详情。
 - `POST /v1/transactions/{id}/settlement_recoveries`：幂等查询未知 x402 结算，不重复付款。

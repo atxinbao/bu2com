@@ -1,0 +1,6 @@
+[mcp_servers.bu2-simulation]
+command = "node"
+args = ["/absolute/path/to/bu2com/sandbox/bin/bu2-mcp.mjs"]
+env = { BU2_ENDPOINT = "http://127.0.0.1:3100", BU2_ENVIRONMENT = "simulation" }
+startup_timeout_sec = 10
+tool_timeout_sec = 30

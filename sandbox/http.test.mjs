@@ -44,6 +44,10 @@ test("HTTP reference server completes one signed agent payment", async (context)
   const health = await request(running.url, "/health");
   assert.equal(health.status, 200);
   assert.match(health.requestId, /^req_/);
+  assert.equal(health.body.api_contract_version, "0.1.3");
+  assert.equal(health.body.api_base_path, "/v1");
+  assert.deepEqual(health.body.mcp_contract_versions, ["0.1.0"]);
+  assert.equal(health.body.environment, "simulation");
 
   const quote = await request(running.url, "/v1/quotes", {
     method: "POST",
@@ -286,6 +290,7 @@ test("HTTP server exposes an explicit x402 adapter mode without a signer", async
   const health = await request(running.url, "/health");
   assert.equal(health.body.version, "0.8.0");
   assert.equal(health.body.adapter, "x402_exact_base_sepolia");
+  assert.equal(health.body.environment, "testnet");
   assert.equal(running.sandbox.wallet.currency, "USD");
 });
 
