@@ -154,6 +154,23 @@ Product v0.1 可作为客户访谈、交互原型和工程方案设计的输入�
 
 结论：本次文档索引修订为 **GO**；未对产品逻辑、交易状态或资金行为作出修改。
 
+## Phase 0 Epic 1 冻结验证
+
+日期：2026-09-05
+执行者：Codex
+
+- Epic：`External Agent Transaction Integration & Reliability`。
+- 风险等级：R2；本轮只冻结实施范围，不改变交易状态、金额、数据库或支付通道行为。
+- 范围：Transaction API v1、Webhook 死信/重放/Secret 轮换、交易可观测性、x402 Testnet 失败回归、外部 Agent 接入样例。
+- 边界：Mainnet、真实资金托管、法币、提现、换汇、跨链和第二支付通道不在范围内。
+- 文档链接：根 README 24/24、docs README 35/35、技术 README 10/10 有效。
+- 契约验证：12 项不变量、6 个 MCP 工具通过。
+- Sandbox：20/20 通过，0 失败。
+- Prototype：lint 0 error，生产 build 通过。
+- 格式：`git diff --check` 通过。
+
+结论：Epic 1 定义达到 **Ready**，可以从 E1.0 Transaction API v1 契约冻结开始实施；不构成 Mainnet 或生产资金执行授权。
+
 ## Phase 0 开发准入结论
 
 日期：2026-09-01
@@ -190,3 +207,20 @@ Product v0.1 可作为客户访谈、交互原型和工程方案设计的输入�
 - Contract 12 项、Sandbox 20/20、Prototype lint 与 build 全部通过。
 
 结论：本次 README 与治理变更为 **GO**，可以提交 PR。
+
+## E1.0 Transaction API v1 冻结验证
+
+日期：2026-09-05
+执行者：Codex
+
+- `/v1` 资源与行为契约标记为 `phase0-frozen`，OpenAPI、MCP、HTTP 实现和 Developers 页面已对齐。
+- `GET /v1/transactions` 返回稳定的 cursor 分页结构；旧有 `data` 字段保持不变。
+- 所有 HTTP 响应携带 `X-Request-Id`，错误体 `request_id` 与响应头一致。
+- AJV 在 HTTP 边界拒绝未知字段、非法资源 ID、非法幂等键、无效 cursor、错误媒体类型和超过 1 MiB 的 JSON 请求体。
+- Contract 19 项不变量、6 个 MCP 工具通过；Sandbox 21/21 通过。
+- OpenAPI YAML 可解析，Redocly 判定 API description 有效；仅缺少 license 字段 warning，未在无项目 LICENSE 的情况下擅自声明许可证。
+- Prototype lint 0 error，生产 build 通过。
+- Playwright 在桌面与 390×844 移动端完成中文/英文 Developers 页面、实时 API 数据和控制台验证；0 error、0 warning。
+- 浏览器验证同时修复了 Simulated Adapter 数据被误标为 x402 的展示口径。
+
+结论：E1.0 为 **GO**。本结论冻结 Phase 0 Transaction API v1，但不开放 Mainnet、托管、生产密钥或公开无认证部署；下一顺序项为 E1.1 Webhook 死信、审计重放与 Secret 轮换。

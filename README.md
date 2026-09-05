@@ -11,12 +11,14 @@ BU2.com 是 Agent 的 AI 收付平台。它嵌入 ChatGPT、Codex、Claude 和�
 | 项目阶段 | Phase 0 · Simulation / Testnet |
 | 产品定义 | Product v0.3 · Transaction-first |
 | API 契约 | Agent Payment API v0.1 |
-| Reference Server | Sandbox v0.3 · Node.js + SQLite WAL |
+| Reference Server | Sandbox v0.4 · Node.js + SQLite WAL |
 | 支付通道 | Simulated Adapter + x402 Base Sepolia Adapter |
 | 产品界面 | React 19 + TypeScript 双语原型 |
 | 生产边界 | Mainnet、客户资金托管和法币能力尚未开放 |
 
 当前代码已经形成可运行的 Agent 收付闭环，但仍是本地与测试网证据，不是生产支付系统或法律合规结论。
+
+当前正式开发项为 [Phase 0 Epic 1：External Agent Transaction Integration & Reliability](docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md)：先冻结外部 Transaction API，再闭合 Webhook 死信/重放/Secret 轮换、交易可观测性与 x402 Testnet 失败恢复，最后提供首个外部 Agent 接入样例。
 
 ## Agent 支付闭环
 
@@ -76,7 +78,7 @@ npm --prefix prototype run lint
 npm --prefix prototype run build
 ```
 
-当前基线应得到：Contract 12 项不变量通过、6 个 MCP 工具有效、Sandbox 20/20 通过、Prototype lint 与 build 通过。
+当前基线应得到：Contract 19 项不变量通过、6 个 MCP 工具有效、Sandbox 21/21 通过、Prototype lint 与 build 通过。
 
 ### 启动本地交易演示
 

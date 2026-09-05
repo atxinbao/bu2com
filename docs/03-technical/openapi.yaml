@@ -3,6 +3,7 @@ info:
   title: BU2 Agent Payment API
   version: 0.1.0
   description: Transaction-first API for agent-to-agent payment authorization, delivery, settlement, and receipts.
+  x-bu2-contract-status: phase0-frozen
 servers:
   - url: https://api.bu2.com/v1
 security:
@@ -22,10 +23,15 @@ paths:
       responses:
         '201':
           description: Quote created
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/RequestId' }
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Quote' }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '409': { $ref: '#/components/responses/Conflict' }
+        '413': { $ref: '#/components/responses/RequestTooLarge' }
+        '415': { $ref: '#/components/responses/UnsupportedMediaType' }
   /payment_intents:
     post:
       operationId: createPaymentIntent
@@ -40,10 +46,15 @@ paths:
       responses:
         '201':
           description: Intent created
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/RequestId' }
           content:
             application/json:
               schema: { $ref: '#/components/schemas/PaymentIntent' }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '409': { $ref: '#/components/responses/Conflict' }
+        '413': { $ref: '#/components/responses/RequestTooLarge' }
+        '415': { $ref: '#/components/responses/UnsupportedMediaType' }
   /payment_intents/{payment_intent_id}:
     get:
       operationId: getPaymentIntent
@@ -53,9 +64,12 @@ paths:
       responses:
         '200':
           description: Current intent
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/RequestId' }
           content:
             application/json:
               schema: { $ref: '#/components/schemas/PaymentIntent' }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '404': { $ref: '#/components/responses/NotFound' }
   /payment_intents/{payment_intent_id}/authorization:
     post:
@@ -78,26 +92,31 @@ paths:
       responses:
         '200':
           description: Decision recorded
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/RequestId' }
           content:
             application/json:
               schema: { $ref: '#/components/schemas/PaymentIntent' }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '409': { $ref: '#/components/responses/Conflict' }
+        '413': { $ref: '#/components/responses/RequestTooLarge' }
+        '415': { $ref: '#/components/responses/UnsupportedMediaType' }
   /transactions:
     get:
       operationId: listTransactions
       summary: List transactions with payment, delivery, channel, and receipt context
+      parameters:
+        - $ref: '#/components/parameters/PageLimit'
+        - $ref: '#/components/parameters/PageCursor'
       responses:
         '200':
           description: Transactions ordered newest first
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/RequestId' }
           content:
             application/json:
-              schema:
-                type: object
-                required: [data]
-                properties:
-                  data:
-                    type: array
-                    items: { $ref: '#/components/schemas/TransactionView' }
+              schema: { $ref: '#/components/schemas/TransactionPage' }
+        '400': { $ref: '#/components/responses/BadRequest' }
   /transactions/{transaction_id}:
     get:
       operationId: getTransaction
@@ -107,9 +126,12 @@ paths:
       responses:
         '200':
           description: Transaction detail
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/RequestId' }
           content:
             application/json:
               schema: { $ref: '#/components/schemas/TransactionView' }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '404': { $ref: '#/components/responses/NotFound' }
   /transactions/{transaction_id}/deliveries:
     post:
@@ -126,10 +148,21 @@ paths:
       responses:
         '201':
           description: Delivery recorded
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/RequestId' }
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Transaction' }
+              schema:
+                type: object
+                additionalProperties: false
+                required: [transaction, delivery]
+                properties:
+                  transaction: { $ref: '#/components/schemas/Transaction' }
+                  delivery: { $ref: '#/components/schemas/DeliveryRecord' }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '409': { $ref: '#/components/responses/Conflict' }
+        '413': { $ref: '#/components/responses/RequestTooLarge' }
+        '415': { $ref: '#/components/responses/UnsupportedMediaType' }
   /transactions/{transaction_id}/settlements:
     post:
       operationId: settleTransaction
@@ -137,9 +170,18 @@ paths:
       parameters:
         - $ref: '#/components/parameters/TransactionId'
         - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
       responses:
         '201':
           description: Settled and receipt issued
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/RequestId' }
           content:
             application/json:
               schema:
@@ -148,22 +190,47 @@ paths:
                 properties:
                   transaction: { $ref: '#/components/schemas/Transaction' }
                   receipt: { $ref: '#/components/schemas/Receipt' }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '409': { $ref: '#/components/responses/Conflict' }
+        '413': { $ref: '#/components/responses/RequestTooLarge' }
+        '415': { $ref: '#/components/responses/UnsupportedMediaType' }
   /receipts/{receipt_id}:
     get:
       operationId: getReceipt
       summary: Read a verifiable receipt
       parameters:
-        - name: receipt_id
-          in: path
-          required: true
-          schema: { type: string, pattern: '^rcpt_' }
+        - $ref: '#/components/parameters/ReceiptId'
       responses:
         '200':
           description: Receipt
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/RequestId' }
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Receipt' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /receipts/{receipt_id}/verify:
+    get:
+      operationId: verifyReceipt
+      summary: Verify a receipt signature and transaction binding
+      parameters:
+        - $ref: '#/components/parameters/ReceiptId'
+      responses:
+        '200':
+          description: Receipt verification result
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/RequestId' }
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [receipt_id, valid]
+                properties:
+                  receipt_id: { type: string, pattern: '^rcpt_[A-Za-z0-9_-]+$' }
+                  valid: { type: boolean }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '404': { $ref: '#/components/responses/NotFound' }
 components:
   securitySchemes:
@@ -178,12 +245,32 @@ components:
       name: payment_intent_id
       in: path
       required: true
-      schema: { type: string, pattern: '^pi_' }
+      schema: { type: string, pattern: '^pi_[A-Za-z0-9_-]+$', maxLength: 255 }
     TransactionId:
       name: transaction_id
       in: path
       required: true
-      schema: { type: string, pattern: '^txn_' }
+      schema: { type: string, pattern: '^txn_[A-Za-z0-9_-]+$', maxLength: 255 }
+    ReceiptId:
+      name: receipt_id
+      in: path
+      required: true
+      schema: { type: string, pattern: '^rcpt_[A-Za-z0-9_-]+$', maxLength: 255 }
+    PageLimit:
+      name: limit
+      in: query
+      required: false
+      schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+    PageCursor:
+      name: cursor
+      in: query
+      required: false
+      description: Opaque cursor returned by the preceding page.
+      schema: { type: string, minLength: 1, maxLength: 1024 }
+  headers:
+    RequestId:
+      description: Server-generated identifier for this HTTP request.
+      schema: { type: string, pattern: '^req_[A-Za-z0-9_-]+$' }
   schemas:
     Amount:
       type: object
@@ -197,24 +284,36 @@ components:
       additionalProperties: false
       required: [seller_agent_id, payee_account_id, item, amount, expires_at]
       properties:
-        seller_agent_id: { type: string, pattern: '^agt_' }
-        payee_account_id: { type: string, pattern: '^acct_' }
+        seller_agent_id: { type: string, pattern: '^agt_[A-Za-z0-9_-]+$', maxLength: 255 }
+        payee_account_id: { type: string, pattern: '^acct_[A-Za-z0-9_-]+$', maxLength: 255 }
         item:
           type: object
+          additionalProperties: false
           required: [name, delivery_type]
           properties:
-            name: { type: string, minLength: 1 }
-            delivery_type: { type: string, minLength: 1 }
+            name: { type: string, minLength: 1, maxLength: 200 }
+            delivery_type: { type: string, minLength: 1, maxLength: 100 }
         amount: { $ref: '#/components/schemas/Amount' }
         expires_at: { type: string, format: date-time }
     Quote:
-      allOf:
-        - $ref: '#/components/schemas/CreateQuote'
-        - type: object
-          required: [id, status]
+      type: object
+      additionalProperties: false
+      required: [id, seller_agent_id, payee_account_id, item, amount, expires_at, status, created_at]
+      properties:
+        id: { type: string, pattern: '^quo_[A-Za-z0-9_-]+$' }
+        seller_agent_id: { type: string, pattern: '^agt_[A-Za-z0-9_-]+$', maxLength: 255 }
+        payee_account_id: { type: string, pattern: '^acct_[A-Za-z0-9_-]+$', maxLength: 255 }
+        item:
+          type: object
+          additionalProperties: false
+          required: [name, delivery_type]
           properties:
-            id: { type: string, pattern: '^quo_' }
-            status: { type: string, enum: [active, accepted, expired, canceled] }
+            name: { type: string, minLength: 1, maxLength: 200 }
+            delivery_type: { type: string, minLength: 1, maxLength: 100 }
+        amount: { $ref: '#/components/schemas/Amount' }
+        expires_at: { type: string, format: date-time }
+        status: { type: string, enum: [active, accepted, expired, canceled] }
+        created_at: { type: string, format: date-time }
     ExternalContext:
       type: object
       additionalProperties: false
@@ -227,46 +326,74 @@ components:
       additionalProperties: false
       required: [quote_id, payer_account_id, buyer_agent_id, payment_mandate_id, amount, purpose]
       properties:
-        quote_id: { type: string, pattern: '^quo_' }
-        payer_account_id: { type: string, pattern: '^acct_' }
-        buyer_agent_id: { type: string, pattern: '^agt_' }
-        payment_mandate_id: { type: string, pattern: '^mdt_' }
+        quote_id: { type: string, pattern: '^quo_[A-Za-z0-9_-]+$', maxLength: 255 }
+        payer_account_id: { type: string, pattern: '^acct_[A-Za-z0-9_-]+$', maxLength: 255 }
+        buyer_agent_id: { type: string, pattern: '^agt_[A-Za-z0-9_-]+$', maxLength: 255 }
+        payment_mandate_id: { type: string, pattern: '^mdt_[A-Za-z0-9_-]+$', maxLength: 255 }
         amount: { $ref: '#/components/schemas/Amount' }
         purpose: { type: string, minLength: 1, maxLength: 500 }
         external_context: { $ref: '#/components/schemas/ExternalContext' }
-        metadata: { type: object, additionalProperties: { type: string }, maxProperties: 20 }
+        metadata:
+          type: object
+          maxProperties: 20
+          additionalProperties: { type: string, maxLength: 500 }
     Authorization:
       type: object
+      additionalProperties: false
       required: [id, decision, reason_code, matched_rules]
       properties:
-        id: { type: string, pattern: '^auth_' }
+        id: { type: string, pattern: '^auth_[A-Za-z0-9_-]+$' }
         decision: { type: string, enum: [allowed, review_required, denied] }
         reason_code: { type: string }
         matched_rules: { type: array, items: { type: string } }
     PaymentIntent:
-      allOf:
-        - $ref: '#/components/schemas/CreatePaymentIntent'
-        - type: object
-          required: [id, status, authorization]
-          properties:
-            id: { type: string, pattern: '^pi_' }
-            status: { type: string, enum: [requires_authorization, authorized, funds_reserved, delivery_submitted, settled, declined, expired, canceled, refunded, disputed] }
-            authorization: { $ref: '#/components/schemas/Authorization' }
-            transaction_id: { type: [string, 'null'], pattern: '^txn_' }
+      type: object
+      additionalProperties: false
+      required: [id, quote_id, payer_account_id, payee_account_id, buyer_agent_id, seller_agent_id, payment_mandate_id, amount, purpose, status, transaction_id, authorization, created_at]
+      properties:
+        id: { type: string, pattern: '^pi_[A-Za-z0-9_-]+$' }
+        quote_id: { type: string, pattern: '^quo_[A-Za-z0-9_-]+$', maxLength: 255 }
+        payer_account_id: { type: string, pattern: '^acct_[A-Za-z0-9_-]+$', maxLength: 255 }
+        payee_account_id: { type: string, pattern: '^acct_[A-Za-z0-9_-]+$', maxLength: 255 }
+        buyer_agent_id: { type: string, pattern: '^agt_[A-Za-z0-9_-]+$', maxLength: 255 }
+        seller_agent_id: { type: string, pattern: '^agt_[A-Za-z0-9_-]+$', maxLength: 255 }
+        payment_mandate_id: { type: string, pattern: '^mdt_[A-Za-z0-9_-]+$', maxLength: 255 }
+        amount: { $ref: '#/components/schemas/Amount' }
+        purpose: { type: string, minLength: 1, maxLength: 500 }
+        external_context: { $ref: '#/components/schemas/ExternalContext' }
+        metadata:
+          type: object
+          maxProperties: 20
+          additionalProperties: { type: string, maxLength: 500 }
+        status: { type: string, enum: [requires_authorization, authorized, funds_reserved, delivery_submitted, settled, declined, expired, canceled, refunded, disputed] }
+        transaction_id: { type: [string, 'null'], pattern: '^txn_[A-Za-z0-9_-]+$' }
+        authorization: { $ref: '#/components/schemas/Authorization' }
+        created_at: { type: string, format: date-time }
     DeliveryEvidence:
       type: object
       additionalProperties: false
       required: [type, evidence_hash]
       properties:
-        type: { type: string, minLength: 1 }
-        evidence_hash: { type: string, pattern: '^sha256:' }
+        type: { type: string, minLength: 1, maxLength: 100 }
+        evidence_hash: { type: string, pattern: '^sha256:[A-Za-z0-9]+$', maxLength: 256 }
         summary: { type: string, maxLength: 1000 }
+    DeliveryRecord:
+      type: object
+      additionalProperties: false
+      required: [id, transaction_id, type, evidence_hash, submitted_at]
+      properties:
+        id: { type: string, pattern: '^dlv_[A-Za-z0-9_-]+$' }
+        transaction_id: { type: string, pattern: '^txn_[A-Za-z0-9_-]+$' }
+        type: { type: string, minLength: 1, maxLength: 100 }
+        evidence_hash: { type: string, pattern: '^sha256:[A-Za-z0-9]+$', maxLength: 256 }
+        summary: { type: string, maxLength: 1000 }
+        submitted_at: { type: string, format: date-time }
     Transaction:
       type: object
       required: [id, payment_intent_id, status, authorized_amount, reserved_amount, settled_amount, refunded_amount]
       properties:
-        id: { type: string, pattern: '^txn_' }
-        payment_intent_id: { type: string, pattern: '^pi_' }
+        id: { type: string, pattern: '^txn_[A-Za-z0-9_-]+$' }
+        payment_intent_id: { type: string, pattern: '^pi_[A-Za-z0-9_-]+$' }
         status: { type: string, enum: [authorized, funds_reserved, delivery_submitted, settled, canceled, refunded, disputed] }
         authorized_amount: { $ref: '#/components/schemas/Amount' }
         reserved_amount: { $ref: '#/components/schemas/Amount' }
@@ -287,20 +414,37 @@ components:
             - { type: 'null' }
         delivery:
           anyOf:
-            - { $ref: '#/components/schemas/DeliveryEvidence' }
+            - { $ref: '#/components/schemas/DeliveryRecord' }
             - { type: 'null' }
         receipt:
           anyOf:
             - { $ref: '#/components/schemas/Receipt' }
             - { type: 'null' }
         payment_channel: { type: string }
+    PageMetadata:
+      type: object
+      additionalProperties: false
+      required: [limit, has_more, next_cursor]
+      properties:
+        limit: { type: integer, minimum: 1, maximum: 100 }
+        has_more: { type: boolean }
+        next_cursor: { type: [string, 'null'] }
+    TransactionPage:
+      type: object
+      additionalProperties: false
+      required: [data, page]
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/TransactionView' }
+        page: { $ref: '#/components/schemas/PageMetadata' }
     Receipt:
       type: object
       required: [id, transaction_id, settlement_id, signature_algorithm, verification_key_id, signature]
       properties:
-        id: { type: string, pattern: '^rcpt_' }
-        transaction_id: { type: string, pattern: '^txn_' }
-        settlement_id: { type: string, pattern: '^stl_' }
+        id: { type: string, pattern: '^rcpt_[A-Za-z0-9_-]+$' }
+        transaction_id: { type: string, pattern: '^txn_[A-Za-z0-9_-]+$' }
+        settlement_id: { type: string, pattern: '^stl_[A-Za-z0-9_-]+$' }
         signature_algorithm: { type: string, enum: [Ed25519] }
         verification_key_id: { type: string }
         signature: { type: string }
@@ -318,13 +462,38 @@ components:
             request_id: { type: string }
             details: { type: object, additionalProperties: true }
   responses:
+    BadRequest:
+      description: Invalid body, path identifier, query, cursor, or idempotency key
+      headers:
+        X-Request-Id: { $ref: '#/components/headers/RequestId' }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
     Conflict:
       description: Idempotency or state conflict
+      headers:
+        X-Request-Id: { $ref: '#/components/headers/RequestId' }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    RequestTooLarge:
+      description: JSON request body exceeds 1 MiB
+      headers:
+        X-Request-Id: { $ref: '#/components/headers/RequestId' }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    UnsupportedMediaType:
+      description: Content-Type is not application/json
+      headers:
+        X-Request-Id: { $ref: '#/components/headers/RequestId' }
       content:
         application/json:
           schema: { $ref: '#/components/schemas/Error' }
     NotFound:
       description: Resource not found
+      headers:
+        X-Request-Id: { $ref: '#/components/headers/RequestId' }
       content:
         application/json:
           schema: { $ref: '#/components/schemas/Error' }

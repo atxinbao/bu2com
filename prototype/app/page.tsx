@@ -149,7 +149,7 @@ const copy = {
     developerTitle: '嵌入现有 Agent，而不是迁移工作流',
     secondary:
       '该页面已按 Transaction-first P0 定位重构，下一轮将接入真实 API 契约。',
-    liveData: '真实 x402 数据',
+    liveData: '实时 API 数据',
     apiOffline: '真实 API 暂不可用，正在展示演示数据',
     chainTransaction: '链上交易',
   },
@@ -222,7 +222,7 @@ const copy = {
     developerTitle: 'Embed into existing agents—do not migrate workflows',
     secondary:
       'This surface now reflects the Transaction-first P0. The next iteration will connect the real API contract.',
-    liveData: 'Live x402 data',
+    liveData: 'Live API data',
     apiOffline: 'Live API unavailable; showing demo data',
     chainTransaction: 'Onchain transaction',
   },
@@ -318,8 +318,8 @@ export default function Home() {
                 : transaction.authorized_amount;
             return {
               id: transaction.id,
-              zh: quote?.item.name ?? 'Agent x402 支付',
-              en: quote?.item.name ?? 'Agent x402 payment',
+              zh: quote?.item.name ?? 'Agent 支付',
+              en: quote?.item.name ?? 'Agent payment',
               payer: payment_intent?.payer_account_id ?? 'Unknown payer',
               payee: payment_intent?.payee_account_id ?? 'Unknown payee',
               buyer: payment_intent?.buyer_agent_id ?? 'Unknown buyer agent',
@@ -895,6 +895,11 @@ function Supporting({ page, t }: { page: Page; t: typeof copy.zh }) {
 function Developers({ language }: { language: Language }) {
   const zh = language === 'zh';
   const endpoints = [
+    [
+      'GET',
+      '/v1/transactions?limit=20&cursor=…',
+      zh ? '分页读取交易' : 'List transactions with cursor pagination',
+    ],
     ['POST', '/v1/quotes', zh ? '创建卖方报价' : 'Create seller quote'],
     [
       'POST',
@@ -926,8 +931,8 @@ function Developers({ language }: { language: Language }) {
         </h2>
         <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">
           {zh
-            ? '统一资源、金额、状态、幂等与错误契约已经冻结为 P0 候选。API、SDK 与 MCP 共享同一套交易语义。'
-            : 'Resources, amounts, states, idempotency, and errors are frozen as the P0 candidate. API, SDK, and MCP share one transaction model.'}
+            ? '统一资源、金额、状态、幂等、分页、请求关联与错误契约已经冻结为 Phase 0 基线。API 与 MCP 共享同一套交易语义。'
+            : 'Resources, amounts, states, idempotency, pagination, request correlation, and errors are frozen for Phase 0. API and MCP share one transaction model.'}
         </p>
         <div className="mt-6 flex flex-wrap gap-2">
           {['OpenAPI 3.1', 'REST /v1', 'MCP 0.1', 'Minor-unit amounts'].map(
