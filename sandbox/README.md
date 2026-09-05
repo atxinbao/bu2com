@@ -1,9 +1,9 @@
-# BU2 Reference Server v0.11 / x402 Sandbox v0.5
+# BU2 Reference Server v0.12 / x402 Sandbox v0.5
 
 日期：2026-09-06
 执行者：Codex
 
-本目录实现 Phase 0 Frozen `/v1` Contract 的本地 SQLite 沙盒。它具备追加账本、Webhook Outbox、模拟支付 Adapter、签名 Receipt、稳定分页与运行时请求校验、基于官方 MCP SDK 的外部 Agent 接入样例，以及基于官方 x402 SDK 的 Base Sepolia `exact` 支付通道；不持有真实资金，不可用于生产。
+本目录实现 Phase 0 Frozen `/v1` Contract 的本地 SQLite Reference Server。它具备追加账本、Webhook Outbox、模拟支付 Adapter、签名 Receipt、稳定分页与运行时请求校验、基于官方 MCP SDK 的外部 Agent 接入样例，以及基于官方 x402 SDK 的 Base Sepolia `exact` 支付通道；ENV-02 已增加 `local/sandbox/live` 环境注册表、SQLite 环境绑定和链/Signer/Provider 断言。它不持有真实资金，不可用于生产。
 
 ## 启动
 
@@ -11,9 +11,9 @@
 node sandbox/server.mjs
 ```
 
-默认地址：`http://127.0.0.1:3100`。
+默认地址：`http://127.0.0.1:3100`。未指定环境时只允许 `local + simulated`。
 
-默认数据库：`sandbox/data/bu2-sandbox.sqlite`。重启服务后资源、钱包、幂等结果、账本和 Receipt 均会恢复。领域写入先登记数据库 `processing` Claim，再以状态版本 CAS 把资源、余额、LedgerEvent、Webhook Outbox 和幂等终态一次提交；遗留 `processing` 会返回结果未知，禁止自动重放。
+默认数据库：`sandbox/data/bu2-sandbox.sqlite`。SQLite Schema v8 会为新库写入不可变环境 metadata；错环境数据库拒绝启动。没有 metadata 的旧库必须先鉴别，再用一次性 `BU2_CLAIM_LEGACY_DB_ENVIRONMENT=true` 明确认领，不能默认解释为 Sandbox 或 Live。重启服务后资源、钱包、幂等结果、账本和 Receipt 均会恢复。领域写入先登记数据库 `processing` Claim，再以状态版本 CAS 把资源、余额、LedgerEvent、Webhook Outbox 和幂等终态一次提交；遗留 `processing` 会返回结果未知，禁止自动重放。
 
 ## 完整 Agent 交易演示
 
@@ -104,7 +104,10 @@ x402 模式使用独立端口和数据库，避免与 CNY 模拟钱包混用：
 ```bash
 BU2_SANDBOX_PORT=3101 \
 BU2_SANDBOX_DB=./data/bu2-x402.sqlite \
+BU2_ENVIRONMENT=sandbox \
 BU2_PAYMENT_ADAPTER=x402 \
+BU2_EXECUTION_STATUS=execution_enabled \
+BU2_SIGNER_ENVIRONMENT=sandbox \
 X402_BUYER_PRIVATE_KEY=0x... \
 npm start
 ```
@@ -115,7 +118,7 @@ npm start
 npm run demo:x402
 ```
 
-领域入口已经支持异步 Adapter。预检时会持久化完整 x402 授权条款；正式钱包路径通过官方 x402 Client 的签名前 hook 再次比较 amount、asset、network、resource 和 `payTo`。Adapter 会在任何对外支付调用前，以同一数据库事务写入 `adapter_operation` 和唯一 Payment Attempt。明确失败不会扣减内部余额、改变 Delivery 状态或签发 Receipt；可能已支付、进程中断或只留下 `prepared/submitting` 尝试时统一阻断普通重试，只能通过显式恢复查询收口。
+领域入口已经支持异步 Adapter。Sandbox 默认 `execution_disabled`，必须显式启用测试执行并声明 Signer 环境；Live 在 ENV-02 中不能启用。预检时会持久化完整 x402 授权条款；正式钱包路径通过官方 x402 Client 的签名前 hook 再次比较 amount、asset、network、resource 和 `payTo`。Adapter 会在任何对外支付调用前，以同一数据库事务写入 `adapter_operation` 和唯一 Payment Attempt。明确失败不会扣减内部余额、改变 Delivery 状态或签发 Receipt；可能已支付、进程中断或只留下 `prepared/submitting` 尝试时统一阻断普通重试，只能通过显式恢复查询收口。
 
 ### 恢复未知 x402 结算
 

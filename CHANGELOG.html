@@ -152,6 +152,31 @@
       <h2 id="unreleased">Unreleased</h2>
       <article class="release">
         <div class="release-head">
+          <div><h3>ENV-02 · 环境注册表与链隔离</h3><time datetime="2026-09-06">2026-09-06</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">把 PR #18 批准的 local/Sandbox/Live 决策落实为 Reference Server v0.12 的运行时前置条件：非法环境组合、错链、错库、错 Signer/Provider 和未获准 Live 执行在外部资金调用前失败关闭。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag added">Added</span>新增基于 <code>viem/chains</code> 的唯一环境注册表，显式分离 service environment、payment adapter、chain/network/asset、Provider binding、Signer binding 与 execution status。</li>
+            <li><span class="tag changed">Changed</span>Reference Server 装配顺序改为先验证环境与 RPC/Signer，再绑定数据库和构造 Adapter；Sandbox 默认 execution disabled，Live 在本阶段无条件禁止 execution enabled 或加载 Signer。</li>
+            <li><span class="tag added">Added</span>SQLite Schema v8 新增不可变 <code>environment_metadata</code>；新库首次绑定，错环境数据库拒绝，legacy 无 metadata 数据库必须显式一次性认领。</li>
+            <li><span class="tag changed">Changed</span>x402 Adapter 在 reserve/settle 外部边界检查执行状态；禁用时商户、Signer 与 Provider 调用均为 0，查询式未知结算恢复仍可用于对账。</li>
+            <li><span class="tag governance">Boundary</span>公开 API、SDK、MCP、Doctor 与 Receipt v0.2 的 legacy <code>simulation/testnet</code> 语义保持不变，等待 ENV-03；本变更没有执行 Base Sepolia 或 Mainnet 付款。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R2 · 配置、数据库 metadata、Adapter 与资金执行边界，必须由 Domain + Architecture 独立人工审查后合并</span></div>
+          <div><b>金融行为影响</b><span>新增失败关闭控制，不改变 Transaction Core 状态所有权、金额、账本、Outbox 或 Receipt 签名；Live/Mainnet 仍不签名、不广播</span></div>
+          <div><b>兼容性</b><span>Schema v8 纯新增；旧数据不重写，旧 Receipt 不重签；legacy 数据库必须明确鉴别后认领，公开客户端契约留 ENV-03</span></div>
+          <div><b>验证</b><span>Reference Server 95/95 通过；E-T01/02/03 通过，E-T06/07/09 的 ENV-02 范围通过；完整契约、SDK、clean-room、Prototype、链接、秘密扫描与浏览器结果见 verification.md</span></div>
+          <div><b>恢复</b><span>停止 v0.12 并恢复旧制品；已追加的环境 metadata 保留为审计事实，旧版本忽略新增表；不得删除或改写交易、账本与 Receipt 历史</span></div>
+        </div>
+      </article>
+
+      <article class="release">
+        <div class="release-head">
           <div><h3>F01 / ENV-01 · Sandbox / Live 环境决策冻结</h3><time datetime="2026-09-06">2026-09-06</time></div>
           <span class="status">Unreleased</span>
         </div>

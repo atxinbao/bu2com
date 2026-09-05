@@ -2,7 +2,7 @@
 
 日期：2026-09-06
 执行者：Codex
-状态：F01 / ENV-01 决策冻结，等待 R2 独立人工审查
+状态：F01 / ENV-01 已由 PR #18 批准；ENV-02 已实现，等待 R2 独立人工审查
 适用范围：BU2 服务、API、SDK、MCP、Doctor、Receipt、部署与运营
 
 ## 1. 决策
@@ -163,7 +163,7 @@ PR local simulation / contract verification
 
 F01/ENV-01 只冻结决策，不创建云资源、不配置 DNS、不部署服务、不修改历史数据、不启用 Live，也不执行测试网或主网支付。若决策未获批准，删除本次新增入口并恢复上层文档即可；交易、账本、数据库、Adapter 和 Receipt 均无需回滚。
 
-下一实现 PR 为 ENV-02：`feat(config): enforce environment registry and chain isolation`。在 ENV-02/03 合并前，现有服务器输出仍是 legacy `simulation/testnet`，不得把本文当作已生效的运行时控制。
+ENV-02 已实现环境注册表、配置装载、Schema v8 数据库绑定、RPC/Signer/Provider 断言和 Live execution disabled，等待 R2 审查；实现说明见 [环境注册表与链隔离 v1](ENVIRONMENT_REGISTRY_AND_CHAIN_ISOLATION_V1.md)。下一实现 PR 为 ENV-03。在 ENV-03 合并前，公开 API、SDK、MCP、Doctor 与 Receipt 仍使用 legacy `simulation/testnet`，不得把内部配置迁移误写为客户端契约已经完成。
 
 ## 参考来源
 

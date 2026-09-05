@@ -466,7 +466,7 @@ test("additive migration restores legacy secrets and expired delivery leases", (
     const first = new SqliteLedger(path);
     assert.deepEqual(
       first.schemaMigrations().map((migration) => migration.version),
-      [1, 2, 3, 4, 5, 6, 7],
+      [1, 2, 3, 4, 5, 6, 7, 8],
     );
     const migratedOutbox = first.outboxRows()[0];
     assert.equal(migratedOutbox.request_id, null);

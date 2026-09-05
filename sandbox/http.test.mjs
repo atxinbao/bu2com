@@ -293,6 +293,7 @@ test("HTTP server exposes an explicit x402 adapter mode without a signer", async
   const running = await listen({
     port: 0,
     dbPath: ":memory:",
+    environment: "sandbox",
     adapterMode: "x402",
     x402ResourceUrl: "http://127.0.0.1:4021/premium-data",
   });
@@ -306,9 +307,12 @@ test("HTTP server exposes an explicit x402 adapter mode without a signer", async
       ),
   );
   const health = await request(running.url, "/health");
-  assert.equal(health.body.version, "0.10.0");
+  assert.equal(health.body.version, "0.12.0");
   assert.equal(health.body.adapter, "x402_exact_base_sepolia");
   assert.equal(health.body.environment, "testnet");
+  assert.equal(running.environmentConfig.environment, "sandbox");
+  assert.equal(running.environmentConfig.execution_status, "execution_disabled");
+  assert.equal(running.ledger.environmentMetadata().environment, "sandbox");
   assert.equal(running.sandbox.wallet.currency, "USD");
 });
 
