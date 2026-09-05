@@ -105,6 +105,25 @@ const schemas = {
       secret: { type: "string", minLength: 16, maxLength: 512 },
     },
   },
+  webhookSecretRotation: {
+    type: "object",
+    additionalProperties: false,
+    required: ["version", "secret", "overlap_seconds"],
+    properties: {
+      version: { type: "string", pattern: "^v[1-9][0-9]*$", maxLength: 32 },
+      secret: { type: "string", minLength: 16, maxLength: 512 },
+      overlap_seconds: { type: "integer", minimum: 0, maximum: 86_400 },
+    },
+  },
+  webhookReplay: {
+    type: "object",
+    additionalProperties: false,
+    required: ["requested_by", "reason"],
+    properties: {
+      requested_by: { type: "string", minLength: 1, maxLength: 255 },
+      reason: { type: "string", minLength: 1, maxLength: 500 },
+    },
+  },
 };
 
 const ajv = new Ajv({ allErrors: true, strict: true });

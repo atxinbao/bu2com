@@ -74,6 +74,26 @@ assert(
   openapi.includes('/receipts/{receipt_id}/verify:'),
   'OpenAPI must expose receipt verification',
 );
+assert(
+  openapi.includes('/webhook_dead_letters:'),
+  'OpenAPI must expose Webhook dead-letter inspection',
+);
+assert(
+  openapi.includes('/webhook_subscriptions/{subscription_id}/secret_rotations:'),
+  'OpenAPI must expose versioned Webhook secret rotation',
+);
+assert(
+  openapi.includes('/webhook_outbox/{outbox_id}/replays:'),
+  'OpenAPI must expose audited Webhook replay',
+);
+assert(
+  openapi.includes('WebhookDeliveryAttempt:'),
+  'OpenAPI must define immutable delivery-attempt audit records',
+);
+assert(
+  (openapi.match(/secret: \{[^\n]+writeOnly: true \}/g) ?? []).length === 2,
+  'OpenAPI must accept secrets only as write-only input',
+);
 
 console.log(
   `BU2 contract validation passed: ${assertions} invariants, ${mcp.tools.length} MCP tools.`,

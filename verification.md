@@ -224,3 +224,20 @@ Product v0.1 可作为客户访谈、交互原型和工程方案设计的输入�
 - 浏览器验证同时修复了 Simulated Adapter 数据被误标为 x402 的展示口径。
 
 结论：E1.0 为 **GO**。本结论冻结 Phase 0 Transaction API v1，但不开放 Mainnet、托管、生产密钥或公开无认证部署；下一顺序项为 E1.1 Webhook 死信、审计重放与 Secret 轮换。
+
+## E1.1 Webhook 可靠性闭环验证
+
+日期：2026-09-05
+执行者：Codex
+
+- Reference Sandbox 已升级为 v0.5.0；旧 SQLite 订阅与 Outbox 通过 additive migration 恢复。
+- Worker 以事务和有限租约领取 Outbox；两个并发 Dispatcher 对同一事件只投递一次，重启后过期租约可被回收。
+- HTTP 5xx、网络异常和接收方超时进入有限指数退避；达到最大次数后进入 `dead_letter`，不再无限重试。
+- 死信可通过幂等 API 单事件重放；重放保留原 `event_id` 与载荷，产生独立审计记录，不增加或改写 `LedgerEvent`。
+- Secret 轮换支持显式版本与有限重叠窗口；重叠期间新旧 HMAC 均通过精确签名断言，窗口结束后只使用当前版本。
+- 创建订阅、Secret 轮换与重放均验证同键同载荷返回原结果、同键异载荷返回冲突；公开 API 和审计结果不包含明文 Secret。
+- Contract 24 项不变量、6 个 MCP 工具通过；Sandbox 28/28 通过。
+- OpenAPI YAML 解析和 Redocly 校验通过；仅保留仓库既有的缺少 license 字段 warning。
+- Prototype lint 0 error，Vinext 五阶段生产构建通过；`git diff --check` 通过。
+
+结论：E1.1 为 **GO**，可以提交 R2 PR 供 Project Owner 审查。本结论只覆盖本地 Simulation 与 Base Sepolia Testnet 事件投递可靠性；不开放 Mainnet、托管、生产 Secret 或多节点生产部署。下一顺序项为 E1.2 交易链路可观测性。

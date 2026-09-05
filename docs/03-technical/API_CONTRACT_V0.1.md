@@ -1,6 +1,6 @@
 # BU2 Agent Payment API 契约 v0.1
 
-日期：2026-09-01  
+日期：2026-09-05
 执行者：Codex  
 状态：Phase 0 Frozen（`/v1` 资源与行为契约）
 
@@ -30,6 +30,10 @@
 | DeliveryEvidence | `dlv_` | 卖方提交的交付证明 |
 | Settlement | `stl_` | 资金结算事件 |
 | Receipt | `rcpt_` | 双方可验证的交易凭证 |
+| WebhookSubscription | `whsub_` | 外部系统的事件接收地址与 Secret 版本元数据 |
+| WebhookOutbox | `out_` | 每个事件与订阅组合的可靠投递状态 |
+| WebhookDeliveryAttempt | `wha_` | 单次投递的不可变审计事实 |
+| WebhookReplay | `whrp_` | 死信人工重放的操作者与理由 |
 
 ## 3. PaymentIntent 最小输入
 
@@ -96,7 +100,7 @@ requires_authorization
 
 ## 6. 幂等契约
 
-- `POST /quotes`、`POST /payment_intents`、授权、交付、结算和退款均要求 `Idempotency-Key`。
+- `POST /quotes`、`POST /payment_intents`、授权、交付、结算、退款、Webhook 订阅、Secret 轮换和死信重放均要求 `Idempotency-Key`。
 - 同一 Account、同一路径、同一 Key 和相同请求体返回第一次结果。
 - 同一 Key 配合不同请求体返回 `409 idempotency_conflict`。
 - Key 至少保留 24 小时；资金动作建议永久绑定到业务记录。
@@ -174,6 +178,13 @@ receipt.issued
 ```
 
 Webhook 使用事件 ID 去重；接收方应按至少一次投递处理，不依赖事件严格按序到达。
+
+- Outbox 状态为 `pending / delivering / retrying / dead_letter / delivered`。
+- 投递使用有限 Worker 租约；租约过期后允许恢复领取，并发 Worker 不得同时拥有同一投递。
+- 非 2xx、网络异常或超时使用有上限的指数退避；达到最大尝试次数后必须进入 `dead_letter`。
+- 只有死信允许人工重放；重放保留原 `event_id` 和载荷，不创建新的业务事件，并记录操作者与理由。
+- `webhook-signature` 按 `版本=HMAC-SHA256` 表达；Secret 轮换重叠期可同时携带多个版本。
+- Secret 只允许出现在写入请求和内部签名路径，不在公开资源、日志、事件或审计响应中返回。
 
 ## 12. 版本边界
 
