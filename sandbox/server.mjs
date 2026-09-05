@@ -122,7 +122,7 @@ export function createBu2Server({ sandbox, ledger, dispatcher, adapter, initialW
         return send(response, 200, {
           status: "ok",
           service: "bu2-reference-server",
-          version: "0.4.0",
+          version: "0.5.0",
           persistence: activeLedger.path,
           adapter: activeSandbox.adapter?.name ?? "none",
           ledger_events: activeLedger.listLedgerEvents().length,
@@ -144,9 +144,16 @@ export function createBu2Server({ sandbox, ledger, dispatcher, adapter, initialW
       if (request.method === "GET" && url.pathname === "/v1/webhook_outbox") {
         return send(response, 200, { data: activeLedger.outboxRows() });
       }
+      if (request.method === "GET" && url.pathname === "/v1/webhook_dead_letters") {
+        return send(response, 200, { data: activeLedger.deadLetterRows() });
+      }
       if (request.method === "POST" && url.pathname === "/v1/webhook_subscriptions") {
         const body = validateBody("webhookSubscription", await readJson(request));
-        return send(response, 201, activeLedger.addWebhookSubscription(body));
+        return send(
+          response,
+          201,
+          activeLedger.addWebhookSubscription(body, validateIdempotencyKey(key)),
+        );
       }
       if (request.method === "POST" && url.pathname === "/v1/webhooks/dispatch") {
         return send(response, 200, { data: await activeDispatcher.flush({ force: true }) });
@@ -162,6 +169,57 @@ export function createBu2Server({ sandbox, ledger, dispatcher, adapter, initialW
           201,
           await activeSandbox.createPaymentIntent(body, validateIdempotencyKey(key)),
         );
+      }
+      if (segments[0] === "v1" && segments[1] === "webhook_subscriptions" && segments[2]) {
+        if (
+          request.method === "POST" &&
+          segments.length === 4 &&
+          segments[3] === "secret_rotations"
+        ) {
+          const subscriptionId = validateResourceId(
+            segments[2],
+            "whsub",
+            "subscription_id",
+          );
+          const body = validateBody("webhookSecretRotation", await readJson(request));
+          return send(
+            response,
+            201,
+            activeLedger.rotateWebhookSecret(
+              subscriptionId,
+              body,
+              validateIdempotencyKey(key),
+            ),
+          );
+        }
+      }
+      if (segments[0] === "v1" && segments[1] === "webhook_outbox" && segments[2]) {
+        const outboxId = validateResourceId(segments[2], "out", "outbox_id");
+        if (
+          request.method === "GET" &&
+          segments.length === 4 &&
+          segments[3] === "attempts"
+        ) {
+          return send(response, 200, {
+            data: activeLedger.webhookDeliveryAttempts(outboxId),
+          });
+        }
+        if (
+          request.method === "POST" &&
+          segments.length === 4 &&
+          segments[3] === "replays"
+        ) {
+          const body = validateBody("webhookReplay", await readJson(request));
+          return send(
+            response,
+            201,
+            activeLedger.replayWebhook(
+              outboxId,
+              body,
+              validateIdempotencyKey(key),
+            ),
+          );
+        }
       }
       if (segments[0] === "v1" && segments[1] === "payment_intents" && segments[2]) {
         if (request.method === "GET" && segments.length === 3) {
@@ -289,5 +347,5 @@ export async function listen({
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
   const running = await listen();
-  console.log(`BU2 Reference Server v0.4 listening on ${running.url}`);
+  console.log(`BU2 Reference Server v0.5 listening on ${running.url}`);
 }

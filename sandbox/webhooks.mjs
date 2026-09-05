@@ -1,37 +1,104 @@
-import { createHmac } from "node:crypto";
+import { createHmac, randomUUID } from "node:crypto";
 
 export class WebhookDispatcher {
-  constructor({ ledger, fetchImpl = fetch, baseDelayMs = 1000 }) {
+  constructor({
+    ledger,
+    fetchImpl = fetch,
+    baseDelayMs = 1000,
+    maxDelayMs = 60_000,
+    maxAttempts = 5,
+    leaseMs = 30_000,
+    requestTimeoutMs = 10_000,
+    jitterRatio = 0.2,
+    random = Math.random,
+    now = Date.now,
+    workerId = `whw_${randomUUID().replaceAll("-", "").slice(0, 16)}`,
+  }) {
     this.ledger = ledger;
     this.fetchImpl = fetchImpl;
     this.baseDelayMs = baseDelayMs;
+    this.maxDelayMs = maxDelayMs;
+    this.maxAttempts = maxAttempts;
+    this.leaseMs = leaseMs;
+    this.requestTimeoutMs = requestTimeoutMs;
+    this.jitterRatio = jitterRatio;
+    this.random = random;
+    this.now = now;
+    this.workerId = workerId;
+  }
+
+  retryDelay(attempts) {
+    const exponential = Math.min(
+      this.maxDelayMs,
+      this.baseDelayMs * 2 ** Math.min(attempts, 16),
+    );
+    const jitter = Math.floor(exponential * this.jitterRatio * this.random());
+    return Math.min(this.maxDelayMs, exponential + jitter);
   }
 
   async flush({ force = false } = {}) {
     const results = [];
-    for (const job of this.ledger.listDueOutbox({ force })) {
-      const timestamp = Math.floor(Date.now() / 1000).toString();
-      const signature = createHmac("sha256", job.secret)
-        .update(`${timestamp}.${job.payload}`)
-        .digest("hex");
+    const jobs = this.ledger.claimWebhookDeliveries({
+      force,
+      workerId: this.workerId,
+      leaseMs: this.leaseMs,
+      now: this.now(),
+    });
+    for (const job of jobs) {
+      const startedAt = this.now();
+      const timestamp = Math.floor(startedAt / 1000).toString();
+      const versions = job.secrets.map((secret) => secret.version);
+      let httpStatus = null;
       try {
+        if (job.secrets.length === 0) {
+          throw new Error("No active Webhook secret version is available.");
+        }
+        const signatures = job.secrets.map((secret) => {
+          const signature = createHmac("sha256", secret.secret)
+            .update(`${timestamp}.${job.payload}`)
+            .digest("hex");
+          return `${secret.version}=${signature}`;
+        });
         const response = await this.fetchImpl(job.url, {
           method: "POST",
           headers: {
             "content-type": "application/json",
             "webhook-id": job.event_id,
             "webhook-timestamp": timestamp,
-            "webhook-signature": `v1=${signature}`,
+            "webhook-signature": signatures.join(","),
+            "webhook-secret-versions": versions.join(","),
           },
           body: job.payload,
+          signal: AbortSignal.timeout(this.requestTimeoutMs),
         });
+        httpStatus = response.status;
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        this.ledger.markDelivered(job.id);
-        results.push({ id: job.id, status: "delivered" });
+        results.push(
+          this.ledger.completeWebhookDelivery({
+            outboxId: job.id,
+            workerId: this.workerId,
+            succeeded: true,
+            httpStatus,
+            maxAttempts: this.maxAttempts,
+            secretVersions: versions,
+            startedAt,
+            now: this.now(),
+          }),
+        );
       } catch (error) {
-        const delay = this.baseDelayMs * 2 ** Math.min(job.attempts, 8);
-        this.ledger.markWebhookFailed(job.id, error.message, delay);
-        results.push({ id: job.id, status: "retrying", error: error.message });
+        const result = this.ledger.completeWebhookDelivery({
+          outboxId: job.id,
+          workerId: this.workerId,
+          succeeded: false,
+          httpStatus,
+          error: error.message,
+          delayMs: this.retryDelay(job.attempts),
+          maxAttempts: this.maxAttempts,
+          secretVersions: versions,
+          startedAt,
+          now: this.now(),
+        });
+        results.push({ ...result, error: error.message });
       }
     }
     return results;

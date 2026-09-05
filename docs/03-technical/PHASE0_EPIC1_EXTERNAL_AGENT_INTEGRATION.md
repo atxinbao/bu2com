@@ -48,12 +48,14 @@
 
 完成证据：`/v1` 已增加不透明 cursor 分页、`X-Request-Id`、AJV 运行时请求校验和稳定校验错误；OpenAPI 已补齐实际 Delivery 响应与 Receipt verify 路由。既有交易状态机、金额和资金行为未改变。
 
-### E1.1 — Webhook 可靠性闭环
+### E1.1 — Webhook 可靠性闭环（已完成）
 
 - 为重试配置最大次数、退避上限和确定的 `dead_letter` 状态。
 - 提供受审计的死信查询与单事件重放；重放沿用原 `event_id`，不得重新产生业务事件。
 - Webhook Secret 支持版本标识和有限重叠轮换，不在 API、日志或事件载荷中返回明文。
 - 证明重复投递、接收方超时、持续 5xx、重启和人工重放不会重复改变交易状态。
+
+完成证据：Reference Sandbox v0.5 增加事务化 Worker 租约、有限指数退避、确定死信、逐次投递审计、幂等人工重放和 Secret 版本轮换；旧 SQLite 数据通过 additive migration 升级。HTTP、持久化、并发、超时、5xx、重启恢复和签名验证均进入本地自动化测试，重放不增加 `LedgerEvent`，不改变既有交易金额或状态机。
 
 ### E1.2 — 交易链路可观测性
 

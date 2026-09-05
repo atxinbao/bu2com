@@ -11,7 +11,7 @@ BU2.com 是 Agent 的 AI 收付平台。它嵌入 ChatGPT、Codex、Claude 和�
 | 项目阶段 | Phase 0 · Simulation / Testnet |
 | 产品定义 | Product v0.3 · Transaction-first |
 | API 契约 | Agent Payment API v0.1 |
-| Reference Server | Sandbox v0.4 · Node.js + SQLite WAL |
+| Reference Server | Sandbox v0.5 · Node.js + SQLite WAL |
 | 支付通道 | Simulated Adapter + x402 Base Sepolia Adapter |
 | 产品界面 | React 19 + TypeScript 双语原型 |
 | 生产边界 | Mainnet、客户资金托管和法币能力尚未开放 |
@@ -48,7 +48,7 @@ BU2 将授权、资金预留、交付、结算和退款保存为不同事实。�
 - 整数最小货币单位、明确币种和受约束的交易状态机。
 - 端到端幂等、载荷冲突拒绝和非法状态转换保护。
 - SQLite WAL 持久化、追加式 LedgerEvent 和进程重启恢复。
-- Webhook Outbox、HMAC 签名、失败重试和事件去重。
+- Webhook Outbox、Worker 租约、有限重试、死信、审计重放、版本化 HMAC Secret 和事件去重。
 - SimulatedPaymentAdapter 与官方 x402 v2 Base Sepolia Adapter。
 - Ed25519 签名 Receipt 及独立验证。
 - 中英文 Transaction-first 产品界面，可展示真实 Sandbox API 数据并在离线时降级到演示数据。
@@ -78,7 +78,7 @@ npm --prefix prototype run lint
 npm --prefix prototype run build
 ```
 
-当前基线应得到：Contract 19 项不变量通过、6 个 MCP 工具有效、Sandbox 21/21 通过、Prototype lint 与 build 通过。
+当前基线应得到：Contract 24 项不变量通过、6 个 MCP 工具有效、Sandbox 28/28 通过、Prototype lint 与 build 通过。
 
 ### 启动本地交易演示
 
@@ -171,5 +171,5 @@ bu2com/
 
 ---
 
-更新日期：2026-09-01  
+更新日期：2026-09-05
 维护者：BU2 Engineering / Codex

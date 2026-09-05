@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
   title: BU2 Agent Payment API
-  version: 0.1.0
-  description: Transaction-first API for agent-to-agent payment authorization, delivery, settlement, and receipts.
+  version: 0.1.1
+  description: Transaction-first API for agent-to-agent payment authorization, delivery, settlement, receipts, and reliable Webhook operations.
   x-bu2-contract-status: phase0-frozen
 servers:
   - url: https://api.bu2.com/v1
@@ -232,6 +232,107 @@ paths:
                   valid: { type: boolean }
         '400': { $ref: '#/components/responses/BadRequest' }
         '404': { $ref: '#/components/responses/NotFound' }
+  /webhook_subscriptions:
+    post:
+      operationId: createWebhookSubscription
+      summary: Create an idempotent Webhook subscription
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateWebhookSubscription' }
+      responses:
+        '201':
+          description: Subscription metadata created; secret material is never returned
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/RequestId' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/WebhookSubscription' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '413': { $ref: '#/components/responses/RequestTooLarge' }
+        '415': { $ref: '#/components/responses/UnsupportedMediaType' }
+  /webhook_subscriptions/{subscription_id}/secret_rotations:
+    post:
+      operationId: rotateWebhookSecret
+      summary: Add a new signing-secret version with a bounded overlap window
+      parameters:
+        - $ref: '#/components/parameters/WebhookSubscriptionId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RotateWebhookSecret' }
+      responses:
+        '201':
+          description: Rotation metadata created; secret material is never returned
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/RequestId' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/WebhookSecretRotation' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '413': { $ref: '#/components/responses/RequestTooLarge' }
+        '415': { $ref: '#/components/responses/UnsupportedMediaType' }
+  /webhook_dead_letters:
+    get:
+      operationId: listWebhookDeadLetters
+      summary: List terminal Webhook delivery failures
+      responses:
+        '200':
+          description: Dead-lettered Outbox records
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/RequestId' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/WebhookOutboxList' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+  /webhook_outbox/{outbox_id}/attempts:
+    get:
+      operationId: listWebhookDeliveryAttempts
+      summary: List immutable delivery-attempt audit records
+      parameters:
+        - $ref: '#/components/parameters/WebhookOutboxId'
+      responses:
+        '200':
+          description: Delivery attempts ordered by occurrence
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/RequestId' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/WebhookDeliveryAttemptList' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+  /webhook_outbox/{outbox_id}/replays:
+    post:
+      operationId: replayWebhook
+      summary: Requeue one dead-lettered event without creating a new business event
+      parameters:
+        - $ref: '#/components/parameters/WebhookOutboxId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ReplayWebhook' }
+      responses:
+        '201':
+          description: Replay audit record created and original event requeued
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/RequestId' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/WebhookReplay' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '413': { $ref: '#/components/responses/RequestTooLarge' }
+        '415': { $ref: '#/components/responses/UnsupportedMediaType' }
 components:
   securitySchemes:
     bearerAuth: { type: http, scheme: bearer }
@@ -256,6 +357,16 @@ components:
       in: path
       required: true
       schema: { type: string, pattern: '^rcpt_[A-Za-z0-9_-]+$', maxLength: 255 }
+    WebhookSubscriptionId:
+      name: subscription_id
+      in: path
+      required: true
+      schema: { type: string, pattern: '^whsub_[A-Za-z0-9_-]+$', maxLength: 255 }
+    WebhookOutboxId:
+      name: outbox_id
+      in: path
+      required: true
+      schema: { type: string, pattern: '^out_[A-Za-z0-9_-]+$', maxLength: 255 }
     PageLimit:
       name: limit
       in: query
@@ -272,6 +383,127 @@ components:
       description: Server-generated identifier for this HTTP request.
       schema: { type: string, pattern: '^req_[A-Za-z0-9_-]+$' }
   schemas:
+    CreateWebhookSubscription:
+      type: object
+      additionalProperties: false
+      required: [id, url, secret]
+      properties:
+        id: { type: string, pattern: '^whsub_[A-Za-z0-9_-]+$', maxLength: 255 }
+        url: { type: string, format: uri, pattern: '^https?://', maxLength: 2048 }
+        secret: { type: string, minLength: 16, maxLength: 512, writeOnly: true }
+    WebhookSecretVersion:
+      type: object
+      additionalProperties: false
+      required: [version, valid_from, valid_until, created_at, current]
+      properties:
+        version: { type: string, pattern: '^v[1-9][0-9]*$', maxLength: 32 }
+        valid_from: { type: integer, minimum: 0 }
+        valid_until: { type: [integer, 'null'], minimum: 0 }
+        created_at: { type: string, format: date-time }
+        current: { type: boolean }
+    WebhookSubscription:
+      type: object
+      additionalProperties: false
+      required: [id, url, active, current_secret_version, created_at, secret_versions]
+      properties:
+        id: { type: string, pattern: '^whsub_[A-Za-z0-9_-]+$' }
+        url: { type: string, format: uri }
+        active: { type: boolean }
+        current_secret_version: { type: string, pattern: '^v[1-9][0-9]*$' }
+        created_at: { type: string, format: date-time }
+        secret_versions:
+          type: array
+          items: { $ref: '#/components/schemas/WebhookSecretVersion' }
+    RotateWebhookSecret:
+      type: object
+      additionalProperties: false
+      required: [version, secret, overlap_seconds]
+      properties:
+        version: { type: string, pattern: '^v[1-9][0-9]*$', maxLength: 32 }
+        secret: { type: string, minLength: 16, maxLength: 512, writeOnly: true }
+        overlap_seconds: { type: integer, minimum: 0, maximum: 86400 }
+    WebhookSecretRotation:
+      type: object
+      additionalProperties: false
+      required: [id, subscription_id, previous_version, new_version, overlap_until, created_at]
+      properties:
+        id: { type: string, pattern: '^whr_[A-Za-z0-9_-]+$' }
+        subscription_id: { type: string, pattern: '^whsub_[A-Za-z0-9_-]+$' }
+        previous_version: { type: string, pattern: '^v[1-9][0-9]*$' }
+        new_version: { type: string, pattern: '^v[1-9][0-9]*$' }
+        overlap_until: { type: integer, minimum: 0 }
+        created_at: { type: string, format: date-time }
+    WebhookOutboxRecord:
+      type: object
+      required: [id, event_id, subscription_id, payload, status, attempts, next_attempt_at, replay_count]
+      properties:
+        id: { type: string, pattern: '^out_[A-Za-z0-9_-]+$' }
+        event_id: { type: string, pattern: '^evt_[A-Za-z0-9_-]+$' }
+        subscription_id: { type: string, pattern: '^whsub_[A-Za-z0-9_-]+$' }
+        payload: { type: string, description: Serialized immutable LedgerEvent }
+        status: { type: string, enum: [pending, delivering, retrying, dead_letter, delivered] }
+        attempts: { type: integer, minimum: 0 }
+        next_attempt_at: { type: integer, minimum: 0 }
+        last_error: { type: [string, 'null'] }
+        delivered_at: { type: [string, 'null'], format: date-time }
+        dead_lettered_at: { type: [string, 'null'], format: date-time }
+        lease_expires_at: { type: [integer, 'null'], minimum: 0 }
+        locked_by: { type: [string, 'null'] }
+        last_attempt_at: { type: [string, 'null'], format: date-time }
+        replay_count: { type: integer, minimum: 0 }
+        last_replayed_at: { type: [string, 'null'], format: date-time }
+    WebhookOutboxList:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/WebhookOutboxRecord' } }
+    WebhookDeliveryAttempt:
+      type: object
+      additionalProperties: false
+      required: [id, outbox_id, event_id, subscription_id, replay_cycle, attempt_number, worker_id, status, secret_versions, started_at, completed_at]
+      properties:
+        id: { type: string, pattern: '^wha_[A-Za-z0-9_-]+$' }
+        outbox_id: { type: string, pattern: '^out_[A-Za-z0-9_-]+$' }
+        event_id: { type: string, pattern: '^evt_[A-Za-z0-9_-]+$' }
+        subscription_id: { type: string, pattern: '^whsub_[A-Za-z0-9_-]+$' }
+        replay_cycle: { type: integer, minimum: 0 }
+        attempt_number: { type: integer, minimum: 1 }
+        worker_id: { type: string, pattern: '^whw_[A-Za-z0-9_-]+$' }
+        status: { type: string, enum: [retrying, dead_letter, delivered] }
+        http_status: { type: [integer, 'null'], minimum: 100, maximum: 599 }
+        error: { type: [string, 'null'], maxLength: 500 }
+        secret_versions:
+          type: array
+          items: { type: string, pattern: '^v[1-9][0-9]*$' }
+        started_at: { type: string, format: date-time }
+        completed_at: { type: string, format: date-time }
+    WebhookDeliveryAttemptList:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/WebhookDeliveryAttempt' } }
+    ReplayWebhook:
+      type: object
+      additionalProperties: false
+      required: [requested_by, reason]
+      properties:
+        requested_by: { type: string, minLength: 1, maxLength: 255 }
+        reason: { type: string, minLength: 1, maxLength: 500 }
+    WebhookReplay:
+      type: object
+      additionalProperties: false
+      required: [id, outbox_id, event_id, subscription_id, requested_by, reason, prior_status, created_at]
+      properties:
+        id: { type: string, pattern: '^whrp_[A-Za-z0-9_-]+$' }
+        outbox_id: { type: string, pattern: '^out_[A-Za-z0-9_-]+$' }
+        event_id: { type: string, pattern: '^evt_[A-Za-z0-9_-]+$' }
+        subscription_id: { type: string, pattern: '^whsub_[A-Za-z0-9_-]+$' }
+        requested_by: { type: string, minLength: 1, maxLength: 255 }
+        reason: { type: string, minLength: 1, maxLength: 500 }
+        prior_status: { type: string, enum: [dead_letter] }
+        created_at: { type: string, format: date-time }
     Amount:
       type: object
       additionalProperties: false

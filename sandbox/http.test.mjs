@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { SimulatedPaymentAdapter } from "./adapter.mjs";
+import { Bu2Sandbox } from "./domain.mjs";
+import { SqliteLedger } from "./persistence.mjs";
 import { listen } from "./server.mjs";
+import { WebhookDispatcher } from "./webhooks.mjs";
 
 async function request(base, path, { method = "GET", body, key } = {}) {
   const response = await fetch(`${base}${path}`, {
@@ -273,7 +277,153 @@ test("HTTP server exposes an explicit x402 adapter mode without a signer", async
       ),
   );
   const health = await request(running.url, "/health");
-  assert.equal(health.body.version, "0.4.0");
+  assert.equal(health.body.version, "0.5.0");
   assert.equal(health.body.adapter, "x402_exact_base_sepolia");
   assert.equal(running.sandbox.wallet.currency, "USD");
 });
+
+test("HTTP v1 exposes idempotent Webhook dead-letter, replay, and secret rotation operations", async (context) => {
+  const ledger = new SqliteLedger(":memory:");
+  const sandbox = new Bu2Sandbox({
+    ledger,
+    adapter: new SimulatedPaymentAdapter({ ledger }),
+  });
+  const dispatcher = new WebhookDispatcher({
+    ledger,
+    maxAttempts: 1,
+    fetchImpl: async () => ({ ok: false, status: 503 }),
+  });
+  const running = await listen({ port: 0, ledger, dispatcher });
+  context.after(
+    () =>
+      new Promise((resolve) =>
+        running.server.close(() => {
+          ledger.close();
+          resolve();
+        }),
+      ),
+  );
+
+  const subscriptionBody = {
+    id: "whsub_http_reliability",
+    url: "https://receiver.invalid/events",
+    secret: "http-secret-value-0001",
+  };
+  const subscription = await request(running.url, "/v1/webhook_subscriptions", {
+    method: "POST",
+    key: "http-subscription-key",
+    body: subscriptionBody,
+  });
+  assert.equal(subscription.status, 201);
+  assert.equal(subscription.body.current_secret_version, "v1");
+  assert.equal(JSON.stringify(subscription.body).includes(subscriptionBody.secret), false);
+  const repeatedSubscription = await request(
+    running.url,
+    "/v1/webhook_subscriptions",
+    {
+      method: "POST",
+      key: "http-subscription-key",
+      body: subscriptionBody,
+    },
+  );
+  assert.deepEqual(repeatedSubscription.body, subscription.body);
+  const conflictingSubscription = await request(
+    running.url,
+    "/v1/webhook_subscriptions",
+    {
+      method: "POST",
+      key: "http-subscription-key",
+      body: { ...subscriptionBody, url: "https://other.invalid/events" },
+    },
+  );
+  assert.equal(conflictingSubscription.status, 409);
+  assert.equal(conflictingSubscription.body.error.code, "idempotency_key_reused");
+  const duplicateSubscriptionId = await request(
+    running.url,
+    "/v1/webhook_subscriptions",
+    {
+      method: "POST",
+      key: "http-subscription-new-key",
+      body: subscriptionBody,
+    },
+  );
+  assert.equal(duplicateSubscriptionId.status, 409);
+  assert.equal(
+    duplicateSubscriptionId.body.error.code,
+    "webhook_subscription_exists",
+  );
+
+  const quote = sandbox.createQuote(quoteInputForWebhook(), "http-webhook-event-key");
+  assert.match(quote.id, /^quo_/);
+  const dispatched = await request(running.url, "/v1/webhooks/dispatch", {
+    method: "POST",
+  });
+  assert.equal(dispatched.body.data[0].status, "dead_letter");
+
+  const deadLetters = await request(running.url, "/v1/webhook_dead_letters");
+  assert.equal(deadLetters.body.data.length, 1);
+  const outboxId = deadLetters.body.data[0].id;
+  const attempts = await request(
+    running.url,
+    `/v1/webhook_outbox/${outboxId}/attempts`,
+  );
+  assert.equal(attempts.body.data.length, 1);
+  assert.equal(attempts.body.data[0].status, "dead_letter");
+
+  const replayBody = {
+    requested_by: "operator_http",
+    reason: "Receiver recovered",
+  };
+  const replay = await request(
+    running.url,
+    `/v1/webhook_outbox/${outboxId}/replays`,
+    { method: "POST", key: "http-replay-key", body: replayBody },
+  );
+  assert.equal(replay.status, 201);
+  const repeatedReplay = await request(
+    running.url,
+    `/v1/webhook_outbox/${outboxId}/replays`,
+    { method: "POST", key: "http-replay-key", body: replayBody },
+  );
+  assert.equal(repeatedReplay.body.id, replay.body.id);
+  assert.equal(replay.body.event_id, deadLetters.body.data[0].event_id);
+
+  const rotationBody = {
+    version: "v2",
+    secret: "http-secret-value-0002",
+    overlap_seconds: 300,
+  };
+  const rotation = await request(
+    running.url,
+    "/v1/webhook_subscriptions/whsub_http_reliability/secret_rotations",
+    { method: "POST", key: "http-rotation-key", body: rotationBody },
+  );
+  assert.equal(rotation.status, 201);
+  assert.equal(rotation.body.previous_version, "v1");
+  assert.equal(rotation.body.new_version, "v2");
+  const repeatedRotation = await request(
+    running.url,
+    "/v1/webhook_subscriptions/whsub_http_reliability/secret_rotations",
+    { method: "POST", key: "http-rotation-key", body: rotationBody },
+  );
+  assert.equal(repeatedRotation.body.id, rotation.body.id);
+  const publicResponses = JSON.stringify({
+    subscription: subscription.body,
+    deadLetters: deadLetters.body,
+    attempts: attempts.body,
+    replay: replay.body,
+    rotation: rotation.body,
+  });
+  assert.equal(publicResponses.includes(subscriptionBody.secret), false);
+  assert.equal(publicResponses.includes(rotationBody.secret), false);
+});
+
+function quoteInputForWebhook() {
+  return {
+    seller_agent_id: "agt_market_data",
+    payee_account_id: "acct_atlas_data",
+    item: { name: "Webhook event", delivery_type: "dataset_access" },
+    amount: { value: 100, currency: "CNY" },
+    expires_at: "2026-09-12T08:00:00Z",
+  };
+}

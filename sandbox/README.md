@@ -1,6 +1,6 @@
-# BU2 Reference Server v0.4 / x402 Sandbox v0.3
+# BU2 Reference Server v0.5 / x402 Sandbox v0.3
 
-日期：2026-09-01  
+日期：2026-09-05
 执行者：Codex
 
 本目录实现 Phase 0 Frozen `/v1` Contract 的本地 SQLite 沙盒。它具备追加账本、Webhook Outbox、模拟支付 Adapter、签名 Receipt、稳定分页与运行时请求校验，以及基于官方 x402 SDK 的 Base Sepolia `exact` 支付通道；不持有真实资金，不可用于生产。
@@ -31,7 +31,7 @@ node sandbox/demo-agents.mjs
 node --test sandbox/*.test.mjs
 ```
 
-覆盖完整闭环、幂等重放、幂等冲突、报价金额篡改、Mandate 拒绝、交付前非法结算、SQLite 重启恢复、Adapter 防重复、Webhook HTTP 失败重试和 Receipt 签名验证。
+覆盖完整闭环、幂等冲突、报价金额篡改、Mandate 拒绝、交付前非法结算、SQLite 重启恢复、Adapter 防重复、Webhook HTTP 超时/5xx、有限重试、死信、审计重放、并发租约、Secret 轮换和 Receipt 签名验证。
 
 ## x402 沙盒商户
 
@@ -94,7 +94,13 @@ npm run x402:server
 - `GET /v1/transactions/{id}`：返回单笔完整交易详情。
 - `GET /v1/ledger`：追加式账本事件。
 - `POST /v1/webhook_subscriptions`：创建本地 Webhook 订阅。
+- `POST /v1/webhook_subscriptions/{id}/secret_rotations`：轮换签名 Secret，并设置新旧版本重叠窗口。
 - `POST /v1/webhooks/dispatch`：立即投递当前 Outbox。
 - `GET /v1/webhook_outbox`：查看投递状态与尝试次数。
+- `GET /v1/webhook_dead_letters`：查看达到最大尝试次数的死信。
+- `GET /v1/webhook_outbox/{id}/attempts`：查看逐次投递审计。
+- `POST /v1/webhook_outbox/{id}/replays`：幂等重放单个死信，保留原 `event_id`。
+
+Webhook 默认最多尝试 5 次，指数退避上限 60 秒，Worker 租约 30 秒，请求超时 10 秒。创建订阅、轮换和重放要求 `Idempotency-Key`；公开响应与审计记录不会返回明文 Secret。
 
 所有 HTTP 响应均返回 `X-Request-Id`。公开 `/v1` 请求体、资源 ID、分页参数与 `Idempotency-Key` 会在边界运行时校验；未知字段、非法 cursor 和不匹配的资源前缀返回稳定的 JSON 错误。Reference Server 仅绑定本机 Sandbox/Testnet，当前认证边界不支持公开部署。
