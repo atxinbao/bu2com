@@ -18,6 +18,8 @@ BU2.com 是 Agent 的 AI 收付平台。它嵌入 ChatGPT、Codex、Claude 和�
 
 当前代码已经形成可运行的 Agent 收付闭环，但仍是本地与测试网证据，不是生产支付系统或法律合规结论。
 
+当前正式开发项为 [Phase 0 Epic 1：External Agent Transaction Integration & Reliability](docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md)：先冻结外部 Transaction API，再闭合 Webhook 死信/重放/Secret 轮换、交易可观测性与 x402 Testnet 失败恢复，最后提供首个外部 Agent 接入样例。
+
 ## Agent 支付闭环
 
 ```text

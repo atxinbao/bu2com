@@ -154,6 +154,23 @@ Product v0.1 可作为客户访谈、交互原型和工程方案设计的输入�
 
 结论：本次文档索引修订为 **GO**；未对产品逻辑、交易状态或资金行为作出修改。
 
+## Phase 0 Epic 1 冻结验证
+
+日期：2026-09-05
+执行者：Codex
+
+- Epic：`External Agent Transaction Integration & Reliability`。
+- 风险等级：R2；本轮只冻结实施范围，不改变交易状态、金额、数据库或支付通道行为。
+- 范围：Transaction API v1、Webhook 死信/重放/Secret 轮换、交易可观测性、x402 Testnet 失败回归、外部 Agent 接入样例。
+- 边界：Mainnet、真实资金托管、法币、提现、换汇、跨链和第二支付通道不在范围内。
+- 文档链接：根 README 24/24、docs README 35/35、技术 README 10/10 有效。
+- 契约验证：12 项不变量、6 个 MCP 工具通过。
+- Sandbox：20/20 通过，0 失败。
+- Prototype：lint 0 error，生产 build 通过。
+- 格式：`git diff --check` 通过。
+
+结论：Epic 1 定义达到 **Ready**，可以从 E1.0 Transaction API v1 契约冻结开始实施；不构成 Mainnet 或生产资金执行授权。
+
 ## Phase 0 开发准入结论
 
 日期：2026-09-01

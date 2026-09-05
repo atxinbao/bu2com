@@ -12,5 +12,6 @@
 - [x402 Sandbox Adapter v0.3](X402_ADAPTER_V0.3.md)
 - [x402 Base Sepolia 测试钱包](X402_TEST_WALLET.md)
 - [x402 Base Sepolia 实结算证据](X402_LIVE_SETTLEMENT_EVIDENCE.md)
+- [Phase 0 Epic 1：外部 Agent 交易接入与可靠性](PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md)
 
 Contract v0.1 已具备本地 SQLite Reference Server、追加式账本、Webhook Outbox、签名 Receipt、模拟支付 Adapter，以及基于官方 x402 SDK 的 Base Sepolia Testnet Adapter。当前只允许 Simulation / Testnet；Mainnet、真实资金托管与生产密钥管理仍受项目治理约束，未经独立准入不得启用。
