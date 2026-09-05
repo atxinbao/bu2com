@@ -1,4 +1,4 @@
-# BU2 Persistence、Webhook 与 Adapter v0.5
+# BU2 Persistence、Webhook 与 Adapter v0.6
 
 日期：2026-09-05
 执行者：Codex
@@ -11,8 +11,10 @@ Reference Server 使用 SQLite WAL 模式保存资源快照和不可变事件。
 
 - `resources`：Quote、PaymentIntent、Transaction、Delivery 和 Receipt 当前快照。
 - `ledger_events`：按自增 sequence 追加的不可覆盖业务事件。
-- `idempotency_records`：请求指纹和第一次响应。
-- `sandbox_state`：演示钱包与已确认商户状态。
+- `idempotency_claims`：操作前的 `processing` Claim、请求指纹和成功终态。
+- `idempotency_records`：兼容保留的历史请求指纹和第一次响应。
+- `sandbox_state`：已确认商户状态、钱包兼容投影与全局状态版本。
+- `wallet_accounts`：带非负约束和版本号的钱包权威投影。
 - `adapter_operations`：支付 Adapter 的资金操作和提供商引用。
 - `webhook_outbox`：待投递、租约占用、重试、死信和已交付事件。
 - `webhook_delivery_attempts`：每次投递的不可变审计记录。
@@ -21,7 +23,7 @@ Reference Server 使用 SQLite WAL 模式保存资源快照和不可变事件。
 - `webhook_secret_rotations`：密钥轮换审计记录。
 - `schema_migrations`：可重复执行的追加式数据库迁移历史。
 
-进程重启后必须恢复资源、钱包、幂等结果、账本顺序、Adapter 操作和 Receipt 验证能力。
+进程重启后必须恢复资源、钱包、幂等结果、账本顺序、Adapter 操作和 Receipt 验证能力。Transaction Core 的领域事件先缓冲，资源、钱包、LedgerEvent、Webhook Outbox 和幂等成功终态在同一事务提交；遗留 `processing` 必须报告结果未知，不得自动重放。
 
 ## 2. Webhook Outbox
 
@@ -69,7 +71,7 @@ Adapter 使用 `reserve:{transaction_id}` 和 `settle:{transaction_id}` 作为�
 
 - SQLite 和模拟资金只用于本地沙盒。
 - Node.js `node:sqlite` 在当前运行时仍标记为实验能力。
-- E1.1 仅实现单机 SQLite 的可靠性语义，不代表多节点生产高可用。
+- 当前只实现单实例 SQLite 的本地串行写与数据库状态版本冲突保护，不代表多节点生产高可用。
 - Secret 仍只允许本地 Sandbox/Testnet 使用；生产密钥管理尚未开放。
 - x402 仅限 Base Sepolia Testnet，尚未接入 Mainnet 或持牌法币支付提供商。
 - 单机 SQLite 不等同于生产高可用账本。

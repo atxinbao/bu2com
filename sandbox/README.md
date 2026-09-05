@@ -1,4 +1,4 @@
-# BU2 Reference Server v0.8 / x402 Sandbox v0.4
+# BU2 Reference Server v0.10 / x402 Sandbox v0.4
 
 日期：2026-09-06
 执行者：Codex
@@ -13,7 +13,7 @@ node sandbox/server.mjs
 
 默认地址：`http://127.0.0.1:3100`。
 
-默认数据库：`sandbox/data/bu2-sandbox.sqlite`。重启服务后资源、钱包、幂等结果、账本和 Receipt 均会恢复。
+默认数据库：`sandbox/data/bu2-sandbox.sqlite`。重启服务后资源、钱包、幂等结果、账本和 Receipt 均会恢复。领域写入先登记数据库 `processing` Claim，再以状态版本 CAS 把资源、余额、LedgerEvent、Webhook Outbox 和幂等终态一次提交；遗留 `processing` 会返回结果未知，禁止自动重放。
 
 ## 完整 Agent 交易演示
 
@@ -73,7 +73,7 @@ npm --prefix sandbox run acceptance:clean-room
 node --test sandbox/*.test.mjs
 ```
 
-覆盖完整闭环、幂等冲突、报价金额篡改、Mandate 拒绝、交付前非法结算、SQLite 重启恢复、Adapter 防重复、Webhook HTTP 超时/5xx、有限重试、死信、审计重放、并发租约、Secret 轮换、端到端关联、日志脱敏、健康快照、MCP 外部 Agent 接入、doctor 故障注入、clean-room 证据约束、x402 未知结果恢复和 Receipt 签名验证。
+覆盖完整闭环、数据库幂等 Claim、并发预留、状态 CAS、原子提交故障注入、报价金额篡改、Mandate 拒绝、交付前非法结算、SQLite 重启恢复、Adapter 防重复、Webhook HTTP 超时/5xx、有限重试、死信、审计重放、并发租约、Secret 轮换、端到端关联、日志脱敏、健康快照、MCP 外部 Agent 接入、doctor 故障注入、clean-room 证据约束、x402 未知结果恢复和 Receipt 签名验证。
 
 ## x402 沙盒商户
 

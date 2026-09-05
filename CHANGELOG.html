@@ -152,6 +152,32 @@
       <h2 id="unreleased">Unreleased</h2>
       <article class="release">
         <div class="release-head">
+          <div><h3>Transaction Trust Gate 2 · 数据库幂等与交易原子性</h3><time datetime="2026-09-06">2026-09-06</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">修复审计发现的异步幂等竞争、并发余额透支和业务状态与 Ledger/Outbox 分事务提交问题；Epic 3 继续冻结，等待 Gate 2 人工审查和后续 Gate 3。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag added">Added</span>SQLite Schema v6 新增数据库唯一 <code>processing</code> Claim；同键同载荷并发共享一个业务结果，不同载荷拒绝，重启遗留 Claim 返回结果未知且禁止自动重放。</li>
+            <li><span class="tag added">Added</span>新增带非负约束和版本号的 <code>wallet_accounts</code>，余额以期望值条件更新；全局 <code>state_revision</code> CAS 阻止陈旧进程覆盖新快照。</li>
+            <li><span class="tag changed">Changed</span>Quote、PaymentIntent、Authorization、Delivery、Settlement 和 Recovery 统一进入串行领域写队列；领域事件先缓冲，再与资源、钱包、LedgerEvent、Webhook Outbox 和幂等成功结果一次提交。</li>
+            <li><span class="tag removed">Removed</span>移除领域层独立 <code>saveSnapshot</code> / <code>appendEvent</code> 写入路径，事务失败时统一回滚并从数据库重新加载已提交事实。</li>
+            <li><span class="tag added">Added</span>新增并发授权、同键执行中冲突、原子提交故障注入、重启 processing、陈旧写入 CAS 和成功提交一致性测试。</li>
+            <li><span class="tag changed">Changed</span>Reference Sandbox 升至 <code>v0.10.0</code>；公开 Agent Payment API 与 MCP 契约版本保持不变。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R2 · 资金预留、幂等、数据库迁移、账本和 Outbox 原子边界，必须独立人工审查后合并</span></div>
+          <div><b>金融行为影响</b><span>并发请求不能产生负余额或重复 Transaction；失败关闭为余额不足、并发冲突或结果未知</span></div>
+          <div><b>兼容性</b><span>Schema v6 纯追加并回填历史成功幂等；旧资源、事件、Outbox、Adapter 操作与 Receipt 保持可解释</span></div>
+          <div><b>验证</b><span>Gate 2 专项 8/8、Sandbox 78/78、Contract 42 项、MCP 6 个、SDK 8/8、clean-room 3/3、Prototype lint/build 全部通过</span></div>
+          <div><b>恢复</b><span>回退应用并保留 v6 追加表；遗留 processing 只允许查询/对账，禁止自动重放；x402 Payment Attempt 仍由 Gate 3 完成</span></div>
+        </div>
+      </article>
+
+      <article class="release">
+        <div class="release-head">
           <div><h3>Transaction Trust Gate 1 · Receipt v0.2 与界面真实性</h3><time datetime="2026-09-06">2026-09-06</time></div>
           <span class="status">Unreleased</span>
         </div>

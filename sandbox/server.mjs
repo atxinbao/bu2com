@@ -189,7 +189,7 @@ export function createBu2Server({
               ? "attention_required"
               : "healthy",
           service: "bu2-reference-server",
-          version: "0.9.0",
+          version: "0.10.0",
           api_contract_version: contractVersions.agent_payment_api,
           api_base_path: contractVersions.api_base_path,
           mcp_contract_versions: [contractVersions.mcp_tools],
@@ -235,7 +235,11 @@ export function createBu2Server({
       }
       if (request.method === "POST" && url.pathname === "/v1/quotes") {
         const body = validateBody("createQuote", await readJson(request));
-        return send(response, 201, activeSandbox.createQuote(body, validateIdempotencyKey(key)));
+        return send(
+          response,
+          201,
+          await activeSandbox.createQuote(body, validateIdempotencyKey(key)),
+        );
       }
       if (request.method === "POST" && url.pathname === "/v1/payment_intents") {
         const body = validateBody("createPaymentIntent", await readJson(request));
@@ -338,7 +342,7 @@ export function createBu2Server({
           return send(
             response,
             201,
-            activeSandbox.submitDelivery(
+            await activeSandbox.submitDelivery(
               transactionId,
               body,
               validateIdempotencyKey(key),
@@ -474,5 +478,5 @@ export async function listen({
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
   const running = await listen({ logSink: (line) => console.log(line) });
-  console.log(`BU2 Reference Server v0.9 listening on ${running.url}`);
+  console.log(`BU2 Reference Server v0.10 listening on ${running.url}`);
 }

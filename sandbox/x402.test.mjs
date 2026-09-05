@@ -50,7 +50,7 @@ async function alteredChallenge(url, mutate) {
 }
 
 async function deliveredTransaction(sandbox, suffix = "recovery") {
-  const quote = sandbox.createQuote(
+  const quote = await sandbox.createQuote(
     {
       seller_agent_id: "agt_x402_seller",
       payee_account_id: `acct_x402_${suffix}`,
@@ -76,7 +76,7 @@ async function deliveredTransaction(sandbox, suffix = "recovery") {
     { decision: "authorize" },
     `${suffix}-authorize-key`,
   );
-  sandbox.submitDelivery(
+  await sandbox.submitDelivery(
     authorized.transaction_id,
     { type: "dataset_access", evidence_hash: `sha256:${suffix}` },
     `${suffix}-delivery-key`,
@@ -544,7 +544,7 @@ test("BU2 core objects complete an asynchronous x402 adapter transaction", async
     adapter,
     initialWallet: { id: "wal_x402_buyer", available: 100, reserved: 0, currency: "USD" },
   });
-  const quote = sandbox.createQuote(
+  const quote = await sandbox.createQuote(
     {
       seller_agent_id: "agt_x402_seller",
       payee_account_id: "acct_x402_merchant",
@@ -571,7 +571,7 @@ test("BU2 core objects complete an asynchronous x402 adapter transaction", async
     "x402-core-authorize",
   );
   assert.equal(authorized.status, "funds_reserved");
-  sandbox.submitDelivery(
+  await sandbox.submitDelivery(
     authorized.transaction_id,
     { type: "dataset_access", evidence_hash: "sha256:x402core" },
     "x402-core-delivery",

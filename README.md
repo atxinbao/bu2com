@@ -9,10 +9,10 @@ BU2.com 是 Agent 的 AI 收付平台。它嵌入 ChatGPT、Codex、Claude 和�
 | 项目 | 当前基线 |
 | --- | --- |
 | 项目阶段 | Phase 0 · Simulation / Testnet |
-| 当前 Epic | Epic 3 · External Pilot Readiness & Evidence |
+| 当前工程关卡 | Transaction Trust Gate 2 · Database Idempotency & Atomicity |
 | 产品定义 | Product v0.3 · Transaction-first |
 | API 契约 | Agent Payment API v0.1 |
-| Reference Server | Sandbox v0.9 · Node.js + SQLite WAL + MCP |
+| Reference Server | Sandbox v0.10 · Node.js + SQLite WAL + MCP |
 | TypeScript SDK | `@bu2/sdk` v0.1 · Monorepo private package |
 | MCP 分发 | stdio v0.1 · Codex / Claude Desktop / Generic Host |
 | 接入诊断 | `bu2-doctor` v0.1 · 本地执行 / 零远程遥测 |
@@ -53,6 +53,7 @@ BU2 将授权、资金预留、交付、结算和退款保存为不同事实。�
 - 整数最小货币单位、明确币种和受约束的交易状态机。
 - 端到端幂等、载荷冲突拒绝和非法状态转换保护。
 - SQLite WAL 持久化、追加式 LedgerEvent 和进程重启恢复。
+- 数据库 processing 幂等 Claim、状态版本 CAS、非负钱包约束，以及资源、余额、LedgerEvent、Outbox 和幂等终态的单事务提交。
 - Webhook Outbox、Worker 租约、有限重试、死信、审计重放、版本化 HMAC Secret 和事件去重。
 - `request_id` / `trace_id` 端到端关联、分类结构化事件、敏感值脱敏和运行健康快照。
 - SimulatedPaymentAdapter 与官方 x402 v2 Base Sepolia Adapter。
@@ -93,7 +94,7 @@ npm --prefix packages/typescript-sdk test
 npm --prefix sandbox run acceptance:clean-room
 ```
 
-当前基线应得到：Contract 42 项不变量通过、6 个 MCP 工具有效、Sandbox 70/70 通过、TypeScript SDK 8/8 通过、三条 clean-room 路径全部生成有效 Simulation Receipt、Prototype lint 与 build 通过。
+当前基线应得到：Contract 42 项不变量通过、6 个 MCP 工具有效、Sandbox 78/78 通过、TypeScript SDK 8/8 通过、三条 clean-room 路径全部生成有效 Simulation Receipt、Prototype lint 与 build 通过。
 
 ### 运行接入诊断
 

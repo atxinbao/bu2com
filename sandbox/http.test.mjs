@@ -306,7 +306,7 @@ test("HTTP server exposes an explicit x402 adapter mode without a signer", async
       ),
   );
   const health = await request(running.url, "/health");
-  assert.equal(health.body.version, "0.9.0");
+  assert.equal(health.body.version, "0.10.0");
   assert.equal(health.body.adapter, "x402_exact_base_sepolia");
   assert.equal(health.body.environment, "testnet");
   assert.equal(running.sandbox.wallet.currency, "USD");
@@ -512,7 +512,10 @@ test("HTTP v1 exposes idempotent Webhook dead-letter, replay, and secret rotatio
     "webhook_subscription_exists",
   );
 
-  const quote = sandbox.createQuote(quoteInputForWebhook(), "http-webhook-event-key");
+  const quote = await sandbox.createQuote(
+    quoteInputForWebhook(),
+    "http-webhook-event-key",
+  );
   assert.match(quote.id, /^quo_/);
   const dispatched = await request(running.url, "/v1/webhooks/dispatch", {
     method: "POST",

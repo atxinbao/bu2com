@@ -40,7 +40,7 @@ async function closeRunning(running) {
 }
 
 async function createReceipt(sandbox) {
-  const quote = sandbox.createQuote(
+  const quote = await sandbox.createQuote(
     {
       seller_agent_id: "agt_doctor_seller",
       payee_account_id: "acct_doctor_seller",
@@ -66,7 +66,7 @@ async function createReceipt(sandbox) {
     { decision: "authorize" },
     "doctor-authorize-key",
   );
-  sandbox.submitDelivery(
+  await sandbox.submitDelivery(
     authorized.transaction_id,
     { type: "dataset_access", evidence_hash: "sha256:doctorreceipt" },
     "doctor-delivery-key",

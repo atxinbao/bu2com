@@ -164,7 +164,7 @@ test("preflight rejects environment and MCP contract mismatches", async () => {
   const health = {
     status: "ok",
     service: "bu2-reference-server",
-    version: "0.9.0",
+    version: "0.10.0",
     api_contract_version: "0.1.4",
     api_base_path: "/v1",
     mcp_contract_versions: [mcpContract.version],
