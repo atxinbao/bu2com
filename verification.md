@@ -256,3 +256,19 @@ Product v0.1 可作为客户访谈、交互原型和工程方案设计的输入�
 - Prototype lint 0 error，Vinext 五阶段生产构建通过；`git diff --check` 通过。
 
 结论：E1.1 为 **GO**，可以提交 R2 PR 供 Project Owner 审查。本结论只覆盖本地 Simulation 与 Base Sepolia Testnet 事件投递可靠性；不开放 Mainnet、托管、生产 Secret 或多节点生产部署。下一顺序项为 E1.2 交易链路可观测性。
+
+## E1.3 x402 Testnet 失败恢复验证
+
+日期：2026-09-06
+执行者：Codex
+
+- Reference Sandbox 升级为 v0.7.0；SQLite schema v4 只追加 Adapter operation 恢复字段与 `adapter_recovery_attempts` 审计表。
+- x402 challenge 分别校验 exact scheme、Base Sepolia network、指定 USDC asset 与 BU2 授权 amount，错误码稳定且不写入 reserve operation。
+- facilitator timeout、5xx、响应缺失、响应不可解析和 response network 异常进入 `provider_unknown`；普通 settlement 重放被阻断，不再次执行 `paidFetch`。
+- 未知结果与恢复查询跨进程重启持久化；查询未决时 Transaction 保持 `delivery_submitted`、钱包保持 reserved、Receipt 为 null。
+- Provider 查询明确返回 settled 后，Adapter operation 与恢复审计在 SQLite 事务中收口，核心复用正常结算路径，只签发一张可验证 Receipt。
+- `POST /v1/transactions/{id}/settlement_recoveries` 使用闭合请求体和 `Idempotency-Key`；同键重放不重复查询。
+- 官方 x402 v2.24.0 SDK 没有按 BU2 transaction id 查询结果的通用接口，故恢复使用显式注入的 provider-specific callback；未配置时保持未知，不伪造链上结论。
+- 本轮验证命令和最终计数记录于 `.codex/testing.md`；未使用 Mainnet、生产密钥或托管资金。
+
+结论：E1.3 本地实现达到 **GO for R2 review**。结果未知时不会自动重复付款、释放内部预留或提前签发 Receipt；下一顺序项为 E1.4 首个外部 Agent 接入样例，但应在本 PR 经 Project Owner 审查合并后开始。

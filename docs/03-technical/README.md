@@ -10,7 +10,7 @@
 - [可运行 Reference Server](../../sandbox/README.md)
 - [Persistence、Webhook 与 Adapter v0.5](PERSISTENCE_WEBHOOK_ADAPTER_V0.2.md)
 - [交易链路可观测性与处置手册 v0.1](OBSERVABILITY_RUNBOOK_V0.1.md)
-- [x402 Sandbox Adapter v0.3](X402_ADAPTER_V0.3.md)
+- [x402 Sandbox Adapter v0.4](X402_ADAPTER_V0.4.md)
 - [x402 Base Sepolia 测试钱包](X402_TEST_WALLET.md)
 - [x402 Base Sepolia 实结算证据](X402_LIVE_SETTLEMENT_EVIDENCE.md)
 - [Phase 0 Epic 1：外部 Agent 交易接入与可靠性](PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md)

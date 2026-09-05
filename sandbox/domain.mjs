@@ -343,6 +343,9 @@ export class Bu2Sandbox {
     const receipt = transaction.receipt_id
       ? (this.receipts.get(transaction.receipt_id) ?? null)
       : null;
+    const settlementOperation = this.ledger?.getAdapterOperation(
+      `settle:${transaction.id}`,
+    );
     return {
       transaction: clone(transaction),
       payment_intent: intent ? clone(intent) : null,
@@ -352,6 +355,18 @@ export class Bu2Sandbox {
         ? { ...clone(receipt), valid: this.verifyReceipt(receipt.id).valid }
         : null,
       payment_channel: this.adapter?.name ?? "none",
+      settlement_control: settlementOperation
+        ? {
+            status: settlementOperation.status,
+            provider_reference: settlementOperation.provider_reference,
+            reason_code: settlementOperation.last_error ?? null,
+            updated_at:
+              settlementOperation.updated_at ?? settlementOperation.created_at,
+            resolved_at: settlementOperation.resolved_at ?? null,
+            recovery_attempts:
+              this.ledger?.adapterRecoveryAttempts(transaction.id).length ?? 0,
+          }
+        : null,
     };
   }
 
@@ -520,75 +535,148 @@ export class Bu2Sandbox {
       key,
       input,
       async () => {
-      const transaction = this.transactions.get(transactionId);
-      if (!transaction)
-        throw new ApiError(
-          404,
-          "resource_not_found",
-          "transaction_not_found",
-          "Transaction was not found.",
+        const transaction = this.transactions.get(transactionId);
+        if (!transaction)
+          throw new ApiError(
+            404,
+            "resource_not_found",
+            "transaction_not_found",
+            "Transaction was not found.",
+          );
+        if (transaction.status !== "delivery_submitted")
+          throw new ApiError(
+            409,
+            "invalid_state_transition",
+            "transaction_not_delivered",
+            "Transaction must be delivery_submitted before settlement.",
+            { current_state: transaction.status },
+          );
+        const settledAmount = clone(transaction.reserved_amount);
+        const provider = await this.executeAdapter(
+          "settle",
+          transaction.id,
+          settledAmount,
         );
-      if (transaction.status !== "delivery_submitted")
-        throw new ApiError(
-          409,
-          "invalid_state_transition",
-          "transaction_not_delivered",
-          "Transaction must be delivery_submitted before settlement.",
-          { current_state: transaction.status },
-        );
-      const settledAmount = clone(transaction.reserved_amount);
-      const provider = await this.executeAdapter(
-        "settle",
-        transaction.id,
-        settledAmount,
-      );
-      transaction.status = "settled";
-      transaction.settled_amount = settledAmount;
-      transaction.settlement_id = prefix("stl");
-      transaction.settled_at = new Date().toISOString();
-      if (provider) transaction.settlement_provider_reference = provider.provider_reference;
-      this.wallet.reserved -= transaction.settled_amount.value;
-      const intent = this.intents.get(transaction.payment_intent_id);
-      intent.status = "settled";
-      const quote = this.quotes.get(intent.quote_id);
-      quote.status = "accepted";
-      this.event("transaction.settled", transaction);
-      const receiptPayload = {
-        version: "0.1",
-        transaction_id: transaction.id,
-        settlement_id: transaction.settlement_id,
-        quote_id: quote.id,
-        payment_intent_id: intent.id,
-        payer_account_id: intent.payer_account_id,
-        payee_account_id: intent.payee_account_id,
-        buyer_agent_id: intent.buyer_agent_id,
-        seller_agent_id: intent.seller_agent_id,
-        amount: clone(transaction.settled_amount),
-        authorization_id: intent.authorization.id,
-        payment_mandate_id: intent.payment_mandate_id,
-        delivery_id: transaction.delivery_id,
-        delivery_evidence_hash: this.deliveries.get(transaction.delivery_id).evidence_hash,
-        issued_at: new Date().toISOString(),
-      };
-      const signature = sign(
-        null,
-        Buffer.from(canonical(receiptPayload)),
-        this.privateKey,
-      ).toString("base64");
-      const receipt = {
-        id: prefix("rcpt"),
-        ...receiptPayload,
-        signature_algorithm: "Ed25519",
-        verification_key_id: "key_bu2_sandbox_01",
-        signature,
-        public_key: this.publicKey.export({ type: "spki", format: "der" }).toString("base64"),
-      };
-      this.receipts.set(receipt.id, receipt);
-      transaction.receipt_id = receipt.id;
-      this.event("receipt.issued", receipt);
-        return { transaction: clone(transaction), receipt: clone(receipt) };
+        if (transaction.status === "settled") {
+          return {
+            transaction: clone(transaction),
+            receipt: clone(this.receipts.get(transaction.receipt_id)),
+          };
+        }
+        return this.completeSettlement(transaction, settledAmount, provider);
       },
     );
+  }
+
+  async recoverSettlement(transactionId, input, key) {
+    return this.runIdempotentAsync(
+      `transactions/${transactionId}/settlement_recoveries`,
+      key,
+      input,
+      async () => {
+        const transaction = this.transactions.get(transactionId);
+        if (!transaction)
+          throw new ApiError(
+            404,
+            "resource_not_found",
+            "transaction_not_found",
+            "Transaction was not found.",
+          );
+        if (transaction.status !== "delivery_submitted")
+          throw new ApiError(
+            409,
+            "invalid_state_transition",
+            "transaction_not_recoverable",
+            "Only a delivery_submitted transaction can recover an unknown settlement.",
+            { current_state: transaction.status },
+          );
+        if (typeof this.adapter?.recoverSettlement !== "function")
+          throw new ApiError(
+            409,
+            "invalid_state_transition",
+            "settlement_recovery_unsupported",
+            "The active payment adapter does not support settlement recovery.",
+          );
+        const settledAmount = clone(transaction.reserved_amount);
+        const provider = await this.executeAdapter(
+          "recoverSettlement",
+          transaction.id,
+          settledAmount,
+        );
+        if (provider.status === "settled") {
+          return {
+            ...this.completeSettlement(transaction, settledAmount, provider),
+            recovery: {
+              status: "settled",
+              reason_code: null,
+              attempt_id: provider.recovery_attempt_id,
+            },
+          };
+        }
+        return {
+          transaction: clone(transaction),
+          receipt: null,
+          recovery: {
+            status: "provider_unknown",
+            reason_code:
+              provider.recovery_reason_code ?? "x402_recovery_result_unknown",
+            attempt_id: provider.recovery_attempt_id,
+          },
+        };
+      },
+    );
+  }
+
+  completeSettlement(transaction, settledAmount, provider) {
+    transaction.status = "settled";
+    transaction.settled_amount = settledAmount;
+    transaction.settlement_id = prefix("stl");
+    transaction.settled_at = new Date().toISOString();
+    if (provider) {
+      transaction.settlement_provider_reference = provider.provider_reference;
+    }
+    this.wallet.reserved -= transaction.settled_amount.value;
+    const intent = this.intents.get(transaction.payment_intent_id);
+    intent.status = "settled";
+    const quote = this.quotes.get(intent.quote_id);
+    quote.status = "accepted";
+    this.event("transaction.settled", transaction);
+    const receiptPayload = {
+      version: "0.1",
+      transaction_id: transaction.id,
+      settlement_id: transaction.settlement_id,
+      quote_id: quote.id,
+      payment_intent_id: intent.id,
+      payer_account_id: intent.payer_account_id,
+      payee_account_id: intent.payee_account_id,
+      buyer_agent_id: intent.buyer_agent_id,
+      seller_agent_id: intent.seller_agent_id,
+      amount: clone(transaction.settled_amount),
+      authorization_id: intent.authorization.id,
+      payment_mandate_id: intent.payment_mandate_id,
+      delivery_id: transaction.delivery_id,
+      delivery_evidence_hash: this.deliveries.get(transaction.delivery_id).evidence_hash,
+      issued_at: new Date().toISOString(),
+    };
+    const signature = sign(
+      null,
+      Buffer.from(canonical(receiptPayload)),
+      this.privateKey,
+    ).toString("base64");
+    const receipt = {
+      id: prefix("rcpt"),
+      ...receiptPayload,
+      signature_algorithm: "Ed25519",
+      verification_key_id: "key_bu2_sandbox_01",
+      signature,
+      public_key: this.publicKey
+        .export({ type: "spki", format: "der" })
+        .toString("base64"),
+    };
+    this.receipts.set(receipt.id, receipt);
+    transaction.receipt_id = receipt.id;
+    this.event("receipt.issued", receipt);
+    return { transaction: clone(transaction), receipt: clone(receipt) };
   }
 
   getReceipt(id) {

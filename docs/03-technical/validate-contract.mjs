@@ -94,6 +94,14 @@ assert(
   'OpenAPI must define immutable delivery-attempt audit records',
 );
 assert(
+  openapi.includes('/transactions/{transaction_id}/settlement_recoveries:'),
+  'OpenAPI must expose explicit settlement recovery',
+);
+assert(
+  openapi.includes('SettlementRecoveryResult:'),
+  'OpenAPI must define unknown and settled recovery results',
+);
+assert(
   (openapi.match(/secret: \{[^\n]+writeOnly: true \}/g) ?? []).length === 2,
   'OpenAPI must accept secrets only as write-only input',
 );

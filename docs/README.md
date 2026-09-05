@@ -74,7 +74,7 @@
 ### 持久化与支付通道
 
 - [`PERSISTENCE_WEBHOOK_ADAPTER_V0.2.md`](03-technical/PERSISTENCE_WEBHOOK_ADAPTER_V0.2.md)：SQLite 追加账本、Webhook Outbox 与 Adapter 边界。
-- [`X402_ADAPTER_V0.3.md`](03-technical/X402_ADAPTER_V0.3.md)：x402 Sandbox Adapter、状态编排和失败恢复。
+- [`X402_ADAPTER_V0.4.md`](03-technical/X402_ADAPTER_V0.4.md)：x402 Sandbox Adapter、未知结果冻结与显式恢复。
 - [`X402_TEST_WALLET.md`](03-technical/X402_TEST_WALLET.md)：Base Sepolia 测试钱包边界和操作记录。
 - [`X402_LIVE_SETTLEMENT_EVIDENCE.md`](03-technical/X402_LIVE_SETTLEMENT_EVIDENCE.md)：真实测试网结算及 Receipt 验证证据，不等同于生产可用性证明。
 - [`PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md`](03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md)：首个正式开发 Epic 的范围、Owner、可靠性工作包和完成门槛。

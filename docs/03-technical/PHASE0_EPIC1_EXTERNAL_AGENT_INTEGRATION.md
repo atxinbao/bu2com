@@ -66,12 +66,14 @@
 
 完成证据：Reference Sandbox v0.6 使用 AsyncLocalStorage 隔离并发请求关联，将 `request_id`、`trace_id`、`transaction_id`、`event_id` 和 provider reference 追加保存到 LedgerEvent、Adapter 操作、Outbox 与 Webhook 投递审计；`/health` 提供 Outbox 状态、最近成功投递与未知结果计数。分类 JSON 事件在写出前脱敏，并新增告警与处置手册。Schema v3 为 additive migration，旧记录关联字段保持可空，交易金额、状态机与资金动作不变。
 
-### E1.3 — x402 Testnet 失败回归
+### E1.3 — x402 Testnet 失败回归（已完成）
 
 - 覆盖 challenge 金额/网络/资产不匹配。
 - 覆盖 facilitator 超时、响应丢失、链上结果未知和恢复查询。
 - 证明未知结果不会自动重试扣款、释放内部预留或签发 Receipt。
 - Base Sepolia 成功路径继续产生稳定 provider reference 和可验证 Receipt。
+
+完成证据：Reference Sandbox v0.7 校验 challenge 的 exact scheme、Base Sepolia network、USDC asset 与授权 amount；facilitator timeout、5xx、响应缺失/不可解析和 network 异常会持久化为 `provider_unknown`。普通 settlement 在未知结果后不再执行 `paidFetch`；显式、幂等的 settlement recovery API 通过 provider-specific 查询边界收口，查询未决时保持 `delivery_submitted`、reserved 与无 Receipt，确认 settled 时复用单一核心结算路径。Schema v4 只追加 operation 状态字段与不可变恢复尝试表，重启后仍保持阻断。
 
 ### E1.4 — 首个外部 Agent 接入样例
 

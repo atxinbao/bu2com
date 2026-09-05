@@ -87,26 +87,31 @@ export function buildPaymentAdapter({
   mode = "simulated",
   resourceUrl,
   buyerPrivateKey,
+  paidFetch = null,
+  recoveryQuery = null,
 } = {}) {
   if (mode === "simulated") return new SimulatedPaymentAdapter({ ledger, observer });
   if (mode !== "x402") {
     throw new ApiError(400, "validation_error", "adapter_mode_invalid", `Unknown adapter: ${mode}`);
   }
-  const paidFetch = buyerPrivateKey
-    ? wrapFetchWithPaymentFromConfig(fetch, {
-        schemes: [
-          {
-            network: "eip155:84532",
-            client: new ExactEvmScheme(privateKeyToAccount(buyerPrivateKey)),
-          },
-        ],
-      })
-    : null;
+  const activePaidFetch =
+    paidFetch ??
+    (buyerPrivateKey
+      ? wrapFetchWithPaymentFromConfig(fetch, {
+          schemes: [
+            {
+              network: "eip155:84532",
+              client: new ExactEvmScheme(privateKeyToAccount(buyerPrivateKey)),
+            },
+          ],
+        })
+      : null);
   return new X402PaymentAdapter({
     ledger,
     observer,
     resourceUrl: resourceUrl ?? "http://127.0.0.1:4021/premium-data",
-    paidFetch,
+    paidFetch: activePaidFetch,
+    recoveryQuery,
   });
 }
 
@@ -180,7 +185,7 @@ export function createBu2Server({
               ? "attention_required"
               : "healthy",
           service: "bu2-reference-server",
-          version: "0.6.0",
+          version: "0.7.0",
           persistence: activeLedger.path,
           adapter: activeSandbox.adapter?.name ?? "none",
           ledger_events: activeLedger.listLedgerEvents().length,
@@ -346,6 +351,23 @@ export function createBu2Server({
             ),
           );
         }
+        if (
+          request.method === "POST" &&
+          segments.length === 4 &&
+          segments[3] === "settlement_recoveries"
+        ) {
+          const transactionId = validateResourceId(segments[2], "txn", "transaction_id");
+          const body = validateBody("settlementRecovery", await readJson(request));
+          return send(
+            response,
+            200,
+            await activeSandbox.recoverSettlement(
+              transactionId,
+              body,
+              validateIdempotencyKey(key),
+            ),
+          );
+        }
       }
       if (
         request.method === "GET" &&
@@ -405,6 +427,8 @@ export async function listen({
   adapterMode = process.env.BU2_PAYMENT_ADAPTER ?? "simulated",
   x402ResourceUrl = process.env.X402_RESOURCE_URL,
   x402BuyerPrivateKey = process.env.X402_BUYER_PRIVATE_KEY,
+  x402PaidFetch = null,
+  x402RecoveryQuery = null,
 } = {}) {
   const activeObserver = observer ?? new Observability({ sink: logSink });
   const activeLedger = ledger ?? new SqliteLedger(dbPath, { observer: activeObserver });
@@ -415,6 +439,8 @@ export async function listen({
     mode: adapterMode,
     resourceUrl: x402ResourceUrl,
     buyerPrivateKey: x402BuyerPrivateKey,
+    paidFetch: x402PaidFetch,
+    recoveryQuery: x402RecoveryQuery,
   });
   const initialWallet =
     adapterMode === "x402"
@@ -437,5 +463,5 @@ export async function listen({
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
   const running = await listen({ logSink: (line) => console.log(line) });
-  console.log(`BU2 Reference Server v0.6 listening on ${running.url}`);
+  console.log(`BU2 Reference Server v0.7 listening on ${running.url}`);
 }

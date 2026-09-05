@@ -1,4 +1,4 @@
-# BU2 Reference Server v0.6 / x402 Sandbox v0.3
+# BU2 Reference Server v0.7 / x402 Sandbox v0.4
 
 日期：2026-09-05
 执行者：Codex
@@ -31,7 +31,7 @@ node sandbox/demo-agents.mjs
 node --test sandbox/*.test.mjs
 ```
 
-覆盖完整闭环、幂等冲突、报价金额篡改、Mandate 拒绝、交付前非法结算、SQLite 重启恢复、Adapter 防重复、Webhook HTTP 超时/5xx、有限重试、死信、审计重放、并发租约、Secret 轮换、端到端关联、日志脱敏、健康快照和 Receipt 签名验证。
+覆盖完整闭环、幂等冲突、报价金额篡改、Mandate 拒绝、交付前非法结算、SQLite 重启恢复、Adapter 防重复、Webhook HTTP 超时/5xx、有限重试、死信、审计重放、并发租约、Secret 轮换、端到端关联、日志脱敏、健康快照、x402 未知结果恢复和 Receipt 签名验证。
 
 ## x402 沙盒商户
 
@@ -73,7 +73,18 @@ npm start
 npm run demo:x402
 ```
 
-领域入口已经支持异步 Adapter。支付通道失败时不会扣减内部余额、改变 Delivery 状态或签发 Receipt，可以使用相同幂等键安全重试。
+领域入口已经支持异步 Adapter。明确失败不会扣减内部余额、改变 Delivery 状态或签发 Receipt；可能已支付但结果未知时保存 `provider_unknown` 并阻断普通重试，只能通过显式恢复查询收口。
+
+### 恢复未知 x402 结算
+
+```bash
+curl -X POST http://127.0.0.1:3101/v1/transactions/txn_.../settlement_recoveries \
+  -H 'Content-Type: application/json' \
+  -H 'Idempotency-Key: recovery-query-001' \
+  -d '{}'
+```
+
+恢复查询不会发起第二次付款。只有注入的 Provider 查询器明确返回 `settled`，BU2 才释放内部预留并签发 Receipt；未配置查询器或链上结果仍不确定时保持 `delivery_submitted`。详见 [x402 Adapter v0.4](../docs/03-technical/X402_ADAPTER_V0.4.md)。
 
 ### 本机测试钱包
 
@@ -92,6 +103,7 @@ npm run x402:server
 - `GET /health`：服务、数据库、Adapter、账本事件，以及 Outbox 与 Adapter 未知结果健康快照。
 - `GET /v1/transactions?limit=20&cursor=...`：按时间倒序返回交易及其支付、交付、通道和 Receipt 上下文，使用不透明 cursor 分页。
 - `GET /v1/transactions/{id}`：返回单笔完整交易详情。
+- `POST /v1/transactions/{id}/settlement_recoveries`：幂等查询未知 x402 结算，不重复付款。
 - `GET /v1/ledger`：追加式账本事件。
 - `POST /v1/webhook_subscriptions`：创建本地 Webhook 订阅。
 - `POST /v1/webhook_subscriptions/{id}/secret_rotations`：轮换签名 Secret，并设置新旧版本重叠窗口。
