@@ -62,11 +62,17 @@ test("SQLite restart restores resources, wallet, idempotency, ledger, and receip
   try {
     const first = stack(path);
     const payment = await completePayment(first.sandbox);
+    const originalKeyId = payment.result.receipt.verification_key_id;
     const eventCount = first.ledger.listLedgerEvents().length;
     assert.equal(eventCount, 7);
     first.ledger.close();
 
     const restored = stack(path);
+    assert.notEqual(restored.sandbox.verificationKeyId, originalKeyId);
+    assert.equal(
+      restored.ledger.getReceiptVerificationKey(originalKeyId).status,
+      "trusted",
+    );
     assert.equal(restored.sandbox.getPaymentIntent(payment.intent.id).status, "settled");
     assert.equal(restored.sandbox.verifyReceipt(payment.result.receipt.id).valid, true);
     assert.equal(restored.sandbox.wallet.available, 96_100);
@@ -457,7 +463,7 @@ test("additive migration restores legacy secrets and expired delivery leases", (
     const first = new SqliteLedger(path);
     assert.deepEqual(
       first.schemaMigrations().map((migration) => migration.version),
-      [1, 2, 3, 4],
+      [1, 2, 3, 4, 5],
     );
     const migratedOutbox = first.outboxRows()[0];
     assert.equal(migratedOutbox.request_id, null);

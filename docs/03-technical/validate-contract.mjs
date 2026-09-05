@@ -44,6 +44,11 @@ assert(
   flow.receipt.transaction_id === flow.transaction.id,
   'receipt must bind to transaction',
 );
+assert(
+  flow.receipt.schema_version === '0.2' &&
+    flow.receipt.canonicalization_version === 'RFC8785-JCS-1',
+  'receipt example must use trusted v0.2 canonicalization',
+);
 const { authorized_amount, reserved_amount, settled_amount, refunded_amount } =
   flow.transaction;
 assert(
@@ -57,6 +62,11 @@ assert(
     (amount) => Number.isInteger(amount.value) && amount.currency === 'CNY',
   ),
   'amounts must use integer minor units and one currency',
+);
+assert(
+  flow.receipt.amount.value === settled_amount.value &&
+    flow.receipt.amount.currency === settled_amount.currency,
+  'receipt amount must bind to settled amount',
 );
 assert(mcp.tools.length === 6, 'MCP contract must expose 6 bounded tools');
 assert(
@@ -126,6 +136,12 @@ assert(openapi.includes('trace_id:'), 'OpenAPI errors and records must expose tr
 assert(
   openapi.includes('/receipts/{receipt_id}/verify:'),
   'OpenAPI must expose receipt verification',
+);
+assert(
+  ['signature_valid', 'issuer_trusted', 'settlement_confirmed'].every((field) =>
+    openapi.includes(`${field}:`),
+  ),
+  'OpenAPI must separate signature, issuer trust, and settlement confirmation',
 );
 assert(
   openapi.includes('/webhook_dead_letters:'),

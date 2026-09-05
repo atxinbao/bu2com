@@ -573,12 +573,42 @@ export interface components {
         };
         Receipt: {
             id: string;
+            /** @enum {string} */
+            version: "0.2";
+            /** @enum {string} */
+            schema_version: "0.2";
+            /** @enum {string} */
+            canonicalization_version: "RFC8785-JCS-1";
             transaction_id: string;
             settlement_id: string;
+            quote_id: string;
+            payment_intent_id: string;
+            payer_account_id: string;
+            payee_account_id: string;
+            buyer_agent_id: string;
+            seller_agent_id: string;
+            amount: components["schemas"]["Amount"];
+            authorization_id: string;
+            payment_mandate_id: string;
+            delivery_id: string;
+            delivery_evidence_hash: string;
+            /** @enum {string} */
+            environment: "simulation" | "testnet";
+            payment_channel: string;
+            provider_reference: string | null;
+            /** Format: date-time */
+            signed_at: string;
+            /** Format: date-time */
+            issued_at: string;
             /** @enum {string} */
             signature_algorithm: "Ed25519";
             verification_key_id: string;
             signature: string;
+            public_key: string;
+            readonly valid?: boolean;
+            readonly signature_valid?: boolean;
+            readonly issuer_trusted?: boolean;
+            readonly settlement_confirmed?: boolean;
         };
         Error: {
             error: {
@@ -1038,6 +1068,13 @@ export interface operations {
                     "application/json": {
                         receipt_id: string;
                         valid: boolean;
+                        signature_valid: boolean;
+                        issuer_trusted: boolean;
+                        settlement_confirmed: boolean;
+                        /** @enum {string} */
+                        schema_version: "0.1" | "0.2";
+                        /** @enum {string} */
+                        canonicalization_version: "BU2-LEGACY-0.1" | "RFC8785-JCS-1";
                     };
                 };
             };

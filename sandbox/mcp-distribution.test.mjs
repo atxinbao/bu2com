@@ -80,7 +80,7 @@ test("stable MCP CLI preflights the endpoint before opening stdio", async (conte
   const preflight = JSON.parse(result.stdout);
   assert.equal(preflight.status, "compatible");
   assert.equal(preflight.environment, "simulation");
-  assert.equal(preflight.api_contract_version, "0.1.3");
+  assert.equal(preflight.api_contract_version, "0.1.4");
   assert.equal(preflight.mcp_contract_version, mcpContract.version);
 });
 
@@ -91,7 +91,7 @@ test("MCP initialize handshake exposes and validates BU2 compatibility", async (
   mcp = await connectBu2McpClient({ baseUrl: running.url });
   assert.equal(mcp.handshake.server.name, mcpContract.name);
   assert.equal(mcp.handshake.server.version, mcpContract.version);
-  assert.equal(mcp.handshake.capability.api_contract_version, "0.1.3");
+  assert.equal(mcp.handshake.capability.api_contract_version, "0.1.4");
   assert.equal(mcp.handshake.capability.environment, "simulation");
   assert.equal(mcp.handshake.capability.mcp_contract_sha256, mcpContractSha256);
   assert.equal((await mcp.listTools()).length, 6);
@@ -105,7 +105,7 @@ test("MCP handshake validation rejects an unexpected configured environment", ()
         {
           experimental: {
             [BU2_MCP_CAPABILITY_NAMESPACE]: {
-              api_contract_version: "0.1.3",
+              api_contract_version: "0.1.4",
               api_base_path: "/v1",
               mcp_contract_version: mcpContract.version,
               mcp_contract_sha256: mcpContractSha256,
@@ -164,8 +164,8 @@ test("preflight rejects environment and MCP contract mismatches", async () => {
   const health = {
     status: "ok",
     service: "bu2-reference-server",
-    version: "0.8.0",
-    api_contract_version: "0.1.3",
+    version: "0.9.0",
+    api_contract_version: "0.1.4",
     api_base_path: "/v1",
     mcp_contract_versions: [mcpContract.version],
     environment: "simulation",

@@ -33,7 +33,18 @@ type Page =
   | 'ledger'
   | 'developers';
 type Stage = 'review' | 'reserved' | 'settled';
-type Status = 'authorization_required' | 'settled' | 'refunded';
+type Status =
+  | 'authorization_required'
+  | 'authorized'
+  | 'funds_reserved'
+  | 'delivery_submitted'
+  | 'provider_unknown'
+  | 'settled'
+  | 'refunded'
+  | 'declined'
+  | 'expired'
+  | 'canceled'
+  | 'disputed';
 
 type TransactionCard = {
   id: string;
@@ -47,13 +58,26 @@ type TransactionCard = {
   currency: string;
   status: Status;
   time: string;
-  source?: 'api';
+  source?: 'api' | 'demo';
   channel?: string;
   chainHash?: string;
+  providerReference?: string;
   receiptId?: string;
   receiptValid?: boolean;
+  signatureValid?: boolean;
+  issuerTrusted?: boolean;
+  settlementConfirmed?: boolean;
+  receiptSchemaVersion?: string;
   deliveryHash?: string;
   mandateId?: string;
+  quoteTime?: string;
+  requestTime?: string;
+  reserveTime?: string;
+  deliveryTime?: string;
+  settlementTime?: string;
+  reserveReference?: string;
+  quotePresent?: boolean;
+  requestPresent?: boolean;
 };
 
 type TransactionApiItem = {
@@ -63,7 +87,9 @@ type TransactionApiItem = {
     settled_amount: { value: number; currency: string };
     authorized_amount: { value: number; currency: string };
     settlement_provider_reference?: string;
+    reserve_provider_reference?: string;
     created_at: string;
+    settled_at?: string;
   };
   payment_intent: {
     payer_account_id: string;
@@ -71,11 +97,21 @@ type TransactionApiItem = {
     buyer_agent_id: string;
     seller_agent_id: string;
     payment_mandate_id: string;
+    created_at?: string;
   } | null;
-  quote: { item: { name: string } } | null;
-  delivery: { evidence_hash: string } | null;
-  receipt: { id: string; valid: boolean } | null;
+  quote: { item: { name: string }; created_at?: string } | null;
+  delivery: { evidence_hash: string; submitted_at?: string } | null;
+  receipt: {
+    id: string;
+    valid?: boolean;
+    signature_valid?: boolean;
+    issuer_trusted?: boolean;
+    settlement_confirmed?: boolean;
+    schema_version?: string;
+    signed_at?: string;
+  } | null;
   payment_channel: string;
+  settlement_control?: { status?: string } | null;
 };
 
 const API_BASE = 'http://127.0.0.1:3101';
@@ -105,6 +141,10 @@ const copy = {
     settled: '已结算',
     refunded: '已退款',
     reserved: '资金已预留',
+    deliveredStatus: '等待结算',
+    providerUnknown: '结算结果未知',
+    declinedStatus: '已拒绝',
+    inactiveStatus: '已结束',
     volume: '今日交易额',
     completed: '今日已结算',
     activeAgents: '活跃 Agent',
@@ -152,6 +192,17 @@ const copy = {
     liveData: '实时 API 数据',
     apiOffline: '真实 API 暂不可用，正在展示演示数据',
     chainTransaction: '链上交易',
+    providerReference: 'Provider 引用',
+    dataSource: '数据来源',
+    demoData: '演示数据',
+    receiptValid: '可信凭证',
+    receiptInvalid: '验证失败',
+    receiptUnknown: '未签发 / 未知',
+    signatureValid: '签名有效',
+    issuerTrusted: '签发方可信',
+    settlementConfirmed: '结算已确认',
+    receiptVersion: '凭证版本',
+    mandateAutoApproved: 'Mandate 自动通过',
   },
   en: {
     product: 'Agent Payment Network',
@@ -177,6 +228,10 @@ const copy = {
     settled: 'Settled',
     refunded: 'Refunded',
     reserved: 'Funds reserved',
+    deliveredStatus: 'Awaiting settlement',
+    providerUnknown: 'Settlement unknown',
+    declinedStatus: 'Declined',
+    inactiveStatus: 'Ended',
     volume: 'Volume today',
     completed: 'Settled today',
     activeAgents: 'Active agents',
@@ -225,6 +280,17 @@ const copy = {
     liveData: 'Live API data',
     apiOffline: 'Live API unavailable; showing demo data',
     chainTransaction: 'Onchain transaction',
+    providerReference: 'Provider reference',
+    dataSource: 'Data source',
+    demoData: 'Demo data',
+    receiptValid: 'Trusted receipt',
+    receiptInvalid: 'Verification failed',
+    receiptUnknown: 'Not issued / unknown',
+    signatureValid: 'Signature valid',
+    issuerTrusted: 'Issuer trusted',
+    settlementConfirmed: 'Settlement confirmed',
+    receiptVersion: 'Receipt version',
+    mandateAutoApproved: 'Mandate auto-approved',
   },
 };
 
@@ -241,6 +307,7 @@ const demoTxs: TransactionCard[] = [
     currency: 'CNY',
     status: 'authorization_required' as Status,
     time: '14:32',
+    source: 'demo',
   },
   {
     id: 'PAY-8419',
@@ -254,6 +321,7 @@ const demoTxs: TransactionCard[] = [
     currency: 'CNY',
     status: 'settled' as Status,
     time: '13:58',
+    source: 'demo',
   },
   {
     id: 'PAY-8416',
@@ -267,6 +335,7 @@ const demoTxs: TransactionCard[] = [
     currency: 'CNY',
     status: 'settled' as Status,
     time: '12:46',
+    source: 'demo',
   },
   {
     id: 'PAY-8408',
@@ -280,6 +349,7 @@ const demoTxs: TransactionCard[] = [
     currency: 'CNY',
     status: 'refunded' as Status,
     time: '10:21',
+    source: 'demo',
   },
 ];
 
@@ -311,11 +381,17 @@ export default function Home() {
             delivery,
             receipt,
             payment_channel,
+            settlement_control,
           }) => {
-            const amount =
-              transaction.status === 'settled'
-                ? transaction.settled_amount
-                : transaction.authorized_amount;
+            const amount = ['settled', 'refunded', 'disputed'].includes(
+              transaction.status,
+            )
+              ? transaction.settled_amount
+              : transaction.authorized_amount;
+            const hasReceiptTrustEvidence =
+              typeof receipt?.signature_valid === 'boolean' &&
+              typeof receipt?.issuer_trusted === 'boolean' &&
+              typeof receipt?.settlement_confirmed === 'boolean';
             return {
               id: transaction.id,
               zh: quote?.item.name ?? 'Agent 支付',
@@ -326,21 +402,41 @@ export default function Home() {
               seller: payment_intent?.seller_agent_id ?? 'Unknown seller agent',
               amount: amount.value / 100,
               currency: amount.currency,
-              status:
-                transaction.status === 'settled'
-                  ? 'settled'
-                  : 'authorization_required',
+              status: normalizeStatus(
+                transaction.status,
+                settlement_control?.status,
+              ),
               time: new Date(transaction.created_at).toLocaleTimeString([], {
                 hour: '2-digit',
                 minute: '2-digit',
               }),
               source: 'api',
               channel: payment_channel,
-              chainHash: transaction.settlement_provider_reference,
+              chainHash:
+                payment_channel === 'x402_exact_base_sepolia'
+                  ? transaction.settlement_provider_reference
+                  : undefined,
+              providerReference: transaction.settlement_provider_reference,
               receiptId: receipt?.id,
-              receiptValid: receipt?.valid,
+              receiptValid: hasReceiptTrustEvidence
+                ? receipt?.valid
+                : undefined,
+              signatureValid: receipt?.signature_valid,
+              issuerTrusted: receipt?.issuer_trusted,
+              settlementConfirmed: receipt?.settlement_confirmed,
+              receiptSchemaVersion: receipt?.schema_version,
               deliveryHash: delivery?.evidence_hash,
               mandateId: payment_intent?.payment_mandate_id,
+              quoteTime: formatApiTime(quote?.created_at),
+              requestTime: formatApiTime(payment_intent?.created_at),
+              reserveTime: formatApiTime(transaction.created_at),
+              deliveryTime: formatApiTime(delivery?.submitted_at),
+              settlementTime: formatApiTime(
+                transaction.settled_at ?? receipt?.signed_at,
+              ),
+              reserveReference: transaction.reserve_provider_reference,
+              quotePresent: Boolean(quote),
+              requestPresent: Boolean(payment_intent),
             };
           },
         );
@@ -458,7 +554,7 @@ export default function Home() {
               language={language}
               t={t}
               tx={selected}
-              stage={selected.id === 'PAY-8421' ? stage : 'settled'}
+              stage={selected.id === 'PAY-8421' ? stage : undefined}
               setStage={setStage}
               back={() => setPage('transactions')}
             />
@@ -590,12 +686,22 @@ function Detail({
   language: Language;
   t: typeof copy.zh;
   tx: TransactionCard;
-  stage: Stage;
+  stage?: Stage;
   setStage: (s: Stage) => void;
   back: () => void;
 }) {
   const demo = tx.id === 'PAY-8421';
   const live = tx.source === 'api';
+  const currentStatus = demo && stage ? stageStatus(stage) : tx.status;
+  const reserved = hasReached(currentStatus, 'funds_reserved');
+  const delivered = hasReached(currentStatus, 'delivery_submitted');
+  const settled = currentStatus === 'settled' || currentStatus === 'refunded';
+  const receiptState =
+    tx.receiptValid === true
+      ? 'valid'
+      : tx.receiptValid === false
+        ? 'invalid'
+        : 'unknown';
   return (
     <div className="space-y-6">
       <button
@@ -609,7 +715,7 @@ function Detail({
         <div className="flex flex-col justify-between gap-5 lg:flex-row">
           <div>
             <div className="flex gap-2">
-              <StatusBadge status={tx.status} stage={stage} t={t} />
+              <StatusBadge status={currentStatus} t={t} />
               <Badge variant="outline" className="font-mono">
                 {tx.id}
               </Badge>
@@ -639,43 +745,52 @@ function Detail({
             }
           />
           <Info label={t.purpose} value={language === 'zh' ? tx.zh : tx.en} />
+          <Info label={t.dataSource} value={live ? t.liveData : t.demoData} />
         </div>
       </section>
-      {demo ? <Decision t={t} stage={stage} setStage={setStage} /> : null}
+      {demo ? (
+        <Decision t={t} stage={stage ?? 'review'} setStage={setStage} />
+      ) : null}
       <div className="grid gap-6 xl:grid-cols-[1.25fr_.75fr]">
         <section className="surface p-6">
           <p className="eyebrow">{t.timeline}</p>
           <h3 className="mt-1 text-lg font-semibold">{t.timeline}</h3>
           <div className="mt-6">
             <Timeline
-              done
+              done={!live || tx.quotePresent === true}
               title={t.quote}
               detail={`${tx.seller} · ${formatAmount(tx)}`}
-              time="14:31:54"
+              time={live ? (tx.quoteTime ?? '—') : '14:31:54'}
             />
             <Timeline
-              done
+              done={!live || tx.requestPresent === true}
               title={t.requested}
-              detail={demo ? t.mandateValue : 'Mandate auto-approved'}
-              time="14:32:01"
+              detail={demo ? t.mandateValue : t.mandateAutoApproved}
+              time={live ? (tx.requestTime ?? '—') : '14:32:01'}
             />
             <Timeline
-              done={stage !== 'review' || !demo}
+              done={reserved}
               title={t.fundsReserved}
-              detail="BU2 Wallet · rsrv_91B2"
-              time={stage !== 'review' || !demo ? '14:33:18' : '—'}
+              detail={`BU2 Wallet · ${live ? (tx.reserveReference ?? '—') : 'rsrv_91B2'}`}
+              time={
+                reserved ? (live ? (tx.reserveTime ?? '—') : '14:33:18') : '—'
+              }
             />
             <Timeline
-              done={stage === 'settled' || !demo}
+              done={delivered}
               title={t.delivered}
-              detail={`delivery_hash: ${tx.deliveryHash ?? 'sha256:9fc2…a17e'}`}
-              time={stage === 'settled' || !demo ? '14:41:06' : '—'}
+              detail={`delivery_hash: ${tx.deliveryHash ?? (live ? '—' : 'sha256:9fc2…a17e')}`}
+              time={
+                delivered ? (live ? (tx.deliveryTime ?? '—') : '14:41:06') : '—'
+              }
             />
             <Timeline
-              done={stage === 'settled' || !demo}
+              done={settled}
               title={t.settlement}
               detail={`${tx.payee} · ${formatAmount(tx)}`}
-              time={stage === 'settled' || !demo ? '14:41:09' : '—'}
+              time={
+                settled ? (live ? (tx.settlementTime ?? '—') : '14:41:09') : '—'
+              }
               last
             />
           </div>
@@ -705,28 +820,52 @@ function Detail({
                 <h3 className="mt-1 text-lg font-semibold">{t.receipt}</h3>
               </div>
               <BadgeCheck
-                className={`size-6 ${stage === 'settled' || !demo ? 'text-success' : 'text-muted-foreground/40'}`}
+                className={`size-6 ${receiptState === 'valid' ? 'text-success' : receiptState === 'invalid' ? 'text-destructive' : 'text-muted-foreground/40'}`}
               />
             </div>
             <dl className="mt-5 space-y-3 text-sm">
               <div className="flex justify-between">
                 <dt className="text-muted-foreground">{t.receiptId}</dt>
                 <dd className="font-mono">
-                  {stage === 'settled' || !demo
-                    ? (tx.receiptId ?? 'rcpt_8A21F')
-                    : '—'}
+                  {tx.receiptId ?? (demo && settled ? 'rcpt_8A21F' : '—')}
                 </dd>
               </div>
               <div className="flex justify-between">
                 <dt className="text-muted-foreground">{t.verify}</dt>
                 <dd>
-                  {stage === 'settled' || !demo
-                    ? tx.receiptValid === false
-                      ? '✕ Ed25519'
-                      : '✓ Ed25519'
-                    : '—'}
+                  {demo && settled
+                    ? `✓ ${t.receiptValid}`
+                    : receiptState === 'valid'
+                      ? `✓ ${t.receiptValid}`
+                      : receiptState === 'invalid'
+                        ? `✕ ${t.receiptInvalid}`
+                        : t.receiptUnknown}
                 </dd>
               </div>
+              {live && tx.receiptId ? (
+                <>
+                  <div className="flex justify-between">
+                    <dt className="text-muted-foreground">
+                      {t.receiptVersion}
+                    </dt>
+                    <dd className="font-mono">
+                      {tx.receiptSchemaVersion ?? '—'}
+                    </dd>
+                  </div>
+                  <VerificationRow
+                    label={t.signatureValid}
+                    value={tx.signatureValid}
+                  />
+                  <VerificationRow
+                    label={t.issuerTrusted}
+                    value={tx.issuerTrusted}
+                  />
+                  <VerificationRow
+                    label={t.settlementConfirmed}
+                    value={tx.settlementConfirmed}
+                  />
+                </>
+              ) : null}
               {tx.chainHash ? (
                 <div className="flex items-start justify-between gap-4">
                   <dt className="text-muted-foreground">
@@ -741,6 +880,16 @@ function Detail({
                     >
                       {tx.chainHash}
                     </a>
+                  </dd>
+                </div>
+              ) : null}
+              {!tx.chainHash && tx.providerReference ? (
+                <div className="flex items-start justify-between gap-4">
+                  <dt className="text-muted-foreground">
+                    {t.providerReference}
+                  </dt>
+                  <dd className="max-w-[190px] break-all text-right font-mono text-xs">
+                    {tx.providerReference}
                   </dd>
                 </div>
               ) : null}
@@ -1051,16 +1200,41 @@ function StatusBadge({
     );
   if (status === 'refunded')
     return <Badge variant="outline">{t.refunded}</Badge>;
-  if (stage === 'reserved')
+  if (status === 'provider_unknown')
+    return (
+      <Badge className="w-fit bg-warning text-warning-foreground hover:bg-warning">
+        {t.providerUnknown}
+      </Badge>
+    );
+  if (status === 'delivery_submitted')
+    return <Badge variant="outline">{t.deliveredStatus}</Badge>;
+  if (
+    stage === 'reserved' ||
+    status === 'funds_reserved' ||
+    status === 'authorized'
+  )
     return (
       <Badge className="w-fit bg-primary/10 text-primary hover:bg-primary/10">
         {t.reserved}
       </Badge>
     );
+  if (status === 'declined')
+    return <Badge variant="destructive">{t.declinedStatus}</Badge>;
+  if (['expired', 'canceled', 'disputed'].includes(status))
+    return <Badge variant="outline">{t.inactiveStatus}</Badge>;
   return (
     <Badge className="w-fit bg-warning text-warning-foreground hover:bg-warning">
       {t.pending}
     </Badge>
+  );
+}
+
+function VerificationRow({ label, value }: { label: string; value?: boolean }) {
+  return (
+    <div className="flex justify-between">
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd>{value === true ? '✓' : value === false ? '✕' : '—'}</dd>
+    </div>
   );
 }
 
@@ -1083,6 +1257,59 @@ function formatAmount(tx: TransactionCard) {
         ? '$'
         : `${tx.currency} `;
   return `${symbol}${tx.amount.toFixed(2)}`;
+}
+
+function formatApiTime(value?: string) {
+  if (!value) return undefined;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return undefined;
+  return date.toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  });
+}
+
+function normalizeStatus(
+  transactionStatus: string,
+  settlementStatus?: string,
+): Status {
+  if (settlementStatus === 'provider_unknown') return 'provider_unknown';
+  const supported: Status[] = [
+    'authorization_required',
+    'authorized',
+    'funds_reserved',
+    'delivery_submitted',
+    'settled',
+    'refunded',
+    'declined',
+    'expired',
+    'canceled',
+    'disputed',
+  ];
+  return supported.includes(transactionStatus as Status)
+    ? (transactionStatus as Status)
+    : 'provider_unknown';
+}
+
+function stageStatus(stage: Stage): Status {
+  if (stage === 'settled') return 'settled';
+  if (stage === 'reserved') return 'funds_reserved';
+  return 'authorization_required';
+}
+
+function hasReached(
+  status: Status,
+  target: 'funds_reserved' | 'delivery_submitted',
+) {
+  const rank: Partial<Record<Status, number>> = {
+    funds_reserved: 1,
+    delivery_submitted: 2,
+    provider_unknown: 2,
+    settled: 3,
+    refunded: 3,
+  };
+  return (rank[status] ?? 0) >= (target === 'funds_reserved' ? 1 : 2);
 }
 
 function Timeline({

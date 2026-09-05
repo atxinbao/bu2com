@@ -129,6 +129,18 @@ Receipt 至少覆盖：
 - Settlement ID、支付通道引用和时间；
 - Receipt 版本、签名算法、签名与验证键 ID。
 
+Phase 0 的新签发凭证固定为 Receipt v0.2，并使用 RFC 8785 JCS
+（`canonicalization_version=RFC8785-JCS-1`）递归规范化全部签名字段。签名范围必须包含金额与币种、环境、支付通道、Provider 引用、收付款双方、Mandate、交付证据和结算时间；任一字段改变都必须导致签名验证失败。
+
+验证结果不得只返回单一的密码学判断，而要区分：
+
+- `signature_valid`：签名与完整 payload 是否匹配；
+- `issuer_trusted`：`verification_key_id` 是否对应 BU2 持久化信任的公钥；
+- `settlement_confirmed`：Receipt 是否与当前已结算 Transaction、金额和 Provider 引用一致；
+- `valid`：仅当 v0.2 且以上三项都为 `true` 时为 `true`。
+
+v0.1 仅保留读取与解释能力，使用 `BU2-LEGACY-0.1` 标记，不得作为新的可信支付凭证。历史 v0.2 公钥必须持久保存；服务重启或签发密钥轮换后，已签发 Receipt 仍应可验证。私钥不写入账本。
+
 ## 9. 错误模型
 
 ```json

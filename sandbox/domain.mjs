@@ -6,6 +6,7 @@ import {
   sign,
   verify,
 } from "node:crypto";
+import canonicalize from "canonicalize";
 import { classifyOperationalError } from "./observability.mjs";
 
 export class ApiError extends Error {
@@ -20,8 +21,12 @@ export class ApiError extends Error {
 
 const prefix = (value) => `${value}_${randomUUID().replaceAll("-", "").slice(0, 16)}`;
 const clone = (value) => structuredClone(value);
-const canonical = (value) => JSON.stringify(value, Object.keys(value).sort());
+const legacyCanonical = (value) => JSON.stringify(value, Object.keys(value).sort());
+const receiptCanonical = (value) => canonicalize(value);
 const hash = (value) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
+const RECEIPT_SCHEMA_VERSION = "0.2";
+const RECEIPT_CANONICALIZATION_VERSION = "RFC8785-JCS-1";
+const RECEIPT_SIGNATURE_ALGORITHM = "Ed25519";
 
 function requireFields(value, fields) {
   for (const field of fields) {
@@ -92,6 +97,31 @@ export class Bu2Sandbox {
     const keys = generateKeyPairSync("ed25519");
     this.privateKey = keys.privateKey;
     this.publicKey = keys.publicKey;
+    this.publicKeyBase64 = this.publicKey
+      .export({ type: "spki", format: "der" })
+      .toString("base64");
+    this.verificationKeyId = `key_bu2_${createHash("sha256")
+      .update(this.publicKeyBase64)
+      .digest("hex")
+      .slice(0, 16)}`;
+    this.trustedVerificationKeys = new Map([
+      [
+        this.verificationKeyId,
+        {
+          key_id: this.verificationKeyId,
+          algorithm: RECEIPT_SIGNATURE_ALGORITHM,
+          public_key: this.publicKeyBase64,
+          status: "trusted",
+          registered_at: new Date().toISOString(),
+          revoked_at: null,
+        },
+      ],
+    ]);
+    this.ledger?.registerReceiptVerificationKey({
+      key_id: this.verificationKeyId,
+      algorithm: RECEIPT_SIGNATURE_ALGORITHM,
+      public_key: this.publicKeyBase64,
+    });
   }
 
   runIdempotent(scope, key, body, operation) {
@@ -343,6 +373,11 @@ export class Bu2Sandbox {
     const receipt = transaction.receipt_id
       ? (this.receipts.get(transaction.receipt_id) ?? null)
       : null;
+    let receiptView = null;
+    if (receipt) {
+      const { receipt_id: _receiptId, ...verification } = this.verifyReceipt(receipt.id);
+      receiptView = { ...clone(receipt), ...verification };
+    }
     const settlementOperation = this.ledger?.getAdapterOperation(
       `settle:${transaction.id}`,
     );
@@ -351,9 +386,7 @@ export class Bu2Sandbox {
       payment_intent: intent ? clone(intent) : null,
       quote: quote ? clone(quote) : null,
       delivery: delivery ? clone(delivery) : null,
-      receipt: receipt
-        ? { ...clone(receipt), valid: this.verifyReceipt(receipt.id).valid }
-        : null,
+      receipt: receiptView,
       payment_channel: this.adapter?.name ?? "none",
       settlement_control: settlementOperation
         ? {
@@ -641,8 +674,11 @@ export class Bu2Sandbox {
     const quote = this.quotes.get(intent.quote_id);
     quote.status = "accepted";
     this.event("transaction.settled", transaction);
+    const signedAt = new Date().toISOString();
     const receiptPayload = {
-      version: "0.1",
+      version: RECEIPT_SCHEMA_VERSION,
+      schema_version: RECEIPT_SCHEMA_VERSION,
+      canonicalization_version: RECEIPT_CANONICALIZATION_VERSION,
       transaction_id: transaction.id,
       settlement_id: transaction.settlement_id,
       quote_id: quote.id,
@@ -656,22 +692,25 @@ export class Bu2Sandbox {
       payment_mandate_id: intent.payment_mandate_id,
       delivery_id: transaction.delivery_id,
       delivery_evidence_hash: this.deliveries.get(transaction.delivery_id).evidence_hash,
-      issued_at: new Date().toISOString(),
+      environment:
+        this.adapter?.name === "x402_exact_base_sepolia" ? "testnet" : "simulation",
+      payment_channel: this.adapter?.name ?? "none",
+      provider_reference: transaction.settlement_provider_reference ?? null,
+      signed_at: signedAt,
+      issued_at: signedAt,
     };
     const signature = sign(
       null,
-      Buffer.from(canonical(receiptPayload)),
+      Buffer.from(receiptCanonical(receiptPayload)),
       this.privateKey,
     ).toString("base64");
     const receipt = {
       id: prefix("rcpt"),
       ...receiptPayload,
-      signature_algorithm: "Ed25519",
-      verification_key_id: "key_bu2_sandbox_01",
+      signature_algorithm: RECEIPT_SIGNATURE_ALGORITHM,
+      verification_key_id: this.verificationKeyId,
       signature,
-      public_key: this.publicKey
-        .export({ type: "spki", format: "der" })
-        .toString("base64"),
+      public_key: this.publicKeyBase64,
     };
     this.receipts.set(receipt.id, receipt);
     transaction.receipt_id = receipt.id;
@@ -696,19 +735,62 @@ export class Bu2Sandbox {
       public_key: _publicKey,
       ...payload
     } = receipt;
-    const receiptPublicKey = createPublicKey({
-      key: Buffer.from(receipt.public_key, "base64"),
-      type: "spki",
-      format: "der",
-    });
-    const result = {
-      receipt_id: id,
-      valid: verify(
+    const schemaVersion = receipt.schema_version ?? receipt.version ?? "0.1";
+    const canonicalizationVersion =
+      receipt.canonicalization_version ?? "BU2-LEGACY-0.1";
+    let signatureValid = false;
+    try {
+      const receiptPublicKey = createPublicKey({
+        key: Buffer.from(receipt.public_key, "base64"),
+        type: "spki",
+        format: "der",
+      });
+      const serialized =
+        schemaVersion === RECEIPT_SCHEMA_VERSION &&
+        canonicalizationVersion === RECEIPT_CANONICALIZATION_VERSION
+          ? receiptCanonical(payload)
+          : legacyCanonical(payload);
+      signatureValid = verify(
         null,
-        Buffer.from(canonical(payload)),
+        Buffer.from(serialized),
         receiptPublicKey,
         Buffer.from(signature, "base64"),
-      ),
+      );
+    } catch {
+      signatureValid = false;
+    }
+    const registeredKey =
+      this.ledger?.getReceiptVerificationKey(receipt.verification_key_id) ??
+      this.trustedVerificationKeys.get(receipt.verification_key_id);
+    const issuerTrusted = Boolean(
+      registeredKey &&
+        registeredKey.status === "trusted" &&
+        registeredKey.algorithm === receipt.signature_algorithm &&
+        registeredKey.public_key === receipt.public_key,
+    );
+    const transaction = this.transactions.get(receipt.transaction_id);
+    const settlementConfirmed = Boolean(
+      transaction &&
+        transaction.status === "settled" &&
+        transaction.receipt_id === receipt.id &&
+        transaction.settlement_id === receipt.settlement_id &&
+        (transaction.settlement_provider_reference ?? null) === receipt.provider_reference &&
+        transaction.settled_amount?.value === receipt.amount?.value &&
+        transaction.settled_amount?.currency === receipt.amount?.currency,
+    );
+    const result = {
+      receipt_id: id,
+      valid:
+        schemaVersion === RECEIPT_SCHEMA_VERSION &&
+        canonicalizationVersion === RECEIPT_CANONICALIZATION_VERSION &&
+        signatureValid &&
+        issuerTrusted &&
+        settlementConfirmed,
+      signature_valid: signatureValid,
+      issuer_trusted: issuerTrusted,
+      settlement_confirmed: settlementConfirmed,
+      schema_version: schemaVersion,
+      canonicalization_version: canonicalizationVersion,
     };
     this.observer?.record(
       result.valid ? "state" : "internal",

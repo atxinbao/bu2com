@@ -2,7 +2,7 @@
 
 日期：2026-09-06
 执行者：Codex
-状态：Ready · pending implementation
+状态：Blocked by Transaction Trust Gate · scope frozen
 Epic 风险等级：R2（外部试点会执行现有交易路径，不包含生产资金）
 本次范围冻结风险等级：R0（仅文档与状态对齐）
 
@@ -20,6 +20,7 @@ Epic 风险等级：R2（外部试点会执行现有交易路径，不包含生�
 
 ## 2. 前置状态
 
+- Transaction Trust Gate 的 Receipt v0.2、数据库原子性与 x402 Testnet 可信执行必须全部通过并合并；在此之前不得开始外部团队试点。
 - Epic 1 已通过 PR #8 合并并标记 Done。
 - Epic 2 的 E2.1–E2.4 已通过 PR #10–#13 合并，TypeScript SDK、MCP Host、`doctor` 和三路径 clean-room 证据均已建立。
 - HTTP、SDK 与 MCP 三条自动 clean-room 路径已在独立 Local Simulation 环境生成有效 Receipt。
