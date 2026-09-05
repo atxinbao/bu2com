@@ -70,6 +70,9 @@ assert(
 assert(openapi.includes('PageCursor:'), 'OpenAPI must define cursor pagination');
 assert(openapi.includes('TransactionPage:'), 'OpenAPI must define transaction pages');
 assert(openapi.includes('X-Request-Id:'), 'OpenAPI must expose request correlation ids');
+assert(openapi.includes('X-Trace-Id:'), 'OpenAPI must expose trace correlation ids');
+assert(openapi.includes('TraceId:'), 'OpenAPI must define trace identifier headers');
+assert(openapi.includes('trace_id:'), 'OpenAPI errors and records must expose trace ids');
 assert(
   openapi.includes('/receipts/{receipt_id}/verify:'),
   'OpenAPI must expose receipt verification',

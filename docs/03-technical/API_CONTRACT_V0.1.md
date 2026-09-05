@@ -12,7 +12,8 @@
 - Quote、授权、资金预留、交付和结算是独立事件。
 - 外部上下文可选，不要求上传完整会话或任务内容。
 - 完成交易必须生成可验证 Receipt。
-- 所有 HTTP 响应返回服务端生成的 `X-Request-Id`；错误体中的 `request_id` 与其一致。
+- 所有 HTTP 响应返回服务端生成的 `X-Request-Id` 与 `X-Trace-Id`；错误体中的 `request_id`、`trace_id` 与响应头一致。
+- 调用方可传入符合 `trc_` 规则的 `X-Trace-Id` 贯穿一次外部 Agent 执行；省略时由 BU2 生成，非法值失败关闭。
 - 所有外部请求体、路径参数和查询参数必须在 HTTP 边界运行时校验，未知字段失败关闭。
 - 资源 ID 由固定前缀和 ASCII 字母、数字、下划线或连字符组成，总长度不超过 255 字符。
 
@@ -134,6 +135,7 @@ Receipt 至少覆盖：
     "code": "transaction_not_delivered",
     "message": "Transaction must be delivery_submitted before settlement.",
     "request_id": "req_01KBU2Z",
+    "trace_id": "trc_01KBU2TRACE",
     "details": { "current_state": "funds_reserved" }
   }
 }
@@ -141,9 +143,21 @@ Receipt 至少覆盖：
 
 P0 稳定错误类型：`validation_error`、`authentication_error`、`mandate_denied`、`insufficient_funds`、`idempotency_conflict`、`invalid_state_transition`、`resource_not_found`、`adapter_error`。
 
-稳定校验错误码包括：`invalid_request_body`、`invalid_resource_id`、`invalid_query_parameters`、`invalid_limit`、`invalid_cursor`、`missing_idempotency_key`、`invalid_json`、`unsupported_media_type` 和 `request_body_too_large`。
+稳定校验错误码包括：`invalid_request_body`、`invalid_resource_id`、`invalid_query_parameters`、`invalid_limit`、`invalid_cursor`、`invalid_trace_id`、`missing_idempotency_key`、`invalid_json`、`unsupported_media_type` 和 `request_body_too_large`。
 
-## 10. Transaction 分页
+## 10. 链路关联
+
+一次 HTTP 请求由 `request_id` 唯一标识，一次跨请求 Agent 执行由 `trace_id` 关联。交易建立后，BU2 将以下字段追加到 LedgerEvent、Outbox、Adapter 操作和 Webhook 投递审计：
+
+- `request_id`：创建该事实的 BU2 HTTP 请求；
+- `trace_id`：调用方传入或 BU2 生成的端到端链路；
+- `transaction_id`：资金与交付容器；
+- `event_id`：不可变业务事件；
+- `provider_reference`：支付通道返回的外部引用。
+
+Webhook 使用 `webhook-trace-id` 转发原业务事件的 `trace_id`。投递本身的请求与链路保存在 `WebhookDeliveryAttempt`，不会覆盖原事件关联。
+
+## 11. Transaction 分页
 
 `GET /v1/transactions` 使用稳定的不透明 cursor 分页：
 
@@ -164,7 +178,7 @@ P0 稳定错误类型：`validation_error`、`authentication_error`、`mandate_d
 - 未知、重复或非法查询参数返回 `400 validation_error`，不静默纠正。
 - 新增 `page` 字段是向后兼容扩展；既有调用方仍可直接读取 `data`。
 
-## 11. Webhook 事件
+## 12. Webhook 事件
 
 ```text
 payment_intent.authorization_required
@@ -186,10 +200,10 @@ Webhook 使用事件 ID 去重；接收方应按至少一次投递处理，不�
 - `webhook-signature` 按 `版本=HMAC-SHA256` 表达；Secret 轮换重叠期可同时携带多个版本。
 - Secret 只允许出现在写入请求和内部签名路径，不在公开资源、日志、事件或审计响应中返回。
 
-## 12. 版本边界
+## 13. 版本边界
 
 - `/v1` 冻结资源名称、金额模型、状态语义和错误外壳。
-- Phase 0 冻结同时覆盖 Transaction 列表分页、`X-Request-Id`、运行时校验与 Receipt verify 响应。
+- Phase 0 冻结同时覆盖 Transaction 列表分页、`X-Request-Id`、`X-Trace-Id`、运行时校验与 Receipt verify 响应。
 - 认证方案仍是生产准入的一部分；当前 Reference Server 只绑定本机 Sandbox/Testnet，不构成可公开部署的无认证支付服务。
 - x402、AP2、银行卡或稳定币只能作为 Adapter，不改变核心资源。
 - P0 不承诺真实托管、换汇、跨链、收益或开放市场。

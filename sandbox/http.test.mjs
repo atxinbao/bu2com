@@ -2,16 +2,22 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { SimulatedPaymentAdapter } from "./adapter.mjs";
 import { Bu2Sandbox } from "./domain.mjs";
+import { Observability } from "./observability.mjs";
 import { SqliteLedger } from "./persistence.mjs";
 import { listen } from "./server.mjs";
 import { WebhookDispatcher } from "./webhooks.mjs";
 
-async function request(base, path, { method = "GET", body, key } = {}) {
+async function request(
+  base,
+  path,
+  { method = "GET", body, key, traceId } = {},
+) {
   const response = await fetch(`${base}${path}`, {
     method,
     headers: {
       ...(body ? { "content-type": "application/json" } : {}),
       ...(key ? { "idempotency-key": key } : {}),
+      ...(traceId ? { "x-trace-id": traceId } : {}),
     },
     body: body ? JSON.stringify(body) : undefined,
   });
@@ -19,6 +25,7 @@ async function request(base, path, { method = "GET", body, key } = {}) {
     status: response.status,
     body: await response.json(),
     requestId: response.headers.get("x-request-id"),
+    traceId: response.headers.get("x-trace-id"),
   };
 }
 
@@ -277,9 +284,138 @@ test("HTTP server exposes an explicit x402 adapter mode without a signer", async
       ),
   );
   const health = await request(running.url, "/health");
-  assert.equal(health.body.version, "0.5.0");
+  assert.equal(health.body.version, "0.6.0");
   assert.equal(health.body.adapter, "x402_exact_base_sepolia");
   assert.equal(running.sandbox.wallet.currency, "USD");
+});
+
+test("HTTP observability correlates transaction, adapter, outbox, and webhook delivery", async (context) => {
+  const observer = new Observability();
+  const ledger = new SqliteLedger(":memory:", { observer });
+  const deliveredHeaders = [];
+  const dispatcher = new WebhookDispatcher({
+    ledger,
+    observer,
+    fetchImpl: async (_url, options) => {
+      deliveredHeaders.push(options.headers);
+      return { ok: true, status: 204 };
+    },
+  });
+  const running = await listen({ port: 0, ledger, dispatcher, observer });
+  context.after(
+    () =>
+      new Promise((resolve) =>
+        running.server.close(() => {
+          ledger.close();
+          resolve();
+        }),
+      ),
+  );
+
+  const secret = "observability-secret-value";
+  await request(running.url, "/v1/webhook_subscriptions", {
+    method: "POST",
+    key: "observability-subscription-key",
+    traceId: "trc_subscription01",
+    body: {
+      id: "whsub_observability",
+      url: "https://receiver.invalid/events",
+      secret,
+    },
+  });
+  const quote = await request(running.url, "/v1/quotes", {
+    method: "POST",
+    key: "observability-quote-key",
+    traceId: "trc_quote000001",
+    body: quoteInputForWebhook(),
+  });
+  const intent = await request(running.url, "/v1/payment_intents", {
+    method: "POST",
+    key: "observability-intent-key",
+    traceId: "trc_intent00001",
+    body: {
+      quote_id: quote.body.id,
+      payer_account_id: "acct_bu2_ventures",
+      buyer_agent_id: "agt_research_copilot",
+      payment_mandate_id: "mdt_research_04",
+      amount: { value: 100, currency: "CNY" },
+      purpose: "Webhook event",
+    },
+  });
+  const authorization = await request(
+    running.url,
+    `/v1/payment_intents/${intent.body.id}/authorization`,
+    {
+      method: "POST",
+      key: "observability-auth-key",
+      traceId: "trc_authorize001",
+      body: { decision: "authorize" },
+    },
+  );
+  assert.equal(authorization.traceId, "trc_authorize001");
+
+  const transactionId = authorization.body.transaction_id;
+  const reservedEvent = ledger
+    .listLedgerEvents()
+    .find((event) => event.type === "transaction.funds_reserved");
+  assert.equal(reservedEvent.correlation.request_id, authorization.requestId);
+  assert.equal(reservedEvent.correlation.trace_id, "trc_authorize001");
+  assert.equal(reservedEvent.correlation.transaction_id, transactionId);
+  assert.match(reservedEvent.correlation.provider_reference, /^sim_/);
+
+  const operation = ledger
+    .adapterOperations()
+    .find((candidate) => candidate.transaction_id === transactionId);
+  assert.equal(operation.request_id, authorization.requestId);
+  assert.equal(operation.trace_id, "trc_authorize001");
+  assert.equal(
+    operation.provider_reference,
+    reservedEvent.correlation.provider_reference,
+  );
+
+  const outbox = ledger
+    .outboxRows()
+    .find((candidate) => candidate.event_id === reservedEvent.id);
+  assert.equal(outbox.request_id, authorization.requestId);
+  assert.equal(outbox.trace_id, "trc_authorize001");
+  assert.equal(outbox.transaction_id, transactionId);
+
+  const dispatch = await request(running.url, "/v1/webhooks/dispatch", {
+    method: "POST",
+    traceId: "trc_dispatch0001",
+  });
+  assert.equal(dispatch.status, 200);
+  assert.ok(
+    dispatch.body.data.every((delivery) => delivery.status === "delivered"),
+  );
+  assert.ok(
+    deliveredHeaders.some(
+      (headers) => headers["webhook-trace-id"] === "trc_authorize001",
+    ),
+  );
+  const attempt = ledger.webhookDeliveryAttempts(outbox.id)[0];
+  assert.equal(attempt.request_id, dispatch.requestId);
+  assert.equal(attempt.trace_id, "trc_dispatch0001");
+  assert.equal(attempt.transaction_id, transactionId);
+
+  const health = await request(running.url, "/health");
+  assert.equal(health.body.operational_status, "healthy");
+  assert.equal(health.body.webhook_outbox.pending, 0);
+  assert.ok(health.body.webhook_outbox.delivered > 0);
+  assert.ok(health.body.webhook_outbox.last_successful_delivery_at);
+  assert.equal(health.body.adapter_operations.unknown_results, 0);
+
+  const invalidTrace = await request(running.url, "/health", {
+    traceId: "invalid-trace",
+  });
+  assert.equal(invalidTrace.status, 400);
+  assert.equal(invalidTrace.body.error.code, "invalid_trace_id");
+  assert.equal(invalidTrace.body.error.trace_id, invalidTrace.traceId);
+  assert.deepEqual(
+    new Set(observer.records.map((record) => record.category)),
+    new Set(["request", "validation", "policy", "state", "adapter", "webhook"]),
+  );
+  assert.equal(JSON.stringify(observer.records).includes(secret), false);
 });
 
 test("HTTP v1 exposes idempotent Webhook dead-letter, replay, and secret rotation operations", async (context) => {
