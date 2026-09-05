@@ -2,7 +2,7 @@
 
 日期：2026-09-06
 执行者：Codex
-状态：E2.4 implemented locally · pending R2 review
+状态：Done · merged via PR #13
 风险等级：R2（交易接入边界，不包含生产资金）
 
 ## 1. 目标
@@ -74,7 +74,7 @@ BU2 只接收完成交易所需的结构化对象和外部上下文引用，不�
 
 完成证据：新增稳定 `sandbox/bin/bu2-doctor.mjs` 和 `npm run doctor`，按固定顺序检查 Node、配置、endpoint、环境、API/MCP contract、真实 stdio initialize 与 Receipt 验证能力。无 Receipt ID 时只报告 `capability_available`，显式提供 ID 且服务端返回 `valid=true` 时才报告 `verified`。机器输出由 `doctor-result.schema.json` 冻结，人类输出支持全中文或全英文固定恢复建议。最小分析严格只包含阶段、耗时、结果类别和稳定错误码，并固定 `remote_enabled=false`、`upload_attempted=false`、`persistence=none`；12 项专项测试覆盖真实 endpoint/MCP/Receipt、故障注入、结果 Schema、敏感值不泄漏和 CLI 行为。
 
-### E2.4 — 外部 clean-room 接入证据（已完成本地实现）
+### E2.4 — 外部 clean-room 接入证据（已完成 · PR #13）
 
 - 在三个全新临时项目中分别验证 HTTP、TypeScript SDK 和 MCP 路径。
 - 每条路径从文档入口到有效 Simulation Receipt 不超过 15 分钟，不允许人工修改 BU2 源码。
@@ -167,4 +167,4 @@ npm --prefix prototype run build
 - E2.1–E2.4 依赖顺序、验收、测试与恢复方案已经明确。
 - 生产资金、公开分发、远程托管和数据采集边界已经明确排除。
 
-结论：Epic 2 的 E2.1–E2.3 已分别经 PR #10–#12 合并，E2.4 已完成本地实现和 3/3 clean-room 自动验收。当前达到 **GO for R2 review**；只有本次 E2.4 PR 经 Project Owner 人工审查并合并后，Epic 2 才能标记 **Done**。不得扩大到 Python SDK、公开分发、远程 MCP 或 Mainnet。
+结论：Epic 2 的 E2.1–E2.4 已分别经 PR #10–#13 完成人工审查与合并，全部完成门槛均已满足，状态为 **Done**。后续开发进入 Epic 3 外部试点准备与证据，不反向扩大本 Epic，也不得自动开放 Python SDK、公开分发、远程 MCP、Phase 1 或 Mainnet。
