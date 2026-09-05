@@ -2,7 +2,7 @@
 
 日期：2026-09-05
 执行者：Codex
-状态：Frozen for implementation
+状态：E1.4 implemented locally · pending R2 review
 风险等级：R2（交易相关，不包含生产资金）
 
 ## 1. 目标
@@ -75,13 +75,13 @@
 
 完成证据：Reference Sandbox v0.7 校验 challenge 的 exact scheme、Base Sepolia network、USDC asset 与授权 amount；facilitator timeout、5xx、响应缺失/不可解析和 network 异常会持久化为 `provider_unknown`。普通 settlement 在未知结果后不再执行 `paidFetch`；显式、幂等的 settlement recovery API 通过 provider-specific 查询边界收口，查询未决时保持 `delivery_submitted`、reserved 与无 Receipt，确认 settled 时复用单一核心结算路径。Schema v4 只追加 operation 状态字段与不可变恢复尝试表，重启后仍保持阻断。
 
-### E1.4 — 首个外部 Agent 接入样例
-
-仅在 E1.0–E1.3 通过后实施：
+### E1.4 — 首个外部 Agent 接入样例（已完成本地实现）
 
 - 提供一个最小 buyer-agent 示例和一个 seller-agent 示例。
 - 同时演示 HTTP API 与现有 MCP 工具，不新增第二套交易语义。
 - 从空环境到第一笔 Simulation 交易的接入时间目标不超过 15 分钟。
+
+完成证据：Reference Sandbox v0.8 增加基于官方 MCP TypeScript SDK 2.0 的 stdio Server，6 个工具直接读取冻结的 `mcp-tools.json` 并映射到现有 `/v1` HTTP API。独立 Seller Agent 负责 Quote 与 DeliveryEvidence，Buyer Agent 负责 PaymentIntent、状态与 Receipt；人工授权和 BU2 结算明确保留在 HTTP 控制面。单命令从隔离内存环境完成首笔 Simulation 交易并验证 Receipt，耗时进入自动化门禁且必须小于 15 分钟。
 
 ## 5. 明确不做
 
@@ -158,3 +158,5 @@ npm --prefix prototype run build
 ## 11. 后续门槛
 
 Epic 1 完成后，才评估 Epic 2：开发者接入规模化，包括 SDK 包装、MCP 分发、示例 Agent 和接入分析。Epic 1 不会自动提升 Mainnet、托管或生产执行模式。
+
+E1.0–E1.4 已完成本地实现。Epic 1 仍需通过 R2 人工审查并合并后才能标记 Done。

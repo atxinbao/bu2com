@@ -272,3 +272,18 @@ Product v0.1 可作为客户访谈、交互原型和工程方案设计的输入�
 - 本轮验证命令和最终计数记录于 `.codex/testing.md`；未使用 Mainnet、生产密钥或托管资金。
 
 结论：E1.3 本地实现达到 **GO for R2 review**。结果未知时不会自动重复付款、释放内部预留或提前签发 Receipt；下一顺序项为 E1.4 首个外部 Agent 接入样例，但应在本 PR 经 Project Owner 审查合并后开始。
+
+## E1.4 外部 Buyer / Seller Agent 接入样例验证
+
+日期：2026-09-06
+执行者：Codex
+
+- Reference Sandbox 升级为 v0.8.0；没有数据库迁移、API 破坏性变化或新的交易状态。
+- 标准 stdio MCP Server 基于官方 `@modelcontextprotocol/server@2.0.0`，直接从冻结的 `mcp-tools.json` 注册 6 个工具。
+- MCP 工具只映射现有 `/v1` API；不导入领域对象、不直接写 SQLite，Transaction Core 仍是唯一交易状态所有者。
+- Seller Agent 通过 MCP 创建 Quote 和提交 DeliveryEvidence；Buyer Agent 通过 MCP 创建 PaymentIntent、查询状态并读取/验证 Receipt。
+- 首次收款方的人工授权与交付后的 BU2 结算保留在 HTTP 控制面；Agent 不获得自批授权或直接结算能力。
+- 单命令隔离 Simulation 从空运行环境完成完整闭环，实测 237ms；自动化门禁要求小于 15 分钟。
+- Contract 29 项不变量、MCP 6/6、Sandbox 44/44、Prototype lint/build、OpenAPI、依赖审计和文档链接全部通过。
+
+结论：E1.4 本地实现达到 **GO for R2 review**。E1.0–E1.4 已完成本地实现，但 Epic 1 只有在 Project Owner 完成人工审查并合并后才能标记 Done；Mainnet、托管与生产执行仍为 NO-GO。

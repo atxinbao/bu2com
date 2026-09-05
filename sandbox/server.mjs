@@ -185,7 +185,7 @@ export function createBu2Server({
               ? "attention_required"
               : "healthy",
           service: "bu2-reference-server",
-          version: "0.7.0",
+          version: "0.8.0",
           persistence: activeLedger.path,
           adapter: activeSandbox.adapter?.name ?? "none",
           ledger_events: activeLedger.listLedgerEvents().length,
@@ -463,5 +463,5 @@ export async function listen({
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
   const running = await listen({ logSink: (line) => console.log(line) });
-  console.log(`BU2 Reference Server v0.7 listening on ${running.url}`);
+  console.log(`BU2 Reference Server v0.8 listening on ${running.url}`);
 }

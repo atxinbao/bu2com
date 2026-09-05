@@ -11,7 +11,7 @@ BU2.com 是 Agent 的 AI 收付平台。它嵌入 ChatGPT、Codex、Claude 和�
 | 项目阶段 | Phase 0 · Simulation / Testnet |
 | 产品定义 | Product v0.3 · Transaction-first |
 | API 契约 | Agent Payment API v0.1 |
-| Reference Server | Sandbox v0.7 · Node.js + SQLite WAL |
+| Reference Server | Sandbox v0.8 · Node.js + SQLite WAL + MCP |
 | 支付通道 | Simulated Adapter + x402 Base Sepolia Adapter |
 | 产品界面 | React 19 + TypeScript 双语原型 |
 | 生产边界 | Mainnet、客户资金托管和法币能力尚未开放 |
@@ -52,6 +52,7 @@ BU2 将授权、资金预留、交付、结算和退款保存为不同事实。�
 - `request_id` / `trace_id` 端到端关联、分类结构化事件、敏感值脱敏和运行健康快照。
 - SimulatedPaymentAdapter 与官方 x402 v2 Base Sepolia Adapter。
 - x402 challenge 全字段校验、未知结算冻结、显式恢复查询与恢复审计。
+- 官方 MCP TypeScript SDK 2.0 stdio Server，以及独立 Buyer/Seller Agent Simulation 样例。
 - Ed25519 签名 Receipt 及独立验证。
 - 中英文 Transaction-first 产品界面，可展示真实 Sandbox API 数据并在离线时降级到演示数据。
 - OpenAPI 3.1、Agent 原生 MCP 工具和完整交易示例。
@@ -80,7 +81,17 @@ npm --prefix prototype run lint
 npm --prefix prototype run build
 ```
 
-当前基线应得到：Contract 29 项不变量通过、6 个 MCP 工具有效、Sandbox 41/41 通过、Prototype lint 与 build 通过。
+当前基线应得到：Contract 29 项不变量通过、6 个 MCP 工具有效、Sandbox 44/44 通过、Prototype lint 与 build 通过。
+
+### 一条命令运行外部 Agent 样例
+
+安装 Sandbox 依赖后，以下命令会启动隔离 Reference Server 和 stdio MCP Server，让独立 Buyer/Seller Agent 完成一笔 Simulation 交易，并验证签名 Receipt：
+
+```bash
+npm --prefix sandbox run demo:external
+```
+
+完整 MCP Host 配置、角色边界和代码入口见 [`外部 Buyer / Seller Agent 快速接入`](docs/03-technical/EXTERNAL_AGENT_QUICKSTART.md)。
 
 ### 启动本地交易演示
 
