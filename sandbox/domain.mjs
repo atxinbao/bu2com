@@ -298,7 +298,10 @@ export class Bu2Sandbox {
 
   listTransactions() {
     return [...this.transactions.values()]
-      .sort((left, right) => right.created_at.localeCompare(left.created_at))
+      .sort((left, right) => {
+        const byCreatedAt = right.created_at.localeCompare(left.created_at);
+        return byCreatedAt || right.id.localeCompare(left.id);
+      })
       .map((transaction) => this.transactionView(transaction));
   }
 

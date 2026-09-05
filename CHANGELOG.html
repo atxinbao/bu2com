@@ -136,7 +136,7 @@
         <p class="eyebrow">BU2.COM · AUDITABLE CHANGE HISTORY</p>
         <h1>系统变更日志</h1>
         <p class="lead">记录 BU2 从代码到金融业务行为的每一次可观察变化，使人类与 Agent 都能回答：改了什么、为什么改、影响什么、如何验证、如何恢复。</p>
-        <div class="meta"><span>格式版本 1.0</span><span>最新更新 2026-09-01</span><span>维护者 BU2 Engineering / Codex</span></div>
+        <div class="meta"><span>格式版本 1.0</span><span>最新更新 2026-09-05</span><span>维护者 BU2 Engineering / Codex</span></div>
       </header>
 
       <section class="contract" id="contract">
@@ -183,6 +183,32 @@
           <div><b>金融行为影响</b><span>无资金移动或交易状态变化</span></div>
           <div><b>验证</b><span>HTML 桌面/移动端检查；Sandbox 20/20；Prototype build 通过</span></div>
           <div><b>恢复</b><span>恢复 AGENTS.md 与 README 对应段落，并移除此文件</span></div>
+        </div>
+      </article>
+
+      <article class="release">
+        <div class="release-head">
+          <div><h3>Transaction API v1 Phase 0 契约冻结</h3><time datetime="2026-09-05">2026-09-05</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">完成 Epic E1.0：将外部 Agent 使用的 <code>/v1</code> 交易资源从候选接口升级为 Phase 0 冻结契约，并让 OpenAPI、运行时校验和开发者入口保持一致。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag added">Added</span>交易列表新增稳定的游标分页，默认按 <code>created_at DESC, id DESC</code> 排序并返回 <code>data</code> 与 <code>page</code>。</li>
+            <li><span class="tag added">Added</span>所有 HTTP 响应新增 <code>X-Request-Id</code>，错误响应中的 <code>request_id</code> 与响应头一致，便于 Agent 端关联重试和诊断。</li>
+            <li><span class="tag added">Added</span>使用 AJV 对公开写接口执行运行时 Schema 校验，并固定无效 JSON、媒体类型、请求体大小、资源标识、幂等键和分页参数的错误语义。</li>
+            <li><span class="tag changed">Changed</span>对齐 OpenAPI 中的 Quote、Authorization、Delivery、Settlement、Receipt 验证和分页结构，标记为 <code>phase0-frozen</code>。</li>
+            <li><span class="tag changed">Changed</span>Reference Sandbox 升级到 <code>0.4.0</code>；开发者页面同步展示冻结后的交易列表调用方式。</li>
+            <li><span class="tag changed">Fixed</span>产品界面的实时数据标识改为通道中性的“实时 API 数据”，不再把 Simulated Adapter 误标为 x402。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R2 · 交易 API 契约与运行时行为</span></div>
+          <div><b>金融行为影响</b><span>不改变金额、状态机、账本写入或资金移动</span></div>
+          <div><b>兼容性</b><span>保留列表 <code>data</code> 字段，仅追加 <code>page</code>；非法输入改为稳定拒绝</span></div>
+          <div><b>验证</b><span>Contract 19 项不变量；Sandbox 21/21；OpenAPI、Prototype 与浏览器验收见本次验证记录</span></div>
+          <div><b>恢复</b><span>回退 Sandbox 0.4.0 代码与对应契约文档；SQLite 无需迁移</span></div>
         </div>
       </article>
 

@@ -11,7 +11,11 @@ async function request(base, path, { method = "GET", body, key } = {}) {
     },
     body: body ? JSON.stringify(body) : undefined,
   });
-  return { status: response.status, body: await response.json() };
+  return {
+    status: response.status,
+    body: await response.json(),
+    requestId: response.headers.get("x-request-id"),
+  };
 }
 
 test("HTTP reference server completes one signed agent payment", async (context) => {
@@ -28,6 +32,7 @@ test("HTTP reference server completes one signed agent payment", async (context)
 
   const health = await request(running.url, "/health");
   assert.equal(health.status, 200);
+  assert.match(health.requestId, /^req_/);
 
   const quote = await request(running.url, "/v1/quotes", {
     method: "POST",
@@ -110,6 +115,11 @@ test("HTTP reference server completes one signed agent payment", async (context)
   const transactionList = await request(running.url, "/v1/transactions");
   assert.equal(transactionList.status, 200);
   assert.equal(transactionList.body.data.length, 1);
+  assert.deepEqual(transactionList.body.page, {
+    limit: 20,
+    has_more: false,
+    next_cursor: null,
+  });
   assert.equal(
     transactionList.body.data[0].transaction.id,
     authorization.body.transaction_id,
@@ -125,8 +135,125 @@ test("HTTP reference server completes one signed agent payment", async (context)
   assert.equal(transactionDetail.body.delivery.evidence_hash, "sha256:httpdemo");
   assert.equal(transactionDetail.body.payment_channel, "bu2_simulated_provider");
 
+  const secondQuote = await request(running.url, "/v1/quotes", {
+    method: "POST",
+    key: "http-quote-key-2",
+    body: {
+      seller_agent_id: "agt_market_data",
+      payee_account_id: "acct_atlas_data",
+      item: { name: "Dataset 2", delivery_type: "dataset_access" },
+      amount: { value: 100, currency: "CNY" },
+      expires_at: "2026-09-12T08:00:00Z",
+    },
+  });
+  const secondIntent = await request(running.url, "/v1/payment_intents", {
+    method: "POST",
+    key: "http-intent-key-2",
+    body: {
+      quote_id: secondQuote.body.id,
+      payer_account_id: "acct_bu2_ventures",
+      buyer_agent_id: "agt_research_copilot",
+      payment_mandate_id: "mdt_research_04",
+      amount: { value: 100, currency: "CNY" },
+      purpose: "Dataset 2",
+    },
+  });
+  assert.equal(secondIntent.body.status, "funds_reserved");
+
+  const firstPage = await request(running.url, "/v1/transactions?limit=1");
+  assert.equal(firstPage.body.data.length, 1);
+  assert.equal(firstPage.body.page.has_more, true);
+  assert.ok(firstPage.body.page.next_cursor);
+  const secondPage = await request(
+    running.url,
+    `/v1/transactions?limit=1&cursor=${encodeURIComponent(firstPage.body.page.next_cursor)}`,
+  );
+  assert.equal(secondPage.body.data.length, 1);
+  assert.notEqual(
+    firstPage.body.data[0].transaction.id,
+    secondPage.body.data[0].transaction.id,
+  );
+  assert.equal(secondPage.body.page.has_more, false);
+
   const events = await request(running.url, "/v1/events");
   assert.ok(events.body.data.some((event) => event.type === "receipt.issued"));
+});
+
+test("HTTP v1 rejects schema drift and returns a stable request id", async (context) => {
+  const running = await listen({ port: 0, dbPath: ":memory:" });
+  context.after(
+    () =>
+      new Promise((resolve) =>
+        running.server.close(() => {
+          running.ledger.close();
+          resolve();
+        }),
+      ),
+  );
+
+  const invalidBody = await request(running.url, "/v1/quotes", {
+    method: "POST",
+    key: "invalid-body-key",
+    body: {
+      seller_agent_id: "agt_market_data",
+      payee_account_id: "acct_atlas_data",
+      item: { name: "Dataset", delivery_type: "dataset_access" },
+      amount: { value: 3900, currency: "CNY" },
+      expires_at: "2026-09-12T08:00:00Z",
+      unexpected: true,
+    },
+  });
+  assert.equal(invalidBody.status, 400);
+  assert.equal(invalidBody.body.error.code, "invalid_request_body");
+  assert.equal(invalidBody.body.error.request_id, invalidBody.requestId);
+
+  const invalidId = await request(running.url, "/v1/transactions/not-a-transaction");
+  assert.equal(invalidId.status, 400);
+  assert.equal(invalidId.body.error.code, "invalid_resource_id");
+  assert.equal(invalidId.body.error.request_id, invalidId.requestId);
+
+  const invalidIdentifierCharacters = await request(running.url, "/v1/transactions/txn_%20");
+  assert.equal(invalidIdentifierCharacters.status, 400);
+  assert.equal(invalidIdentifierCharacters.body.error.code, "invalid_resource_id");
+
+  const invalidLimit = await request(running.url, "/v1/transactions?limit=0");
+  assert.equal(invalidLimit.status, 400);
+  assert.equal(invalidLimit.body.error.code, "invalid_limit");
+
+  const unknownQuery = await request(running.url, "/v1/transactions?offset=1");
+  assert.equal(unknownQuery.status, 400);
+  assert.equal(unknownQuery.body.error.code, "invalid_query_parameters");
+
+  const unsupportedQuery = await request(running.url, "/v1/events?after=evt_1");
+  assert.equal(unsupportedQuery.status, 400);
+  assert.equal(unsupportedQuery.body.error.code, "invalid_query_parameters");
+
+  const invalidCursor = await request(running.url, "/v1/transactions?cursor=not-opaque");
+  assert.equal(invalidCursor.status, 400);
+  assert.equal(invalidCursor.body.error.code, "invalid_cursor");
+
+  const unsupportedResponse = await fetch(`${running.url}/v1/quotes`, {
+    method: "POST",
+    headers: { "idempotency-key": "unsupported-media-key" },
+    body: "{}",
+  });
+  const unsupportedBody = await unsupportedResponse.json();
+  assert.equal(unsupportedResponse.status, 415);
+  assert.equal(unsupportedBody.error.code, "unsupported_media_type");
+  assert.equal(unsupportedBody.error.request_id, unsupportedResponse.headers.get("x-request-id"));
+
+  const oversizedResponse = await fetch(`${running.url}/v1/quotes`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "idempotency-key": "oversized-body-key",
+    },
+    body: JSON.stringify({ payload: "x".repeat(1_048_576) }),
+  });
+  const oversizedBody = await oversizedResponse.json();
+  assert.equal(oversizedResponse.status, 413);
+  assert.equal(oversizedBody.error.code, "request_body_too_large");
+  assert.equal(oversizedBody.error.request_id, oversizedResponse.headers.get("x-request-id"));
 });
 
 test("HTTP server exposes an explicit x402 adapter mode without a signer", async (context) => {
@@ -146,7 +273,7 @@ test("HTTP server exposes an explicit x402 adapter mode without a signer", async
       ),
   );
   const health = await request(running.url, "/health");
-  assert.equal(health.body.version, "0.3.0");
+  assert.equal(health.body.version, "0.4.0");
   assert.equal(health.body.adapter, "x402_exact_base_sepolia");
   assert.equal(running.sandbox.wallet.currency, "USD");
 });

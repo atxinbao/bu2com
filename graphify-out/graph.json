@@ -51,6 +51,19 @@
   },
   "nodes": [
     {
+      "id": "sandbox_persistence_sqliteledger",
+      "label": "SqliteLedger",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 15,
+      "community_name": "SqliteLedger",
+      "file_type": "code",
+      "norm_label": "sqliteledger",
+      "source_file": "sandbox/persistence.mjs",
+      "source_location": "L7"
+    },
+    {
       "id": "sandbox_adapter_simulatedpaymentadapter",
       "label": "SimulatedPaymentAdapter",
       "_callable": true,
@@ -88,19 +101,6 @@
       "norm_label": "bu2sandbox",
       "source_file": "sandbox/domain.mjs",
       "source_location": "L59"
-    },
-    {
-      "id": "sandbox_persistence_sqliteledger",
-      "label": "SqliteLedger",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "ApiError",
-      "file_type": "code",
-      "norm_label": "sqliteledger",
-      "source_file": "sandbox/persistence.mjs",
-      "source_location": "L7"
     },
     {
       "id": "sandbox_webhooks_webhookdispatcher",
@@ -298,6 +298,19 @@
       "source_location": "L13"
     },
     {
+      "id": "prototype_components_ui_native_select_nativeselectprops",
+      "label": "NativeSelectProps",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 30,
+      "community_name": "react",
+      "file_type": "code",
+      "norm_label": "nativeselectprops",
+      "source_file": "prototype/components/ui/native-select.tsx",
+      "source_location": "L6"
+    },
+    {
       "id": "prototype_components_ui_chart_chartconfig",
       "label": "ChartConfig",
       "_callable": true,
@@ -343,7 +356,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 46,
-      "community_name": "pagination.tsx",
+      "community_name": "alert-dialog.tsx",
       "file_type": "code",
       "norm_label": "paginationlinkprops",
       "source_file": "prototype/components/ui/pagination.tsx",
@@ -361,19 +374,6 @@
       "norm_label": "sidebarcontextprops",
       "source_file": "prototype/components/ui/sidebar.tsx",
       "source_location": "L35"
-    },
-    {
-      "id": "prototype_components_ui_native_select_nativeselectprops",
-      "label": "NativeSelectProps",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 54,
-      "community_name": "native-select.tsx",
-      "file_type": "code",
-      "norm_label": "nativeselectprops",
-      "source_file": "prototype/components/ui/native-select.tsx",
-      "source_location": "L6"
     },
     {
       "id": "sandbox_demo_agents_api",
@@ -400,12 +400,204 @@
       "source_location": "L3"
     },
     {
+      "id": "sandbox_persistence_parse",
+      "label": "parse()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 15,
+      "community_name": "SqliteLedger",
+      "file_type": "code",
+      "norm_label": "parse()",
+      "source_file": "sandbox/persistence.mjs",
+      "source_location": "L5"
+    },
+    {
+      "id": "sandbox_persistence_sqliteledger_adapteroperations",
+      "label": ".adapterOperations()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 15,
+      "community_name": "SqliteLedger",
+      "file_type": "code",
+      "norm_label": ".adapteroperations()",
+      "source_file": "sandbox/persistence.mjs",
+      "source_location": "L226"
+    },
+    {
+      "id": "sandbox_persistence_sqliteledger_addwebhooksubscription",
+      "label": ".addWebhookSubscription()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 15,
+      "community_name": "SqliteLedger",
+      "file_type": "code",
+      "norm_label": ".addwebhooksubscription()",
+      "source_file": "sandbox/persistence.mjs",
+      "source_location": "L162"
+    },
+    {
+      "id": "sandbox_persistence_sqliteledger_appendevent",
+      "label": ".appendEvent()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 15,
+      "community_name": "SqliteLedger",
+      "file_type": "code",
+      "norm_label": ".appendevent()",
+      "source_file": "sandbox/persistence.mjs",
+      "source_location": "L131"
+    },
+    {
+      "id": "sandbox_persistence_sqliteledger_close",
+      "label": ".close()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 15,
+      "community_name": "SqliteLedger",
+      "file_type": "code",
+      "norm_label": ".close()",
+      "source_file": "sandbox/persistence.mjs",
+      "source_location": "L230"
+    },
+    {
+      "id": "sandbox_persistence_sqliteledger_constructor",
+      "label": ".constructor()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 15,
+      "community_name": "SqliteLedger",
+      "file_type": "code",
+      "norm_label": ".constructor()",
+      "source_file": "sandbox/persistence.mjs",
+      "source_location": "L8"
+    },
+    {
+      "id": "sandbox_persistence_sqliteledger_getadapteroperation",
+      "label": ".getAdapterOperation()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 15,
+      "community_name": "SqliteLedger",
+      "file_type": "code",
+      "norm_label": ".getadapteroperation()",
+      "source_file": "sandbox/persistence.mjs",
+      "source_location": "L201"
+    },
+    {
+      "id": "sandbox_persistence_sqliteledger_listdueoutbox",
+      "label": ".listDueOutbox()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 15,
+      "community_name": "SqliteLedger",
+      "file_type": "code",
+      "norm_label": ".listdueoutbox()",
+      "source_file": "sandbox/persistence.mjs",
+      "source_location": "L171"
+    },
+    {
+      "id": "sandbox_persistence_sqliteledger_listledgerevents",
+      "label": ".listLedgerEvents()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 15,
+      "community_name": "SqliteLedger",
+      "file_type": "code",
+      "norm_label": ".listledgerevents()",
+      "source_file": "sandbox/persistence.mjs",
+      "source_location": "L155"
+    },
+    {
+      "id": "sandbox_persistence_sqliteledger_loadstate",
+      "label": ".loadState()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 15,
+      "community_name": "SqliteLedger",
+      "file_type": "code",
+      "norm_label": ".loadstate()",
+      "source_file": "sandbox/persistence.mjs",
+      "source_location": "L74"
+    },
+    {
+      "id": "sandbox_persistence_sqliteledger_markdelivered",
+      "label": ".markDelivered()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 15,
+      "community_name": "SqliteLedger",
+      "file_type": "code",
+      "norm_label": ".markdelivered()",
+      "source_file": "sandbox/persistence.mjs",
+      "source_location": "L181"
+    },
+    {
+      "id": "sandbox_persistence_sqliteledger_markwebhookfailed",
+      "label": ".markWebhookFailed()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 15,
+      "community_name": "SqliteLedger",
+      "file_type": "code",
+      "norm_label": ".markwebhookfailed()",
+      "source_file": "sandbox/persistence.mjs",
+      "source_location": "L189"
+    },
+    {
+      "id": "sandbox_persistence_sqliteledger_migrate",
+      "label": ".migrate()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 15,
+      "community_name": "SqliteLedger",
+      "file_type": "code",
+      "norm_label": ".migrate()",
+      "source_file": "sandbox/persistence.mjs",
+      "source_location": "L16"
+    },
+    {
+      "id": "sandbox_persistence_sqliteledger_outboxrows",
+      "label": ".outboxRows()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 15,
+      "community_name": "SqliteLedger",
+      "file_type": "code",
+      "norm_label": ".outboxrows()",
+      "source_file": "sandbox/persistence.mjs",
+      "source_location": "L197"
+    },
+    {
+      "id": "sandbox_persistence_sqliteledger_saveadapteroperation",
+      "label": ".saveAdapterOperation()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 15,
+      "community_name": "SqliteLedger",
+      "file_type": "code",
+      "norm_label": ".saveadapteroperation()",
+      "source_file": "sandbox/persistence.mjs",
+      "source_location": "L208"
+    },
+    {
+      "id": "sandbox_persistence_sqliteledger_savesnapshot",
+      "label": ".saveSnapshot()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 15,
+      "community_name": "SqliteLedger",
+      "file_type": "code",
+      "norm_label": ".savesnapshot()",
+      "source_file": "sandbox/persistence.mjs",
+      "source_location": "L100"
+    },
+    {
       "id": "sandbox_x402_merchant_createx402merchant",
       "label": "createX402Merchant()",
       "_callable": true,
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402-wallet.mjs",
+      "community_name": "SqliteLedger",
       "file_type": "code",
       "norm_label": "createx402merchant()",
       "source_file": "sandbox/x402-merchant.mjs",
@@ -417,7 +609,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402-wallet.mjs",
+      "community_name": "SqliteLedger",
       "file_type": "code",
       "norm_label": "defaultpayto()",
       "source_file": "sandbox/x402-merchant.mjs",
@@ -429,7 +621,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402-wallet.mjs",
+      "community_name": "SqliteLedger",
       "file_type": "code",
       "norm_label": "listenx402merchant()",
       "source_file": "sandbox/x402-merchant.mjs",
@@ -441,7 +633,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402-wallet.mjs",
+      "community_name": "SqliteLedger",
       "file_type": "code",
       "norm_label": "merchant()",
       "source_file": "sandbox/x402.test.mjs",
@@ -453,7 +645,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402-wallet.mjs",
+      "community_name": "SqliteLedger",
       "file_type": "code",
       "norm_label": "buyeraccount()",
       "source_file": "sandbox/x402-wallet.mjs",
@@ -465,7 +657,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402-wallet.mjs",
+      "community_name": "SqliteLedger",
       "file_type": "code",
       "norm_label": "merchantaccount()",
       "source_file": "sandbox/x402-wallet.mjs",
@@ -477,7 +669,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402-wallet.mjs",
+      "community_name": "SqliteLedger",
       "file_type": "code",
       "norm_label": "readbuyerprivatekey()",
       "source_file": "sandbox/x402-wallet.mjs",
@@ -489,7 +681,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402-wallet.mjs",
+      "community_name": "SqliteLedger",
       "file_type": "code",
       "norm_label": "readkeychainprivatekey()",
       "source_file": "sandbox/x402-wallet.mjs",
@@ -501,7 +693,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402-wallet.mjs",
+      "community_name": "SqliteLedger",
       "file_type": "code",
       "norm_label": "walletstatus()",
       "source_file": "sandbox/x402-wallet.mjs",
@@ -520,6 +712,42 @@
       "source_location": "L3"
     },
     {
+      "id": "prototype_components_ui_button_group_buttongroup",
+      "label": "ButtonGroup()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "utils.ts",
+      "file_type": "code",
+      "norm_label": "buttongroup()",
+      "source_file": "prototype/components/ui/button-group.tsx",
+      "source_location": "L25"
+    },
+    {
+      "id": "prototype_components_ui_button_group_buttongroupseparator",
+      "label": "ButtonGroupSeparator()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "utils.ts",
+      "file_type": "code",
+      "norm_label": "buttongroupseparator()",
+      "source_file": "prototype/components/ui/button-group.tsx",
+      "source_location": "L63"
+    },
+    {
+      "id": "prototype_components_ui_button_group_buttongrouptext",
+      "label": "ButtonGroupText()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "utils.ts",
+      "file_type": "code",
+      "norm_label": "buttongrouptext()",
+      "source_file": "prototype/components/ui/button-group.tsx",
+      "source_location": "L40"
+    },
+    {
       "id": "prototype_components_ui_checkbox_checkbox",
       "label": "Checkbox()",
       "_callable": true,
@@ -530,114 +758,6 @@
       "norm_label": "checkbox()",
       "source_file": "prototype/components/ui/checkbox.tsx",
       "source_location": "L8"
-    },
-    {
-      "id": "prototype_components_ui_hover_card_hovercard",
-      "label": "HoverCard()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 17,
-      "community_name": "utils.ts",
-      "file_type": "code",
-      "norm_label": "hovercard()",
-      "source_file": "prototype/components/ui/hover-card.tsx",
-      "source_location": "L7"
-    },
-    {
-      "id": "prototype_components_ui_hover_card_hovercardcontent",
-      "label": "HoverCardContent()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 17,
-      "community_name": "utils.ts",
-      "file_type": "code",
-      "norm_label": "hovercardcontent()",
-      "source_file": "prototype/components/ui/hover-card.tsx",
-      "source_location": "L17"
-    },
-    {
-      "id": "prototype_components_ui_hover_card_hovercardtrigger",
-      "label": "HoverCardTrigger()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 17,
-      "community_name": "utils.ts",
-      "file_type": "code",
-      "norm_label": "hovercardtrigger()",
-      "source_file": "prototype/components/ui/hover-card.tsx",
-      "source_location": "L11"
-    },
-    {
-      "id": "prototype_components_ui_input_otp_inputotp",
-      "label": "InputOTP()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 17,
-      "community_name": "utils.ts",
-      "file_type": "code",
-      "norm_label": "inputotp()",
-      "source_file": "prototype/components/ui/input-otp.tsx",
-      "source_location": "L9"
-    },
-    {
-      "id": "prototype_components_ui_input_otp_inputotpgroup",
-      "label": "InputOTPGroup()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 17,
-      "community_name": "utils.ts",
-      "file_type": "code",
-      "norm_label": "inputotpgroup()",
-      "source_file": "prototype/components/ui/input-otp.tsx",
-      "source_location": "L30"
-    },
-    {
-      "id": "prototype_components_ui_input_otp_inputotpseparator",
-      "label": "InputOTPSeparator()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 17,
-      "community_name": "utils.ts",
-      "file_type": "code",
-      "norm_label": "inputotpseparator()",
-      "source_file": "prototype/components/ui/input-otp.tsx",
-      "source_location": "L73"
-    },
-    {
-      "id": "prototype_components_ui_input_otp_inputotpslot",
-      "label": "InputOTPSlot()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 17,
-      "community_name": "utils.ts",
-      "file_type": "code",
-      "norm_label": "inputotpslot()",
-      "source_file": "prototype/components/ui/input-otp.tsx",
-      "source_location": "L43"
-    },
-    {
-      "id": "prototype_components_ui_kbd_kbd",
-      "label": "Kbd()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 17,
-      "community_name": "utils.ts",
-      "file_type": "code",
-      "norm_label": "kbd()",
-      "source_file": "prototype/components/ui/kbd.tsx",
-      "source_location": "L3"
-    },
-    {
-      "id": "prototype_components_ui_kbd_kbdgroup",
-      "label": "KbdGroup()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 17,
-      "community_name": "utils.ts",
-      "file_type": "code",
-      "norm_label": "kbdgroup()",
-      "source_file": "prototype/components/ui/kbd.tsx",
-      "source_location": "L16"
     },
     {
       "id": "prototype_components_ui_radio_group_radiogroup",
@@ -664,6 +784,54 @@
       "source_location": "L18"
     },
     {
+      "id": "prototype_components_ui_resizable_resizablehandle",
+      "label": "ResizableHandle()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "utils.ts",
+      "file_type": "code",
+      "norm_label": "resizablehandle()",
+      "source_file": "prototype/components/ui/resizable.tsx",
+      "source_location": "L27"
+    },
+    {
+      "id": "prototype_components_ui_resizable_resizablepanel",
+      "label": "ResizablePanel()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "utils.ts",
+      "file_type": "code",
+      "norm_label": "resizablepanel()",
+      "source_file": "prototype/components/ui/resizable.tsx",
+      "source_location": "L23"
+    },
+    {
+      "id": "prototype_components_ui_resizable_resizablepanelgroup",
+      "label": "ResizablePanelGroup()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "utils.ts",
+      "file_type": "code",
+      "norm_label": "resizablepanelgroup()",
+      "source_file": "prototype/components/ui/resizable.tsx",
+      "source_location": "L7"
+    },
+    {
+      "id": "prototype_components_ui_separator_separator",
+      "label": "Separator()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "utils.ts",
+      "file_type": "code",
+      "norm_label": "separator()",
+      "source_file": "prototype/components/ui/separator.tsx",
+      "source_location": "L7"
+    },
+    {
       "id": "prototype_components_ui_slider_slider",
       "label": "Slider()",
       "_callable": true,
@@ -674,18 +842,6 @@
       "norm_label": "slider()",
       "source_file": "prototype/components/ui/slider.tsx",
       "source_location": "L5"
-    },
-    {
-      "id": "prototype_components_ui_spinner_spinner",
-      "label": "Spinner()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 17,
-      "community_name": "utils.ts",
-      "file_type": "code",
-      "norm_label": "spinner()",
-      "source_file": "prototype/components/ui/spinner.tsx",
-      "source_location": "L4"
     },
     {
       "id": "prototype_components_ui_switch_switch",
@@ -1192,6 +1348,18 @@
       "source_location": "L135"
     },
     {
+      "id": "prototype_components_ui_input_input",
+      "label": "Input()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 18,
+      "community_name": "combobox.tsx",
+      "file_type": "code",
+      "norm_label": "input()",
+      "source_file": "prototype/components/ui/input.tsx",
+      "source_location": "L6"
+    },
+    {
       "id": "prototype_components_ui_textarea_textarea",
       "label": "Textarea()",
       "_callable": true,
@@ -1252,6 +1420,102 @@
       "source_location": "L42"
     },
     {
+      "id": "sandbox_api_contract_decodecursor",
+      "label": "decodeCursor()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "ApiError",
+      "file_type": "code",
+      "norm_label": "decodecursor()",
+      "source_file": "sandbox/api-contract.mjs",
+      "source_location": "L171"
+    },
+    {
+      "id": "sandbox_api_contract_encodecursor",
+      "label": "encodeCursor()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "ApiError",
+      "file_type": "code",
+      "norm_label": "encodecursor()",
+      "source_file": "sandbox/api-contract.mjs",
+      "source_location": "L193"
+    },
+    {
+      "id": "sandbox_api_contract_identifier",
+      "label": "identifier()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "ApiError",
+      "file_type": "code",
+      "norm_label": "identifier()",
+      "source_file": "sandbox/api-contract.mjs",
+      "source_location": "L5"
+    },
+    {
+      "id": "sandbox_api_contract_paginatetransactions",
+      "label": "paginateTransactions()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "ApiError",
+      "file_type": "code",
+      "norm_label": "paginatetransactions()",
+      "source_file": "sandbox/api-contract.mjs",
+      "source_location": "L202"
+    },
+    {
+      "id": "sandbox_api_contract_validatebody",
+      "label": "validateBody()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "ApiError",
+      "file_type": "code",
+      "norm_label": "validatebody()",
+      "source_file": "sandbox/api-contract.mjs",
+      "source_location": "L116"
+    },
+    {
+      "id": "sandbox_api_contract_validateidempotencykey",
+      "label": "validateIdempotencyKey()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "ApiError",
+      "file_type": "code",
+      "norm_label": "validateidempotencykey()",
+      "source_file": "sandbox/api-contract.mjs",
+      "source_location": "L134"
+    },
+    {
+      "id": "sandbox_api_contract_validatenoqueryparameters",
+      "label": "validateNoQueryParameters()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "ApiError",
+      "file_type": "code",
+      "norm_label": "validatenoqueryparameters()",
+      "source_file": "sandbox/api-contract.mjs",
+      "source_location": "L159"
+    },
+    {
+      "id": "sandbox_api_contract_validateresourceid",
+      "label": "validateResourceId()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "ApiError",
+      "file_type": "code",
+      "norm_label": "validateresourceid()",
+      "source_file": "sandbox/api-contract.mjs",
+      "source_location": "L146"
+    },
+    {
       "id": "sandbox_domain_apierror_constructor",
       "label": ".constructor()",
       "_callable": true,
@@ -1309,7 +1573,7 @@
       "file_type": "code",
       "norm_label": ".decideauthorization()",
       "source_file": "sandbox/domain.mjs",
-      "source_location": "L317"
+      "source_location": "L320"
     },
     {
       "id": "sandbox_domain_bu2sandbox_event",
@@ -1345,7 +1609,7 @@
       "file_type": "code",
       "norm_label": ".getreceipt()",
       "source_file": "sandbox/domain.mjs",
-      "source_location": "L524"
+      "source_location": "L527"
     },
     {
       "id": "sandbox_domain_bu2sandbox_gettransaction",
@@ -1357,7 +1621,7 @@
       "file_type": "code",
       "norm_label": ".gettransaction()",
       "source_file": "sandbox/domain.mjs",
-      "source_location": "L305"
+      "source_location": "L308"
     },
     {
       "id": "sandbox_domain_bu2sandbox_listtransactions",
@@ -1393,7 +1657,7 @@
       "file_type": "code",
       "norm_label": ".reserve()",
       "source_file": "sandbox/domain.mjs",
-      "source_location": "L372"
+      "source_location": "L375"
     },
     {
       "id": "sandbox_domain_bu2sandbox_runidempotent",
@@ -1429,7 +1693,7 @@
       "file_type": "code",
       "norm_label": ".settle()",
       "source_file": "sandbox/domain.mjs",
-      "source_location": "L451"
+      "source_location": "L454"
     },
     {
       "id": "sandbox_domain_bu2sandbox_submitdelivery",
@@ -1441,7 +1705,7 @@
       "file_type": "code",
       "norm_label": ".submitdelivery()",
       "source_file": "sandbox/domain.mjs",
-      "source_location": "L410"
+      "source_location": "L413"
     },
     {
       "id": "sandbox_domain_bu2sandbox_transactionview",
@@ -1465,7 +1729,7 @@
       "file_type": "code",
       "norm_label": ".verifyreceipt()",
       "source_file": "sandbox/domain.mjs",
-      "source_location": "L531"
+      "source_location": "L534"
     },
     {
       "id": "sandbox_domain_canonical",
@@ -1588,198 +1852,6 @@
       "source_location": "L5"
     },
     {
-      "id": "sandbox_persistence_parse",
-      "label": "parse()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "ApiError",
-      "file_type": "code",
-      "norm_label": "parse()",
-      "source_file": "sandbox/persistence.mjs",
-      "source_location": "L5"
-    },
-    {
-      "id": "sandbox_persistence_sqliteledger_adapteroperations",
-      "label": ".adapterOperations()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "ApiError",
-      "file_type": "code",
-      "norm_label": ".adapteroperations()",
-      "source_file": "sandbox/persistence.mjs",
-      "source_location": "L226"
-    },
-    {
-      "id": "sandbox_persistence_sqliteledger_addwebhooksubscription",
-      "label": ".addWebhookSubscription()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "ApiError",
-      "file_type": "code",
-      "norm_label": ".addwebhooksubscription()",
-      "source_file": "sandbox/persistence.mjs",
-      "source_location": "L162"
-    },
-    {
-      "id": "sandbox_persistence_sqliteledger_appendevent",
-      "label": ".appendEvent()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "ApiError",
-      "file_type": "code",
-      "norm_label": ".appendevent()",
-      "source_file": "sandbox/persistence.mjs",
-      "source_location": "L131"
-    },
-    {
-      "id": "sandbox_persistence_sqliteledger_close",
-      "label": ".close()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "ApiError",
-      "file_type": "code",
-      "norm_label": ".close()",
-      "source_file": "sandbox/persistence.mjs",
-      "source_location": "L230"
-    },
-    {
-      "id": "sandbox_persistence_sqliteledger_constructor",
-      "label": ".constructor()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "ApiError",
-      "file_type": "code",
-      "norm_label": ".constructor()",
-      "source_file": "sandbox/persistence.mjs",
-      "source_location": "L8"
-    },
-    {
-      "id": "sandbox_persistence_sqliteledger_getadapteroperation",
-      "label": ".getAdapterOperation()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "ApiError",
-      "file_type": "code",
-      "norm_label": ".getadapteroperation()",
-      "source_file": "sandbox/persistence.mjs",
-      "source_location": "L201"
-    },
-    {
-      "id": "sandbox_persistence_sqliteledger_listdueoutbox",
-      "label": ".listDueOutbox()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "ApiError",
-      "file_type": "code",
-      "norm_label": ".listdueoutbox()",
-      "source_file": "sandbox/persistence.mjs",
-      "source_location": "L171"
-    },
-    {
-      "id": "sandbox_persistence_sqliteledger_listledgerevents",
-      "label": ".listLedgerEvents()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "ApiError",
-      "file_type": "code",
-      "norm_label": ".listledgerevents()",
-      "source_file": "sandbox/persistence.mjs",
-      "source_location": "L155"
-    },
-    {
-      "id": "sandbox_persistence_sqliteledger_loadstate",
-      "label": ".loadState()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "ApiError",
-      "file_type": "code",
-      "norm_label": ".loadstate()",
-      "source_file": "sandbox/persistence.mjs",
-      "source_location": "L74"
-    },
-    {
-      "id": "sandbox_persistence_sqliteledger_markdelivered",
-      "label": ".markDelivered()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "ApiError",
-      "file_type": "code",
-      "norm_label": ".markdelivered()",
-      "source_file": "sandbox/persistence.mjs",
-      "source_location": "L181"
-    },
-    {
-      "id": "sandbox_persistence_sqliteledger_markwebhookfailed",
-      "label": ".markWebhookFailed()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "ApiError",
-      "file_type": "code",
-      "norm_label": ".markwebhookfailed()",
-      "source_file": "sandbox/persistence.mjs",
-      "source_location": "L189"
-    },
-    {
-      "id": "sandbox_persistence_sqliteledger_migrate",
-      "label": ".migrate()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "ApiError",
-      "file_type": "code",
-      "norm_label": ".migrate()",
-      "source_file": "sandbox/persistence.mjs",
-      "source_location": "L16"
-    },
-    {
-      "id": "sandbox_persistence_sqliteledger_outboxrows",
-      "label": ".outboxRows()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "ApiError",
-      "file_type": "code",
-      "norm_label": ".outboxrows()",
-      "source_file": "sandbox/persistence.mjs",
-      "source_location": "L197"
-    },
-    {
-      "id": "sandbox_persistence_sqliteledger_saveadapteroperation",
-      "label": ".saveAdapterOperation()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "ApiError",
-      "file_type": "code",
-      "norm_label": ".saveadapteroperation()",
-      "source_file": "sandbox/persistence.mjs",
-      "source_location": "L208"
-    },
-    {
-      "id": "sandbox_persistence_sqliteledger_savesnapshot",
-      "label": ".saveSnapshot()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "ApiError",
-      "file_type": "code",
-      "norm_label": ".savesnapshot()",
-      "source_file": "sandbox/persistence.mjs",
-      "source_location": "L100"
-    },
-    {
       "id": "sandbox_persistence_test_completepayment",
       "label": "completePayment()",
       "_callable": true,
@@ -1813,7 +1885,7 @@
       "file_type": "code",
       "norm_label": "buildpaymentadapter()",
       "source_file": "sandbox/server.mjs",
-      "source_location": "L49"
+      "source_location": "L77"
     },
     {
       "id": "sandbox_server_createbu2server",
@@ -1825,7 +1897,7 @@
       "file_type": "code",
       "norm_label": "createbu2server()",
       "source_file": "sandbox/server.mjs",
-      "source_location": "L71"
+      "source_location": "L99"
     },
     {
       "id": "sandbox_server_errorbody",
@@ -1837,7 +1909,7 @@
       "file_type": "code",
       "norm_label": "errorbody()",
       "source_file": "sandbox/server.mjs",
-      "source_location": "L33"
+      "source_location": "L61"
     },
     {
       "id": "sandbox_server_listen",
@@ -1849,7 +1921,7 @@
       "file_type": "code",
       "norm_label": "listen()",
       "source_file": "sandbox/server.mjs",
-      "source_location": "L184"
+      "source_location": "L254"
     },
     {
       "id": "sandbox_server_readjson",
@@ -1861,7 +1933,7 @@
       "file_type": "code",
       "norm_label": "readjson()",
       "source_file": "sandbox/server.mjs",
-      "source_location": "L14"
+      "source_location": "L22"
     },
     {
       "id": "sandbox_server_requestid",
@@ -1873,7 +1945,7 @@
       "file_type": "code",
       "norm_label": "requestid()",
       "source_file": "sandbox/server.mjs",
-      "source_location": "L12"
+      "source_location": "L19"
     },
     {
       "id": "sandbox_server_send",
@@ -1885,7 +1957,7 @@
       "file_type": "code",
       "norm_label": "send()",
       "source_file": "sandbox/server.mjs",
-      "source_location": "L25"
+      "source_location": "L53"
     },
     {
       "id": "sandbox_webhooks_webhookdispatcher_constructor",
@@ -2053,7 +2125,7 @@
       "file_type": "code",
       "norm_label": "formatamount()",
       "source_file": "prototype/app/page.tsx",
-      "source_location": "L1073"
+      "source_location": "L1078"
     },
     {
       "id": "prototype_app_page_home",
@@ -2077,7 +2149,7 @@
       "file_type": "code",
       "norm_label": "info()",
       "source_file": "prototype/app/page.tsx",
-      "source_location": "L1062"
+      "source_location": "L1067"
     },
     {
       "id": "prototype_app_page_statusbadge",
@@ -2089,7 +2161,7 @@
       "file_type": "code",
       "norm_label": "statusbadge()",
       "source_file": "prototype/app/page.tsx",
-      "source_location": "L1032"
+      "source_location": "L1037"
     },
     {
       "id": "prototype_app_page_supporting",
@@ -2113,7 +2185,7 @@
       "file_type": "code",
       "norm_label": "timeline()",
       "source_file": "prototype/app/page.tsx",
-      "source_location": "L1083"
+      "source_location": "L1088"
     },
     {
       "id": "prototype_app_page_transactions",
@@ -2138,42 +2210,6 @@
       "norm_label": "badge()",
       "source_file": "prototype/components/ui/badge.tsx",
       "source_location": "L30"
-    },
-    {
-      "id": "prototype_components_ui_button_group_buttongroup",
-      "label": "ButtonGroup()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 22,
-      "community_name": "item.tsx",
-      "file_type": "code",
-      "norm_label": "buttongroup()",
-      "source_file": "prototype/components/ui/button-group.tsx",
-      "source_location": "L25"
-    },
-    {
-      "id": "prototype_components_ui_button_group_buttongroupseparator",
-      "label": "ButtonGroupSeparator()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 22,
-      "community_name": "item.tsx",
-      "file_type": "code",
-      "norm_label": "buttongroupseparator()",
-      "source_file": "prototype/components/ui/button-group.tsx",
-      "source_location": "L63"
-    },
-    {
-      "id": "prototype_components_ui_button_group_buttongrouptext",
-      "label": "ButtonGroupText()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 22,
-      "community_name": "item.tsx",
-      "file_type": "code",
-      "norm_label": "buttongrouptext()",
-      "source_file": "prototype/components/ui/button-group.tsx",
-      "source_location": "L40"
     },
     {
       "id": "prototype_components_ui_item_item",
@@ -2294,102 +2330,6 @@
       "norm_label": "itemtitle()",
       "source_file": "prototype/components/ui/item.tsx",
       "source_location": "L127"
-    },
-    {
-      "id": "prototype_components_ui_separator_separator",
-      "label": "Separator()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 22,
-      "community_name": "item.tsx",
-      "file_type": "code",
-      "norm_label": "separator()",
-      "source_file": "prototype/components/ui/separator.tsx",
-      "source_location": "L7"
-    },
-    {
-      "id": "prototype_components_ui_breadcrumb_breadcrumb",
-      "label": "Breadcrumb()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 25,
-      "community_name": "breadcrumb.tsx",
-      "file_type": "code",
-      "norm_label": "breadcrumb()",
-      "source_file": "prototype/components/ui/breadcrumb.tsx",
-      "source_location": "L8"
-    },
-    {
-      "id": "prototype_components_ui_breadcrumb_breadcrumbellipsis",
-      "label": "BreadcrumbEllipsis()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 25,
-      "community_name": "breadcrumb.tsx",
-      "file_type": "code",
-      "norm_label": "breadcrumbellipsis()",
-      "source_file": "prototype/components/ui/breadcrumb.tsx",
-      "source_location": "L91"
-    },
-    {
-      "id": "prototype_components_ui_breadcrumb_breadcrumbitem",
-      "label": "BreadcrumbItem()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 25,
-      "community_name": "breadcrumb.tsx",
-      "file_type": "code",
-      "norm_label": "breadcrumbitem()",
-      "source_file": "prototype/components/ui/breadcrumb.tsx",
-      "source_location": "L32"
-    },
-    {
-      "id": "prototype_components_ui_breadcrumb_breadcrumblink",
-      "label": "BreadcrumbLink()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 25,
-      "community_name": "breadcrumb.tsx",
-      "file_type": "code",
-      "norm_label": "breadcrumblink()",
-      "source_file": "prototype/components/ui/breadcrumb.tsx",
-      "source_location": "L42"
-    },
-    {
-      "id": "prototype_components_ui_breadcrumb_breadcrumblist",
-      "label": "BreadcrumbList()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 25,
-      "community_name": "breadcrumb.tsx",
-      "file_type": "code",
-      "norm_label": "breadcrumblist()",
-      "source_file": "prototype/components/ui/breadcrumb.tsx",
-      "source_location": "L19"
-    },
-    {
-      "id": "prototype_components_ui_breadcrumb_breadcrumbpage",
-      "label": "BreadcrumbPage()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 25,
-      "community_name": "breadcrumb.tsx",
-      "file_type": "code",
-      "norm_label": "breadcrumbpage()",
-      "source_file": "prototype/components/ui/breadcrumb.tsx",
-      "source_location": "L62"
-    },
-    {
-      "id": "prototype_components_ui_breadcrumb_breadcrumbseparator",
-      "label": "BreadcrumbSeparator()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 25,
-      "community_name": "breadcrumb.tsx",
-      "file_type": "code",
-      "norm_label": "breadcrumbseparator()",
-      "source_file": "prototype/components/ui/breadcrumb.tsx",
-      "source_location": "L73"
     },
     {
       "id": "prototype_components_ui_context_menu_contextmenu",
@@ -2788,148 +2728,184 @@
       "source_location": "L35"
     },
     {
-      "id": "prototype_components_ui_alert_dialog_alertdialog",
-      "label": "AlertDialog()",
+      "id": "prototype_components_ui_input_otp_inputotp",
+      "label": "InputOTP()",
       "_callable": true,
       "_origin": "ast",
       "community": 30,
-      "community_name": "alert-dialog.tsx",
+      "community_name": "react",
       "file_type": "code",
-      "norm_label": "alertdialog()",
-      "source_file": "prototype/components/ui/alert-dialog.tsx",
+      "norm_label": "inputotp()",
+      "source_file": "prototype/components/ui/input-otp.tsx",
       "source_location": "L9"
     },
     {
-      "id": "prototype_components_ui_alert_dialog_alertdialogaction",
-      "label": "AlertDialogAction()",
+      "id": "prototype_components_ui_input_otp_inputotpgroup",
+      "label": "InputOTPGroup()",
       "_callable": true,
       "_origin": "ast",
       "community": 30,
-      "community_name": "alert-dialog.tsx",
+      "community_name": "react",
       "file_type": "code",
-      "norm_label": "alertdialogaction()",
-      "source_file": "prototype/components/ui/alert-dialog.tsx",
-      "source_location": "L144"
+      "norm_label": "inputotpgroup()",
+      "source_file": "prototype/components/ui/input-otp.tsx",
+      "source_location": "L30"
     },
     {
-      "id": "prototype_components_ui_alert_dialog_alertdialogcancel",
-      "label": "AlertDialogCancel()",
+      "id": "prototype_components_ui_input_otp_inputotpseparator",
+      "label": "InputOTPSeparator()",
       "_callable": true,
       "_origin": "ast",
       "community": 30,
-      "community_name": "alert-dialog.tsx",
+      "community_name": "react",
       "file_type": "code",
-      "norm_label": "alertdialogcancel()",
-      "source_file": "prototype/components/ui/alert-dialog.tsx",
-      "source_location": "L157"
+      "norm_label": "inputotpseparator()",
+      "source_file": "prototype/components/ui/input-otp.tsx",
+      "source_location": "L73"
     },
     {
-      "id": "prototype_components_ui_alert_dialog_alertdialogcontent",
-      "label": "AlertDialogContent()",
+      "id": "prototype_components_ui_input_otp_inputotpslot",
+      "label": "InputOTPSlot()",
       "_callable": true,
       "_origin": "ast",
       "community": 30,
-      "community_name": "alert-dialog.tsx",
+      "community_name": "react",
       "file_type": "code",
-      "norm_label": "alertdialogcontent()",
-      "source_file": "prototype/components/ui/alert-dialog.tsx",
-      "source_location": "L41"
+      "norm_label": "inputotpslot()",
+      "source_file": "prototype/components/ui/input-otp.tsx",
+      "source_location": "L43"
     },
     {
-      "id": "prototype_components_ui_alert_dialog_alertdialogdescription",
-      "label": "AlertDialogDescription()",
+      "id": "prototype_components_ui_message_message",
+      "label": "Message()",
       "_callable": true,
       "_origin": "ast",
       "community": 30,
-      "community_name": "alert-dialog.tsx",
+      "community_name": "react",
       "file_type": "code",
-      "norm_label": "alertdialogdescription()",
-      "source_file": "prototype/components/ui/alert-dialog.tsx",
-      "source_location": "L128"
+      "norm_label": "message()",
+      "source_file": "prototype/components/ui/message.tsx",
+      "source_location": "L15"
     },
     {
-      "id": "prototype_components_ui_alert_dialog_alertdialogfooter",
-      "label": "AlertDialogFooter()",
+      "id": "prototype_components_ui_message_messageavatar",
+      "label": "MessageAvatar()",
       "_callable": true,
       "_origin": "ast",
       "community": 30,
-      "community_name": "alert-dialog.tsx",
+      "community_name": "react",
       "file_type": "code",
-      "norm_label": "alertdialogfooter()",
-      "source_file": "prototype/components/ui/alert-dialog.tsx",
-      "source_location": "L80"
+      "norm_label": "messageavatar()",
+      "source_file": "prototype/components/ui/message.tsx",
+      "source_location": "L33"
     },
     {
-      "id": "prototype_components_ui_alert_dialog_alertdialogheader",
-      "label": "AlertDialogHeader()",
+      "id": "prototype_components_ui_message_messagecontent",
+      "label": "MessageContent()",
       "_callable": true,
       "_origin": "ast",
       "community": 30,
-      "community_name": "alert-dialog.tsx",
+      "community_name": "react",
       "file_type": "code",
-      "norm_label": "alertdialogheader()",
-      "source_file": "prototype/components/ui/alert-dialog.tsx",
-      "source_location": "L64"
+      "norm_label": "messagecontent()",
+      "source_file": "prototype/components/ui/message.tsx",
+      "source_location": "L46"
     },
     {
-      "id": "prototype_components_ui_alert_dialog_alertdialogmedia",
-      "label": "AlertDialogMedia()",
+      "id": "prototype_components_ui_message_messagefooter",
+      "label": "MessageFooter()",
       "_callable": true,
       "_origin": "ast",
       "community": 30,
-      "community_name": "alert-dialog.tsx",
+      "community_name": "react",
       "file_type": "code",
-      "norm_label": "alertdialogmedia()",
-      "source_file": "prototype/components/ui/alert-dialog.tsx",
-      "source_location": "L96"
+      "norm_label": "messagefooter()",
+      "source_file": "prototype/components/ui/message.tsx",
+      "source_location": "L72"
     },
     {
-      "id": "prototype_components_ui_alert_dialog_alertdialogoverlay",
-      "label": "AlertDialogOverlay()",
+      "id": "prototype_components_ui_message_messagegroup",
+      "label": "MessageGroup()",
       "_callable": true,
       "_origin": "ast",
       "community": 30,
-      "community_name": "alert-dialog.tsx",
+      "community_name": "react",
       "file_type": "code",
-      "norm_label": "alertdialogoverlay()",
-      "source_file": "prototype/components/ui/alert-dialog.tsx",
-      "source_location": "L25"
+      "norm_label": "messagegroup()",
+      "source_file": "prototype/components/ui/message.tsx",
+      "source_location": "L5"
     },
     {
-      "id": "prototype_components_ui_alert_dialog_alertdialogportal",
-      "label": "AlertDialogPortal()",
+      "id": "prototype_components_ui_message_messageheader",
+      "label": "MessageHeader()",
       "_callable": true,
       "_origin": "ast",
       "community": 30,
-      "community_name": "alert-dialog.tsx",
+      "community_name": "react",
       "file_type": "code",
-      "norm_label": "alertdialogportal()",
-      "source_file": "prototype/components/ui/alert-dialog.tsx",
-      "source_location": "L19"
+      "norm_label": "messageheader()",
+      "source_file": "prototype/components/ui/message.tsx",
+      "source_location": "L59"
     },
     {
-      "id": "prototype_components_ui_alert_dialog_alertdialogtitle",
-      "label": "AlertDialogTitle()",
+      "id": "prototype_components_ui_native_select_nativeselect",
+      "label": "NativeSelect()",
       "_callable": true,
       "_origin": "ast",
       "community": 30,
-      "community_name": "alert-dialog.tsx",
+      "community_name": "react",
       "file_type": "code",
-      "norm_label": "alertdialogtitle()",
-      "source_file": "prototype/components/ui/alert-dialog.tsx",
-      "source_location": "L112"
+      "norm_label": "nativeselect()",
+      "source_file": "prototype/components/ui/native-select.tsx",
+      "source_location": "L10"
     },
     {
-      "id": "prototype_components_ui_alert_dialog_alertdialogtrigger",
-      "label": "AlertDialogTrigger()",
+      "id": "prototype_components_ui_native_select_nativeselectoptgroup",
+      "label": "NativeSelectOptGroup()",
       "_callable": true,
       "_origin": "ast",
       "community": 30,
-      "community_name": "alert-dialog.tsx",
+      "community_name": "react",
       "file_type": "code",
-      "norm_label": "alertdialogtrigger()",
-      "source_file": "prototype/components/ui/alert-dialog.tsx",
-      "source_location": "L13"
+      "norm_label": "nativeselectoptgroup()",
+      "source_file": "prototype/components/ui/native-select.tsx",
+      "source_location": "L52"
+    },
+    {
+      "id": "prototype_components_ui_native_select_nativeselectoption",
+      "label": "NativeSelectOption()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 30,
+      "community_name": "react",
+      "file_type": "code",
+      "norm_label": "nativeselectoption()",
+      "source_file": "prototype/components/ui/native-select.tsx",
+      "source_location": "L39"
+    },
+    {
+      "id": "prototype_components_ui_scroll_area_scrollarea",
+      "label": "ScrollArea()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 30,
+      "community_name": "react",
+      "file_type": "code",
+      "norm_label": "scrollarea()",
+      "source_file": "prototype/components/ui/scroll-area.tsx",
+      "source_location": "L8"
+    },
+    {
+      "id": "prototype_components_ui_scroll_area_scrollbar",
+      "label": "ScrollBar()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 30,
+      "community_name": "react",
+      "file_type": "code",
+      "norm_label": "scrollbar()",
+      "source_file": "prototype/components/ui/scroll-area.tsx",
+      "source_location": "L31"
     },
     {
       "id": "prototype_components_ui_chart_chartcontainer",
@@ -3261,7 +3237,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 35,
-      "community_name": "react",
+      "community_name": "field.tsx",
       "file_type": "code",
       "norm_label": "field()",
       "source_file": "prototype/components/ui/field.tsx",
@@ -3273,7 +3249,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 35,
-      "community_name": "react",
+      "community_name": "field.tsx",
       "file_type": "code",
       "norm_label": "fieldcontent()",
       "source_file": "prototype/components/ui/field.tsx",
@@ -3285,7 +3261,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 35,
-      "community_name": "react",
+      "community_name": "field.tsx",
       "file_type": "code",
       "norm_label": "fielddescription()",
       "source_file": "prototype/components/ui/field.tsx",
@@ -3297,7 +3273,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 35,
-      "community_name": "react",
+      "community_name": "field.tsx",
       "file_type": "code",
       "norm_label": "fielderror()",
       "source_file": "prototype/components/ui/field.tsx",
@@ -3309,7 +3285,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 35,
-      "community_name": "react",
+      "community_name": "field.tsx",
       "file_type": "code",
       "norm_label": "fieldgroup()",
       "source_file": "prototype/components/ui/field.tsx",
@@ -3321,7 +3297,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 35,
-      "community_name": "react",
+      "community_name": "field.tsx",
       "file_type": "code",
       "norm_label": "fieldlabel()",
       "source_file": "prototype/components/ui/field.tsx",
@@ -3333,7 +3309,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 35,
-      "community_name": "react",
+      "community_name": "field.tsx",
       "file_type": "code",
       "norm_label": "fieldlegend()",
       "source_file": "prototype/components/ui/field.tsx",
@@ -3345,7 +3321,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 35,
-      "community_name": "react",
+      "community_name": "field.tsx",
       "file_type": "code",
       "norm_label": "fieldseparator()",
       "source_file": "prototype/components/ui/field.tsx",
@@ -3357,7 +3333,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 35,
-      "community_name": "react",
+      "community_name": "field.tsx",
       "file_type": "code",
       "norm_label": "fieldset()",
       "source_file": "prototype/components/ui/field.tsx",
@@ -3369,7 +3345,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 35,
-      "community_name": "react",
+      "community_name": "field.tsx",
       "file_type": "code",
       "norm_label": "fieldtitle()",
       "source_file": "prototype/components/ui/field.tsx",
@@ -3381,107 +3357,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 35,
-      "community_name": "react",
+      "community_name": "field.tsx",
       "file_type": "code",
       "norm_label": "label()",
       "source_file": "prototype/components/ui/label.tsx",
       "source_location": "L7"
-    },
-    {
-      "id": "prototype_components_ui_scroll_area_scrollarea",
-      "label": "ScrollArea()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 35,
-      "community_name": "react",
-      "file_type": "code",
-      "norm_label": "scrollarea()",
-      "source_file": "prototype/components/ui/scroll-area.tsx",
-      "source_location": "L8"
-    },
-    {
-      "id": "prototype_components_ui_scroll_area_scrollbar",
-      "label": "ScrollBar()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 35,
-      "community_name": "react",
-      "file_type": "code",
-      "norm_label": "scrollbar()",
-      "source_file": "prototype/components/ui/scroll-area.tsx",
-      "source_location": "L31"
-    },
-    {
-      "id": "prototype_components_ui_message_scroller_messagescroller",
-      "label": "MessageScroller()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "message-scroller.tsx",
-      "file_type": "code",
-      "norm_label": "messagescroller()",
-      "source_file": "prototype/components/ui/message-scroller.tsx",
-      "source_location": "L21"
-    },
-    {
-      "id": "prototype_components_ui_message_scroller_messagescrollerbutton",
-      "label": "MessageScrollerButton()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "message-scroller.tsx",
-      "file_type": "code",
-      "norm_label": "messagescrollerbutton()",
-      "source_file": "prototype/components/ui/message-scroller.tsx",
-      "source_location": "L84"
-    },
-    {
-      "id": "prototype_components_ui_message_scroller_messagescrollercontent",
-      "label": "MessageScrollerContent()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "message-scroller.tsx",
-      "file_type": "code",
-      "norm_label": "messagescrollercontent()",
-      "source_file": "prototype/components/ui/message-scroller.tsx",
-      "source_location": "L53"
-    },
-    {
-      "id": "prototype_components_ui_message_scroller_messagescrolleritem",
-      "label": "MessageScrollerItem()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "message-scroller.tsx",
-      "file_type": "code",
-      "norm_label": "messagescrolleritem()",
-      "source_file": "prototype/components/ui/message-scroller.tsx",
-      "source_location": "L66"
-    },
-    {
-      "id": "prototype_components_ui_message_scroller_messagescrollerprovider",
-      "label": "MessageScrollerProvider()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "message-scroller.tsx",
-      "file_type": "code",
-      "norm_label": "messagescrollerprovider()",
-      "source_file": "prototype/components/ui/message-scroller.tsx",
-      "source_location": "L15"
-    },
-    {
-      "id": "prototype_components_ui_message_scroller_messagescrollerviewport",
-      "label": "MessageScrollerViewport()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 39,
-      "community_name": "message-scroller.tsx",
-      "file_type": "code",
-      "norm_label": "messagescrollerviewport()",
-      "source_file": "prototype/components/ui/message-scroller.tsx",
-      "source_location": "L37"
     },
     {
       "id": "prototype_components_ui_accordion_accordion",
@@ -3604,6 +3484,90 @@
       "source_location": "L28"
     },
     {
+      "id": "prototype_components_ui_breadcrumb_breadcrumb",
+      "label": "Breadcrumb()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "cn",
+      "file_type": "code",
+      "norm_label": "breadcrumb()",
+      "source_file": "prototype/components/ui/breadcrumb.tsx",
+      "source_location": "L8"
+    },
+    {
+      "id": "prototype_components_ui_breadcrumb_breadcrumbellipsis",
+      "label": "BreadcrumbEllipsis()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "cn",
+      "file_type": "code",
+      "norm_label": "breadcrumbellipsis()",
+      "source_file": "prototype/components/ui/breadcrumb.tsx",
+      "source_location": "L91"
+    },
+    {
+      "id": "prototype_components_ui_breadcrumb_breadcrumbitem",
+      "label": "BreadcrumbItem()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "cn",
+      "file_type": "code",
+      "norm_label": "breadcrumbitem()",
+      "source_file": "prototype/components/ui/breadcrumb.tsx",
+      "source_location": "L32"
+    },
+    {
+      "id": "prototype_components_ui_breadcrumb_breadcrumblink",
+      "label": "BreadcrumbLink()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "cn",
+      "file_type": "code",
+      "norm_label": "breadcrumblink()",
+      "source_file": "prototype/components/ui/breadcrumb.tsx",
+      "source_location": "L42"
+    },
+    {
+      "id": "prototype_components_ui_breadcrumb_breadcrumblist",
+      "label": "BreadcrumbList()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "cn",
+      "file_type": "code",
+      "norm_label": "breadcrumblist()",
+      "source_file": "prototype/components/ui/breadcrumb.tsx",
+      "source_location": "L19"
+    },
+    {
+      "id": "prototype_components_ui_breadcrumb_breadcrumbpage",
+      "label": "BreadcrumbPage()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "cn",
+      "file_type": "code",
+      "norm_label": "breadcrumbpage()",
+      "source_file": "prototype/components/ui/breadcrumb.tsx",
+      "source_location": "L62"
+    },
+    {
+      "id": "prototype_components_ui_breadcrumb_breadcrumbseparator",
+      "label": "BreadcrumbSeparator()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "cn",
+      "file_type": "code",
+      "norm_label": "breadcrumbseparator()",
+      "source_file": "prototype/components/ui/breadcrumb.tsx",
+      "source_location": "L73"
+    },
+    {
       "id": "prototype_components_ui_card_card",
       "label": "Card()",
       "_callable": true,
@@ -3688,76 +3652,28 @@
       "source_location": "L36"
     },
     {
-      "id": "prototype_components_ui_message_message",
-      "label": "Message()",
+      "id": "prototype_components_ui_kbd_kbd",
+      "label": "Kbd()",
       "_callable": true,
       "_origin": "ast",
       "community": 4,
       "community_name": "cn",
       "file_type": "code",
-      "norm_label": "message()",
-      "source_file": "prototype/components/ui/message.tsx",
-      "source_location": "L15"
+      "norm_label": "kbd()",
+      "source_file": "prototype/components/ui/kbd.tsx",
+      "source_location": "L3"
     },
     {
-      "id": "prototype_components_ui_message_messageavatar",
-      "label": "MessageAvatar()",
+      "id": "prototype_components_ui_kbd_kbdgroup",
+      "label": "KbdGroup()",
       "_callable": true,
       "_origin": "ast",
       "community": 4,
       "community_name": "cn",
       "file_type": "code",
-      "norm_label": "messageavatar()",
-      "source_file": "prototype/components/ui/message.tsx",
-      "source_location": "L33"
-    },
-    {
-      "id": "prototype_components_ui_message_messagecontent",
-      "label": "MessageContent()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 4,
-      "community_name": "cn",
-      "file_type": "code",
-      "norm_label": "messagecontent()",
-      "source_file": "prototype/components/ui/message.tsx",
-      "source_location": "L46"
-    },
-    {
-      "id": "prototype_components_ui_message_messagefooter",
-      "label": "MessageFooter()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 4,
-      "community_name": "cn",
-      "file_type": "code",
-      "norm_label": "messagefooter()",
-      "source_file": "prototype/components/ui/message.tsx",
-      "source_location": "L72"
-    },
-    {
-      "id": "prototype_components_ui_message_messagegroup",
-      "label": "MessageGroup()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 4,
-      "community_name": "cn",
-      "file_type": "code",
-      "norm_label": "messagegroup()",
-      "source_file": "prototype/components/ui/message.tsx",
-      "source_location": "L5"
-    },
-    {
-      "id": "prototype_components_ui_message_messageheader",
-      "label": "MessageHeader()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 4,
-      "community_name": "cn",
-      "file_type": "code",
-      "norm_label": "messageheader()",
-      "source_file": "prototype/components/ui/message.tsx",
-      "source_location": "L59"
+      "norm_label": "kbdgroup()",
+      "source_file": "prototype/components/ui/kbd.tsx",
+      "source_location": "L16"
     },
     {
       "id": "prototype_components_ui_progress_progress",
@@ -3818,42 +3734,6 @@
       "norm_label": "progressvalue()",
       "source_file": "prototype/components/ui/progress.tsx",
       "source_location": "L64"
-    },
-    {
-      "id": "prototype_components_ui_resizable_resizablehandle",
-      "label": "ResizableHandle()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 4,
-      "community_name": "cn",
-      "file_type": "code",
-      "norm_label": "resizablehandle()",
-      "source_file": "prototype/components/ui/resizable.tsx",
-      "source_location": "L27"
-    },
-    {
-      "id": "prototype_components_ui_resizable_resizablepanel",
-      "label": "ResizablePanel()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 4,
-      "community_name": "cn",
-      "file_type": "code",
-      "norm_label": "resizablepanel()",
-      "source_file": "prototype/components/ui/resizable.tsx",
-      "source_location": "L23"
-    },
-    {
-      "id": "prototype_components_ui_resizable_resizablepanelgroup",
-      "label": "ResizablePanelGroup()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 4,
-      "community_name": "cn",
-      "file_type": "code",
-      "norm_label": "resizablepanelgroup()",
-      "source_file": "prototype/components/ui/resizable.tsx",
-      "source_location": "L7"
     },
     {
       "id": "prototype_components_ui_select_selectcontent",
@@ -3962,6 +3842,18 @@
       "norm_label": "selectvalue()",
       "source_file": "prototype/components/ui/select.tsx",
       "source_location": "L21"
+    },
+    {
+      "id": "prototype_components_ui_spinner_spinner",
+      "label": "Spinner()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "cn",
+      "file_type": "code",
+      "norm_label": "spinner()",
+      "source_file": "prototype/components/ui/spinner.tsx",
+      "source_location": "L4"
     },
     {
       "id": "prototype_components_ui_table_table",
@@ -4168,12 +4060,264 @@
       "source_location": "L62"
     },
     {
+      "id": "prototype_components_ui_alert_dialog_alertdialog",
+      "label": "AlertDialog()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 46,
+      "community_name": "alert-dialog.tsx",
+      "file_type": "code",
+      "norm_label": "alertdialog()",
+      "source_file": "prototype/components/ui/alert-dialog.tsx",
+      "source_location": "L9"
+    },
+    {
+      "id": "prototype_components_ui_alert_dialog_alertdialogaction",
+      "label": "AlertDialogAction()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 46,
+      "community_name": "alert-dialog.tsx",
+      "file_type": "code",
+      "norm_label": "alertdialogaction()",
+      "source_file": "prototype/components/ui/alert-dialog.tsx",
+      "source_location": "L144"
+    },
+    {
+      "id": "prototype_components_ui_alert_dialog_alertdialogcancel",
+      "label": "AlertDialogCancel()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 46,
+      "community_name": "alert-dialog.tsx",
+      "file_type": "code",
+      "norm_label": "alertdialogcancel()",
+      "source_file": "prototype/components/ui/alert-dialog.tsx",
+      "source_location": "L157"
+    },
+    {
+      "id": "prototype_components_ui_alert_dialog_alertdialogcontent",
+      "label": "AlertDialogContent()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 46,
+      "community_name": "alert-dialog.tsx",
+      "file_type": "code",
+      "norm_label": "alertdialogcontent()",
+      "source_file": "prototype/components/ui/alert-dialog.tsx",
+      "source_location": "L41"
+    },
+    {
+      "id": "prototype_components_ui_alert_dialog_alertdialogdescription",
+      "label": "AlertDialogDescription()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 46,
+      "community_name": "alert-dialog.tsx",
+      "file_type": "code",
+      "norm_label": "alertdialogdescription()",
+      "source_file": "prototype/components/ui/alert-dialog.tsx",
+      "source_location": "L128"
+    },
+    {
+      "id": "prototype_components_ui_alert_dialog_alertdialogfooter",
+      "label": "AlertDialogFooter()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 46,
+      "community_name": "alert-dialog.tsx",
+      "file_type": "code",
+      "norm_label": "alertdialogfooter()",
+      "source_file": "prototype/components/ui/alert-dialog.tsx",
+      "source_location": "L80"
+    },
+    {
+      "id": "prototype_components_ui_alert_dialog_alertdialogheader",
+      "label": "AlertDialogHeader()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 46,
+      "community_name": "alert-dialog.tsx",
+      "file_type": "code",
+      "norm_label": "alertdialogheader()",
+      "source_file": "prototype/components/ui/alert-dialog.tsx",
+      "source_location": "L64"
+    },
+    {
+      "id": "prototype_components_ui_alert_dialog_alertdialogmedia",
+      "label": "AlertDialogMedia()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 46,
+      "community_name": "alert-dialog.tsx",
+      "file_type": "code",
+      "norm_label": "alertdialogmedia()",
+      "source_file": "prototype/components/ui/alert-dialog.tsx",
+      "source_location": "L96"
+    },
+    {
+      "id": "prototype_components_ui_alert_dialog_alertdialogoverlay",
+      "label": "AlertDialogOverlay()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 46,
+      "community_name": "alert-dialog.tsx",
+      "file_type": "code",
+      "norm_label": "alertdialogoverlay()",
+      "source_file": "prototype/components/ui/alert-dialog.tsx",
+      "source_location": "L25"
+    },
+    {
+      "id": "prototype_components_ui_alert_dialog_alertdialogportal",
+      "label": "AlertDialogPortal()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 46,
+      "community_name": "alert-dialog.tsx",
+      "file_type": "code",
+      "norm_label": "alertdialogportal()",
+      "source_file": "prototype/components/ui/alert-dialog.tsx",
+      "source_location": "L19"
+    },
+    {
+      "id": "prototype_components_ui_alert_dialog_alertdialogtitle",
+      "label": "AlertDialogTitle()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 46,
+      "community_name": "alert-dialog.tsx",
+      "file_type": "code",
+      "norm_label": "alertdialogtitle()",
+      "source_file": "prototype/components/ui/alert-dialog.tsx",
+      "source_location": "L112"
+    },
+    {
+      "id": "prototype_components_ui_alert_dialog_alertdialogtrigger",
+      "label": "AlertDialogTrigger()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 46,
+      "community_name": "alert-dialog.tsx",
+      "file_type": "code",
+      "norm_label": "alertdialogtrigger()",
+      "source_file": "prototype/components/ui/alert-dialog.tsx",
+      "source_location": "L13"
+    },
+    {
+      "id": "prototype_components_ui_button_button",
+      "label": "Button()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 46,
+      "community_name": "alert-dialog.tsx",
+      "file_type": "code",
+      "norm_label": "button()",
+      "source_file": "prototype/components/ui/button.tsx",
+      "source_location": "L43"
+    },
+    {
+      "id": "prototype_components_ui_calendar_calendar",
+      "label": "Calendar()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 46,
+      "community_name": "alert-dialog.tsx",
+      "file_type": "code",
+      "norm_label": "calendar()",
+      "source_file": "prototype/components/ui/calendar.tsx",
+      "source_location": "L19"
+    },
+    {
+      "id": "prototype_components_ui_calendar_calendardaybutton",
+      "label": "CalendarDayButton()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 46,
+      "community_name": "alert-dialog.tsx",
+      "file_type": "code",
+      "norm_label": "calendardaybutton()",
+      "source_file": "prototype/components/ui/calendar.tsx",
+      "source_location": "L193"
+    },
+    {
+      "id": "prototype_components_ui_message_scroller_messagescroller",
+      "label": "MessageScroller()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 46,
+      "community_name": "alert-dialog.tsx",
+      "file_type": "code",
+      "norm_label": "messagescroller()",
+      "source_file": "prototype/components/ui/message-scroller.tsx",
+      "source_location": "L21"
+    },
+    {
+      "id": "prototype_components_ui_message_scroller_messagescrollerbutton",
+      "label": "MessageScrollerButton()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 46,
+      "community_name": "alert-dialog.tsx",
+      "file_type": "code",
+      "norm_label": "messagescrollerbutton()",
+      "source_file": "prototype/components/ui/message-scroller.tsx",
+      "source_location": "L84"
+    },
+    {
+      "id": "prototype_components_ui_message_scroller_messagescrollercontent",
+      "label": "MessageScrollerContent()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 46,
+      "community_name": "alert-dialog.tsx",
+      "file_type": "code",
+      "norm_label": "messagescrollercontent()",
+      "source_file": "prototype/components/ui/message-scroller.tsx",
+      "source_location": "L53"
+    },
+    {
+      "id": "prototype_components_ui_message_scroller_messagescrolleritem",
+      "label": "MessageScrollerItem()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 46,
+      "community_name": "alert-dialog.tsx",
+      "file_type": "code",
+      "norm_label": "messagescrolleritem()",
+      "source_file": "prototype/components/ui/message-scroller.tsx",
+      "source_location": "L66"
+    },
+    {
+      "id": "prototype_components_ui_message_scroller_messagescrollerprovider",
+      "label": "MessageScrollerProvider()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 46,
+      "community_name": "alert-dialog.tsx",
+      "file_type": "code",
+      "norm_label": "messagescrollerprovider()",
+      "source_file": "prototype/components/ui/message-scroller.tsx",
+      "source_location": "L15"
+    },
+    {
+      "id": "prototype_components_ui_message_scroller_messagescrollerviewport",
+      "label": "MessageScrollerViewport()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 46,
+      "community_name": "alert-dialog.tsx",
+      "file_type": "code",
+      "norm_label": "messagescrollerviewport()",
+      "source_file": "prototype/components/ui/message-scroller.tsx",
+      "source_location": "L37"
+    },
+    {
       "id": "prototype_components_ui_pagination_pagination",
       "label": "Pagination()",
       "_callable": true,
       "_origin": "ast",
       "community": 46,
-      "community_name": "pagination.tsx",
+      "community_name": "alert-dialog.tsx",
       "file_type": "code",
       "norm_label": "pagination()",
       "source_file": "prototype/components/ui/pagination.tsx",
@@ -4185,7 +4329,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 46,
-      "community_name": "pagination.tsx",
+      "community_name": "alert-dialog.tsx",
       "file_type": "code",
       "norm_label": "paginationcontent()",
       "source_file": "prototype/components/ui/pagination.tsx",
@@ -4197,7 +4341,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 46,
-      "community_name": "pagination.tsx",
+      "community_name": "alert-dialog.tsx",
       "file_type": "code",
       "norm_label": "paginationellipsis()",
       "source_file": "prototype/components/ui/pagination.tsx",
@@ -4209,7 +4353,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 46,
-      "community_name": "pagination.tsx",
+      "community_name": "alert-dialog.tsx",
       "file_type": "code",
       "norm_label": "paginationitem()",
       "source_file": "prototype/components/ui/pagination.tsx",
@@ -4221,7 +4365,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 46,
-      "community_name": "pagination.tsx",
+      "community_name": "alert-dialog.tsx",
       "file_type": "code",
       "norm_label": "paginationlink()",
       "source_file": "prototype/components/ui/pagination.tsx",
@@ -4233,7 +4377,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 46,
-      "community_name": "pagination.tsx",
+      "community_name": "alert-dialog.tsx",
       "file_type": "code",
       "norm_label": "paginationnext()",
       "source_file": "prototype/components/ui/pagination.tsx",
@@ -4245,59 +4389,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 46,
-      "community_name": "pagination.tsx",
+      "community_name": "alert-dialog.tsx",
       "file_type": "code",
       "norm_label": "paginationprevious()",
       "source_file": "prototype/components/ui/pagination.tsx",
       "source_location": "L72"
-    },
-    {
-      "id": "prototype_components_ui_button_button",
-      "label": "Button()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 49,
-      "community_name": "button.tsx",
-      "file_type": "code",
-      "norm_label": "button()",
-      "source_file": "prototype/components/ui/button.tsx",
-      "source_location": "L43"
-    },
-    {
-      "id": "prototype_components_ui_calendar_calendar",
-      "label": "Calendar()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 49,
-      "community_name": "button.tsx",
-      "file_type": "code",
-      "norm_label": "calendar()",
-      "source_file": "prototype/components/ui/calendar.tsx",
-      "source_location": "L19"
-    },
-    {
-      "id": "prototype_components_ui_calendar_calendardaybutton",
-      "label": "CalendarDayButton()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 49,
-      "community_name": "button.tsx",
-      "file_type": "code",
-      "norm_label": "calendardaybutton()",
-      "source_file": "prototype/components/ui/calendar.tsx",
-      "source_location": "L193"
-    },
-    {
-      "id": "prototype_components_ui_input_input",
-      "label": "Input()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "sidebar.tsx",
-      "file_type": "code",
-      "norm_label": "input()",
-      "source_file": "prototype/components/ui/input.tsx",
-      "source_location": "L6"
     },
     {
       "id": "prototype_components_ui_sheet_sheet",
@@ -4864,40 +4960,40 @@
       "source_location": "L58"
     },
     {
-      "id": "prototype_components_ui_native_select_nativeselect",
-      "label": "NativeSelect()",
+      "id": "prototype_components_ui_hover_card_hovercard",
+      "label": "HoverCard()",
       "_callable": true,
       "_origin": "ast",
       "community": 54,
-      "community_name": "native-select.tsx",
+      "community_name": "hover-card.tsx",
       "file_type": "code",
-      "norm_label": "nativeselect()",
-      "source_file": "prototype/components/ui/native-select.tsx",
-      "source_location": "L10"
+      "norm_label": "hovercard()",
+      "source_file": "prototype/components/ui/hover-card.tsx",
+      "source_location": "L7"
     },
     {
-      "id": "prototype_components_ui_native_select_nativeselectoptgroup",
-      "label": "NativeSelectOptGroup()",
+      "id": "prototype_components_ui_hover_card_hovercardcontent",
+      "label": "HoverCardContent()",
       "_callable": true,
       "_origin": "ast",
       "community": 54,
-      "community_name": "native-select.tsx",
+      "community_name": "hover-card.tsx",
       "file_type": "code",
-      "norm_label": "nativeselectoptgroup()",
-      "source_file": "prototype/components/ui/native-select.tsx",
-      "source_location": "L52"
+      "norm_label": "hovercardcontent()",
+      "source_file": "prototype/components/ui/hover-card.tsx",
+      "source_location": "L17"
     },
     {
-      "id": "prototype_components_ui_native_select_nativeselectoption",
-      "label": "NativeSelectOption()",
+      "id": "prototype_components_ui_hover_card_hovercardtrigger",
+      "label": "HoverCardTrigger()",
       "_callable": true,
       "_origin": "ast",
       "community": 54,
-      "community_name": "native-select.tsx",
+      "community_name": "hover-card.tsx",
       "file_type": "code",
-      "norm_label": "nativeselectoption()",
-      "source_file": "prototype/components/ui/native-select.tsx",
-      "source_location": "L39"
+      "norm_label": "hovercardtrigger()",
+      "source_file": "prototype/components/ui/hover-card.tsx",
+      "source_location": "L11"
     },
     {
       "id": "prototype_components_ui_bubble_bubble",
@@ -5161,7 +5257,7 @@
       "file_type": "code",
       "norm_label": "assert()",
       "source_file": "docs/03-technical/validate-contract.mjs",
-      "source_location": "L11"
+      "source_location": "L13"
     },
     {
       "id": "prototype_components_ui_marker_marker",
@@ -5629,7 +5725,7 @@
       "node_kind": "heading",
       "norm_label": "10. \u63d0\u4ea4\u524d\u68c0\u67e5\u6e05\u5355",
       "source_file": "AGENTS.md",
-      "source_location": "L241"
+      "source_location": "L244"
     },
     {
       "id": "agents_11_\u89c4\u5219\u7ef4\u62a4",
@@ -5641,7 +5737,7 @@
       "node_kind": "heading",
       "norm_label": "11. \u89c4\u5219\u7ef4\u62a4",
       "source_file": "AGENTS.md",
-      "source_location": "L257"
+      "source_location": "L260"
     },
     {
       "id": "agents_12_changelog_\u5f3a\u5236\u5bf9\u9f50\u89c4\u5219",
@@ -5653,7 +5749,7 @@
       "node_kind": "heading",
       "norm_label": "12. changelog \u5f3a\u5236\u5bf9\u9f50\u89c4\u5219",
       "source_file": "AGENTS.md",
-      "source_location": "L264"
+      "source_location": "L267"
     },
     {
       "id": "agents_1_\u4f7f\u547d\u4e0e\u4f18\u5148\u7ea7",
@@ -5941,7 +6037,7 @@
       "node_kind": "heading",
       "norm_label": "graphify",
       "source_file": "AGENTS.md",
-      "source_location": "L278"
+      "source_location": "L281"
     },
     {
       "id": "agents_r0_\u6587\u6863\u4e0e\u7eaf\u5c55\u793a",
@@ -6423,6 +6519,28 @@
       "source_location": "L20"
     },
     {
+      "id": "sandbox_package_dependencies_ajv",
+      "label": "ajv",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "scripts",
+      "file_type": "code",
+      "norm_label": "ajv",
+      "source_file": "sandbox/package.json",
+      "source_location": "L25"
+    },
+    {
+      "id": "sandbox_package_dependencies_ajv_formats",
+      "label": "ajv-formats",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "scripts",
+      "file_type": "code",
+      "norm_label": "ajv-formats",
+      "source_file": "sandbox/package.json",
+      "source_location": "L26"
+    },
+    {
       "id": "sandbox_package_dependencies_express",
       "label": "express",
       "_origin": "ast",
@@ -6431,7 +6549,7 @@
       "file_type": "code",
       "norm_label": "express",
       "source_file": "sandbox/package.json",
-      "source_location": "L25"
+      "source_location": "L27"
     },
     {
       "id": "sandbox_package_dependencies_viem",
@@ -6442,7 +6560,7 @@
       "file_type": "code",
       "norm_label": "viem",
       "source_file": "sandbox/package.json",
-      "source_location": "L26"
+      "source_location": "L28"
     },
     {
       "id": "sandbox_package_dependencies_x402_core",
@@ -6665,6 +6783,28 @@
       "source_location": "L3"
     },
     {
+      "id": "ajv",
+      "label": "ajv",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "scripts",
+      "file_type": "concept",
+      "norm_label": "ajv",
+      "source_file": "sandbox/package.json",
+      "source_location": "L25"
+    },
+    {
+      "id": "ajv_formats",
+      "label": "ajv-formats",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "scripts",
+      "file_type": "concept",
+      "norm_label": "ajv-formats",
+      "source_file": "sandbox/package.json",
+      "source_location": "L26"
+    },
+    {
       "id": "express",
       "label": "express",
       "_origin": "ast",
@@ -6673,7 +6813,7 @@
       "file_type": "concept",
       "norm_label": "express",
       "source_file": "sandbox/package.json",
-      "source_location": "L25"
+      "source_location": "L27"
     },
     {
       "id": "viem",
@@ -6684,7 +6824,7 @@
       "file_type": "concept",
       "norm_label": "viem",
       "source_file": "sandbox/package.json",
-      "source_location": "L26"
+      "source_location": "L28"
     },
     {
       "id": "x402_core",
@@ -7237,11 +7377,22 @@
       "source_location": "L5"
     },
     {
+      "id": "sandbox_persistence",
+      "label": "persistence.mjs",
+      "_origin": "ast",
+      "community": 15,
+      "community_name": "SqliteLedger",
+      "file_type": "code",
+      "norm_label": "persistence.mjs",
+      "source_file": "sandbox/persistence.mjs",
+      "source_location": "L1"
+    },
+    {
       "id": "sandbox_x402_funded_probe",
       "label": "x402-funded-probe.mjs",
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402-wallet.mjs",
+      "community_name": "SqliteLedger",
       "file_type": "code",
       "norm_label": "x402-funded-probe.mjs",
       "source_file": "sandbox/x402-funded-probe.mjs",
@@ -7252,7 +7403,7 @@
       "label": "x402-merchant.mjs",
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402-wallet.mjs",
+      "community_name": "SqliteLedger",
       "file_type": "code",
       "norm_label": "x402-merchant.mjs",
       "source_file": "sandbox/x402-merchant.mjs",
@@ -7263,7 +7414,7 @@
       "label": "X402_FACILITATOR",
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402-wallet.mjs",
+      "community_name": "SqliteLedger",
       "file_type": "code",
       "norm_label": "x402_facilitator",
       "source_file": "sandbox/x402-merchant.mjs",
@@ -7274,7 +7425,7 @@
       "label": "X402_NETWORK",
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402-wallet.mjs",
+      "community_name": "SqliteLedger",
       "file_type": "code",
       "norm_label": "x402_network",
       "source_file": "sandbox/x402-merchant.mjs",
@@ -7285,7 +7436,7 @@
       "label": "X402_PRICE",
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402-wallet.mjs",
+      "community_name": "SqliteLedger",
       "file_type": "code",
       "norm_label": "x402_price",
       "source_file": "sandbox/x402-merchant.mjs",
@@ -7296,7 +7447,7 @@
       "label": "x402-probe.mjs",
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402-wallet.mjs",
+      "community_name": "SqliteLedger",
       "file_type": "code",
       "norm_label": "x402-probe.mjs",
       "source_file": "sandbox/x402-probe.mjs",
@@ -7307,7 +7458,7 @@
       "label": "capability",
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402-wallet.mjs",
+      "community_name": "SqliteLedger",
       "file_type": "code",
       "norm_label": "capability",
       "source_file": "sandbox/x402-probe.mjs",
@@ -7318,7 +7469,7 @@
       "label": "challenge",
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402-wallet.mjs",
+      "community_name": "SqliteLedger",
       "file_type": "code",
       "norm_label": "challenge",
       "source_file": "sandbox/x402-probe.mjs",
@@ -7329,7 +7480,7 @@
       "label": "encoded",
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402-wallet.mjs",
+      "community_name": "SqliteLedger",
       "file_type": "code",
       "norm_label": "encoded",
       "source_file": "sandbox/x402-probe.mjs",
@@ -7340,7 +7491,7 @@
       "label": "result",
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402-wallet.mjs",
+      "community_name": "SqliteLedger",
       "file_type": "code",
       "norm_label": "result",
       "source_file": "sandbox/x402-probe.mjs",
@@ -7351,7 +7502,7 @@
       "label": "x402-server.mjs",
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402-wallet.mjs",
+      "community_name": "SqliteLedger",
       "file_type": "code",
       "norm_label": "x402-server.mjs",
       "source_file": "sandbox/x402-server.mjs",
@@ -7362,7 +7513,7 @@
       "label": "x402.test.mjs",
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402-wallet.mjs",
+      "community_name": "SqliteLedger",
       "file_type": "code",
       "norm_label": "x402.test.mjs",
       "source_file": "sandbox/x402.test.mjs",
@@ -7373,7 +7524,7 @@
       "label": "facilitatorClient",
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402-wallet.mjs",
+      "community_name": "SqliteLedger",
       "file_type": "code",
       "norm_label": "facilitatorclient",
       "source_file": "sandbox/x402.test.mjs",
@@ -7384,7 +7535,7 @@
       "label": "x402-wallet.mjs",
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402-wallet.mjs",
+      "community_name": "SqliteLedger",
       "file_type": "code",
       "norm_label": "x402-wallet.mjs",
       "source_file": "sandbox/x402-wallet.mjs",
@@ -7395,7 +7546,7 @@
       "label": "BASE_SEPOLIA_USDC",
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402-wallet.mjs",
+      "community_name": "SqliteLedger",
       "file_type": "code",
       "norm_label": "base_sepolia_usdc",
       "source_file": "sandbox/x402-wallet.mjs",
@@ -7406,7 +7557,7 @@
       "label": "KEYCHAIN_ACCOUNT",
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402-wallet.mjs",
+      "community_name": "SqliteLedger",
       "file_type": "code",
       "norm_label": "keychain_account",
       "source_file": "sandbox/x402-wallet.mjs",
@@ -7417,7 +7568,7 @@
       "label": "KEYCHAIN_SERVICE",
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402-wallet.mjs",
+      "community_name": "SqliteLedger",
       "file_type": "code",
       "norm_label": "keychain_service",
       "source_file": "sandbox/x402-wallet.mjs",
@@ -7428,7 +7579,7 @@
       "label": "MERCHANT_KEYCHAIN_ACCOUNT",
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402-wallet.mjs",
+      "community_name": "SqliteLedger",
       "file_type": "code",
       "norm_label": "merchant_keychain_account",
       "source_file": "sandbox/x402-wallet.mjs",
@@ -7439,7 +7590,7 @@
       "label": "x402-wallet-status.mjs",
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402-wallet.mjs",
+      "community_name": "SqliteLedger",
       "file_type": "code",
       "norm_label": "x402-wallet-status.mjs",
       "source_file": "sandbox/x402-wallet-status.mjs",
@@ -7709,6 +7860,28 @@
       "source_location": "L1"
     },
     {
+      "id": "prototype_components_ui_button_group",
+      "label": "button-group.tsx",
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "utils.ts",
+      "file_type": "code",
+      "norm_label": "button-group.tsx",
+      "source_file": "prototype/components/ui/button-group.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "prototype_components_ui_button_group_buttongroupvariants",
+      "label": "buttonGroupVariants",
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "utils.ts",
+      "file_type": "code",
+      "norm_label": "buttongroupvariants",
+      "source_file": "prototype/components/ui/button-group.tsx",
+      "source_location": "L8"
+    },
+    {
       "id": "prototype_components_ui_checkbox",
       "label": "checkbox.tsx",
       "_origin": "ast",
@@ -7717,39 +7890,6 @@
       "file_type": "code",
       "norm_label": "checkbox.tsx",
       "source_file": "prototype/components/ui/checkbox.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "prototype_components_ui_hover_card",
-      "label": "hover-card.tsx",
-      "_origin": "ast",
-      "community": 17,
-      "community_name": "utils.ts",
-      "file_type": "code",
-      "norm_label": "hover-card.tsx",
-      "source_file": "prototype/components/ui/hover-card.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "prototype_components_ui_input_otp",
-      "label": "input-otp.tsx",
-      "_origin": "ast",
-      "community": 17,
-      "community_name": "utils.ts",
-      "file_type": "code",
-      "norm_label": "input-otp.tsx",
-      "source_file": "prototype/components/ui/input-otp.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "prototype_components_ui_kbd",
-      "label": "kbd.tsx",
-      "_origin": "ast",
-      "community": 17,
-      "community_name": "utils.ts",
-      "file_type": "code",
-      "norm_label": "kbd.tsx",
-      "source_file": "prototype/components/ui/kbd.tsx",
       "source_location": "L1"
     },
     {
@@ -7764,6 +7904,28 @@
       "source_location": "L1"
     },
     {
+      "id": "prototype_components_ui_resizable",
+      "label": "resizable.tsx",
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "utils.ts",
+      "file_type": "code",
+      "norm_label": "resizable.tsx",
+      "source_file": "prototype/components/ui/resizable.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "prototype_components_ui_separator",
+      "label": "separator.tsx",
+      "_origin": "ast",
+      "community": 17,
+      "community_name": "utils.ts",
+      "file_type": "code",
+      "norm_label": "separator.tsx",
+      "source_file": "prototype/components/ui/separator.tsx",
+      "source_location": "L1"
+    },
+    {
       "id": "prototype_components_ui_slider",
       "label": "slider.tsx",
       "_origin": "ast",
@@ -7772,17 +7934,6 @@
       "file_type": "code",
       "norm_label": "slider.tsx",
       "source_file": "prototype/components/ui/slider.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "prototype_components_ui_spinner",
-      "label": "spinner.tsx",
-      "_origin": "ast",
-      "community": 17,
-      "community_name": "utils.ts",
-      "file_type": "code",
-      "norm_label": "spinner.tsx",
-      "source_file": "prototype/components/ui/spinner.tsx",
       "source_location": "L1"
     },
     {
@@ -8127,6 +8278,61 @@
       "source_location": "L1"
     },
     {
+      "id": "sandbox_api_contract",
+      "label": "api-contract.mjs",
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "ApiError",
+      "file_type": "code",
+      "norm_label": "api-contract.mjs",
+      "source_file": "sandbox/api-contract.mjs",
+      "source_location": "L1"
+    },
+    {
+      "id": "sandbox_api_contract_ajv",
+      "label": "ajv",
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "ApiError",
+      "file_type": "code",
+      "norm_label": "ajv",
+      "source_file": "sandbox/api-contract.mjs",
+      "source_location": "L110"
+    },
+    {
+      "id": "sandbox_api_contract_amount",
+      "label": "amount",
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "ApiError",
+      "file_type": "code",
+      "norm_label": "amount",
+      "source_file": "sandbox/api-contract.mjs",
+      "source_location": "L10"
+    },
+    {
+      "id": "sandbox_api_contract_schemas",
+      "label": "schemas",
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "ApiError",
+      "file_type": "code",
+      "norm_label": "schemas",
+      "source_file": "sandbox/api-contract.mjs",
+      "source_location": "L20"
+    },
+    {
+      "id": "sandbox_api_contract_validators",
+      "label": "validators",
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "ApiError",
+      "file_type": "code",
+      "norm_label": "validators",
+      "source_file": "sandbox/api-contract.mjs",
+      "source_location": "L112"
+    },
+    {
       "id": "sandbox_domain",
       "label": "domain.mjs",
       "_origin": "ast",
@@ -8168,17 +8374,6 @@
       "file_type": "code",
       "norm_label": "http.test.mjs",
       "source_file": "sandbox/http.test.mjs",
-      "source_location": "L1"
-    },
-    {
-      "id": "sandbox_persistence",
-      "label": "persistence.mjs",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "ApiError",
-      "file_type": "code",
-      "norm_label": "persistence.mjs",
-      "source_file": "sandbox/persistence.mjs",
       "source_location": "L1"
     },
     {
@@ -8520,28 +8715,6 @@
       "source_location": "L7"
     },
     {
-      "id": "prototype_components_ui_button_group",
-      "label": "button-group.tsx",
-      "_origin": "ast",
-      "community": 22,
-      "community_name": "item.tsx",
-      "file_type": "code",
-      "norm_label": "button-group.tsx",
-      "source_file": "prototype/components/ui/button-group.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "prototype_components_ui_button_group_buttongroupvariants",
-      "label": "buttonGroupVariants",
-      "_origin": "ast",
-      "community": 22,
-      "community_name": "item.tsx",
-      "file_type": "code",
-      "norm_label": "buttongroupvariants",
-      "source_file": "prototype/components/ui/button-group.tsx",
-      "source_location": "L8"
-    },
-    {
       "id": "prototype_components_ui_item",
       "label": "item.tsx",
       "_origin": "ast",
@@ -8573,17 +8746,6 @@
       "norm_label": "itemvariants",
       "source_file": "prototype/components/ui/item.tsx",
       "source_location": "L36"
-    },
-    {
-      "id": "prototype_components_ui_separator",
-      "label": "separator.tsx",
-      "_origin": "ast",
-      "community": 22,
-      "community_name": "item.tsx",
-      "file_type": "code",
-      "norm_label": "separator.tsx",
-      "source_file": "prototype/components/ui/separator.tsx",
-      "source_location": "L1"
     },
     {
       "id": "github_pull_request_template",
@@ -8655,7 +8817,7 @@
       "node_kind": "heading",
       "norm_label": "14. \u6b8b\u4f59\u98ce\u9669\u4e0e\u540e\u7eed\u5de5\u4f5c",
       "source_file": ".github/pull_request_template.md",
-      "source_location": "L200"
+      "source_location": "L201"
     },
     {
       "id": "github_pull_request_template_15_\u63d0\u4ea4\u8005\u6700\u7ec8\u786e\u8ba4",
@@ -8667,7 +8829,7 @@
       "node_kind": "heading",
       "norm_label": "15. \u63d0\u4ea4\u8005\u6700\u7ec8\u786e\u8ba4",
       "source_file": ".github/pull_request_template.md",
-      "source_location": "L206"
+      "source_location": "L207"
     },
     {
       "id": "github_pull_request_template_1_\u53d8\u66f4\u6458\u8981",
@@ -9054,15 +9216,256 @@
       "source_location": "L108"
     },
     {
-      "id": "prototype_components_ui_breadcrumb",
-      "label": "breadcrumb.tsx",
+      "id": "docs_03_technical_phase0_epic1_external_agent_integration_10_\u6062\u590d\u7b56\u7565",
+      "label": "10. \u6062\u590d\u7b56\u7565",
       "_origin": "ast",
       "community": 25,
-      "community_name": "breadcrumb.tsx",
-      "file_type": "code",
-      "norm_label": "breadcrumb.tsx",
-      "source_file": "prototype/components/ui/breadcrumb.tsx",
+      "community_name": "Phase 0 Epic 1\uff1aExternal Agent Transaction Integration & Reliability",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "10. \u6062\u590d\u7b56\u7565",
+      "source_file": "docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md",
+      "source_location": "L145"
+    },
+    {
+      "id": "docs_03_technical_phase0_epic1_external_agent_integration_11_\u540e\u7eed\u95e8\u69db",
+      "label": "11. \u540e\u7eed\u95e8\u69db",
+      "_origin": "ast",
+      "community": 25,
+      "community_name": "Phase 0 Epic 1\uff1aExternal Agent Transaction Integration & Reliability",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "11. \u540e\u7eed\u95e8\u69db",
+      "source_file": "docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md",
+      "source_location": "L152"
+    },
+    {
+      "id": "docs_03_technical_phase0_epic1_external_agent_integration_1_\u76ee\u6807",
+      "label": "1. \u76ee\u6807",
+      "_origin": "ast",
+      "community": 25,
+      "community_name": "Phase 0 Epic 1\uff1aExternal Agent Transaction Integration & Reliability",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "1. \u76ee\u6807",
+      "source_file": "docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md",
+      "source_location": "L8"
+    },
+    {
+      "id": "docs_03_technical_phase0_epic1_external_agent_integration_2_owner",
+      "label": "2. Owner",
+      "_origin": "ast",
+      "community": 25,
+      "community_name": "Phase 0 Epic 1\uff1aExternal Agent Transaction Integration & Reliability",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "2. owner",
+      "source_file": "docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md",
+      "source_location": "L14"
+    },
+    {
+      "id": "docs_03_technical_phase0_epic1_external_agent_integration_3_\u7528\u6237\u95ed\u73af",
+      "label": "3. \u7528\u6237\u95ed\u73af",
+      "_origin": "ast",
+      "community": 25,
+      "community_name": "Phase 0 Epic 1\uff1aExternal Agent Transaction Integration & Reliability",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "3. \u7528\u6237\u95ed\u73af",
+      "source_file": "docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md",
+      "source_location": "L25"
+    },
+    {
+      "id": "docs_03_technical_phase0_epic1_external_agent_integration_4_\u8303\u56f4",
+      "label": "4. \u8303\u56f4",
+      "_origin": "ast",
+      "community": 25,
+      "community_name": "Phase 0 Epic 1\uff1aExternal Agent Transaction Integration & Reliability",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "4. \u8303\u56f4",
+      "source_file": "docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md",
+      "source_location": "L40"
+    },
+    {
+      "id": "docs_03_technical_phase0_epic1_external_agent_integration_5_\u660e\u786e\u4e0d\u505a",
+      "label": "5. \u660e\u786e\u4e0d\u505a",
+      "_origin": "ast",
+      "community": 25,
+      "community_name": "Phase 0 Epic 1\uff1aExternal Agent Transaction Integration & Reliability",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "5. \u660e\u786e\u4e0d\u505a",
+      "source_file": "docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md",
+      "source_location": "L80"
+    },
+    {
+      "id": "docs_03_technical_phase0_epic1_external_agent_integration_6_\u63a5\u53e3\u4e0e\u72b6\u6001\u5951\u7ea6",
+      "label": "6. \u63a5\u53e3\u4e0e\u72b6\u6001\u5951\u7ea6",
+      "_origin": "ast",
+      "community": 25,
+      "community_name": "Phase 0 Epic 1\uff1aExternal Agent Transaction Integration & Reliability",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "6. \u63a5\u53e3\u4e0e\u72b6\u6001\u5951\u7ea6",
+      "source_file": "docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md",
+      "source_location": "L88"
+    },
+    {
+      "id": "docs_03_technical_phase0_epic1_external_agent_integration_7_\u9a8c\u6536\u6807\u51c6",
+      "label": "7. \u9a8c\u6536\u6807\u51c6",
+      "_origin": "ast",
+      "community": 25,
+      "community_name": "Phase 0 Epic 1\uff1aExternal Agent Transaction Integration & Reliability",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "7. \u9a8c\u6536\u6807\u51c6",
+      "source_file": "docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md",
+      "source_location": "L97"
+    },
+    {
+      "id": "docs_03_technical_phase0_epic1_external_agent_integration_8_\u5f3a\u5236\u9a8c\u8bc1",
+      "label": "8. \u5f3a\u5236\u9a8c\u8bc1",
+      "_origin": "ast",
+      "community": 25,
+      "community_name": "Phase 0 Epic 1\uff1aExternal Agent Transaction Integration & Reliability",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "8. \u5f3a\u5236\u9a8c\u8bc1",
+      "source_file": "docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md",
+      "source_location": "L124"
+    },
+    {
+      "id": "docs_03_technical_phase0_epic1_external_agent_integration_9_\u5b8c\u6210\u95e8\u69db",
+      "label": "9. \u5b8c\u6210\u95e8\u69db",
+      "_origin": "ast",
+      "community": 25,
+      "community_name": "Phase 0 Epic 1\uff1aExternal Agent Transaction Integration & Reliability",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "9. \u5b8c\u6210\u95e8\u69db",
+      "source_file": "docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md",
+      "source_location": "L135"
+    },
+    {
+      "id": "docs_03_technical_phase0_epic1_external_agent_integration_e1_0_\u51bb\u7ed3_transaction_api_v1_\u5df2\u5b8c\u6210",
+      "label": "E1.0 \u2014 \u51bb\u7ed3 Transaction API v1\uff08\u5df2\u5b8c\u6210\uff09",
+      "_origin": "ast",
+      "community": 25,
+      "community_name": "Phase 0 Epic 1\uff1aExternal Agent Transaction Integration & Reliability",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "e1.0 \u2014 \u51bb\u7ed3 transaction api v1(\u5df2\u5b8c\u6210)",
+      "source_file": "docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md",
+      "source_location": "L42"
+    },
+    {
+      "id": "docs_03_technical_phase0_epic1_external_agent_integration_e1_1_webhook_\u53ef\u9760\u6027\u95ed\u73af",
+      "label": "E1.1 \u2014 Webhook \u53ef\u9760\u6027\u95ed\u73af",
+      "_origin": "ast",
+      "community": 25,
+      "community_name": "Phase 0 Epic 1\uff1aExternal Agent Transaction Integration & Reliability",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "e1.1 \u2014 webhook \u53ef\u9760\u6027\u95ed\u73af",
+      "source_file": "docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md",
+      "source_location": "L51"
+    },
+    {
+      "id": "docs_03_technical_phase0_epic1_external_agent_integration_e1_2_\u4ea4\u6613\u94fe\u8def\u53ef\u89c2\u6d4b\u6027",
+      "label": "E1.2 \u2014 \u4ea4\u6613\u94fe\u8def\u53ef\u89c2\u6d4b\u6027",
+      "_origin": "ast",
+      "community": 25,
+      "community_name": "Phase 0 Epic 1\uff1aExternal Agent Transaction Integration & Reliability",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "e1.2 \u2014 \u4ea4\u6613\u94fe\u8def\u53ef\u89c2\u6d4b\u6027",
+      "source_file": "docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md",
+      "source_location": "L58"
+    },
+    {
+      "id": "docs_03_technical_phase0_epic1_external_agent_integration_e1_3_x402_testnet_\u5931\u8d25\u56de\u5f52",
+      "label": "E1.3 \u2014 x402 Testnet \u5931\u8d25\u56de\u5f52",
+      "_origin": "ast",
+      "community": 25,
+      "community_name": "Phase 0 Epic 1\uff1aExternal Agent Transaction Integration & Reliability",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "e1.3 \u2014 x402 testnet \u5931\u8d25\u56de\u5f52",
+      "source_file": "docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md",
+      "source_location": "L65"
+    },
+    {
+      "id": "docs_03_technical_phase0_epic1_external_agent_integration_e1_4_\u9996\u4e2a\u5916\u90e8_agent_\u63a5\u5165\u6837\u4f8b",
+      "label": "E1.4 \u2014 \u9996\u4e2a\u5916\u90e8 Agent \u63a5\u5165\u6837\u4f8b",
+      "_origin": "ast",
+      "community": 25,
+      "community_name": "Phase 0 Epic 1\uff1aExternal Agent Transaction Integration & Reliability",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "e1.4 \u2014 \u9996\u4e2a\u5916\u90e8 agent \u63a5\u5165\u6837\u4f8b",
+      "source_file": "docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md",
+      "source_location": "L72"
+    },
+    {
+      "id": "docs_03_technical_phase0_epic1_external_agent_integration_phase_0_epic_1_external_agent_transaction_integration_reliability",
+      "label": "Phase 0 Epic 1\uff1aExternal Agent Transaction Integration & Reliability",
+      "_origin": "ast",
+      "community": 25,
+      "community_name": "Phase 0 Epic 1\uff1aExternal Agent Transaction Integration & Reliability",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "phase 0 epic 1:external agent transaction integration & reliability",
+      "source_file": "docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md",
       "source_location": "L1"
+    },
+    {
+      "id": "docs_03_technical_phase0_epic1_external_agent_integration_x402",
+      "label": "x402",
+      "_origin": "ast",
+      "community": 25,
+      "community_name": "Phase 0 Epic 1\uff1aExternal Agent Transaction Integration & Reliability",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "x402",
+      "source_file": "docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md",
+      "source_location": "L112"
+    },
+    {
+      "id": "docs_03_technical_phase0_epic1_external_agent_integration_\u4ea7\u54c1\u4e0e\u5f00\u53d1\u8005\u4f53\u9a8c",
+      "label": "\u4ea7\u54c1\u4e0e\u5f00\u53d1\u8005\u4f53\u9a8c",
+      "_origin": "ast",
+      "community": 25,
+      "community_name": "Phase 0 Epic 1\uff1aExternal Agent Transaction Integration & Reliability",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "\u4ea7\u54c1\u4e0e\u5f00\u53d1\u8005\u4f53\u9a8c",
+      "source_file": "docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md",
+      "source_location": "L118"
+    },
+    {
+      "id": "docs_03_technical_phase0_epic1_external_agent_integration_\u53ef\u9760\u6027",
+      "label": "\u53ef\u9760\u6027",
+      "_origin": "ast",
+      "community": 25,
+      "community_name": "Phase 0 Epic 1\uff1aExternal Agent Transaction Integration & Reliability",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "\u53ef\u9760\u6027",
+      "source_file": "docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md",
+      "source_location": "L105"
+    },
+    {
+      "id": "docs_03_technical_phase0_epic1_external_agent_integration_\u5951\u7ea6",
+      "label": "\u5951\u7ea6",
+      "_origin": "ast",
+      "community": 25,
+      "community_name": "Phase 0 Epic 1\uff1aExternal Agent Transaction Integration & Reliability",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "\u5951\u7ea6",
+      "source_file": "docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md",
+      "source_location": "L99"
     },
     {
       "id": "prototype_components_ui_context_menu",
@@ -9264,15 +9667,70 @@
       "source_location": "L1"
     },
     {
-      "id": "prototype_components_ui_alert_dialog",
-      "label": "alert-dialog.tsx",
+      "id": "prototype_components_ui_input",
+      "label": "input.tsx",
       "_origin": "ast",
       "community": 30,
-      "community_name": "alert-dialog.tsx",
+      "community_name": "react",
       "file_type": "code",
-      "norm_label": "alert-dialog.tsx",
-      "source_file": "prototype/components/ui/alert-dialog.tsx",
+      "norm_label": "input.tsx",
+      "source_file": "prototype/components/ui/input.tsx",
       "source_location": "L1"
+    },
+    {
+      "id": "prototype_components_ui_input_otp",
+      "label": "input-otp.tsx",
+      "_origin": "ast",
+      "community": 30,
+      "community_name": "react",
+      "file_type": "code",
+      "norm_label": "input-otp.tsx",
+      "source_file": "prototype/components/ui/input-otp.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "prototype_components_ui_message",
+      "label": "message.tsx",
+      "_origin": "ast",
+      "community": 30,
+      "community_name": "react",
+      "file_type": "code",
+      "norm_label": "message.tsx",
+      "source_file": "prototype/components/ui/message.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "prototype_components_ui_native_select",
+      "label": "native-select.tsx",
+      "_origin": "ast",
+      "community": 30,
+      "community_name": "react",
+      "file_type": "code",
+      "norm_label": "native-select.tsx",
+      "source_file": "prototype/components/ui/native-select.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "prototype_components_ui_scroll_area",
+      "label": "scroll-area.tsx",
+      "_origin": "ast",
+      "community": 30,
+      "community_name": "react",
+      "file_type": "code",
+      "norm_label": "scroll-area.tsx",
+      "source_file": "prototype/components/ui/scroll-area.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "ref_react",
+      "label": "react",
+      "_origin": "ast",
+      "community": 30,
+      "community_name": "react",
+      "file_type": "concept",
+      "norm_label": "react",
+      "source_file": "prototype/.oxlintrc.json",
+      "source_location": "L3"
     },
     {
       "id": "prototype_components_ui_chart",
@@ -9330,28 +9788,40 @@
       "source_location": "L1"
     },
     {
-      "id": "docs_03_technical_api_contract_v0_1_10_webhook_\u4e8b\u4ef6",
-      "label": "10. Webhook \u4e8b\u4ef6",
+      "id": "docs_03_technical_api_contract_v0_1_10_transaction_\u5206\u9875",
+      "label": "10. Transaction \u5206\u9875",
       "_origin": "ast",
       "community": 33,
       "community_name": "BU2 Agent Payment API \u5951\u7ea6 v0.1",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "10. webhook \u4e8b\u4ef6",
+      "norm_label": "10. transaction \u5206\u9875",
       "source_file": "docs/03-technical/API_CONTRACT_V0.1.md",
-      "source_location": "L137"
+      "source_location": "L142"
     },
     {
-      "id": "docs_03_technical_api_contract_v0_1_11_\u7248\u672c\u8fb9\u754c",
-      "label": "11. \u7248\u672c\u8fb9\u754c",
+      "id": "docs_03_technical_api_contract_v0_1_11_webhook_\u4e8b\u4ef6",
+      "label": "11. Webhook \u4e8b\u4ef6",
       "_origin": "ast",
       "community": 33,
       "community_name": "BU2 Agent Payment API \u5951\u7ea6 v0.1",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "11. \u7248\u672c\u8fb9\u754c",
+      "norm_label": "11. webhook \u4e8b\u4ef6",
       "source_file": "docs/03-technical/API_CONTRACT_V0.1.md",
-      "source_location": "L152"
+      "source_location": "L163"
+    },
+    {
+      "id": "docs_03_technical_api_contract_v0_1_12_\u7248\u672c\u8fb9\u754c",
+      "label": "12. \u7248\u672c\u8fb9\u754c",
+      "_origin": "ast",
+      "community": 33,
+      "community_name": "BU2 Agent Payment API \u5951\u7ea6 v0.1",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "12. \u7248\u672c\u8fb9\u754c",
+      "source_file": "docs/03-technical/API_CONTRACT_V0.1.md",
+      "source_location": "L178"
     },
     {
       "id": "docs_03_technical_api_contract_v0_1_1_\u8bbe\u8ba1\u539f\u5219",
@@ -9375,7 +9845,7 @@
       "node_kind": "heading",
       "norm_label": "2. \u7a33\u5b9a\u8d44\u6e90",
       "source_file": "docs/03-technical/API_CONTRACT_V0.1.md",
-      "source_location": "L16"
+      "source_location": "L19"
     },
     {
       "id": "docs_03_technical_api_contract_v0_1_3_paymentintent_\u6700\u5c0f\u8f93\u5165",
@@ -9387,7 +9857,7 @@
       "node_kind": "heading",
       "norm_label": "3. paymentintent \u6700\u5c0f\u8f93\u5165",
       "source_file": "docs/03-technical/API_CONTRACT_V0.1.md",
-      "source_location": "L31"
+      "source_location": "L34"
     },
     {
       "id": "docs_03_technical_api_contract_v0_1_4_\u72b6\u6001\u673a",
@@ -9399,7 +9869,7 @@
       "node_kind": "heading",
       "norm_label": "4. \u72b6\u6001\u673a",
       "source_file": "docs/03-technical/API_CONTRACT_V0.1.md",
-      "source_location": "L51"
+      "source_location": "L54"
     },
     {
       "id": "docs_03_technical_api_contract_v0_1_5_\u6388\u6743\u7ed3\u679c",
@@ -9411,7 +9881,7 @@
       "node_kind": "heading",
       "norm_label": "5. \u6388\u6743\u7ed3\u679c",
       "source_file": "docs/03-technical/API_CONTRACT_V0.1.md",
-      "source_location": "L78"
+      "source_location": "L81"
     },
     {
       "id": "docs_03_technical_api_contract_v0_1_6_\u5e42\u7b49\u5951\u7ea6",
@@ -9423,7 +9893,7 @@
       "node_kind": "heading",
       "norm_label": "6. \u5e42\u7b49\u5951\u7ea6",
       "source_file": "docs/03-technical/API_CONTRACT_V0.1.md",
-      "source_location": "L94"
+      "source_location": "L97"
     },
     {
       "id": "docs_03_technical_api_contract_v0_1_7_\u91d1\u989d\u4e0e\u5bf9\u8d26",
@@ -9435,7 +9905,7 @@
       "node_kind": "heading",
       "norm_label": "7. \u91d1\u989d\u4e0e\u5bf9\u8d26",
       "source_file": "docs/03-technical/API_CONTRACT_V0.1.md",
-      "source_location": "L101"
+      "source_location": "L104"
     },
     {
       "id": "docs_03_technical_api_contract_v0_1_8_receipt",
@@ -9447,7 +9917,7 @@
       "node_kind": "heading",
       "norm_label": "8. receipt",
       "source_file": "docs/03-technical/API_CONTRACT_V0.1.md",
-      "source_location": "L109"
+      "source_location": "L112"
     },
     {
       "id": "docs_03_technical_api_contract_v0_1_9_\u9519\u8bef\u6a21\u578b",
@@ -9459,7 +9929,7 @@
       "node_kind": "heading",
       "norm_label": "9. \u9519\u8bef\u6a21\u578b",
       "source_file": "docs/03-technical/API_CONTRACT_V0.1.md",
-      "source_location": "L121"
+      "source_location": "L124"
     },
     {
       "id": "docs_03_technical_api_contract_v0_1_bu2_agent_payment_api_\u5951\u7ea6_v0_1",
@@ -9511,7 +9981,7 @@
       "label": "field.tsx",
       "_origin": "ast",
       "community": 35,
-      "community_name": "react",
+      "community_name": "field.tsx",
       "file_type": "code",
       "norm_label": "field.tsx",
       "source_file": "prototype/components/ui/field.tsx",
@@ -9522,7 +9992,7 @@
       "label": "fieldVariants",
       "_origin": "ast",
       "community": 35,
-      "community_name": "react",
+      "community_name": "field.tsx",
       "file_type": "code",
       "norm_label": "fieldvariants",
       "source_file": "prototype/components/ui/field.tsx",
@@ -9533,33 +10003,11 @@
       "label": "label.tsx",
       "_origin": "ast",
       "community": 35,
-      "community_name": "react",
+      "community_name": "field.tsx",
       "file_type": "code",
       "norm_label": "label.tsx",
       "source_file": "prototype/components/ui/label.tsx",
       "source_location": "L1"
-    },
-    {
-      "id": "prototype_components_ui_scroll_area",
-      "label": "scroll-area.tsx",
-      "_origin": "ast",
-      "community": 35,
-      "community_name": "react",
-      "file_type": "code",
-      "norm_label": "scroll-area.tsx",
-      "source_file": "prototype/components/ui/scroll-area.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "ref_react",
-      "label": "react",
-      "_origin": "ast",
-      "community": 35,
-      "community_name": "react",
-      "file_type": "concept",
-      "norm_label": "react",
-      "source_file": "prototype/.oxlintrc.json",
-      "source_location": "L3"
     },
     {
       "id": "prototype_oxfmtrc",
@@ -9852,6 +10300,30 @@
       "source_location": "L141"
     },
     {
+      "id": "verification_e1_0_transaction_api_v1_\u51bb\u7ed3\u9a8c\u8bc1",
+      "label": "E1.0 Transaction API v1 \u51bb\u7ed3\u9a8c\u8bc1",
+      "_origin": "ast",
+      "community": 38,
+      "community_name": "BU2 Product v0.1 \u9a8c\u8bc1\u7ed3\u8bba",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "e1.0 transaction api v1 \u51bb\u7ed3\u9a8c\u8bc1",
+      "source_file": "verification.md",
+      "source_location": "L211"
+    },
+    {
+      "id": "verification_phase_0_epic_1_\u51bb\u7ed3\u9a8c\u8bc1",
+      "label": "Phase 0 Epic 1 \u51bb\u7ed3\u9a8c\u8bc1",
+      "_origin": "ast",
+      "community": 38,
+      "community_name": "BU2 Product v0.1 \u9a8c\u8bc1\u7ed3\u8bba",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "phase 0 epic 1 \u51bb\u7ed3\u9a8c\u8bc1",
+      "source_file": "verification.md",
+      "source_location": "L157"
+    },
+    {
       "id": "verification_phase_0_\u5f00\u53d1\u51c6\u5165\u7ed3\u8bba",
       "label": "Phase 0 \u5f00\u53d1\u51c6\u5165\u7ed3\u8bba",
       "_origin": "ast",
@@ -9861,7 +10333,19 @@
       "node_kind": "heading",
       "norm_label": "phase 0 \u5f00\u53d1\u51c6\u5165\u7ed3\u8bba",
       "source_file": "verification.md",
-      "source_location": "L157"
+      "source_location": "L174"
+    },
+    {
+      "id": "verification_readme_\u91cd\u6784\u4e0e\u5355\u4eba_r3_\u6cbb\u7406\u9a8c\u8bc1",
+      "label": "README \u91cd\u6784\u4e0e\u5355\u4eba R3 \u6cbb\u7406\u9a8c\u8bc1",
+      "_origin": "ast",
+      "community": 38,
+      "community_name": "BU2 Product v0.1 \u9a8c\u8bc1\u7ed3\u8bba",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "readme \u91cd\u6784\u4e0e\u5355\u4eba r3 \u6cbb\u7406\u9a8c\u8bc1",
+      "source_file": "verification.md",
+      "source_location": "L197"
     },
     {
       "id": "verification_reference_server_v0_1_\u9a8c\u8bc1",
@@ -9960,15 +10444,100 @@
       "source_location": "L52"
     },
     {
-      "id": "prototype_components_ui_message_scroller",
-      "label": "message-scroller.tsx",
+      "id": "verification_\u91d1\u878d\u4e1a\u52a1_pr_\u6a21\u677f\u9a8c\u8bc1",
+      "label": "\u91d1\u878d\u4e1a\u52a1 PR \u6a21\u677f\u9a8c\u8bc1",
+      "_origin": "ast",
+      "community": 38,
+      "community_name": "BU2 Product v0.1 \u9a8c\u8bc1\u7ed3\u8bba",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "\u91d1\u878d\u4e1a\u52a1 pr \u6a21\u677f\u9a8c\u8bc1",
+      "source_file": "verification.md",
+      "source_location": "L186"
+    },
+    {
+      "id": "docs_02_product_product_strategy_3_1_\u5148\u6cbb\u7406_\u540e\u652f\u4ed8",
+      "label": "3.1 \u5148\u6cbb\u7406\uff0c\u540e\u652f\u4ed8",
       "_origin": "ast",
       "community": 39,
-      "community_name": "message-scroller.tsx",
-      "file_type": "code",
-      "norm_label": "message-scroller.tsx",
-      "source_file": "prototype/components/ui/message-scroller.tsx",
-      "source_location": "L1"
+      "community_name": "3. \u4ea7\u54c1\u539f\u5219",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "3.1 \u5148\u6cbb\u7406,\u540e\u652f\u4ed8",
+      "source_file": "docs/02-product/PRODUCT_STRATEGY.md",
+      "source_location": "L28"
+    },
+    {
+      "id": "docs_02_product_product_strategy_3_2_\u6a21\u578b\u63d0\u51fa\u7406\u7531_\u89c4\u5219\u51b3\u5b9a\u6743\u9650",
+      "label": "3.2 \u6a21\u578b\u63d0\u51fa\u7406\u7531\uff0c\u89c4\u5219\u51b3\u5b9a\u6743\u9650",
+      "_origin": "ast",
+      "community": 39,
+      "community_name": "3. \u4ea7\u54c1\u539f\u5219",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "3.2 \u6a21\u578b\u63d0\u51fa\u7406\u7531,\u89c4\u5219\u51b3\u5b9a\u6743\u9650",
+      "source_file": "docs/02-product/PRODUCT_STRATEGY.md",
+      "source_location": "L32"
+    },
+    {
+      "id": "docs_02_product_product_strategy_3_3_\u9ed8\u8ba4\u6700\u5c0f\u6743\u9650",
+      "label": "3.3 \u9ed8\u8ba4\u6700\u5c0f\u6743\u9650",
+      "_origin": "ast",
+      "community": 39,
+      "community_name": "3. \u4ea7\u54c1\u539f\u5219",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "3.3 \u9ed8\u8ba4\u6700\u5c0f\u6743\u9650",
+      "source_file": "docs/02-product/PRODUCT_STRATEGY.md",
+      "source_location": "L36"
+    },
+    {
+      "id": "docs_02_product_product_strategy_3_4_\u4efb\u52a1\u662f\u6700\u5c0f\u5f52\u56e0\u5355\u5143",
+      "label": "3.4 \u4efb\u52a1\u662f\u6700\u5c0f\u5f52\u56e0\u5355\u5143",
+      "_origin": "ast",
+      "community": 39,
+      "community_name": "3. \u4ea7\u54c1\u539f\u5219",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "3.4 \u4efb\u52a1\u662f\u6700\u5c0f\u5f52\u56e0\u5355\u5143",
+      "source_file": "docs/02-product/PRODUCT_STRATEGY.md",
+      "source_location": "L40"
+    },
+    {
+      "id": "docs_02_product_product_strategy_3_5_\u534f\u8bae\u4e2d\u7acb",
+      "label": "3.5 \u534f\u8bae\u4e2d\u7acb",
+      "_origin": "ast",
+      "community": 39,
+      "community_name": "3. \u4ea7\u54c1\u539f\u5219",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "3.5 \u534f\u8bae\u4e2d\u7acb",
+      "source_file": "docs/02-product/PRODUCT_STRATEGY.md",
+      "source_location": "L44"
+    },
+    {
+      "id": "docs_02_product_product_strategy_3_6_\u8bc1\u636e\u4f18\u5148",
+      "label": "3.6 \u8bc1\u636e\u4f18\u5148",
+      "_origin": "ast",
+      "community": 39,
+      "community_name": "3. \u4ea7\u54c1\u539f\u5219",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "3.6 \u8bc1\u636e\u4f18\u5148",
+      "source_file": "docs/02-product/PRODUCT_STRATEGY.md",
+      "source_location": "L48"
+    },
+    {
+      "id": "docs_02_product_product_strategy_3_\u4ea7\u54c1\u539f\u5219",
+      "label": "3. \u4ea7\u54c1\u539f\u5219",
+      "_origin": "ast",
+      "community": 39,
+      "community_name": "3. \u4ea7\u54c1\u539f\u5219",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "3. \u4ea7\u54c1\u539f\u5219",
+      "source_file": "docs/02-product/PRODUCT_STRATEGY.md",
+      "source_location": "L26"
     },
     {
       "id": "prototype_components_ui_accordion",
@@ -9993,6 +10562,17 @@
       "source_location": "L1"
     },
     {
+      "id": "prototype_components_ui_breadcrumb",
+      "label": "breadcrumb.tsx",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "cn",
+      "file_type": "code",
+      "norm_label": "breadcrumb.tsx",
+      "source_file": "prototype/components/ui/breadcrumb.tsx",
+      "source_location": "L1"
+    },
+    {
       "id": "prototype_components_ui_card",
       "label": "card.tsx",
       "_origin": "ast",
@@ -10004,14 +10584,14 @@
       "source_location": "L1"
     },
     {
-      "id": "prototype_components_ui_message",
-      "label": "message.tsx",
+      "id": "prototype_components_ui_kbd",
+      "label": "kbd.tsx",
       "_origin": "ast",
       "community": 4,
       "community_name": "cn",
       "file_type": "code",
-      "norm_label": "message.tsx",
-      "source_file": "prototype/components/ui/message.tsx",
+      "norm_label": "kbd.tsx",
+      "source_file": "prototype/components/ui/kbd.tsx",
       "source_location": "L1"
     },
     {
@@ -10026,17 +10606,6 @@
       "source_location": "L1"
     },
     {
-      "id": "prototype_components_ui_resizable",
-      "label": "resizable.tsx",
-      "_origin": "ast",
-      "community": 4,
-      "community_name": "cn",
-      "file_type": "code",
-      "norm_label": "resizable.tsx",
-      "source_file": "prototype/components/ui/resizable.tsx",
-      "source_location": "L1"
-    },
-    {
       "id": "prototype_components_ui_select",
       "label": "select.tsx",
       "_origin": "ast",
@@ -10045,6 +10614,17 @@
       "file_type": "code",
       "norm_label": "select.tsx",
       "source_file": "prototype/components/ui/select.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "prototype_components_ui_spinner",
+      "label": "spinner.tsx",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "cn",
+      "file_type": "code",
+      "norm_label": "spinner.tsx",
+      "source_file": "prototype/components/ui/spinner.tsx",
       "source_location": "L1"
     },
     {
@@ -10179,18 +10759,6 @@
       "source_location": "L1"
     },
     {
-      "id": "docs_02_product_product_strategy",
-      "label": "PRODUCT_STRATEGY.md",
-      "_origin": "ast",
-      "community": 41,
-      "community_name": "BU2 \u4ea7\u54c1\u6218\u7565 v0.1",
-      "file_type": "document",
-      "node_kind": "page",
-      "norm_label": "product_strategy.md",
-      "source_file": "docs/02-product/PRODUCT_STRATEGY.md",
-      "source_location": "L1"
-    },
-    {
       "id": "docs_02_product_product_strategy_1_\u4ea7\u54c1\u613f\u666f",
       "label": "1. \u4ea7\u54c1\u613f\u666f",
       "_origin": "ast",
@@ -10213,90 +10781,6 @@
       "norm_label": "2. \u5f53\u524d\u4ea7\u54c1\u5207\u53e3",
       "source_file": "docs/02-product/PRODUCT_STRATEGY.md",
       "source_location": "L16"
-    },
-    {
-      "id": "docs_02_product_product_strategy_3_1_\u5148\u6cbb\u7406_\u540e\u652f\u4ed8",
-      "label": "3.1 \u5148\u6cbb\u7406\uff0c\u540e\u652f\u4ed8",
-      "_origin": "ast",
-      "community": 41,
-      "community_name": "BU2 \u4ea7\u54c1\u6218\u7565 v0.1",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "3.1 \u5148\u6cbb\u7406,\u540e\u652f\u4ed8",
-      "source_file": "docs/02-product/PRODUCT_STRATEGY.md",
-      "source_location": "L28"
-    },
-    {
-      "id": "docs_02_product_product_strategy_3_2_\u6a21\u578b\u63d0\u51fa\u7406\u7531_\u89c4\u5219\u51b3\u5b9a\u6743\u9650",
-      "label": "3.2 \u6a21\u578b\u63d0\u51fa\u7406\u7531\uff0c\u89c4\u5219\u51b3\u5b9a\u6743\u9650",
-      "_origin": "ast",
-      "community": 41,
-      "community_name": "BU2 \u4ea7\u54c1\u6218\u7565 v0.1",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "3.2 \u6a21\u578b\u63d0\u51fa\u7406\u7531,\u89c4\u5219\u51b3\u5b9a\u6743\u9650",
-      "source_file": "docs/02-product/PRODUCT_STRATEGY.md",
-      "source_location": "L32"
-    },
-    {
-      "id": "docs_02_product_product_strategy_3_3_\u9ed8\u8ba4\u6700\u5c0f\u6743\u9650",
-      "label": "3.3 \u9ed8\u8ba4\u6700\u5c0f\u6743\u9650",
-      "_origin": "ast",
-      "community": 41,
-      "community_name": "BU2 \u4ea7\u54c1\u6218\u7565 v0.1",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "3.3 \u9ed8\u8ba4\u6700\u5c0f\u6743\u9650",
-      "source_file": "docs/02-product/PRODUCT_STRATEGY.md",
-      "source_location": "L36"
-    },
-    {
-      "id": "docs_02_product_product_strategy_3_4_\u4efb\u52a1\u662f\u6700\u5c0f\u5f52\u56e0\u5355\u5143",
-      "label": "3.4 \u4efb\u52a1\u662f\u6700\u5c0f\u5f52\u56e0\u5355\u5143",
-      "_origin": "ast",
-      "community": 41,
-      "community_name": "BU2 \u4ea7\u54c1\u6218\u7565 v0.1",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "3.4 \u4efb\u52a1\u662f\u6700\u5c0f\u5f52\u56e0\u5355\u5143",
-      "source_file": "docs/02-product/PRODUCT_STRATEGY.md",
-      "source_location": "L40"
-    },
-    {
-      "id": "docs_02_product_product_strategy_3_5_\u534f\u8bae\u4e2d\u7acb",
-      "label": "3.5 \u534f\u8bae\u4e2d\u7acb",
-      "_origin": "ast",
-      "community": 41,
-      "community_name": "BU2 \u4ea7\u54c1\u6218\u7565 v0.1",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "3.5 \u534f\u8bae\u4e2d\u7acb",
-      "source_file": "docs/02-product/PRODUCT_STRATEGY.md",
-      "source_location": "L44"
-    },
-    {
-      "id": "docs_02_product_product_strategy_3_6_\u8bc1\u636e\u4f18\u5148",
-      "label": "3.6 \u8bc1\u636e\u4f18\u5148",
-      "_origin": "ast",
-      "community": 41,
-      "community_name": "BU2 \u4ea7\u54c1\u6218\u7565 v0.1",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "3.6 \u8bc1\u636e\u4f18\u5148",
-      "source_file": "docs/02-product/PRODUCT_STRATEGY.md",
-      "source_location": "L48"
-    },
-    {
-      "id": "docs_02_product_product_strategy_3_\u4ea7\u54c1\u539f\u5219",
-      "label": "3. \u4ea7\u54c1\u539f\u5219",
-      "_origin": "ast",
-      "community": 41,
-      "community_name": "BU2 \u4ea7\u54c1\u6218\u7565 v0.1",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "3. \u4ea7\u54c1\u539f\u5219",
-      "source_file": "docs/02-product/PRODUCT_STRATEGY.md",
-      "source_location": "L26"
     },
     {
       "id": "docs_02_product_product_strategy_4_1_mvp_\u8303\u56f4",
@@ -10743,11 +11227,66 @@
       "source_location": "L1"
     },
     {
+      "id": "prototype_components_ui_alert_dialog",
+      "label": "alert-dialog.tsx",
+      "_origin": "ast",
+      "community": 46,
+      "community_name": "alert-dialog.tsx",
+      "file_type": "code",
+      "norm_label": "alert-dialog.tsx",
+      "source_file": "prototype/components/ui/alert-dialog.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "prototype_components_ui_button",
+      "label": "button.tsx",
+      "_origin": "ast",
+      "community": 46,
+      "community_name": "alert-dialog.tsx",
+      "file_type": "code",
+      "norm_label": "button.tsx",
+      "source_file": "prototype/components/ui/button.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "prototype_components_ui_button_buttonvariants",
+      "label": "buttonVariants",
+      "_origin": "ast",
+      "community": 46,
+      "community_name": "alert-dialog.tsx",
+      "file_type": "code",
+      "norm_label": "buttonvariants",
+      "source_file": "prototype/components/ui/button.tsx",
+      "source_location": "L6"
+    },
+    {
+      "id": "prototype_components_ui_calendar",
+      "label": "calendar.tsx",
+      "_origin": "ast",
+      "community": 46,
+      "community_name": "alert-dialog.tsx",
+      "file_type": "code",
+      "norm_label": "calendar.tsx",
+      "source_file": "prototype/components/ui/calendar.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "prototype_components_ui_message_scroller",
+      "label": "message-scroller.tsx",
+      "_origin": "ast",
+      "community": 46,
+      "community_name": "alert-dialog.tsx",
+      "file_type": "code",
+      "norm_label": "message-scroller.tsx",
+      "source_file": "prototype/components/ui/message-scroller.tsx",
+      "source_location": "L1"
+    },
+    {
       "id": "prototype_components_ui_pagination",
       "label": "pagination.tsx",
       "_origin": "ast",
       "community": 46,
-      "community_name": "pagination.tsx",
+      "community_name": "alert-dialog.tsx",
       "file_type": "code",
       "norm_label": "pagination.tsx",
       "source_file": "prototype/components/ui/pagination.tsx",
@@ -10758,7 +11297,7 @@
       "label": "sandbox/README.md",
       "_origin": "ast",
       "community": 47,
-      "community_name": "BU2 Reference Server / x402 Sandbox v0.3",
+      "community_name": "BU2 Reference Server v0.4 / x402 Sandbox v0.3",
       "file_type": "document",
       "node_kind": "page",
       "norm_label": "sandbox/readme.md",
@@ -10766,14 +11305,14 @@
       "source_location": "L1"
     },
     {
-      "id": "sandbox_readme_bu2_reference_server_x402_sandbox_v0_3",
-      "label": "BU2 Reference Server / x402 Sandbox v0.3",
+      "id": "sandbox_readme_bu2_reference_server_v0_4_x402_sandbox_v0_3",
+      "label": "BU2 Reference Server v0.4 / x402 Sandbox v0.3",
       "_origin": "ast",
       "community": 47,
-      "community_name": "BU2 Reference Server / x402 Sandbox v0.3",
+      "community_name": "BU2 Reference Server v0.4 / x402 Sandbox v0.3",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "bu2 reference server / x402 sandbox v0.3",
+      "norm_label": "bu2 reference server v0.4 / x402 sandbox v0.3",
       "source_file": "sandbox/README.md",
       "source_location": "L1"
     },
@@ -10782,7 +11321,7 @@
       "label": "x402 \u6c99\u76d2\u5546\u6237",
       "_origin": "ast",
       "community": 47,
-      "community_name": "BU2 Reference Server / x402 Sandbox v0.3",
+      "community_name": "BU2 Reference Server v0.4 / x402 Sandbox v0.3",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "x402 \u6c99\u76d2\u5546\u6237",
@@ -10794,7 +11333,7 @@
       "label": "\u542f\u52a8",
       "_origin": "ast",
       "community": 47,
-      "community_name": "BU2 Reference Server / x402 Sandbox v0.3",
+      "community_name": "BU2 Reference Server v0.4 / x402 Sandbox v0.3",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "\u542f\u52a8",
@@ -10806,7 +11345,7 @@
       "label": "\u542f\u52a8\u5b8c\u6574 x402 BU2 \u94fe\u8def",
       "_origin": "ast",
       "community": 47,
-      "community_name": "BU2 Reference Server / x402 Sandbox v0.3",
+      "community_name": "BU2 Reference Server v0.4 / x402 Sandbox v0.3",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "\u542f\u52a8\u5b8c\u6574 x402 bu2 \u94fe\u8def",
@@ -10818,7 +11357,7 @@
       "label": "\u5b8c\u6574 Agent \u4ea4\u6613\u6f14\u793a",
       "_origin": "ast",
       "community": 47,
-      "community_name": "BU2 Reference Server / x402 Sandbox v0.3",
+      "community_name": "BU2 Reference Server v0.4 / x402 Sandbox v0.3",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "\u5b8c\u6574 agent \u4ea4\u6613\u6f14\u793a",
@@ -10830,7 +11369,7 @@
       "label": "\u672c\u673a\u6d4b\u8bd5\u94b1\u5305",
       "_origin": "ast",
       "community": 47,
-      "community_name": "BU2 Reference Server / x402 Sandbox v0.3",
+      "community_name": "BU2 Reference Server v0.4 / x402 Sandbox v0.3",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "\u672c\u673a\u6d4b\u8bd5\u94b1\u5305",
@@ -10842,7 +11381,7 @@
       "label": "\u6c99\u76d2\u8c03\u8bd5\u7aef\u70b9",
       "_origin": "ast",
       "community": 47,
-      "community_name": "BU2 Reference Server / x402 Sandbox v0.3",
+      "community_name": "BU2 Reference Server v0.4 / x402 Sandbox v0.3",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "\u6c99\u76d2\u8c03\u8bd5\u7aef\u70b9",
@@ -10854,7 +11393,7 @@
       "label": "\u6d4b\u8bd5",
       "_origin": "ast",
       "community": 47,
-      "community_name": "BU2 Reference Server / x402 Sandbox v0.3",
+      "community_name": "BU2 Reference Server v0.4 / x402 Sandbox v0.3",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "\u6d4b\u8bd5",
@@ -11018,48 +11557,52 @@
       "source_location": "L90"
     },
     {
-      "id": "prototype_components_ui_button",
-      "label": "button.tsx",
+      "id": "docs_02_product_transaction_p0_acceptance_bu2_transaction_first_p0_\u9a8c\u6536\u65b9\u6848",
+      "label": "BU2 Transaction-first P0 \u9a8c\u6536\u65b9\u6848",
       "_origin": "ast",
       "community": 49,
-      "community_name": "button.tsx",
-      "file_type": "code",
-      "norm_label": "button.tsx",
-      "source_file": "prototype/components/ui/button.tsx",
+      "community_name": "BU2 Transaction-first P0 \u9a8c\u6536\u65b9\u6848",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "bu2 transaction-first p0 \u9a8c\u6536\u65b9\u6848",
+      "source_file": "docs/02-product/TRANSACTION_P0_ACCEPTANCE.md",
       "source_location": "L1"
     },
     {
-      "id": "prototype_components_ui_button_buttonvariants",
-      "label": "buttonVariants",
+      "id": "docs_02_product_transaction_p0_acceptance_\u4e3b\u8def\u5f84",
+      "label": "\u4e3b\u8def\u5f84",
       "_origin": "ast",
       "community": 49,
-      "community_name": "button.tsx",
-      "file_type": "code",
-      "norm_label": "buttonvariants",
-      "source_file": "prototype/components/ui/button.tsx",
+      "community_name": "BU2 Transaction-first P0 \u9a8c\u6536\u65b9\u6848",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "\u4e3b\u8def\u5f84",
+      "source_file": "docs/02-product/TRANSACTION_P0_ACCEPTANCE.md",
       "source_location": "L6"
     },
     {
-      "id": "prototype_components_ui_calendar",
-      "label": "calendar.tsx",
+      "id": "docs_02_product_transaction_p0_acceptance_\u7ed3\u8bba\u89c4\u5219",
+      "label": "\u7ed3\u8bba\u89c4\u5219",
       "_origin": "ast",
       "community": 49,
-      "community_name": "button.tsx",
-      "file_type": "code",
-      "norm_label": "calendar.tsx",
-      "source_file": "prototype/components/ui/calendar.tsx",
-      "source_location": "L1"
+      "community_name": "BU2 Transaction-first P0 \u9a8c\u6536\u65b9\u6848",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "\u7ed3\u8bba\u89c4\u5219",
+      "source_file": "docs/02-product/TRANSACTION_P0_ACCEPTANCE.md",
+      "source_location": "L24"
     },
     {
-      "id": "prototype_components_ui_input",
-      "label": "input.tsx",
+      "id": "docs_02_product_transaction_p0_acceptance_\u8f85\u52a9\u8def\u5f84",
+      "label": "\u8f85\u52a9\u8def\u5f84",
       "_origin": "ast",
-      "community": 5,
-      "community_name": "sidebar.tsx",
-      "file_type": "code",
-      "norm_label": "input.tsx",
-      "source_file": "prototype/components/ui/input.tsx",
-      "source_location": "L1"
+      "community": 49,
+      "community_name": "BU2 Transaction-first P0 \u9a8c\u6536\u65b9\u6848",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "\u8f85\u52a9\u8def\u5f84",
+      "source_file": "docs/02-product/TRANSACTION_P0_ACCEPTANCE.md",
+      "source_location": "L17"
     },
     {
       "id": "prototype_components_ui_sheet",
@@ -11398,6 +11941,18 @@
       "source_location": "L1"
     },
     {
+      "id": "docs_02_product_product_strategy",
+      "label": "PRODUCT_STRATEGY.md",
+      "_origin": "ast",
+      "community": 53,
+      "community_name": "02-product/README.md",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "product_strategy.md",
+      "source_file": "docs/02-product/PRODUCT_STRATEGY.md",
+      "source_location": "L1"
+    },
+    {
       "id": "docs_02_product_protocol_adoption_plan",
       "label": "PROTOCOL_ADOPTION_PLAN.md",
       "_origin": "ast",
@@ -11434,14 +11989,26 @@
       "source_location": "L1"
     },
     {
-      "id": "prototype_components_ui_native_select",
-      "label": "native-select.tsx",
+      "id": "prototype_components_ui_hover_card",
+      "label": "hover-card.tsx",
       "_origin": "ast",
       "community": 54,
-      "community_name": "native-select.tsx",
+      "community_name": "hover-card.tsx",
       "file_type": "code",
-      "norm_label": "native-select.tsx",
-      "source_file": "prototype/components/ui/native-select.tsx",
+      "norm_label": "hover-card.tsx",
+      "source_file": "prototype/components/ui/hover-card.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "docs_03_technical_x402_test_wallet",
+      "label": "X402_TEST_WALLET.md",
+      "_origin": "ast",
+      "community": 55,
+      "community_name": "BU2 x402 Base Sepolia \u6d4b\u8bd5\u94b1\u5305",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "x402_test_wallet.md",
+      "source_file": "docs/03-technical/X402_TEST_WALLET.md",
       "source_location": "L1"
     },
     {
@@ -11527,54 +12094,6 @@
       "norm_label": "\u9886\u53d6\u6d4b\u8bd5\u8d44\u4ea7",
       "source_file": "docs/03-technical/X402_TEST_WALLET.md",
       "source_location": "L22"
-    },
-    {
-      "id": "docs_02_product_transaction_p0_acceptance_bu2_transaction_first_p0_\u9a8c\u6536\u65b9\u6848",
-      "label": "BU2 Transaction-first P0 \u9a8c\u6536\u65b9\u6848",
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "BU2 Transaction-first P0 \u9a8c\u6536\u65b9\u6848",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "bu2 transaction-first p0 \u9a8c\u6536\u65b9\u6848",
-      "source_file": "docs/02-product/TRANSACTION_P0_ACCEPTANCE.md",
-      "source_location": "L1"
-    },
-    {
-      "id": "docs_02_product_transaction_p0_acceptance_\u4e3b\u8def\u5f84",
-      "label": "\u4e3b\u8def\u5f84",
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "BU2 Transaction-first P0 \u9a8c\u6536\u65b9\u6848",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "\u4e3b\u8def\u5f84",
-      "source_file": "docs/02-product/TRANSACTION_P0_ACCEPTANCE.md",
-      "source_location": "L6"
-    },
-    {
-      "id": "docs_02_product_transaction_p0_acceptance_\u7ed3\u8bba\u89c4\u5219",
-      "label": "\u7ed3\u8bba\u89c4\u5219",
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "BU2 Transaction-first P0 \u9a8c\u6536\u65b9\u6848",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "\u7ed3\u8bba\u89c4\u5219",
-      "source_file": "docs/02-product/TRANSACTION_P0_ACCEPTANCE.md",
-      "source_location": "L24"
-    },
-    {
-      "id": "docs_02_product_transaction_p0_acceptance_\u8f85\u52a9\u8def\u5f84",
-      "label": "\u8f85\u52a9\u8def\u5f84",
-      "_origin": "ast",
-      "community": 56,
-      "community_name": "BU2 Transaction-first P0 \u9a8c\u6536\u65b9\u6848",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "\u8f85\u52a9\u8def\u5f84",
-      "source_file": "docs/02-product/TRANSACTION_P0_ACCEPTANCE.md",
-      "source_location": "L17"
     },
     {
       "id": "prototype_components_ui_bubble",
@@ -12216,6 +12735,18 @@
       "source_location": "L1"
     },
     {
+      "id": "docs_03_technical_phase0_epic1_external_agent_integration",
+      "label": "PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md",
+      "_origin": "ast",
+      "community": 63,
+      "community_name": "03-technical/README.md",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "phase0_epic1_external_agent_integration.md",
+      "source_file": "docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md",
+      "source_location": "L1"
+    },
+    {
       "id": "docs_03_technical_readme",
       "label": "03-technical/README.md",
       "_origin": "ast",
@@ -12249,18 +12780,6 @@
       "node_kind": "page",
       "norm_label": "x402_live_settlement_evidence.md",
       "source_file": "docs/03-technical/X402_LIVE_SETTLEMENT_EVIDENCE.md",
-      "source_location": "L1"
-    },
-    {
-      "id": "docs_03_technical_x402_test_wallet",
-      "label": "X402_TEST_WALLET.md",
-      "_origin": "ast",
-      "community": 63,
-      "community_name": "03-technical/README.md",
-      "file_type": "document",
-      "node_kind": "page",
-      "norm_label": "x402_test_wallet.md",
-      "source_file": "docs/03-technical/X402_TEST_WALLET.md",
       "source_location": "L1"
     },
     {
@@ -13079,6 +13598,17 @@
       "norm_label": "mcp",
       "source_file": "docs/03-technical/validate-contract.mjs",
       "source_location": "L9"
+    },
+    {
+      "id": "docs_03_technical_validate_contract_openapi",
+      "label": "openapi",
+      "_origin": "ast",
+      "community": 77,
+      "community_name": "validate-contract.mjs",
+      "file_type": "code",
+      "norm_label": "openapi",
+      "source_file": "docs/03-technical/validate-contract.mjs",
+      "source_location": "L10"
     },
     {
       "id": "prototype_components_ui_marker",
@@ -17947,6 +18477,102 @@
       "weight": 1.0
     },
     {
+      "source": "sandbox_api_contract_decodecursor",
+      "target": "sandbox_domain_apierror",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "sandbox/api-contract.mjs",
+      "source_location": "L184",
+      "weight": 1.0
+    },
+    {
+      "source": "sandbox_api_contract_paginatetransactions",
+      "target": "sandbox_domain_apierror",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "sandbox/api-contract.mjs",
+      "source_location": "L205",
+      "weight": 1.0
+    },
+    {
+      "source": "sandbox_api_contract_paginatetransactions",
+      "target": "sandbox_api_contract_decodecursor",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "sandbox/api-contract.mjs",
+      "source_location": "L229",
+      "weight": 1.0
+    },
+    {
+      "source": "sandbox_api_contract_paginatetransactions",
+      "target": "sandbox_api_contract_encodecursor",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "sandbox/api-contract.mjs",
+      "source_location": "L252",
+      "weight": 1.0
+    },
+    {
+      "source": "sandbox_api_contract_validatebody",
+      "target": "sandbox_domain_apierror",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "sandbox/api-contract.mjs",
+      "source_location": "L120",
+      "weight": 1.0
+    },
+    {
+      "source": "sandbox_api_contract_validateidempotencykey",
+      "target": "sandbox_domain_apierror",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "sandbox/api-contract.mjs",
+      "source_location": "L136",
+      "weight": 1.0
+    },
+    {
+      "source": "sandbox_api_contract_validatenoqueryparameters",
+      "target": "sandbox_domain_apierror",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "sandbox/api-contract.mjs",
+      "source_location": "L162",
+      "weight": 1.0
+    },
+    {
+      "source": "sandbox_api_contract_validateresourceid",
+      "target": "sandbox_domain_apierror",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "sandbox/api-contract.mjs",
+      "source_location": "L152",
+      "weight": 1.0
+    },
+    {
       "source": "sandbox_domain_bu2sandbox_createpaymentintent",
       "target": "sandbox_domain_bu2sandbox_runidempotentasync",
       "relation": "calls",
@@ -18135,7 +18761,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "sandbox/domain.mjs",
-      "source_location": "L318",
+      "source_location": "L321",
       "weight": 1.0
     },
     {
@@ -18147,7 +18773,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "sandbox/domain.mjs",
-      "source_location": "L323",
+      "source_location": "L326",
       "weight": 1.0
     },
     {
@@ -18159,7 +18785,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "sandbox/domain.mjs",
-      "source_location": "L326",
+      "source_location": "L329",
       "weight": 1.0
     },
     {
@@ -18171,7 +18797,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "sandbox/domain.mjs",
-      "source_location": "L344",
+      "source_location": "L347",
       "weight": 1.0
     },
     {
@@ -18183,7 +18809,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "sandbox/domain.mjs",
-      "source_location": "L345",
+      "source_location": "L348",
       "weight": 1.0
     },
     {
@@ -18195,7 +18821,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "sandbox/domain.mjs",
-      "source_location": "L360",
+      "source_location": "L363",
       "weight": 1.0
     },
     {
@@ -18243,7 +18869,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "sandbox/domain.mjs",
-      "source_location": "L527",
+      "source_location": "L530",
       "weight": 1.0
     },
     {
@@ -18255,7 +18881,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "sandbox/domain.mjs",
-      "source_location": "L528",
+      "source_location": "L531",
       "weight": 1.0
     },
     {
@@ -18267,7 +18893,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "sandbox/domain.mjs",
-      "source_location": "L308",
+      "source_location": "L311",
       "weight": 1.0
     },
     {
@@ -18279,7 +18905,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "sandbox/domain.mjs",
-      "source_location": "L314",
+      "source_location": "L317",
       "weight": 1.0
     },
     {
@@ -18291,7 +18917,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "sandbox/domain.mjs",
-      "source_location": "L302",
+      "source_location": "L305",
       "weight": 1.0
     },
     {
@@ -18303,7 +18929,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "sandbox/domain.mjs",
-      "source_location": "L374",
+      "source_location": "L377",
       "weight": 1.0
     },
     {
@@ -18315,7 +18941,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "sandbox/domain.mjs",
-      "source_location": "L389",
+      "source_location": "L392",
       "weight": 1.0
     },
     {
@@ -18327,7 +18953,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "sandbox/domain.mjs",
-      "source_location": "L392",
+      "source_location": "L395",
       "weight": 1.0
     },
     {
@@ -18339,7 +18965,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "sandbox/domain.mjs",
-      "source_location": "L400",
+      "source_location": "L403",
       "weight": 1.0
     },
     {
@@ -18423,7 +19049,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "sandbox/domain.mjs",
-      "source_location": "L452",
+      "source_location": "L455",
       "weight": 1.0
     },
     {
@@ -18435,7 +19061,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "sandbox/domain.mjs",
-      "source_location": "L459",
+      "source_location": "L462",
       "weight": 1.0
     },
     {
@@ -18447,7 +19073,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "sandbox/domain.mjs",
-      "source_location": "L473",
+      "source_location": "L476",
       "weight": 1.0
     },
     {
@@ -18459,7 +19085,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "sandbox/domain.mjs",
-      "source_location": "L477",
+      "source_location": "L480",
       "weight": 1.0
     },
     {
@@ -18471,7 +19097,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "sandbox/domain.mjs",
-      "source_location": "L485",
+      "source_location": "L488",
       "weight": 1.0
     },
     {
@@ -18483,7 +19109,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "sandbox/domain.mjs",
-      "source_location": "L505",
+      "source_location": "L508",
       "weight": 1.0
     },
     {
@@ -18495,7 +19121,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "sandbox/domain.mjs",
-      "source_location": "L411",
+      "source_location": "L414",
       "weight": 1.0
     },
     {
@@ -18507,7 +19133,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "sandbox/domain.mjs",
-      "source_location": "L412",
+      "source_location": "L415",
       "weight": 1.0
     },
     {
@@ -18519,7 +19145,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "sandbox/domain.mjs",
-      "source_location": "L414",
+      "source_location": "L417",
       "weight": 1.0
     },
     {
@@ -18531,7 +19157,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "sandbox/domain.mjs",
-      "source_location": "L437",
+      "source_location": "L440",
       "weight": 1.0
     },
     {
@@ -18543,7 +19169,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "sandbox/domain.mjs",
-      "source_location": "L439",
+      "source_location": "L442",
       "weight": 1.0
     },
     {
@@ -18555,7 +19181,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "sandbox/domain.mjs",
-      "source_location": "L446",
+      "source_location": "L449",
       "weight": 1.0
     },
     {
@@ -18591,7 +19217,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "sandbox/domain.mjs",
-      "source_location": "L532",
+      "source_location": "L535",
       "weight": 1.0
     },
     {
@@ -18603,7 +19229,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "sandbox/domain.mjs",
-      "source_location": "L550",
+      "source_location": "L553",
       "weight": 1.0
     },
     {
@@ -18723,7 +19349,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "sandbox/server.mjs",
-      "source_location": "L50",
+      "source_location": "L78",
       "weight": 1.0
     },
     {
@@ -18735,7 +19361,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "sandbox/server.mjs",
-      "source_location": "L52",
+      "source_location": "L80",
       "weight": 1.0
     },
     {
@@ -18747,43 +19373,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "sandbox/server.mjs",
-      "source_location": "L64",
-      "weight": 1.0
-    },
-    {
-      "source": "sandbox_server_createbu2server",
-      "target": "sandbox_server_readjson",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "sandbox/server.mjs",
-      "source_location": "L111",
-      "weight": 1.0
-    },
-    {
-      "source": "sandbox_server_createbu2server",
-      "target": "sandbox_domain_apierror",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "sandbox/server.mjs",
-      "source_location": "L113",
-      "weight": 1.0
-    },
-    {
-      "source": "sandbox_server_createbu2server",
-      "target": "sandbox_server_errorbody",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "sandbox/server.mjs",
-      "source_location": "L177",
+      "source_location": "L92",
       "weight": 1.0
     },
     {
@@ -18795,7 +19385,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "sandbox/server.mjs",
-      "source_location": "L72",
+      "source_location": "L100",
       "weight": 1.0
     },
     {
@@ -18807,7 +19397,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "sandbox/server.mjs",
-      "source_location": "L75",
+      "source_location": "L103",
       "weight": 1.0
     },
     {
@@ -18819,7 +19409,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "sandbox/server.mjs",
-      "source_location": "L77",
+      "source_location": "L105",
       "weight": 1.0
     },
     {
@@ -18831,7 +19421,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "sandbox/server.mjs",
-      "source_location": "L80",
+      "source_location": "L108",
       "weight": 1.0
     },
     {
@@ -18843,7 +19433,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "sandbox/server.mjs",
-      "source_location": "L82",
+      "source_location": "L110",
+      "weight": 1.0
+    },
+    {
+      "source": "sandbox_server_createbu2server",
+      "target": "sandbox_api_contract_validatenoqueryparameters",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "sandbox/server.mjs",
+      "source_location": "L118",
       "weight": 1.0
     },
     {
@@ -18855,7 +19457,91 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "sandbox/server.mjs",
-      "source_location": "L87",
+      "source_location": "L120",
+      "weight": 1.0
+    },
+    {
+      "source": "sandbox_server_createbu2server",
+      "target": "sandbox_api_contract_paginatetransactions",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "sandbox/server.mjs",
+      "source_location": "L141",
+      "weight": 1.0
+    },
+    {
+      "source": "sandbox_server_createbu2server",
+      "target": "sandbox_api_contract_validatebody",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "sandbox/server.mjs",
+      "source_location": "L148",
+      "weight": 1.0
+    },
+    {
+      "source": "sandbox_server_createbu2server",
+      "target": "sandbox_server_readjson",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "sandbox/server.mjs",
+      "source_location": "L148",
+      "weight": 1.0
+    },
+    {
+      "source": "sandbox_server_createbu2server",
+      "target": "sandbox_api_contract_validateidempotencykey",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "sandbox/server.mjs",
+      "source_location": "L156",
+      "weight": 1.0
+    },
+    {
+      "source": "sandbox_server_createbu2server",
+      "target": "sandbox_api_contract_validateresourceid",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "sandbox/server.mjs",
+      "source_location": "L168",
+      "weight": 1.0
+    },
+    {
+      "source": "sandbox_server_createbu2server",
+      "target": "sandbox_domain_apierror",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "sandbox/server.mjs",
+      "source_location": "L245",
+      "weight": 1.0
+    },
+    {
+      "source": "sandbox_server_createbu2server",
+      "target": "sandbox_server_errorbody",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "sandbox/server.mjs",
+      "source_location": "L247",
       "weight": 1.0
     },
     {
@@ -18867,7 +19553,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "sandbox/server.mjs",
-      "source_location": "L195",
+      "source_location": "L265",
       "weight": 1.0
     },
     {
@@ -18879,7 +19565,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "sandbox/server.mjs",
-      "source_location": "L196",
+      "source_location": "L266",
       "weight": 1.0
     },
     {
@@ -18891,7 +19577,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "sandbox/server.mjs",
-      "source_location": "L206",
+      "source_location": "L276",
       "weight": 1.0
     },
     {
@@ -18903,7 +19589,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "sandbox/server.mjs",
-      "source_location": "L21",
+      "source_location": "L24",
       "weight": 1.0
     },
     {
@@ -21343,6 +22029,18 @@
       "weight": 1.0
     },
     {
+      "source": "sandbox_api_contract",
+      "target": "sandbox_domain_apierror",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "sandbox/api-contract.mjs",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
       "source": "sandbox_domain_test",
       "target": "sandbox_domain_apierror",
       "relation": "imports",
@@ -21379,6 +22077,30 @@
       "weight": 1.0
     },
     {
+      "source": "sandbox_package_dependencies_ajv",
+      "target": "ajv",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "sandbox/package.json",
+      "source_location": "L25",
+      "weight": 1.0
+    },
+    {
+      "source": "sandbox_package_dependencies_ajv_formats",
+      "target": "ajv_formats",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "sandbox/package.json",
+      "source_location": "L26",
+      "weight": 1.0
+    },
+    {
       "source": "sandbox_package_dependencies_express",
       "target": "express",
       "relation": "imports",
@@ -21387,7 +22109,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "sandbox/package.json",
-      "source_location": "L25",
+      "source_location": "L27",
       "weight": 1.0
     },
     {
@@ -21399,7 +22121,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "sandbox/package.json",
-      "source_location": "L26",
+      "source_location": "L28",
       "weight": 1.0
     },
     {
@@ -21496,6 +22218,66 @@
       "context": "import",
       "source_file": "sandbox/persistence.test.mjs",
       "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "sandbox_server",
+      "target": "sandbox_api_contract_paginatetransactions",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "sandbox/server.mjs",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "sandbox_server",
+      "target": "sandbox_api_contract_validatebody",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "sandbox/server.mjs",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "sandbox_server",
+      "target": "sandbox_api_contract_validateidempotencykey",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "sandbox/server.mjs",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "sandbox_server",
+      "target": "sandbox_api_contract_validatenoqueryparameters",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "sandbox/server.mjs",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "sandbox_server",
+      "target": "sandbox_api_contract_validateresourceid",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "sandbox/server.mjs",
+      "source_location": "L11",
       "weight": 1.0
     },
     {
@@ -23289,6 +24071,18 @@
       "weight": 1.0
     },
     {
+      "source": "sandbox_api_contract",
+      "target": "sandbox_domain",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "sandbox/api-contract.mjs",
+      "source_location": "L3",
+      "weight": 1.0
+    },
+    {
       "source": "sandbox_domain_test",
       "target": "sandbox_domain",
       "relation": "imports_from",
@@ -23358,6 +24152,18 @@
       "context": "import",
       "source_file": "sandbox/persistence.test.mjs",
       "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "sandbox_server",
+      "target": "sandbox_api_contract",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "sandbox/server.mjs",
+      "source_location": "L11",
       "weight": 1.0
     },
     {
@@ -23812,18 +24618,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "AGENTS.md",
-      "source_location": "L241",
-      "weight": 1.0
-    },
-    {
-      "source": "agents_agents_md_bu2_\u91d1\u878d\u7cfb\u7edf_ai_agent_\u5de5\u7a0b\u89c4\u5219",
-      "target": "agents_11_\u89c4\u5219\u7ef4\u62a4",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "AGENTS.md",
-      "source_location": "L257",
+      "source_location": "L244",
       "weight": 1.0
     },
     {
@@ -23839,13 +24634,24 @@
     },
     {
       "source": "agents_agents_md_bu2_\u91d1\u878d\u7cfb\u7edf_ai_agent_\u5de5\u7a0b\u89c4\u5219",
+      "target": "agents_11_\u89c4\u5219\u7ef4\u62a4",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "AGENTS.md",
+      "source_location": "L260",
+      "weight": 1.0
+    },
+    {
+      "source": "agents_agents_md_bu2_\u91d1\u878d\u7cfb\u7edf_ai_agent_\u5de5\u7a0b\u89c4\u5219",
       "target": "agents_12_changelog_\u5f3a\u5236\u5bf9\u9f50\u89c4\u5219",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "AGENTS.md",
-      "source_location": "L264",
+      "source_location": "L267",
       "weight": 1.0
     },
     {
@@ -23856,7 +24662,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "AGENTS.md",
-      "source_location": "L278",
+      "source_location": "L281",
       "weight": 1.0
     },
     {
@@ -25979,7 +26785,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/03-technical/API_CONTRACT_V0.1.md",
-      "source_location": "L101",
+      "source_location": "L104",
       "weight": 1.0
     },
     {
@@ -25990,7 +26796,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/03-technical/API_CONTRACT_V0.1.md",
-      "source_location": "L109",
+      "source_location": "L112",
       "weight": 1.0
     },
     {
@@ -26001,29 +26807,40 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/03-technical/API_CONTRACT_V0.1.md",
-      "source_location": "L121",
+      "source_location": "L124",
       "weight": 1.0
     },
     {
       "source": "docs_03_technical_api_contract_v0_1_bu2_agent_payment_api_\u5951\u7ea6_v0_1",
-      "target": "docs_03_technical_api_contract_v0_1_10_webhook_\u4e8b\u4ef6",
+      "target": "docs_03_technical_api_contract_v0_1_10_transaction_\u5206\u9875",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/03-technical/API_CONTRACT_V0.1.md",
-      "source_location": "L137",
+      "source_location": "L142",
       "weight": 1.0
     },
     {
       "source": "docs_03_technical_api_contract_v0_1_bu2_agent_payment_api_\u5951\u7ea6_v0_1",
-      "target": "docs_03_technical_api_contract_v0_1_11_\u7248\u672c\u8fb9\u754c",
+      "target": "docs_03_technical_api_contract_v0_1_11_webhook_\u4e8b\u4ef6",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/03-technical/API_CONTRACT_V0.1.md",
-      "source_location": "L152",
+      "source_location": "L163",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_03_technical_api_contract_v0_1_bu2_agent_payment_api_\u5951\u7ea6_v0_1",
+      "target": "docs_03_technical_api_contract_v0_1_12_\u7248\u672c\u8fb9\u754c",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/03-technical/API_CONTRACT_V0.1.md",
+      "source_location": "L178",
       "weight": 1.0
     },
     {
@@ -26034,7 +26851,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/03-technical/API_CONTRACT_V0.1.md",
-      "source_location": "L16",
+      "source_location": "L19",
       "weight": 1.0
     },
     {
@@ -26045,7 +26862,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/03-technical/API_CONTRACT_V0.1.md",
-      "source_location": "L31",
+      "source_location": "L34",
       "weight": 1.0
     },
     {
@@ -26056,7 +26873,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/03-technical/API_CONTRACT_V0.1.md",
-      "source_location": "L51",
+      "source_location": "L54",
       "weight": 1.0
     },
     {
@@ -26078,7 +26895,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/03-technical/API_CONTRACT_V0.1.md",
-      "source_location": "L78",
+      "source_location": "L81",
       "weight": 1.0
     },
     {
@@ -26089,7 +26906,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/03-technical/API_CONTRACT_V0.1.md",
-      "source_location": "L94",
+      "source_location": "L97",
       "weight": 1.0
     },
     {
@@ -26148,6 +26965,237 @@
       "weight": 1.0
     },
     {
+      "source": "docs_03_technical_phase0_epic1_external_agent_integration",
+      "target": "docs_03_technical_phase0_epic1_external_agent_integration_phase_0_epic_1_external_agent_transaction_integration_reliability",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_03_technical_phase0_epic1_external_agent_integration_4_\u8303\u56f4",
+      "target": "docs_03_technical_phase0_epic1_external_agent_integration_e1_0_\u51bb\u7ed3_transaction_api_v1_\u5df2\u5b8c\u6210",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md",
+      "source_location": "L42",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_03_technical_phase0_epic1_external_agent_integration_4_\u8303\u56f4",
+      "target": "docs_03_technical_phase0_epic1_external_agent_integration_e1_1_webhook_\u53ef\u9760\u6027\u95ed\u73af",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md",
+      "source_location": "L51",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_03_technical_phase0_epic1_external_agent_integration_4_\u8303\u56f4",
+      "target": "docs_03_technical_phase0_epic1_external_agent_integration_e1_2_\u4ea4\u6613\u94fe\u8def\u53ef\u89c2\u6d4b\u6027",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md",
+      "source_location": "L58",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_03_technical_phase0_epic1_external_agent_integration_4_\u8303\u56f4",
+      "target": "docs_03_technical_phase0_epic1_external_agent_integration_e1_3_x402_testnet_\u5931\u8d25\u56de\u5f52",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md",
+      "source_location": "L65",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_03_technical_phase0_epic1_external_agent_integration_4_\u8303\u56f4",
+      "target": "docs_03_technical_phase0_epic1_external_agent_integration_e1_4_\u9996\u4e2a\u5916\u90e8_agent_\u63a5\u5165\u6837\u4f8b",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md",
+      "source_location": "L72",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_03_technical_phase0_epic1_external_agent_integration_7_\u9a8c\u6536\u6807\u51c6",
+      "target": "docs_03_technical_phase0_epic1_external_agent_integration_\u53ef\u9760\u6027",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md",
+      "source_location": "L105",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_03_technical_phase0_epic1_external_agent_integration_7_\u9a8c\u6536\u6807\u51c6",
+      "target": "docs_03_technical_phase0_epic1_external_agent_integration_x402",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md",
+      "source_location": "L112",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_03_technical_phase0_epic1_external_agent_integration_7_\u9a8c\u6536\u6807\u51c6",
+      "target": "docs_03_technical_phase0_epic1_external_agent_integration_\u4ea7\u54c1\u4e0e\u5f00\u53d1\u8005\u4f53\u9a8c",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md",
+      "source_location": "L118",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_03_technical_phase0_epic1_external_agent_integration_7_\u9a8c\u6536\u6807\u51c6",
+      "target": "docs_03_technical_phase0_epic1_external_agent_integration_\u5951\u7ea6",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md",
+      "source_location": "L99",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_03_technical_phase0_epic1_external_agent_integration_phase_0_epic_1_external_agent_transaction_integration_reliability",
+      "target": "docs_03_technical_phase0_epic1_external_agent_integration_8_\u5f3a\u5236\u9a8c\u8bc1",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md",
+      "source_location": "L124",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_03_technical_phase0_epic1_external_agent_integration_phase_0_epic_1_external_agent_transaction_integration_reliability",
+      "target": "docs_03_technical_phase0_epic1_external_agent_integration_9_\u5b8c\u6210\u95e8\u69db",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md",
+      "source_location": "L135",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_03_technical_phase0_epic1_external_agent_integration_phase_0_epic_1_external_agent_transaction_integration_reliability",
+      "target": "docs_03_technical_phase0_epic1_external_agent_integration_2_owner",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_03_technical_phase0_epic1_external_agent_integration_phase_0_epic_1_external_agent_transaction_integration_reliability",
+      "target": "docs_03_technical_phase0_epic1_external_agent_integration_10_\u6062\u590d\u7b56\u7565",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md",
+      "source_location": "L145",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_03_technical_phase0_epic1_external_agent_integration_phase_0_epic_1_external_agent_transaction_integration_reliability",
+      "target": "docs_03_technical_phase0_epic1_external_agent_integration_11_\u540e\u7eed\u95e8\u69db",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md",
+      "source_location": "L152",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_03_technical_phase0_epic1_external_agent_integration_phase_0_epic_1_external_agent_transaction_integration_reliability",
+      "target": "docs_03_technical_phase0_epic1_external_agent_integration_3_\u7528\u6237\u95ed\u73af",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md",
+      "source_location": "L25",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_03_technical_phase0_epic1_external_agent_integration_phase_0_epic_1_external_agent_transaction_integration_reliability",
+      "target": "docs_03_technical_phase0_epic1_external_agent_integration_4_\u8303\u56f4",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md",
+      "source_location": "L40",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_03_technical_phase0_epic1_external_agent_integration_phase_0_epic_1_external_agent_transaction_integration_reliability",
+      "target": "docs_03_technical_phase0_epic1_external_agent_integration_1_\u76ee\u6807",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_03_technical_phase0_epic1_external_agent_integration_phase_0_epic_1_external_agent_transaction_integration_reliability",
+      "target": "docs_03_technical_phase0_epic1_external_agent_integration_5_\u660e\u786e\u4e0d\u505a",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md",
+      "source_location": "L80",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_03_technical_phase0_epic1_external_agent_integration_phase_0_epic_1_external_agent_transaction_integration_reliability",
+      "target": "docs_03_technical_phase0_epic1_external_agent_integration_6_\u63a5\u53e3\u4e0e\u72b6\u6001\u5951\u7ea6",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md",
+      "source_location": "L88",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_03_technical_phase0_epic1_external_agent_integration_phase_0_epic_1_external_agent_transaction_integration_reliability",
+      "target": "docs_03_technical_phase0_epic1_external_agent_integration_7_\u9a8c\u6536\u6807\u51c6",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md",
+      "source_location": "L97",
+      "weight": 1.0
+    },
+    {
       "source": "docs_03_technical_readme",
       "target": "docs_03_technical_readme_bu2_\u6280\u672f\u5951\u7ea6",
       "relation": "contains",
@@ -26160,13 +27208,24 @@
     },
     {
       "source": "docs_03_technical_validate_contract",
+      "target": "docs_03_technical_validate_contract_openapi",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/03-technical/validate-contract.mjs",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_03_technical_validate_contract",
       "target": "docs_03_technical_validate_contract_assert",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/03-technical/validate-contract.mjs",
-      "source_location": "L11",
+      "source_location": "L13",
       "weight": 1.0
     },
     {
@@ -26573,7 +27632,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": ".github/pull_request_template.md",
-      "source_location": "L200",
+      "source_location": "L201",
       "weight": 1.0
     },
     {
@@ -26584,7 +27643,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": ".github/pull_request_template.md",
-      "source_location": "L206",
+      "source_location": "L207",
       "weight": 1.0
     },
     {
@@ -26716,7 +27775,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "prototype/app/page.tsx",
-      "source_location": "L1032",
+      "source_location": "L1037",
       "weight": 1.0
     },
     {
@@ -26727,7 +27786,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "prototype/app/page.tsx",
-      "source_location": "L1062",
+      "source_location": "L1067",
       "weight": 1.0
     },
     {
@@ -26738,7 +27797,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "prototype/app/page.tsx",
-      "source_location": "L1073",
+      "source_location": "L1078",
       "weight": 1.0
     },
     {
@@ -26749,7 +27808,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "prototype/app/page.tsx",
-      "source_location": "L1083",
+      "source_location": "L1088",
       "weight": 1.0
     },
     {
@@ -32638,6 +33697,138 @@
       "weight": 1.0
     },
     {
+      "source": "sandbox_api_contract",
+      "target": "sandbox_api_contract_amount",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "sandbox/api-contract.mjs",
+      "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "sandbox_api_contract",
+      "target": "sandbox_api_contract_ajv",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "sandbox/api-contract.mjs",
+      "source_location": "L110",
+      "weight": 1.0
+    },
+    {
+      "source": "sandbox_api_contract",
+      "target": "sandbox_api_contract_validators",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "sandbox/api-contract.mjs",
+      "source_location": "L112",
+      "weight": 1.0
+    },
+    {
+      "source": "sandbox_api_contract",
+      "target": "sandbox_api_contract_validatebody",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "sandbox/api-contract.mjs",
+      "source_location": "L116",
+      "weight": 1.0
+    },
+    {
+      "source": "sandbox_api_contract",
+      "target": "sandbox_api_contract_validateidempotencykey",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "sandbox/api-contract.mjs",
+      "source_location": "L134",
+      "weight": 1.0
+    },
+    {
+      "source": "sandbox_api_contract",
+      "target": "sandbox_api_contract_validateresourceid",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "sandbox/api-contract.mjs",
+      "source_location": "L146",
+      "weight": 1.0
+    },
+    {
+      "source": "sandbox_api_contract",
+      "target": "sandbox_api_contract_validatenoqueryparameters",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "sandbox/api-contract.mjs",
+      "source_location": "L159",
+      "weight": 1.0
+    },
+    {
+      "source": "sandbox_api_contract",
+      "target": "sandbox_api_contract_decodecursor",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "sandbox/api-contract.mjs",
+      "source_location": "L171",
+      "weight": 1.0
+    },
+    {
+      "source": "sandbox_api_contract",
+      "target": "sandbox_api_contract_encodecursor",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "sandbox/api-contract.mjs",
+      "source_location": "L193",
+      "weight": 1.0
+    },
+    {
+      "source": "sandbox_api_contract",
+      "target": "sandbox_api_contract_schemas",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "sandbox/api-contract.mjs",
+      "source_location": "L20",
+      "weight": 1.0
+    },
+    {
+      "source": "sandbox_api_contract",
+      "target": "sandbox_api_contract_paginatetransactions",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "sandbox/api-contract.mjs",
+      "source_location": "L202",
+      "weight": 1.0
+    },
+    {
+      "source": "sandbox_api_contract",
+      "target": "sandbox_api_contract_identifier",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "sandbox/api-contract.mjs",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
       "source": "sandbox_demo_agents",
       "target": "sandbox_demo_agents_api",
       "relation": "contains",
@@ -32925,7 +34116,7 @@
     },
     {
       "source": "sandbox_package_dependencies",
-      "target": "sandbox_package_dependencies_express",
+      "target": "sandbox_package_dependencies_ajv",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -32936,13 +34127,35 @@
     },
     {
       "source": "sandbox_package_dependencies",
-      "target": "sandbox_package_dependencies_viem",
+      "target": "sandbox_package_dependencies_ajv_formats",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "sandbox/package.json",
       "source_location": "L26",
+      "weight": 1.0
+    },
+    {
+      "source": "sandbox_package_dependencies",
+      "target": "sandbox_package_dependencies_express",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "sandbox/package.json",
+      "source_location": "L27",
+      "weight": 1.0
+    },
+    {
+      "source": "sandbox_package_dependencies",
+      "target": "sandbox_package_dependencies_viem",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "sandbox/package.json",
+      "source_location": "L28",
       "weight": 1.0
     },
     {
@@ -33112,7 +34325,7 @@
     },
     {
       "source": "sandbox_readme",
-      "target": "sandbox_readme_bu2_reference_server_x402_sandbox_v0_3",
+      "target": "sandbox_readme_bu2_reference_server_v0_4_x402_sandbox_v0_3",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -33122,7 +34335,7 @@
       "weight": 1.0
     },
     {
-      "source": "sandbox_readme_bu2_reference_server_x402_sandbox_v0_3",
+      "source": "sandbox_readme_bu2_reference_server_v0_4_x402_sandbox_v0_3",
       "target": "sandbox_readme_\u5b8c\u6574_agent_\u4ea4\u6613\u6f14\u793a",
       "relation": "contains",
       "_origin": "ast",
@@ -33133,7 +34346,7 @@
       "weight": 1.0
     },
     {
-      "source": "sandbox_readme_bu2_reference_server_x402_sandbox_v0_3",
+      "source": "sandbox_readme_bu2_reference_server_v0_4_x402_sandbox_v0_3",
       "target": "sandbox_readme_\u6d4b\u8bd5",
       "relation": "contains",
       "_origin": "ast",
@@ -33144,7 +34357,7 @@
       "weight": 1.0
     },
     {
-      "source": "sandbox_readme_bu2_reference_server_x402_sandbox_v0_3",
+      "source": "sandbox_readme_bu2_reference_server_v0_4_x402_sandbox_v0_3",
       "target": "sandbox_readme_x402_\u6c99\u76d2\u5546\u6237",
       "relation": "contains",
       "_origin": "ast",
@@ -33155,7 +34368,7 @@
       "weight": 1.0
     },
     {
-      "source": "sandbox_readme_bu2_reference_server_x402_sandbox_v0_3",
+      "source": "sandbox_readme_bu2_reference_server_v0_4_x402_sandbox_v0_3",
       "target": "sandbox_readme_\u542f\u52a8",
       "relation": "contains",
       "_origin": "ast",
@@ -33166,7 +34379,7 @@
       "weight": 1.0
     },
     {
-      "source": "sandbox_readme_bu2_reference_server_x402_sandbox_v0_3",
+      "source": "sandbox_readme_bu2_reference_server_v0_4_x402_sandbox_v0_3",
       "target": "sandbox_readme_\u6c99\u76d2\u8c03\u8bd5\u7aef\u70b9",
       "relation": "contains",
       "_origin": "ast",
@@ -33206,7 +34419,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "sandbox/server.mjs",
-      "source_location": "L12",
+      "source_location": "L19",
       "weight": 1.0
     },
     {
@@ -33217,7 +34430,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "sandbox/server.mjs",
-      "source_location": "L14",
+      "source_location": "L22",
       "weight": 1.0
     },
     {
@@ -33228,7 +34441,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "sandbox/server.mjs",
-      "source_location": "L184",
+      "source_location": "L254",
       "weight": 1.0
     },
     {
@@ -33239,7 +34452,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "sandbox/server.mjs",
-      "source_location": "L25",
+      "source_location": "L53",
       "weight": 1.0
     },
     {
@@ -33250,7 +34463,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "sandbox/server.mjs",
-      "source_location": "L33",
+      "source_location": "L61",
       "weight": 1.0
     },
     {
@@ -33261,7 +34474,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "sandbox/server.mjs",
-      "source_location": "L49",
+      "source_location": "L77",
       "weight": 1.0
     },
     {
@@ -33272,7 +34485,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "sandbox/server.mjs",
-      "source_location": "L71",
+      "source_location": "L99",
       "weight": 1.0
     },
     {
@@ -33573,6 +34786,28 @@
       "weight": 1.0
     },
     {
+      "source": "verification",
+      "target": "verification_\u91d1\u878d\u4e1a\u52a1_pr_\u6a21\u677f\u9a8c\u8bc1",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "verification.md",
+      "source_location": "L186",
+      "weight": 1.0
+    },
+    {
+      "source": "verification",
+      "target": "verification_readme_\u91cd\u6784\u4e0e\u5355\u4eba_r3_\u6cbb\u7406\u9a8c\u8bc1",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "verification.md",
+      "source_location": "L197",
+      "weight": 1.0
+    },
+    {
       "source": "verification_bu2_product_v0_1_\u9a8c\u8bc1\u7ed3\u8bba",
       "target": "verification_reference_server_v0_2_\u9a8c\u8bc1",
       "relation": "contains",
@@ -33673,13 +34908,35 @@
     },
     {
       "source": "verification_docs_readme_\u5f53\u524d\u76ee\u5f55\u5bf9\u9f50\u9a8c\u8bc1",
-      "target": "verification_phase_0_\u5f00\u53d1\u51c6\u5165\u7ed3\u8bba",
+      "target": "verification_phase_0_epic_1_\u51bb\u7ed3\u9a8c\u8bc1",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "verification.md",
       "source_location": "L157",
+      "weight": 1.0
+    },
+    {
+      "source": "verification_docs_readme_\u5f53\u524d\u76ee\u5f55\u5bf9\u9f50\u9a8c\u8bc1",
+      "target": "verification_phase_0_\u5f00\u53d1\u51c6\u5165\u7ed3\u8bba",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "verification.md",
+      "source_location": "L174",
+      "weight": 1.0
+    },
+    {
+      "source": "verification_readme_\u91cd\u6784\u4e0e\u5355\u4eba_r3_\u6cbb\u7406\u9a8c\u8bc1",
+      "target": "verification_e1_0_transaction_api_v1_\u51bb\u7ed3\u9a8c\u8bc1",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "verification.md",
+      "source_location": "L211",
       "weight": 1.0
     },
     {
@@ -33851,7 +35108,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "sandbox/domain.mjs",
-      "source_location": "L305",
+      "source_location": "L308",
       "weight": 1.0
     },
     {
@@ -33862,7 +35119,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "sandbox/domain.mjs",
-      "source_location": "L317",
+      "source_location": "L320",
       "weight": 1.0
     },
     {
@@ -33873,7 +35130,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "sandbox/domain.mjs",
-      "source_location": "L372",
+      "source_location": "L375",
       "weight": 1.0
     },
     {
@@ -33884,7 +35141,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "sandbox/domain.mjs",
-      "source_location": "L410",
+      "source_location": "L413",
       "weight": 1.0
     },
     {
@@ -33895,7 +35152,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "sandbox/domain.mjs",
-      "source_location": "L451",
+      "source_location": "L454",
       "weight": 1.0
     },
     {
@@ -33906,7 +35163,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "sandbox/domain.mjs",
-      "source_location": "L524",
+      "source_location": "L527",
       "weight": 1.0
     },
     {
@@ -33917,7 +35174,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "sandbox/domain.mjs",
-      "source_location": "L531",
+      "source_location": "L534",
       "weight": 1.0
     },
     {
@@ -34391,6 +35648,17 @@
       "confidence_score": 1.0,
       "source_file": "docs/03-technical/README.md",
       "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_03_technical_readme",
+      "target": "docs_03_technical_phase0_epic1_external_agent_integration",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/03-technical/README.md",
+      "source_location": "L15",
       "weight": 1.0
     },
     {
@@ -34876,5 +36144,5 @@
       "source_file": "README.md"
     }
   ],
-  "built_at_commit": "8f2c60201a97219c1d372b4cc4ab9a12cdfe88eb"
+  "built_at_commit": "afeb1ff63d5906afbf68ea1b667ccc6dc93c18fc"
 }

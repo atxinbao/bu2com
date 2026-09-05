@@ -7,9 +7,12 @@ const flow = JSON.parse(
   readFileSync(join(here, 'examples/payment-flow.json'), 'utf8'),
 );
 const mcp = JSON.parse(readFileSync(join(here, 'mcp-tools.json'), 'utf8'));
+const openapi = readFileSync(join(here, 'openapi.yaml'), 'utf8');
 
+let assertions = 0;
 function assert(condition, message) {
   if (!condition) throw new Error(message);
+  assertions += 1;
 }
 
 assert(flow.quote.id.startsWith('quo_'), 'quote id prefix');
@@ -59,5 +62,19 @@ assert(
   ),
   'MCP inputs must be closed object schemas',
 );
+assert(mcp.contract_status === 'phase0-frozen', 'MCP contract must be Phase 0 frozen');
+assert(
+  openapi.includes('x-bu2-contract-status: phase0-frozen'),
+  'OpenAPI contract must be Phase 0 frozen',
+);
+assert(openapi.includes('PageCursor:'), 'OpenAPI must define cursor pagination');
+assert(openapi.includes('TransactionPage:'), 'OpenAPI must define transaction pages');
+assert(openapi.includes('X-Request-Id:'), 'OpenAPI must expose request correlation ids');
+assert(
+  openapi.includes('/receipts/{receipt_id}/verify:'),
+  'OpenAPI must expose receipt verification',
+);
 
-console.log('BU2 contract validation passed: 12 invariants, 6 MCP tools.');
+console.log(
+  `BU2 contract validation passed: ${assertions} invariants, ${mcp.tools.length} MCP tools.`,
+);

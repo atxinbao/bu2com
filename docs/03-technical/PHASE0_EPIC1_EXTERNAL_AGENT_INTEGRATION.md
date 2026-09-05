@@ -39,12 +39,14 @@
 
 ## 4. 范围
 
-### E1.0 — 冻结 Transaction API v1
+### E1.0 — 冻结 Transaction API v1（已完成）
 
 - 将 Agent Payment API v0.1 从“冻结候选”升级为 Phase 0 frozen contract。
 - 对齐 OpenAPI、MCP 工具、HTTP 实现、示例与稳定错误码。
 - 明确列表、详情、分页、请求关联 ID 和运行时输入校验。
 - 兼容变化只允许增加可选字段；破坏性变化必须进入新版本。
+
+完成证据：`/v1` 已增加不透明 cursor 分页、`X-Request-Id`、AJV 运行时请求校验和稳定校验错误；OpenAPI 已补齐实际 Delivery 响应与 Receipt verify 路由。既有交易状态机、金额和资金行为未改变。
 
 ### E1.1 — Webhook 可靠性闭环
 

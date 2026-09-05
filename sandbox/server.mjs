@@ -8,12 +8,40 @@ import { X402PaymentAdapter } from "./x402-adapter.mjs";
 import { ExactEvmScheme } from "@x402/evm/exact/client";
 import { wrapFetchWithPaymentFromConfig } from "@x402/fetch";
 import { privateKeyToAccount } from "viem/accounts";
+import {
+  paginateTransactions,
+  validateBody,
+  validateIdempotencyKey,
+  validateNoQueryParameters,
+  validateResourceId,
+} from "./api-contract.mjs";
 
 const requestId = () => `req_${crypto.randomUUID().replaceAll("-", "").slice(0, 16)}`;
+const MAX_JSON_BODY_BYTES = 1_048_576;
 
 async function readJson(request) {
+  if (!request.headers["content-type"]?.toLowerCase().startsWith("application/json")) {
+    throw new ApiError(
+      415,
+      "validation_error",
+      "unsupported_media_type",
+      "Content-Type must be application/json.",
+    );
+  }
   const chunks = [];
-  for await (const chunk of request) chunks.push(chunk);
+  let size = 0;
+  for await (const chunk of request) {
+    size += chunk.length;
+    if (size > MAX_JSON_BODY_BYTES) {
+      throw new ApiError(
+        413,
+        "validation_error",
+        "request_body_too_large",
+        "Request body must not exceed 1 MiB.",
+      );
+    }
+    chunks.push(chunk);
+  }
   if (chunks.length === 0) return {};
   try {
     return JSON.parse(Buffer.concat(chunks).toString("utf8"));
@@ -80,16 +108,21 @@ export function createBu2Server({ sandbox, ledger, dispatcher, adapter, initialW
   const activeDispatcher = dispatcher ?? new WebhookDispatcher({ ledger: activeLedger });
   const server = createServer(async (request, response) => {
     const id = requestId();
+    response.setHeader("x-request-id", id);
+    response.setHeader("access-control-expose-headers", "x-request-id");
     const url = new URL(request.url, "http://127.0.0.1");
     const segments = url.pathname.split("/").filter(Boolean);
     const key = request.headers["idempotency-key"];
     try {
+      if (url.pathname.startsWith("/v1/") && url.pathname !== "/v1/transactions") {
+        validateNoQueryParameters(url.searchParams);
+      }
       if (request.method === "OPTIONS") return send(response, 204, {});
       if (request.method === "GET" && url.pathname === "/health") {
         return send(response, 200, {
           status: "ok",
           service: "bu2-reference-server",
-          version: "0.3.0",
+          version: "0.4.0",
           persistence: activeLedger.path,
           adapter: activeSandbox.adapter?.name ?? "none",
           ledger_events: activeLedger.listLedgerEvents().length,
@@ -102,63 +135,98 @@ export function createBu2Server({ sandbox, ledger, dispatcher, adapter, initialW
         return send(response, 200, { data: activeLedger.listLedgerEvents() });
       }
       if (request.method === "GET" && url.pathname === "/v1/transactions") {
-        return send(response, 200, { data: activeSandbox.listTransactions() });
+        return send(
+          response,
+          200,
+          paginateTransactions(activeSandbox.listTransactions(), url.searchParams),
+        );
       }
       if (request.method === "GET" && url.pathname === "/v1/webhook_outbox") {
         return send(response, 200, { data: activeLedger.outboxRows() });
       }
       if (request.method === "POST" && url.pathname === "/v1/webhook_subscriptions") {
-        const body = await readJson(request);
-        if (!body.id || !body.url || !body.secret)
-          throw new ApiError(
-            400,
-            "validation_error",
-            "missing_webhook_fields",
-            "id, url, and secret are required.",
-          );
+        const body = validateBody("webhookSubscription", await readJson(request));
         return send(response, 201, activeLedger.addWebhookSubscription(body));
       }
       if (request.method === "POST" && url.pathname === "/v1/webhooks/dispatch") {
         return send(response, 200, { data: await activeDispatcher.flush({ force: true }) });
       }
       if (request.method === "POST" && url.pathname === "/v1/quotes") {
-        return send(response, 201, activeSandbox.createQuote(await readJson(request), key));
+        const body = validateBody("createQuote", await readJson(request));
+        return send(response, 201, activeSandbox.createQuote(body, validateIdempotencyKey(key)));
       }
       if (request.method === "POST" && url.pathname === "/v1/payment_intents") {
+        const body = validateBody("createPaymentIntent", await readJson(request));
         return send(
           response,
           201,
-          await activeSandbox.createPaymentIntent(await readJson(request), key),
+          await activeSandbox.createPaymentIntent(body, validateIdempotencyKey(key)),
         );
       }
       if (segments[0] === "v1" && segments[1] === "payment_intents" && segments[2]) {
         if (request.method === "GET" && segments.length === 3) {
-          return send(response, 200, activeSandbox.getPaymentIntent(segments[2]));
+          const paymentIntentId = validateResourceId(
+            segments[2],
+            "pi",
+            "payment_intent_id",
+          );
+          return send(response, 200, activeSandbox.getPaymentIntent(paymentIntentId));
         }
-        if (request.method === "POST" && segments[3] === "authorization") {
+        if (
+          request.method === "POST" &&
+          segments.length === 4 &&
+          segments[3] === "authorization"
+        ) {
+          const paymentIntentId = validateResourceId(
+            segments[2],
+            "pi",
+            "payment_intent_id",
+          );
+          const body = validateBody("authorizationDecision", await readJson(request));
           return send(
             response,
             200,
-            await activeSandbox.decideAuthorization(segments[2], await readJson(request), key),
+            await activeSandbox.decideAuthorization(
+              paymentIntentId,
+              body,
+              validateIdempotencyKey(key),
+            ),
           );
         }
       }
       if (segments[0] === "v1" && segments[1] === "transactions" && segments[2]) {
         if (request.method === "GET" && segments.length === 3) {
-          return send(response, 200, activeSandbox.getTransaction(segments[2]));
+          const transactionId = validateResourceId(segments[2], "txn", "transaction_id");
+          return send(response, 200, activeSandbox.getTransaction(transactionId));
         }
-        if (request.method === "POST" && segments[3] === "deliveries") {
+        if (request.method === "POST" && segments.length === 4 && segments[3] === "deliveries") {
+          const transactionId = validateResourceId(segments[2], "txn", "transaction_id");
+          const body = validateBody("deliveryEvidence", await readJson(request));
           return send(
             response,
             201,
-            activeSandbox.submitDelivery(segments[2], await readJson(request), key),
+            activeSandbox.submitDelivery(
+              transactionId,
+              body,
+              validateIdempotencyKey(key),
+            ),
           );
         }
-        if (request.method === "POST" && segments[3] === "settlements") {
+        if (
+          request.method === "POST" &&
+          segments.length === 4 &&
+          segments[3] === "settlements"
+        ) {
+          const transactionId = validateResourceId(segments[2], "txn", "transaction_id");
+          const body = validateBody("settlement", await readJson(request));
           return send(
             response,
             201,
-            await activeSandbox.settle(segments[2], await readJson(request), key),
+            await activeSandbox.settle(
+              transactionId,
+              body,
+              validateIdempotencyKey(key),
+            ),
           );
         }
       }
@@ -168,9 +236,11 @@ export function createBu2Server({ sandbox, ledger, dispatcher, adapter, initialW
         segments[1] === "receipts" &&
         segments[2]
       ) {
-        if (segments[3] === "verify")
-          return send(response, 200, activeSandbox.verifyReceipt(segments[2]));
-        return send(response, 200, activeSandbox.getReceipt(segments[2]));
+        const receiptId = validateResourceId(segments[2], "rcpt", "receipt_id");
+        if (segments.length === 4 && segments[3] === "verify")
+          return send(response, 200, activeSandbox.verifyReceipt(receiptId));
+        if (segments.length === 3)
+          return send(response, 200, activeSandbox.getReceipt(receiptId));
       }
       throw new ApiError(404, "resource_not_found", "route_not_found", "Route was not found.");
     } catch (error) {
@@ -219,5 +289,5 @@ export async function listen({
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
   const running = await listen();
-  console.log(`BU2 Reference Server v0.3 listening on ${running.url}`);
+  console.log(`BU2 Reference Server v0.4 listening on ${running.url}`);
 }

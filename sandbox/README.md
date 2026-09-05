@@ -1,9 +1,9 @@
-# BU2 Reference Server / x402 Sandbox v0.3
+# BU2 Reference Server v0.4 / x402 Sandbox v0.3
 
 日期：2026-09-01  
 执行者：Codex
 
-本目录实现 Contract v0.1 的本地 SQLite 沙盒。它具备追加账本、Webhook Outbox、模拟支付 Adapter、签名 Receipt，以及基于官方 x402 SDK 的 Base Sepolia `exact` 支付通道；不持有真实资金，不可用于生产。
+本目录实现 Phase 0 Frozen `/v1` Contract 的本地 SQLite 沙盒。它具备追加账本、Webhook Outbox、模拟支付 Adapter、签名 Receipt、稳定分页与运行时请求校验，以及基于官方 x402 SDK 的 Base Sepolia `exact` 支付通道；不持有真实资金，不可用于生产。
 
 ## 启动
 
@@ -90,9 +90,11 @@ npm run x402:server
 ## 沙盒调试端点
 
 - `GET /health`：服务、数据库、Adapter 和账本事件数量。
-- `GET /v1/transactions`：按时间倒序返回交易及其支付、交付、通道和 Receipt 上下文。
+- `GET /v1/transactions?limit=20&cursor=...`：按时间倒序返回交易及其支付、交付、通道和 Receipt 上下文，使用不透明 cursor 分页。
 - `GET /v1/transactions/{id}`：返回单笔完整交易详情。
 - `GET /v1/ledger`：追加式账本事件。
 - `POST /v1/webhook_subscriptions`：创建本地 Webhook 订阅。
 - `POST /v1/webhooks/dispatch`：立即投递当前 Outbox。
 - `GET /v1/webhook_outbox`：查看投递状态与尝试次数。
+
+所有 HTTP 响应均返回 `X-Request-Id`。公开 `/v1` 请求体、资源 ID、分页参数与 `Idempotency-Key` 会在边界运行时校验；未知字段、非法 cursor 和不匹配的资源前缀返回稳定的 JSON 错误。Reference Server 仅绑定本机 Sandbox/Testnet，当前认证边界不支持公开部署。
