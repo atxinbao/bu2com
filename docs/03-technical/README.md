@@ -24,5 +24,6 @@
 - [x402 Base Sepolia 实结算证据](X402_LIVE_SETTLEMENT_EVIDENCE.md)
 - [Phase 0 Epic 1：外部 Agent 交易接入与可靠性](PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md)
 - [Phase 0 Epic 2：开发者接入规模化](PHASE0_EPIC2_DEVELOPER_INTEGRATION_SCALE.md)
+- [Phase 0 Epic 3：外部试点准备与证据](PHASE0_EPIC3_EXTERNAL_PILOT_EVIDENCE.md)
 
-Contract v0.1 已具备本地 SQLite Reference Server、追加式账本、Webhook Outbox、有限重试与死信、审计重放、Secret 版本轮换、端到端交易关联、结构化观测、健康快照、签名 Receipt、模拟支付 Adapter、基于官方 MCP SDK 的外部 Buyer/Seller Agent 样例，以及基于官方 x402 SDK 的 Base Sepolia Testnet Adapter。Epic 1 已经 PR #8 合并并完成；Epic 2 的 E2.1–E2.3 已分别经 PR #10–#12 合并，E2.4 已完成 HTTP、SDK 和 MCP 三条本地 clean-room 验收，等待 R2 人工审查。当前只允许 Simulation / Testnet；SDK 与 MCP 均未公开发布，Mainnet、真实资金托管与生产密钥管理仍受项目治理约束，未经独立准入不得启用。
+Contract v0.1 已具备本地 SQLite Reference Server、追加式账本、Webhook Outbox、有限重试与死信、审计重放、Secret 版本轮换、端到端交易关联、结构化观测、健康快照、签名 Receipt、模拟支付 Adapter、基于官方 MCP SDK 的外部 Buyer/Seller Agent 样例，以及基于官方 x402 SDK 的 Base Sepolia Testnet Adapter。Epic 1 已经 PR #8 合并并完成；Epic 2 已经 PR #10–#13 合并并完成。当前正式开发进入 Epic 3，先冻结 Pilot Manifest、最小化 Evidence、失败支持包与三团队外部试点门槛。当前只允许 Simulation / Testnet；SDK 与 MCP 均未公开发布，Mainnet、真实资金托管与生产密钥管理仍受项目治理约束，未经独立准入不得启用。

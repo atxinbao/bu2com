@@ -275,6 +275,23 @@ Product v0.1 可作为客户访谈、交互原型和工程方案设计的输入�
 
 结论：E2.4 满足冻结范围并完成 3/3 clean-room 本地验收，达到 **GO for R2 review**。只有本 PR 经 Project Owner 人工审查并合并后，Epic 2 才能标记 Done；结果不构成公开 npm 发布、远程 MCP 托管、Production、Mainnet、真实资金或托管授权。
 
+## Phase 0 Epic 3 范围冻结验证
+
+日期：2026-09-06
+执行者：Codex
+
+- 前置状态：PR #13 已合并，merge commit 为 `06043ffb74994678fa0b2fbe66ae6f40b8754736`；Epic 2 的 E2.1–E2.4 均已完成人工审查与合并，状态更新为 Done。
+- Epic：`External Pilot Readiness & Evidence`。
+- 本次风险等级：R0；仅关闭 Epic 2 状态并冻结下一 Epic，不修改代码、API、事件、Schema、金额、状态机、账本、数据库、Webhook、Adapter、Receipt 或支付通道。
+- 顺序：E3.1 Pilot Manifest 与本地启动门槛、E3.2 最小 Pilot Evidence 与显式共享、E3.3 失败处置与支持包、E3.4 三团队外部试点与阶段决策。
+- 产品边界：用户继续在 ChatGPT、Codex、Claude 或自建 Agent 中创建和运行任务；BU2 只处理收付闭环，不建设 BU2 Task 工作台或通用 Agent Runtime。
+- 证据边界：自动 clean-room 只作为工具前置证明，不能替代至少 3 个真实外部团队的接入耗时、人工协助、失败和价值反馈。
+- 阶段边界：项目仍处于 Phase 0 Simulation/Testnet；本次冻结不构成 Phase 1、公开 npm、远程 MCP、生产 API Key、Mainnet、真实资金、托管或生产部署授权。
+- 恢复：可以移除 Epic 3 入口并恢复 Epic 2 后续门槛；无代码回滚、数据迁移、外部分发或交易历史恢复。
+- 本地验证：相关 Markdown 链接、HTML 结构、`git diff --check` 与新增行敏感信息扫描已执行，结果见本次提交前检查。
+
+结论：Epic 3 已定义目标、非目标、Owner、外部用户闭环、证据字段、指标、失败、恢复和完成门槛，达到 **Ready**。下一实现项为 E3.1 Pilot Manifest 与本地启动门槛；任何真实外部试点结果和阶段升级仍需独立人工证据与批准。
+
 ## Phase 0 开发准入结论
 
 日期：2026-09-01

@@ -9,6 +9,7 @@ BU2.com 是 Agent 的 AI 收付平台。它嵌入 ChatGPT、Codex、Claude 和�
 | 项目 | 当前基线 |
 | --- | --- |
 | 项目阶段 | Phase 0 · Simulation / Testnet |
+| 当前 Epic | Epic 3 · External Pilot Readiness & Evidence |
 | 产品定义 | Product v0.3 · Transaction-first |
 | API 契约 | Agent Payment API v0.1 |
 | Reference Server | Sandbox v0.8 · Node.js + SQLite WAL + MCP |
@@ -22,7 +23,7 @@ BU2.com 是 Agent 的 AI 收付平台。它嵌入 ChatGPT、Codex、Claude 和�
 
 当前代码已经形成可运行的 Agent 收付闭环，但仍是本地与测试网证据，不是生产支付系统或法律合规结论。
 
-[Phase 0 Epic 1：External Agent Transaction Integration & Reliability](docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md) 已经 PR #8 合并并完成。[Phase 0 Epic 2：Developer Integration Scale](docs/03-technical/PHASE0_EPIC2_DEVELOPER_INTEGRATION_SCALE.md) 的 E2.1–E2.3 已经 PR #10–#12 合并，E2.4 已完成三条 clean-room 本地验收并等待 R2 人工审查；继续复用已经冻结的 Transaction API v1。
+[Phase 0 Epic 1：External Agent Transaction Integration & Reliability](docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md) 已经 PR #8 合并并完成。[Phase 0 Epic 2：Developer Integration Scale](docs/03-technical/PHASE0_EPIC2_DEVELOPER_INTEGRATION_SCALE.md) 已经 PR #10–#13 合并并完成。当前正式开发项为 [Phase 0 Epic 3：External Pilot Readiness & Evidence](docs/03-technical/PHASE0_EPIC3_EXTERNAL_PILOT_EVIDENCE.md)：验证真实外部团队能否在自己的 Agent 工作流中完成 BU2 Simulation 收付闭环，不把任务迁移到 BU2，也不自动进入 Phase 1。
 
 ## Agent 支付闭环
 
@@ -196,6 +197,7 @@ bu2com/
 - [x402 Sandbox Adapter v0.4](docs/03-technical/X402_ADAPTER_V0.4.md)
 - [Base Sepolia 实结算证据](docs/03-technical/X402_LIVE_SETTLEMENT_EVIDENCE.md)
 - [Phase 0 Epic 2：开发者接入规模化](docs/03-technical/PHASE0_EPIC2_DEVELOPER_INTEGRATION_SCALE.md)
+- [Phase 0 Epic 3：外部试点准备与证据](docs/03-technical/PHASE0_EPIC3_EXTERNAL_PILOT_EVIDENCE.md)
 - [TypeScript SDK v0.1](packages/typescript-sdk/README.md)
 - [MCP Host 配置](integrations/mcp/README.md)
 - [开发者接入诊断 v0.1](docs/03-technical/DEVELOPER_DIAGNOSTICS_V0.1.md)
