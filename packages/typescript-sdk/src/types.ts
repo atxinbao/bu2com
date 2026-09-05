@@ -1,0 +1,51 @@
+import type { components, paths } from "./generated/openapi.js";
+
+export type Amount = components["schemas"]["Amount"];
+export type Authorization = components["schemas"]["Authorization"];
+export type CreatePaymentIntent = components["schemas"]["CreatePaymentIntent"];
+export type CreateQuote = components["schemas"]["CreateQuote"];
+export type DeliveryEvidence = components["schemas"]["DeliveryEvidence"];
+export type DeliveryRecord = components["schemas"]["DeliveryRecord"];
+export type PaymentIntent = components["schemas"]["PaymentIntent"];
+export type Quote = components["schemas"]["Quote"];
+export type Receipt = components["schemas"]["Receipt"];
+export type SettlementRecoveryResult = components["schemas"]["SettlementRecoveryResult"];
+export type Transaction = components["schemas"]["Transaction"];
+export type TransactionPage = components["schemas"]["TransactionPage"];
+export type TransactionView = components["schemas"]["TransactionView"];
+
+export type AuthorizationDecision = NonNullable<
+  paths["/payment_intents/{payment_intent_id}/authorization"]["post"]["requestBody"]
+>["content"]["application/json"];
+
+export type DeliveryResult =
+  paths["/transactions/{transaction_id}/deliveries"]["post"]["responses"][201]["content"]["application/json"];
+
+export type SettlementResult =
+  paths["/transactions/{transaction_id}/settlements"]["post"]["responses"][201]["content"]["application/json"];
+
+export type ReceiptVerification =
+  paths["/receipts/{receipt_id}/verify"]["get"]["responses"][200]["content"]["application/json"];
+
+export type TransactionListQuery = NonNullable<
+  paths["/transactions"]["get"]["parameters"]["query"]
+>;
+
+export type Bu2Environment = "simulation" | "testnet";
+
+export interface Bu2ClientOptions {
+  baseUrl: string;
+  environment: Bu2Environment;
+  defaultTimeoutMs?: number;
+  fetch?: typeof globalThis.fetch;
+}
+
+export interface Bu2RequestOptions {
+  traceId?: string;
+  timeoutMs?: number;
+  signal?: AbortSignal;
+}
+
+export interface Bu2MutationOptions extends Bu2RequestOptions {
+  idempotencyKey: string;
+}

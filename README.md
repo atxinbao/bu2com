@@ -12,6 +12,7 @@ BU2.com 是 Agent 的 AI 收付平台。它嵌入 ChatGPT、Codex、Claude 和�
 | 产品定义 | Product v0.3 · Transaction-first |
 | API 契约 | Agent Payment API v0.1 |
 | Reference Server | Sandbox v0.8 · Node.js + SQLite WAL + MCP |
+| TypeScript SDK | `@bu2/sdk` v0.1 · Monorepo private package |
 | 支付通道 | Simulated Adapter + x402 Base Sepolia Adapter |
 | 产品界面 | React 19 + TypeScript 双语原型 |
 | 生产边界 | Mainnet、客户资金托管和法币能力尚未开放 |
@@ -53,6 +54,7 @@ BU2 将授权、资金预留、交付、结算和退款保存为不同事实。�
 - SimulatedPaymentAdapter 与官方 x402 v2 Base Sepolia Adapter。
 - x402 challenge 全字段校验、未知结算冻结、显式恢复查询与恢复审计。
 - 官方 MCP TypeScript SDK 2.0 stdio Server，以及独立 Buyer/Seller Agent Simulation 样例。
+- OpenAPI 生成类型的 `@bu2/sdk` v0.1 薄客户端；显式幂等、无自动重试和错误恢复分类。
 - Ed25519 签名 Receipt 及独立验证。
 - 中英文 Transaction-first 产品界面，可展示真实 Sandbox API 数据并在离线时降级到演示数据。
 - OpenAPI 3.1、Agent 原生 MCP 工具和完整交易示例。
@@ -70,6 +72,7 @@ BU2 将授权、资金预留、交付、结算和退款保存为不同事实。�
 ```bash
 npm ci --prefix sandbox
 npm ci --prefix prototype
+npm ci --prefix packages/typescript-sdk
 ```
 
 ### 运行自动化验证
@@ -79,9 +82,10 @@ node docs/03-technical/validate-contract.mjs
 npm --prefix sandbox test
 npm --prefix prototype run lint
 npm --prefix prototype run build
+npm --prefix packages/typescript-sdk test
 ```
 
-当前基线应得到：Contract 29 项不变量通过、6 个 MCP 工具有效、Sandbox 44/44 通过、Prototype lint 与 build 通过。
+当前基线应得到：Contract 29 项不变量通过、6 个 MCP 工具有效、Sandbox 44/44 通过、TypeScript SDK 8/8 通过、Prototype lint 与 build 通过。
 
 ### 一条命令运行外部 Agent 样例
 
@@ -125,6 +129,8 @@ x402 商户、协议探针、测试钱包和完整 Base Sepolia 演示请参阅 
 bu2com/
 ├── prototype/        # Transaction-first 双语 React/TypeScript 产品界面
 ├── sandbox/          # Reference Server、SQLite、Webhook 与支付 Adapter
+├── packages/
+│   └── typescript-sdk/ # OpenAPI 生成类型的内部 TypeScript SDK v0.1
 ├── docs/
 │   ├── 01-business-plan/
 │   ├── 02-product/
@@ -158,6 +164,7 @@ bu2com/
 - [x402 Sandbox Adapter v0.4](docs/03-technical/X402_ADAPTER_V0.4.md)
 - [Base Sepolia 实结算证据](docs/03-technical/X402_LIVE_SETTLEMENT_EVIDENCE.md)
 - [Phase 0 Epic 2：开发者接入规模化](docs/03-technical/PHASE0_EPIC2_DEVELOPER_INTEGRATION_SCALE.md)
+- [TypeScript SDK v0.1](packages/typescript-sdk/README.md)
 
 ### 商业计划
 

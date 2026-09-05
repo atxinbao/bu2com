@@ -152,6 +152,30 @@
       <h2 id="unreleased">Unreleased</h2>
       <article class="release">
         <div class="release-head">
+          <div><h3>TypeScript SDK v0.1 E2.1</h3><time datetime="2026-09-06">2026-09-06</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">完成 Epic 2 E2.1 本地实现：将冻结 Agent Payment API v1 包装为 Monorepo 内部 TypeScript SDK，使外部 Agent 获得生成类型、显式幂等和可执行的失败恢复语义，而不复制 Transaction Core 或自动重试未知资金结果。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag added">Added</span>新增私有包 <code>@bu2/sdk</code> v0.1.0，覆盖 Quote、PaymentIntent、Authorization、Transaction、DeliveryEvidence、Settlement、Recovery 和 Receipt。</li>
+            <li><span class="tag added">Added</span>使用 <code>openapi-typescript</code> 7.13.0 从冻结 OpenAPI 生成请求与响应类型，并加入生成漂移门禁；运行时复用 <code>openapi-fetch</code> 0.17.0。</li>
+            <li><span class="tag changed">Changed</span>所有写操作要求调用方提供显式幂等键；SDK 不自动重试，写入超时、网络失败或 5xx 返回 <code>query_before_retry</code>。</li>
+            <li><span class="tag added">Added</span>稳定 SDK Error 保留 HTTP status、BU2 type/code、request/trace ID、details 与恢复分类；中英文文档明确 Simulation/Testnet 和未公开发布边界。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R2 · 外部交易客户端，不包含生产资金</span></div>
+          <div><b>金融行为影响</b><span>不改变金额、状态机、账本、数据库、Webhook 或 Adapter；客户端无自动重试</span></div>
+          <div><b>兼容性</b><span>API v1、MCP 和历史数据不变；类型完全由现有 OpenAPI 生成</span></div>
+          <div><b>验证</b><span>SDK 8/8、生成漂移、严格类型、包清单及全项目门禁</span></div>
+          <div><b>恢复</b><span>移除内部 SDK 并回到既有 HTTP/MCP；交易历史和服务端无需迁移</span></div>
+        </div>
+      </article>
+
+      <article class="release">
+        <div class="release-head">
           <div><h3>Phase 0 Epic 2 开发者接入规模化范围冻结</h3><time datetime="2026-09-06">2026-09-06</time></div>
           <span class="status">Unreleased</span>
         </div>
