@@ -1,9 +1,9 @@
-# BU2 Reference Server v0.7 / x402 Sandbox v0.4
+# BU2 Reference Server v0.8 / x402 Sandbox v0.4
 
-日期：2026-09-05
+日期：2026-09-06
 执行者：Codex
 
-本目录实现 Phase 0 Frozen `/v1` Contract 的本地 SQLite 沙盒。它具备追加账本、Webhook Outbox、模拟支付 Adapter、签名 Receipt、稳定分页与运行时请求校验，以及基于官方 x402 SDK 的 Base Sepolia `exact` 支付通道；不持有真实资金，不可用于生产。
+本目录实现 Phase 0 Frozen `/v1` Contract 的本地 SQLite 沙盒。它具备追加账本、Webhook Outbox、模拟支付 Adapter、签名 Receipt、稳定分页与运行时请求校验、基于官方 MCP SDK 的外部 Agent 接入样例，以及基于官方 x402 SDK 的 Base Sepolia `exact` 支付通道；不持有真实资金，不可用于生产。
 
 ## 启动
 
@@ -25,13 +25,29 @@ node sandbox/demo-agents.mjs
 
 演示顺序：卖方报价 → 买方 PaymentIntent → Mandate 请求确认 → 人工授权与资金预留 → 卖方交付 → 结算 → Ed25519 Receipt 验证。
 
+## 外部 Buyer / Seller Agent 与 MCP
+
+从空环境执行一条命令即可启动隔离 Reference Server、标准 stdio MCP Server，并让独立 Buyer/Seller Agent 完成首笔 Simulation 交易：
+
+```bash
+npm run demo:external
+```
+
+也可以把 MCP Server 连接到已运行的本地 BU2：
+
+```bash
+BU2_SANDBOX_URL=http://127.0.0.1:3100 npm run mcp
+```
+
+Agent 只获得冻结的 6 个 MCP 工具；人工授权和 BU2 结算仍留在 HTTP 控制面。MCP 层只转发 `/v1`，不会直接修改领域状态或账本。完整配置、角色边界和五分钟快速开始见 [外部 Agent 快速接入](../docs/03-technical/EXTERNAL_AGENT_QUICKSTART.md)。
+
 ## 测试
 
 ```bash
 node --test sandbox/*.test.mjs
 ```
 
-覆盖完整闭环、幂等冲突、报价金额篡改、Mandate 拒绝、交付前非法结算、SQLite 重启恢复、Adapter 防重复、Webhook HTTP 超时/5xx、有限重试、死信、审计重放、并发租约、Secret 轮换、端到端关联、日志脱敏、健康快照、x402 未知结果恢复和 Receipt 签名验证。
+覆盖完整闭环、幂等冲突、报价金额篡改、Mandate 拒绝、交付前非法结算、SQLite 重启恢复、Adapter 防重复、Webhook HTTP 超时/5xx、有限重试、死信、审计重放、并发租约、Secret 轮换、端到端关联、日志脱敏、健康快照、MCP 外部 Agent 接入、x402 未知结果恢复和 Receipt 签名验证。
 
 ## x402 沙盒商户
 

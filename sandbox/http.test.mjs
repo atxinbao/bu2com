@@ -284,7 +284,7 @@ test("HTTP server exposes an explicit x402 adapter mode without a signer", async
       ),
   );
   const health = await request(running.url, "/health");
-  assert.equal(health.body.version, "0.7.0");
+  assert.equal(health.body.version, "0.8.0");
   assert.equal(health.body.adapter, "x402_exact_base_sepolia");
   assert.equal(running.sandbox.wallet.currency, "USD");
 });

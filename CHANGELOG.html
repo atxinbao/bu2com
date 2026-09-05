@@ -188,6 +188,30 @@
 
       <article class="release">
         <div class="release-head">
+          <div><h3>外部 Buyer / Seller Agent 接入样例 E1.4</h3><time datetime="2026-09-06">2026-09-06</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">完成 Epic E1.4 本地实现：Reference Sandbox v0.8 提供标准 MCP stdio 入口和独立 Buyer/Seller Agent 样例，在不迁移外部任务的前提下完成同一套 BU2 Simulation 交易闭环。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag added">Added</span>基于官方 MCP TypeScript SDK 2.0 增加可运行的 stdio Server；6 个工具直接读取冻结 Schema，并只转发现有 <code>/v1</code> HTTP API。</li>
+            <li><span class="tag added">Added</span>新增独立 Seller Agent 与 Buyer Agent：Seller 创建 Quote、提交 DeliveryEvidence；Buyer 创建 PaymentIntent、查询状态、读取并验证 Receipt。</li>
+            <li><span class="tag changed">Changed</span>人工授权与 BU2 结算保持在 HTTP 控制面，MCP Agent 不获得自批授权或直接结算能力，Transaction Core 仍是唯一状态所有者。</li>
+            <li><span class="tag added">Added</span>新增单命令 Simulation 演示、五分钟接入文档与 15 分钟耗时自动化门禁。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R2 · 外部 Agent 交易入口</span></div>
+          <div><b>金融行为影响</b><span>不改变金额、状态机、账本、Outbox 或 Adapter；MCP 仅映射冻结 HTTP 契约</span></div>
+          <div><b>兼容性</b><span>无数据库或 API 破坏性变化；新增官方 SDK 运行依赖与可选 stdio 入口</span></div>
+          <div><b>验证</b><span>Contract 29 项不变量；MCP 6/6；Sandbox 44/44；Prototype 与格式门禁见本次验证记录</span></div>
+          <div><b>恢复</b><span>停用 MCP stdio 入口并继续使用既有 HTTP API；交易历史和 Receipt 无需迁移</span></div>
+        </div>
+      </article>
+
+      <article class="release">
+        <div class="release-head">
           <div><h3>x402 Testnet 失败恢复 E1.3</h3><time datetime="2026-09-06">2026-09-06</time></div>
           <span class="status">Unreleased</span>
         </div>
