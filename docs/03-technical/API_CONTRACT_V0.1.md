@@ -35,6 +35,7 @@
 | WebhookOutbox | `out_` | 每个事件与订阅组合的可靠投递状态 |
 | WebhookDeliveryAttempt | `wha_` | 单次投递的不可变审计事实 |
 | WebhookReplay | `whrp_` | 死信人工重放的操作者与理由 |
+| AdapterRecoveryAttempt | `arv_` | 未知支付结果的一次不可变查询审计 |
 
 ## 3. PaymentIntent 最小输入
 
@@ -106,6 +107,8 @@ requires_authorization
 - 同一 Key 配合不同请求体返回 `409 idempotency_conflict`。
 - Key 至少保留 24 小时；资金动作建议永久绑定到业务记录。
 
+未知结算只能通过 `POST /transactions/{transaction_id}/settlement_recoveries` 显式查询。该操作同样要求幂等键，但不得调用支付提交入口；同键重放返回原查询结果。
+
 ## 7. 金额与对账
 
 - `amount.value` 必须是非负整数。
@@ -141,7 +144,7 @@ Receipt 至少覆盖：
 }
 ```
 
-P0 稳定错误类型：`validation_error`、`authentication_error`、`mandate_denied`、`insufficient_funds`、`idempotency_conflict`、`invalid_state_transition`、`resource_not_found`、`adapter_error`。
+P0 稳定错误类型：`validation_error`、`authentication_error`、`mandate_denied`、`insufficient_funds`、`idempotency_conflict`、`invalid_state_transition`、`resource_not_found`、`adapter_error`、`provider_unknown`。
 
 稳定校验错误码包括：`invalid_request_body`、`invalid_resource_id`、`invalid_query_parameters`、`invalid_limit`、`invalid_cursor`、`invalid_trace_id`、`missing_idempotency_key`、`invalid_json`、`unsupported_media_type` 和 `request_body_too_large`。
 
@@ -207,3 +210,12 @@ Webhook 使用事件 ID 去重；接收方应按至少一次投递处理，不�
 - 认证方案仍是生产准入的一部分；当前 Reference Server 只绑定本机 Sandbox/Testnet，不构成可公开部署的无认证支付服务。
 - x402、AP2、银行卡或稳定币只能作为 Adapter，不改变核心资源。
 - P0 不承诺真实托管、换汇、跨链、收益或开放市场。
+
+## 14. x402 未知结算恢复
+
+- challenge 必须匹配配置的 scheme、network、asset 与 BU2 授权金额，任一不匹配均失败关闭。
+- 付款请求超时、中断、5xx、成功响应缺少 `PAYMENT-RESPONSE` 或响应不可解释时保存 `provider_unknown`。
+- `provider_unknown` 不等于失败或成功：Transaction 保持 `delivery_submitted`，内部金额保持 reserved，不签发 Receipt。
+- 再次调用普通 settlement 必须返回 `x402_settlement_unknown`，不得再次提交付款。
+- 恢复查询只能使用 Provider 明确支持的查询边界；官方协议没有通用查询时不得伪造链上结论。
+- 每次实际恢复查询追加 `AdapterRecoveryAttempt`；只有明确 `settled` 才能完成 Transaction 并签发 Receipt。

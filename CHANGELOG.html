@@ -188,6 +188,31 @@
 
       <article class="release">
         <div class="release-head">
+          <div><h3>x402 Testnet 失败恢复 E1.3</h3><time datetime="2026-09-06">2026-09-06</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">完成 Epic E1.3：Reference Sandbox v0.7 将可能已支付但结果不确定的 x402 结算冻结为可查询、可审计且不会自动重复付款的恢复流程。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag added">Added</span>x402 challenge 新增 exact scheme、Base Sepolia network、USDC asset 与授权 amount 的独立稳定校验错误。</li>
+            <li><span class="tag added">Added</span>facilitator timeout、5xx、响应丢失、不可解析响应与 network 异常持久化为 <code>provider_unknown</code>；普通 settlement 后续调用不会再次执行支付。</li>
+            <li><span class="tag added">Added</span>新增幂等 <code>POST /v1/transactions/{id}/settlement_recoveries</code> 和 Provider 查询注入边界；未知时不释放内部预留、不签发 Receipt，确认 settled 后复用核心结算逻辑。</li>
+            <li><span class="tag added">Added</span>SQLite schema v4 追加 Adapter 错误/更新时间字段与不可变恢复尝试审计；旧数据库自动迁移。</li>
+            <li><span class="tag changed">Changed</span>Transaction 查询增加 <code>settlement_control</code>，OpenAPI、API 契约、Reference Server README、技术索引和 Epic 状态同步升级。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R2 · Testnet 支付结果判定与恢复</span></div>
+          <div><b>金融行为影响</b><span>结果未知时冻结普通重付；只有 Provider 明确确认才完成结算</span></div>
+          <div><b>兼容性</b><span>数据库仅追加迁移；核心对象、金额不变量与既有成功路径保持不变</span></div>
+          <div><b>验证</b><span>Contract 29 项不变量；Sandbox 41/41；OpenAPI、Prototype 与格式门禁见本次验证记录</span></div>
+          <div><b>恢复</b><span>切回 Simulated Adapter 并保留 provider_unknown 与恢复审计进行只读对账</span></div>
+        </div>
+      </article>
+
+      <article class="release">
+        <div class="release-head">
           <div><h3>交易链路可观测性 E1.2</h3><time datetime="2026-09-05">2026-09-05</time></div>
           <span class="status">Unreleased</span>
         </div>

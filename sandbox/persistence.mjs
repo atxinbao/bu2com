@@ -124,6 +124,11 @@ export class SqliteLedger {
         name: "transaction_observability",
         apply: () => this.migrateTransactionObservability(),
       },
+      {
+        version: 4,
+        name: "x402_failure_recovery",
+        apply: () => this.migrateX402FailureRecovery(),
+      },
     ];
     for (const migration of migrations) {
       if (applied.has(migration.version)) continue;
@@ -249,6 +254,33 @@ export class SqliteLedger {
     ensureColumn("webhook_delivery_attempts", "request_id", "TEXT");
     ensureColumn("webhook_delivery_attempts", "trace_id", "TEXT");
     ensureColumn("webhook_delivery_attempts", "transaction_id", "TEXT");
+  }
+
+  migrateX402FailureRecovery() {
+    const ensureColumn = (table, column, definition) => {
+      const columns = this.db.prepare(`PRAGMA table_info(${table})`).all();
+      if (!columns.some((candidate) => candidate.name === column)) {
+        this.db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+      }
+    };
+    ensureColumn("adapter_operations", "last_error", "TEXT");
+    ensureColumn("adapter_operations", "updated_at", "TEXT");
+    ensureColumn("adapter_operations", "resolved_at", "TEXT");
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS adapter_recovery_attempts (
+        sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+        id TEXT UNIQUE NOT NULL,
+        operation_key TEXT NOT NULL,
+        transaction_id TEXT NOT NULL,
+        status TEXT NOT NULL,
+        provider_reference TEXT,
+        reason_code TEXT,
+        created_at TEXT NOT NULL,
+        request_id TEXT,
+        trace_id TEXT,
+        FOREIGN KEY (operation_key) REFERENCES adapter_operations(idempotency_key)
+      );
+    `);
   }
 
   loadState() {
@@ -882,8 +914,9 @@ export class SqliteLedger {
       .prepare(`
       INSERT INTO adapter_operations(
         idempotency_key, operation, provider_reference, amount_value, currency,
-        status, created_at, request_id, trace_id, transaction_id
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        status, created_at, request_id, trace_id, transaction_id,
+        last_error, updated_at, resolved_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `)
       .run(
         operation.idempotency_key,
@@ -896,6 +929,9 @@ export class SqliteLedger {
         correlation.request_id ?? null,
         correlation.trace_id ?? null,
         correlation.transaction_id ?? null,
+        operation.last_error ?? null,
+        operation.updated_at ?? operation.created_at,
+        operation.resolved_at ?? null,
       );
     return {
       ...operation,
@@ -907,6 +943,100 @@ export class SqliteLedger {
 
   adapterOperations() {
     return this.db.prepare("SELECT * FROM adapter_operations ORDER BY created_at").all();
+  }
+
+  recordAdapterRecovery({
+    operation_key,
+    transaction_id,
+    status,
+    provider_reference = null,
+    reason_code = null,
+    created_at = new Date().toISOString(),
+  }) {
+    const correlation = this.observer?.context({ transaction_id }) ?? {
+      transaction_id,
+    };
+    return immediateTransaction(this.db, () => {
+      const operation = this.db
+        .prepare("SELECT * FROM adapter_operations WHERE idempotency_key=?")
+        .get(operation_key);
+      if (!operation) {
+        throw new ApiError(
+          404,
+          "resource_not_found",
+          "adapter_operation_not_found",
+          "Adapter operation was not found.",
+        );
+      }
+      const attempt = {
+        id: `arv_${randomUUID().replaceAll("-", "").slice(0, 16)}`,
+        operation_key,
+        transaction_id,
+        status,
+        provider_reference,
+        reason_code,
+        created_at,
+        request_id: correlation.request_id ?? null,
+        trace_id: correlation.trace_id ?? null,
+      };
+      this.db
+        .prepare(`
+          INSERT INTO adapter_recovery_attempts(
+            id, operation_key, transaction_id, status, provider_reference,
+            reason_code, created_at, request_id, trace_id
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `)
+        .run(
+          attempt.id,
+          attempt.operation_key,
+          attempt.transaction_id,
+          attempt.status,
+          attempt.provider_reference,
+          attempt.reason_code,
+          attempt.created_at,
+          attempt.request_id,
+          attempt.trace_id,
+        );
+      if (status === "settled") {
+        if (!provider_reference) {
+          throw new ApiError(
+            502,
+            "provider_error",
+            "x402_recovery_reference_missing",
+            "A settled recovery result must include a provider reference.",
+          );
+        }
+        this.db
+          .prepare(`
+            UPDATE adapter_operations
+            SET status='settled', provider_reference=?, last_error=NULL,
+                updated_at=?, resolved_at=?
+            WHERE idempotency_key=? AND status='provider_unknown'
+          `)
+          .run(provider_reference, created_at, created_at, operation_key);
+      } else {
+        this.db
+          .prepare(`
+            UPDATE adapter_operations
+            SET last_error=?, updated_at=?
+            WHERE idempotency_key=? AND status='provider_unknown'
+          `)
+          .run(reason_code, created_at, operation_key);
+      }
+      const updatedOperation = this.db
+        .prepare("SELECT * FROM adapter_operations WHERE idempotency_key=?")
+        .get(operation_key);
+      return { attempt, operation: { ...updatedOperation } };
+    });
+  }
+
+  adapterRecoveryAttempts(transactionId) {
+    return this.db
+      .prepare(`
+        SELECT * FROM adapter_recovery_attempts
+        WHERE transaction_id=? ORDER BY sequence
+      `)
+      .all(transactionId);
   }
 
   close() {

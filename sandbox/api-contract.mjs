@@ -95,6 +95,7 @@ const schemas = {
     },
   },
   settlement: { type: "object", additionalProperties: false },
+  settlementRecovery: { type: "object", additionalProperties: false },
   webhookSubscription: {
     type: "object",
     additionalProperties: false,
