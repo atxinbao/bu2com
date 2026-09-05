@@ -127,6 +127,8 @@ test("MCP handshake validation rejects an unexpected configured environment", ()
 
 test("stable MCP CLI rejects an incompatible API before starting stdio", async (context) => {
   const server = createServer((_request, response) => {
+    response.setHeader("x-request-id", "req_mcp_preflight");
+    response.setHeader("x-trace-id", "trc_mcp_preflight");
     response.writeHead(200, { "content-type": "application/json" });
     response.end(
       JSON.stringify({
@@ -154,6 +156,8 @@ test("stable MCP CLI rejects an incompatible API before starting stdio", async (
   assert.equal(error.event, "bu2.mcp.startup.failed");
   assert.equal(error.code, "api_contract_version_mismatch");
   assert.equal(error.recovery, "fix_configuration");
+  assert.equal(error.details.request_id, "req_mcp_preflight");
+  assert.equal(error.details.trace_id, "trc_mcp_preflight");
 });
 
 test("preflight rejects environment and MCP contract mismatches", async () => {

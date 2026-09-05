@@ -20,7 +20,7 @@
 | --- | --- | --- |
 | [`01-business-plan/`](01-business-plan/) | 商业计划书 PDF 与可编辑 PPTX | BP v0.1 |
 | [`02-product/`](02-product/) | Transaction-first 产品基线、PRD、策略、验收与历史决策 | Product v0.3 |
-| [`03-technical/`](03-technical/) | API、OpenAPI、MCP、持久化、Webhook、x402 与验证证据 | Contract v0.1–v0.3 |
+| [`03-technical/`](03-technical/) | API、OpenAPI、MCP、doctor、持久化、Webhook、x402 与验证证据 | Contract v0.1–v0.3 |
 
 当前没有可索引的市场、架构或运营文档；空目录不作为正式文档入口。相关规则以项目根目录 HTML 文件和现存产品、技术文档为准。
 

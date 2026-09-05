@@ -152,6 +152,30 @@
       <h2 id="unreleased">Unreleased</h2>
       <article class="release">
         <div class="release-head">
+          <div><h3>接入诊断与最小分析 E2.3</h3><time datetime="2026-09-06">2026-09-06</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">完成 Epic 2 E2.3 本地实现：开发者可以在资金工具调用前检查 Node、endpoint、环境、API/MCP 契约、真实 stdio 启动和 Receipt 验证能力，并获得机器结果或全中文、全英文恢复建议。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag added">Added</span>新增稳定 <code>bu2-doctor</code> 入口、7 阶段检查流程和可选真实 Receipt 只读验证；无 Receipt ID 时只声明验证能力可用。</li>
+            <li><span class="tag added">Added</span>新增版本化 Doctor Result JSON Schema，失败保留稳定错误码、重试类别与合法 request/trace ID，不回显原始异常内容。</li>
+            <li><span class="tag changed">Changed</span>MCP endpoint preflight 以加法方式保留健康请求关联 ID，便于在失败后定位服务端事实。</li>
+            <li><span class="tag governance">Governance</span>最小分析仅包含阶段、耗时、结果类别和错误码；无文件/数据库持久化，无远程上传，不采集 Prompt、交易载荷、Secret、私钥或个人数据。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R2 · 交易接入诊断边界，不包含生产资金</span></div>
+          <div><b>金融行为影响</b><span>全部检查为只读；不改变金额、状态机、账本、Webhook、Adapter 或 Receipt</span></div>
+          <div><b>兼容性</b><span>API v0.1.3、MCP v0.1.0 与 6 个工具不变；仅新增 Doctor Schema</span></div>
+          <div><b>验证</b><span>Doctor 专项 12/12，覆盖真实 MCP/Receipt、故障注入、双语、Schema 与敏感值不泄漏</span></div>
+          <div><b>恢复</b><span>可停用 doctor 并继续使用冻结 HTTP/MCP；不会遗留遥测数据或修改交易历史</span></div>
+        </div>
+      </article>
+
+      <article class="release">
+        <div class="release-head">
           <div><h3>MCP 分发与 Host 配置 E2.2</h3><time datetime="2026-09-06">2026-09-06</time></div>
           <span class="status">Unreleased</span>
         </div>

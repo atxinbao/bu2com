@@ -10,6 +10,9 @@ const mcp = JSON.parse(readFileSync(join(here, 'mcp-tools.json'), 'utf8'));
 const versions = JSON.parse(
   readFileSync(join(here, 'contract-versions.json'), 'utf8'),
 );
+const doctor = JSON.parse(
+  readFileSync(join(here, 'doctor-result.schema.json'), 'utf8'),
+);
 const openapi = readFileSync(join(here, 'openapi.yaml'), 'utf8');
 
 let assertions = 0;
@@ -75,6 +78,20 @@ assert(
   'API runtime version manifest must match OpenAPI',
 );
 assert(versions.api_base_path === '/v1', 'API base path must remain /v1');
+assert(
+  doctor.properties.schema_version.const === versions.doctor_result,
+  'Doctor result schema version must match the runtime manifest',
+);
+assert(
+  doctor.properties.checks.minItems === 7 &&
+    doctor.properties.checks.maxItems === 7,
+  'Doctor result must preserve all seven integration stages',
+);
+assert(
+  doctor.properties.analytics.properties.remote_enabled.const === false &&
+    doctor.properties.analytics.properties.persistence.const === 'none',
+  'Doctor analytics must keep remote upload and persistence disabled',
+);
 assert(
   openapi.includes('x-bu2-contract-status: phase0-frozen'),
   'OpenAPI contract must be Phase 0 frozen',
