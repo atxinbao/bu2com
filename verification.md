@@ -408,3 +408,19 @@ Product v0.1 可作为客户访谈、交互原型和工程方案设计的输入�
 - Contract 29 项不变量、MCP 6/6、Sandbox 44/44、Prototype lint/build、OpenAPI、依赖审计和文档链接全部通过。
 
 结论：E1.4 本地实现达到 **GO for R2 review**。E1.0–E1.4 已完成本地实现，但 Epic 1 只有在 Project Owner 完成人工审查并合并后才能标记 Done；Mainnet、托管与生产执行仍为 NO-GO。
+
+## Transaction Trust Gate 2 验证
+
+日期：2026-09-06
+执行者：Codex
+
+- Reference Sandbox 升级为 v0.10.0；公开 Agent Payment API v0.1.4 与 MCP v0.1.0 保持不变。
+- SQLite Schema v6 只追加 `idempotency_claims`、`wallet_accounts` 和 `state_revision`，旧幂等成功结果和钱包状态可回填，历史交易不删除、不改写。
+- 所有领域写入口使用数据库 `processing` Claim；同键同载荷并发共享一个结果，同键异载荷拒绝，重启遗留 Claim 返回 `idempotency_outcome_unknown` 且不重新执行。
+- 钱包 available/reserved 使用非负 CHECK、期望余额和版本条件更新；全局状态版本 CAS 阻止陈旧进程静默覆盖新快照。
+- Quote、PaymentIntent、Authorization、Delivery、Settlement 与 Recovery 的资源、钱包、LedgerEvent、Webhook Outbox 和幂等成功终态在同一事务提交。
+- 故障注入证明 Outbox 写入后失败会回滚资源、钱包、事件、Outbox 与幂等终态；失败后 Transaction Core 从数据库恢复已提交事实。
+- Gate 2 专项 8/8、Sandbox 78/78、Contract 42 项与 MCP 6/6、SDK 8/8、clean-room 3/3、Prototype lint/build 全部通过。
+- UI 浏览器回归未执行，因为本轮没有修改 Prototype 或公开响应结构；Trust Gate 总验收仍保留浏览器回归门槛。
+
+结论：Gate 2 本地实现达到 **GO for R2 review**。Adapter 的外部调用前 Payment Attempt 与授权条款仍属于 Gate 3；Epic 3、Mainnet、真实资金与托管继续 NO-GO。

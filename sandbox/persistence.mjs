@@ -34,10 +34,11 @@ function immediateTransaction(db, operation) {
 }
 
 export class SqliteLedger {
-  constructor(path = ":memory:", { observer = null } = {}) {
+  constructor(path = ":memory:", { observer = null, failureInjector = null } = {}) {
     if (path !== ":memory:") mkdirSync(dirname(path), { recursive: true });
     this.path = path;
     this.observer = observer;
+    this.failureInjector = failureInjector;
     this.db = new DatabaseSync(path);
     this.db.exec("PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;");
     this.migrate();
@@ -133,6 +134,11 @@ export class SqliteLedger {
         version: 5,
         name: "receipt_verification_keys",
         apply: () => this.migrateReceiptVerificationKeys(),
+      },
+      {
+        version: 6,
+        name: "transaction_atomicity",
+        apply: () => this.migrateTransactionAtomicity(),
       },
     ];
     for (const migration of migrations) {
@@ -301,6 +307,49 @@ export class SqliteLedger {
     `);
   }
 
+  migrateTransactionAtomicity() {
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS idempotency_claims (
+        scope_key TEXT PRIMARY KEY,
+        fingerprint TEXT NOT NULL,
+        status TEXT NOT NULL CHECK (status IN ('processing', 'succeeded')),
+        result TEXT,
+        owner_token TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        CHECK (
+          (status = 'processing' AND result IS NULL AND owner_token IS NOT NULL) OR
+          (status = 'succeeded' AND result IS NOT NULL AND owner_token IS NULL)
+        )
+      );
+      CREATE TABLE IF NOT EXISTS wallet_accounts (
+        id TEXT PRIMARY KEY,
+        available INTEGER NOT NULL CHECK (available >= 0),
+        reserved INTEGER NOT NULL CHECK (reserved >= 0),
+        currency TEXT NOT NULL,
+        version INTEGER NOT NULL CHECK (version >= 0)
+      );
+      INSERT OR IGNORE INTO idempotency_claims(
+        scope_key, fingerprint, status, result, owner_token, created_at, updated_at
+      )
+      SELECT scope_key, fingerprint, 'succeeded', result, NULL, created_at, created_at
+      FROM idempotency_records;
+      INSERT OR IGNORE INTO sandbox_state(key, data) VALUES ('state_revision', '0');
+    `);
+    const walletState = this.db
+      .prepare("SELECT data FROM sandbox_state WHERE key='wallet'")
+      .get();
+    if (walletState) {
+      const wallet = JSON.parse(walletState.data);
+      this.db
+        .prepare(
+          `INSERT OR IGNORE INTO wallet_accounts(id, available, reserved, currency, version)
+           VALUES (?, ?, ?, ?, 0)`,
+        )
+        .run(wallet.id, wallet.available, wallet.reserved, wallet.currency);
+    }
+  }
+
   registerReceiptVerificationKey({
     key_id,
     algorithm,
@@ -355,8 +404,16 @@ export class SqliteLedger {
         .all()
         .map((row) => [row.key, JSON.parse(row.data)]),
     );
+    const walletAccount = this.db
+      .prepare("SELECT id, available, reserved, currency FROM wallet_accounts LIMIT 1")
+      .get();
+    if (walletAccount) stateRows.wallet = { ...walletAccount };
+    stateRows.state_revision = Number(stateRows.state_revision ?? 0);
     const idempotency = this.db
-      .prepare("SELECT scope_key, fingerprint, result FROM idempotency_records")
+      .prepare(
+        `SELECT scope_key, fingerprint, result
+         FROM idempotency_claims WHERE status='succeeded'`,
+      )
       .all()
       .map((row) => [
         row.scope_key,
@@ -369,9 +426,164 @@ export class SqliteLedger {
     return { resources, state: stateRows, idempotency, events };
   }
 
-  saveSnapshot(snapshot) {
-    this.db.exec("BEGIN IMMEDIATE");
-    try {
+  claimIdempotency({ scopeKey, fingerprint, ownerToken, createdAt }) {
+    return immediateTransaction(this.db, () => {
+      const existing = this.db
+        .prepare(
+          `SELECT fingerprint, status, result
+           FROM idempotency_claims WHERE scope_key=?`,
+        )
+        .get(scopeKey);
+      if (existing) {
+        if (existing.fingerprint !== fingerprint) {
+          throw new ApiError(
+            409,
+            "idempotency_conflict",
+            "idempotency_key_reused",
+            "The same idempotency key was used with a different request body.",
+          );
+        }
+        if (existing.status === "succeeded") {
+          return { status: "succeeded", result: JSON.parse(existing.result) };
+        }
+        throw new ApiError(
+          409,
+          "outcome_unknown",
+          "idempotency_outcome_unknown",
+          "A previous request with this idempotency key may still be processing; query the resource before retrying.",
+          { retry: "query_before_retry" },
+        );
+      }
+      this.db
+        .prepare(
+          `INSERT INTO idempotency_claims(
+            scope_key, fingerprint, status, result, owner_token, created_at, updated_at
+          ) VALUES (?, ?, 'processing', NULL, ?, ?, ?)`,
+        )
+        .run(scopeKey, fingerprint, ownerToken, createdAt, createdAt);
+      return { status: "processing" };
+    });
+  }
+
+  releaseIdempotency(scopeKey, ownerToken) {
+    return immediateTransaction(this.db, () =>
+      this.db
+        .prepare(
+          `DELETE FROM idempotency_claims
+           WHERE scope_key=? AND status='processing' AND owner_token=?`,
+        )
+        .run(scopeKey, ownerToken).changes,
+    );
+  }
+
+  insertEventAndOutbox(event) {
+    const correlation = event.correlation ?? {};
+    this.db
+      .prepare(
+        `INSERT INTO ledger_events(
+          event_id, event_type, resource_id, payload, created_at,
+          request_id, trace_id, transaction_id, provider_reference
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .run(
+        event.id,
+        event.type,
+        event.resource_id,
+        JSON.stringify(event),
+        event.created_at,
+        correlation.request_id ?? null,
+        correlation.trace_id ?? null,
+        correlation.transaction_id ?? null,
+        correlation.provider_reference ?? null,
+      );
+    const subscriptions = this.db
+      .prepare("SELECT id FROM webhook_subscriptions WHERE active = 1")
+      .all();
+    const enqueue = this.db.prepare(`
+      INSERT INTO webhook_outbox(
+        id, event_id, subscription_id, payload, status, next_attempt_at,
+        request_id, trace_id, transaction_id
+      ) VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?)
+    `);
+    for (const subscription of subscriptions) {
+      enqueue.run(
+        `out_${event.id}_${subscription.id}`,
+        event.id,
+        subscription.id,
+        JSON.stringify(event),
+        Date.now(),
+        correlation.request_id ?? null,
+        correlation.trace_id ?? null,
+        correlation.transaction_id ?? null,
+      );
+    }
+  }
+
+  commitDomainMutation({
+    snapshot,
+    events,
+    idempotency: { scopeKey, fingerprint, ownerToken, result },
+    expectedRevision,
+    expectedWallet,
+  }) {
+    return immediateTransaction(this.db, () => {
+      const revision = this.db
+        .prepare("SELECT data FROM sandbox_state WHERE key='state_revision'")
+        .get();
+      if (Number(revision?.data ?? 0) !== expectedRevision) {
+        throw new ApiError(
+          409,
+          "concurrency_conflict",
+          "transaction_state_conflict",
+          "Transaction state changed concurrently; query the resource before retrying.",
+          { retry: "query_before_retry" },
+        );
+      }
+      const walletRow = this.db
+        .prepare(
+          "SELECT available, reserved, currency, version FROM wallet_accounts WHERE id=?",
+        )
+        .get(snapshot.wallet.id);
+      if (walletRow) {
+        const walletUpdate = this.db
+          .prepare(
+            `UPDATE wallet_accounts
+             SET available=?, reserved=?, currency=?, version=version+1
+             WHERE id=? AND available=? AND reserved=? AND currency=? AND version=?`,
+          )
+          .run(
+            snapshot.wallet.available,
+            snapshot.wallet.reserved,
+            snapshot.wallet.currency,
+            snapshot.wallet.id,
+            expectedWallet.available,
+            expectedWallet.reserved,
+            expectedWallet.currency,
+            walletRow.version,
+          );
+        if (walletUpdate.changes !== 1) {
+          throw new ApiError(
+            409,
+            "concurrency_conflict",
+            "wallet_state_conflict",
+            "Wallet balance changed concurrently; query the wallet before retrying.",
+            { retry: "query_before_retry" },
+          );
+        }
+      } else {
+        this.db
+          .prepare(
+            `INSERT INTO wallet_accounts(id, available, reserved, currency, version)
+             VALUES (?, ?, ?, ?, 1)`,
+          )
+          .run(
+            snapshot.wallet.id,
+            snapshot.wallet.available,
+            snapshot.wallet.reserved,
+            snapshot.wallet.currency,
+          );
+      }
+      this.failureInjector?.("after_wallet_write");
       const upsert = this.db.prepare(`
         INSERT INTO resources(kind, id, data, updated_at) VALUES (?, ?, ?, ?)
         ON CONFLICT(kind, id) DO UPDATE SET data=excluded.data, updated_at=excluded.updated_at
@@ -386,62 +598,49 @@ export class SqliteLedger {
       `);
       state.run("wallet", JSON.stringify(snapshot.wallet));
       state.run("known_payees", JSON.stringify(snapshot.knownPayees));
-      const idem = this.db.prepare(`
-        INSERT OR IGNORE INTO idempotency_records(scope_key, fingerprint, result, created_at)
-        VALUES (?, ?, ?, ?)
-      `);
-      for (const [scopeKey, value] of snapshot.idempotency) {
-        idem.run(scopeKey, value.fingerprint, JSON.stringify(value.result), now);
+      this.failureInjector?.("after_state_write");
+      for (const event of events) this.insertEventAndOutbox(event);
+      this.failureInjector?.("after_outbox_write");
+      const completed = this.db
+        .prepare(
+          `UPDATE idempotency_claims
+           SET status='succeeded', result=?, owner_token=NULL, updated_at=?
+           WHERE scope_key=? AND fingerprint=? AND status='processing' AND owner_token=?`,
+        )
+        .run(JSON.stringify(result), now, scopeKey, fingerprint, ownerToken);
+      if (completed.changes !== 1) {
+        throw new ApiError(
+          409,
+          "concurrency_conflict",
+          "idempotency_claim_lost",
+          "The idempotency claim is no longer owned by this request.",
+          { retry: "query_before_retry" },
+        );
       }
-      this.db.exec("COMMIT");
-    } catch (error) {
-      this.db.exec("ROLLBACK");
-      throw error;
-    }
-  }
-
-  appendEvent(event) {
-    return immediateTransaction(this.db, () => {
-      const correlation = event.correlation ?? {};
       this.db
         .prepare(
-          `INSERT OR IGNORE INTO ledger_events(
-            event_id, event_type, resource_id, payload, created_at,
-            request_id, trace_id, transaction_id, provider_reference
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT OR IGNORE INTO idempotency_records(scope_key, fingerprint, result, created_at)
+           VALUES (?, ?, ?, ?)`,
         )
-        .run(
-          event.id,
-          event.type,
-          event.resource_id,
-          JSON.stringify(event),
-          event.created_at,
-          correlation.request_id ?? null,
-          correlation.trace_id ?? null,
-          correlation.transaction_id ?? null,
-          correlation.provider_reference ?? null,
-        );
-      const subscriptions = this.db
-        .prepare("SELECT id FROM webhook_subscriptions WHERE active = 1")
-        .all();
-      const enqueue = this.db.prepare(`
-        INSERT OR IGNORE INTO webhook_outbox(
-          id, event_id, subscription_id, payload, status, next_attempt_at,
-          request_id, trace_id, transaction_id
-        ) VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?)
-      `);
-      for (const subscription of subscriptions) {
-        enqueue.run(
-          `out_${event.id}_${subscription.id}`,
-          event.id,
-          subscription.id,
-          JSON.stringify(event),
-          Date.now(),
-          correlation.request_id ?? null,
-          correlation.trace_id ?? null,
-          correlation.transaction_id ?? null,
+        .run(scopeKey, fingerprint, JSON.stringify(result), now);
+      const nextRevision = expectedRevision + 1;
+      const revisionUpdate = this.db
+        .prepare(
+          `UPDATE sandbox_state SET data=?
+           WHERE key='state_revision' AND data=?`,
+        )
+        .run(String(nextRevision), String(expectedRevision));
+      if (revisionUpdate.changes !== 1) {
+        throw new ApiError(
+          409,
+          "concurrency_conflict",
+          "transaction_state_conflict",
+          "Transaction state changed concurrently; query the resource before retrying.",
+          { retry: "query_before_retry" },
         );
       }
+      this.failureInjector?.("before_commit");
+      return nextRevision;
     });
   }
 

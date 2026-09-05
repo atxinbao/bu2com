@@ -6,6 +6,7 @@ import {
   sign,
   verify,
 } from "node:crypto";
+import { AsyncLocalStorage } from "node:async_hooks";
 import canonicalize from "canonicalize";
 import { classifyOperationalError } from "./observability.mjs";
 
@@ -85,6 +86,7 @@ export class Bu2Sandbox {
     this.receipts = new Map(restored.resources.receipts ?? []);
     this.idempotency = new Map(restored.idempotency ?? []);
     this.events = restored.events ?? [];
+    this.stateRevision = Number(restored.state.state_revision ?? 0);
     this.wallet =
       restored.state.wallet ??
       initialWallet ?? {
@@ -94,6 +96,9 @@ export class Bu2Sandbox {
         currency: "CNY",
       };
     this.knownPayees = new Set(restored.state.known_payees ?? []);
+    this.inFlightIdempotency = new Map();
+    this.mutationQueue = Promise.resolve();
+    this.mutationContext = new AsyncLocalStorage();
     const keys = generateKeyPairSync("ed25519");
     this.privateKey = keys.privateKey;
     this.publicKey = keys.publicKey;
@@ -124,7 +129,7 @@ export class Bu2Sandbox {
     });
   }
 
-  runIdempotent(scope, key, body, operation) {
+  validateIdempotency(scope, key, body) {
     if (!key || key.length < 8) {
       throw new ApiError(
         400,
@@ -134,7 +139,10 @@ export class Bu2Sandbox {
       );
     }
     const storeKey = `${scope}:${key}`;
-    const fingerprint = hash(body);
+    return { storeKey, fingerprint: hash(body) };
+  }
+
+  idempotencyReplay(storeKey, fingerprint) {
     const existing = this.idempotency.get(storeKey);
     if (existing) {
       if (existing.fingerprint !== fingerprint) {
@@ -147,26 +155,59 @@ export class Bu2Sandbox {
       }
       return clone(existing.result);
     }
-    const result = operation();
-    this.idempotency.set(storeKey, { fingerprint, result: clone(result) });
-    this.persist();
-    return clone(result);
+    return null;
+  }
+
+  enqueueMutation(operation) {
+    const execution = this.mutationQueue.then(operation, operation);
+    this.mutationQueue = execution.catch(() => undefined);
+    return execution;
+  }
+
+  captureState() {
+    return {
+      resources: {
+        quotes: [...this.quotes.entries()].map(([id, value]) => [id, clone(value)]),
+        intents: [...this.intents.entries()].map(([id, value]) => [id, clone(value)]),
+        transactions: [...this.transactions.entries()].map(([id, value]) => [id, clone(value)]),
+        deliveries: [...this.deliveries.entries()].map(([id, value]) => [id, clone(value)]),
+        receipts: [...this.receipts.entries()].map(([id, value]) => [id, clone(value)]),
+      },
+      wallet: clone(this.wallet),
+      knownPayees: [...this.knownPayees],
+    };
+  }
+
+  restoreState(snapshot) {
+    this.quotes = new Map(snapshot.resources.quotes ?? []);
+    this.intents = new Map(snapshot.resources.intents ?? []);
+    this.transactions = new Map(snapshot.resources.transactions ?? []);
+    this.deliveries = new Map(snapshot.resources.deliveries ?? []);
+    this.receipts = new Map(snapshot.resources.receipts ?? []);
+    this.wallet = clone(snapshot.wallet);
+    this.knownPayees = new Set(snapshot.knownPayees ?? []);
+  }
+
+  reloadCommittedState() {
+    if (!this.ledger) return;
+    const restored = this.ledger.loadState();
+    this.restoreState({
+      resources: restored.resources,
+      wallet: restored.state.wallet ?? this.wallet,
+      knownPayees: restored.state.known_payees ?? [],
+    });
+    this.idempotency = new Map(restored.idempotency ?? []);
+    this.events = restored.events ?? [];
+    this.stateRevision = Number(restored.state.state_revision ?? 0);
   }
 
   async runIdempotentAsync(scope, key, body, operation) {
-    if (!key || key.length < 8) {
-      throw new ApiError(
-        400,
-        "validation_error",
-        "missing_idempotency_key",
-        "Idempotency-Key must contain at least 8 characters.",
-      );
-    }
-    const storeKey = `${scope}:${key}`;
-    const fingerprint = hash(body);
-    const existing = this.idempotency.get(storeKey);
-    if (existing) {
-      if (existing.fingerprint !== fingerprint) {
+    const { storeKey, fingerprint } = this.validateIdempotency(scope, key, body);
+    const replay = this.idempotencyReplay(storeKey, fingerprint);
+    if (replay) return replay;
+    const inFlight = this.inFlightIdempotency.get(storeKey);
+    if (inFlight) {
+      if (inFlight.fingerprint !== fingerprint) {
         throw new ApiError(
           409,
           "idempotency_conflict",
@@ -174,27 +215,74 @@ export class Bu2Sandbox {
           "The same idempotency key was used with a different request body.",
         );
       }
-      return clone(existing.result);
+      return clone(await inFlight.promise);
     }
-    const result = await operation();
-    this.idempotency.set(storeKey, { fingerprint, result: clone(result) });
-    this.persist();
-    return clone(result);
-  }
-
-  persist() {
-    this.ledger?.saveSnapshot({
-      resources: {
-        quotes: [...this.quotes.entries()],
-        intents: [...this.intents.entries()],
-        transactions: [...this.transactions.entries()],
-        deliveries: [...this.deliveries.entries()],
-        receipts: [...this.receipts.entries()],
-      },
-      wallet: this.wallet,
-      knownPayees: [...this.knownPayees],
-      idempotency: [...this.idempotency.entries()],
+    const execution = this.enqueueMutation(async () => {
+      const queuedReplay = this.idempotencyReplay(storeKey, fingerprint);
+      if (queuedReplay) return queuedReplay;
+      const ownerToken = randomUUID();
+      const createdAt = new Date().toISOString();
+      const claim = this.ledger?.claimIdempotency({
+        scopeKey: storeKey,
+        fingerprint,
+        ownerToken,
+        createdAt,
+      });
+      if (claim?.status === "succeeded") {
+        this.reloadCommittedState();
+        this.idempotency.set(storeKey, {
+          fingerprint,
+          result: clone(claim.result),
+        });
+        return clone(claim.result);
+      }
+      const before = this.captureState();
+      const expectedRevision = this.stateRevision;
+      const context = { events: [] };
+      try {
+        const result = await this.mutationContext.run(context, operation);
+        const snapshot = this.captureState();
+        const nextRevision = this.ledger?.commitDomainMutation({
+          snapshot,
+          events: context.events,
+          idempotency: {
+            scopeKey: storeKey,
+            fingerprint,
+            ownerToken,
+            result: clone(result),
+          },
+          expectedRevision,
+          expectedWallet: before.wallet,
+        });
+        this.idempotency.set(storeKey, { fingerprint, result: clone(result) });
+        this.events.push(...context.events);
+        if (nextRevision !== undefined) this.stateRevision = nextRevision;
+        for (const event of context.events) {
+          this.observer?.record("state", "transaction.event.appended", {
+            event_type: event.type,
+            resource_id: event.resource_id,
+            ...event.correlation,
+          });
+        }
+        return clone(result);
+      } catch (error) {
+        if (this.ledger) {
+          this.ledger.releaseIdempotency(storeKey, ownerToken);
+          this.reloadCommittedState();
+        } else {
+          this.restoreState(before);
+        }
+        throw error;
+      }
     });
+    this.inFlightIdempotency.set(storeKey, { fingerprint, promise: execution });
+    try {
+      return clone(await execution);
+    } finally {
+      if (this.inFlightIdempotency.get(storeKey)?.promise === execution) {
+        this.inFlightIdempotency.delete(storeKey);
+      }
+    }
   }
 
   event(type, resource) {
@@ -226,13 +314,16 @@ export class Bu2Sandbox {
         provider_reference: providerReference,
       }).filter(([, value]) => value),
     );
-    this.events.push(event);
-    this.ledger?.appendEvent(event);
-    this.observer?.record("state", "transaction.event.appended", {
-      event_type: type,
-      resource_id: resource.id,
-      ...event.correlation,
-    });
+    const context = this.mutationContext.getStore();
+    if (!context) {
+      throw new ApiError(
+        500,
+        "internal_error",
+        "event_outside_transaction",
+        "Ledger events must be recorded inside a domain transaction.",
+      );
+    }
+    context.events.push(event);
     return event;
   }
 
@@ -254,8 +345,8 @@ export class Bu2Sandbox {
     }
   }
 
-  createQuote(input, key) {
-    return this.runIdempotent("quotes", key, input, () => {
+  async createQuote(input, key) {
+    return this.runIdempotentAsync("quotes", key, input, async () => {
       requireFields(input, ["seller_agent_id", "payee_account_id", "item", "amount", "expires_at"]);
       requireFields(input.item, ["name", "delivery_type"]);
       validateAmount(input.amount);
@@ -430,51 +521,51 @@ export class Bu2Sandbox {
       key,
       input,
       async () => {
-      requireFields(input, ["decision"]);
-      const intent = this.intents.get(id);
-      if (!intent)
-        throw new ApiError(
-          404,
-          "resource_not_found",
-          "payment_intent_not_found",
-          "Payment intent was not found.",
-        );
-      if (intent.status !== "requires_authorization") {
-        throw new ApiError(
-          409,
-          "invalid_state_transition",
-          "intent_not_reviewable",
-          "Only requires_authorization intents can be decided.",
-          { current_state: intent.status },
-        );
-      }
-      if (input.decision === "decline") {
-        intent.status = "declined";
-        intent.authorization.decision = "denied";
-        this.event("payment_intent.declined", intent);
-        return clone(intent);
-      }
-      if (input.decision !== "authorize")
-        throw new ApiError(
-          400,
-          "validation_error",
-          "invalid_decision",
-          "Decision must be authorize or decline.",
-        );
-      const wasKnownPayee = this.knownPayees.has(intent.payee_account_id);
-      intent.status = "authorized";
-      intent.authorization.decision = "allowed";
-      intent.authorization.reason_code = "human_confirmation";
-      this.knownPayees.add(intent.payee_account_id);
-      try {
-        return await this.reserve(intent, { emitAuthorization: true });
-      } catch (error) {
-        intent.status = "requires_authorization";
-        intent.authorization.decision = "review_required";
-        intent.authorization.reason_code = "first_time_payee";
-        if (!wasKnownPayee) this.knownPayees.delete(intent.payee_account_id);
-        throw error;
-      }
+        requireFields(input, ["decision"]);
+        const intent = this.intents.get(id);
+        if (!intent)
+          throw new ApiError(
+            404,
+            "resource_not_found",
+            "payment_intent_not_found",
+            "Payment intent was not found.",
+          );
+        if (intent.status !== "requires_authorization") {
+          throw new ApiError(
+            409,
+            "invalid_state_transition",
+            "intent_not_reviewable",
+            "Only requires_authorization intents can be decided.",
+            { current_state: intent.status },
+          );
+        }
+        if (input.decision === "decline") {
+          intent.status = "declined";
+          intent.authorization.decision = "denied";
+          this.event("payment_intent.declined", intent);
+          return clone(intent);
+        }
+        if (input.decision !== "authorize")
+          throw new ApiError(
+            400,
+            "validation_error",
+            "invalid_decision",
+            "Decision must be authorize or decline.",
+          );
+        const wasKnownPayee = this.knownPayees.has(intent.payee_account_id);
+        intent.status = "authorized";
+        intent.authorization.decision = "allowed";
+        intent.authorization.reason_code = "human_confirmation";
+        this.knownPayees.add(intent.payee_account_id);
+        try {
+          return await this.reserve(intent, { emitAuthorization: true });
+        } catch (error) {
+          intent.status = "requires_authorization";
+          intent.authorization.decision = "review_required";
+          intent.authorization.reason_code = "first_time_payee";
+          if (!wasKnownPayee) this.knownPayees.delete(intent.payee_account_id);
+          throw error;
+        }
       },
     );
   }
@@ -521,45 +612,50 @@ export class Bu2Sandbox {
     return clone(intent);
   }
 
-  submitDelivery(transactionId, input, key) {
-    return this.runIdempotent(`transactions/${transactionId}/deliveries`, key, input, () => {
-      requireFields(input, ["type", "evidence_hash"]);
-      if (!/^sha256:/.test(input.evidence_hash))
-        throw new ApiError(
-          400,
-          "validation_error",
-          "invalid_evidence_hash",
-          "Evidence hash must start with sha256:.",
-        );
-      const transaction = this.transactions.get(transactionId);
-      if (!transaction)
-        throw new ApiError(
-          404,
-          "resource_not_found",
-          "transaction_not_found",
-          "Transaction was not found.",
-        );
-      if (transaction.status !== "funds_reserved")
-        throw new ApiError(
-          409,
-          "invalid_state_transition",
-          "transaction_not_reserved",
-          "Funds must be reserved before delivery.",
-          { current_state: transaction.status },
-        );
-      const delivery = {
-        id: prefix("dlv"),
-        transaction_id: transactionId,
-        ...clone(input),
-        submitted_at: new Date().toISOString(),
-      };
-      this.deliveries.set(delivery.id, delivery);
-      transaction.delivery_id = delivery.id;
-      transaction.status = "delivery_submitted";
-      this.intents.get(transaction.payment_intent_id).status = "delivery_submitted";
-      this.event("transaction.delivery_submitted", transaction);
-      return { transaction: clone(transaction), delivery: clone(delivery) };
-    });
+  async submitDelivery(transactionId, input, key) {
+    return this.runIdempotentAsync(
+      `transactions/${transactionId}/deliveries`,
+      key,
+      input,
+      async () => {
+        requireFields(input, ["type", "evidence_hash"]);
+        if (!/^sha256:/.test(input.evidence_hash))
+          throw new ApiError(
+            400,
+            "validation_error",
+            "invalid_evidence_hash",
+            "Evidence hash must start with sha256:.",
+          );
+        const transaction = this.transactions.get(transactionId);
+        if (!transaction)
+          throw new ApiError(
+            404,
+            "resource_not_found",
+            "transaction_not_found",
+            "Transaction was not found.",
+          );
+        if (transaction.status !== "funds_reserved")
+          throw new ApiError(
+            409,
+            "invalid_state_transition",
+            "transaction_not_reserved",
+            "Funds must be reserved before delivery.",
+            { current_state: transaction.status },
+          );
+        const delivery = {
+          id: prefix("dlv"),
+          transaction_id: transactionId,
+          ...clone(input),
+          submitted_at: new Date().toISOString(),
+        };
+        this.deliveries.set(delivery.id, delivery);
+        transaction.delivery_id = delivery.id;
+        transaction.status = "delivery_submitted";
+        this.intents.get(transaction.payment_intent_id).status = "delivery_submitted";
+        this.event("transaction.delivery_submitted", transaction);
+        return { transaction: clone(transaction), delivery: clone(delivery) };
+      },
+    );
   }
 
   async settle(transactionId, input, key) {
@@ -576,6 +672,12 @@ export class Bu2Sandbox {
             "transaction_not_found",
             "Transaction was not found.",
           );
+        if (transaction.status === "settled") {
+          return {
+            transaction: clone(transaction),
+            receipt: clone(this.receipts.get(transaction.receipt_id)),
+          };
+        }
         if (transaction.status !== "delivery_submitted")
           throw new ApiError(
             409,
@@ -590,12 +692,6 @@ export class Bu2Sandbox {
           transaction.id,
           settledAmount,
         );
-        if (transaction.status === "settled") {
-          return {
-            transaction: clone(transaction),
-            receipt: clone(this.receipts.get(transaction.receipt_id)),
-          };
-        }
         return this.completeSettlement(transaction, settledAmount, provider);
       },
     );

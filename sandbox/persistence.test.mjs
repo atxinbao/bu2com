@@ -27,7 +27,7 @@ function stack(path) {
 }
 
 async function completePayment(sandbox) {
-  const quote = sandbox.createQuote(quoteInput, "persistent-quote-key");
+  const quote = await sandbox.createQuote(quoteInput, "persistent-quote-key");
   const intent = await sandbox.createPaymentIntent(
     {
       quote_id: quote.id,
@@ -44,7 +44,7 @@ async function completePayment(sandbox) {
     { decision: "authorize" },
     "persistent-auth-key",
   );
-  sandbox.submitDelivery(
+  await sandbox.submitDelivery(
     reserved.transaction_id,
     { type: "dataset_access", evidence_hash: "sha256:persistent" },
     "persistent-delivery-key",
@@ -78,7 +78,10 @@ test("SQLite restart restores resources, wallet, idempotency, ledger, and receip
     assert.equal(restored.sandbox.wallet.available, 96_100);
     assert.equal(restored.sandbox.wallet.reserved, 0);
     assert.equal(restored.ledger.listLedgerEvents().length, eventCount);
-    const replayedQuote = restored.sandbox.createQuote(quoteInput, "persistent-quote-key");
+    const replayedQuote = await restored.sandbox.createQuote(
+      quoteInput,
+      "persistent-quote-key",
+    );
     assert.equal(replayedQuote.id, payment.quote.id);
     assert.equal(restored.ledger.listLedgerEvents().length, eventCount);
     assert.equal(restored.ledger.adapterOperations().length, 2);
@@ -96,7 +99,7 @@ test("webhook outbox retries failure and delivers each event once", async () => 
     secret: "test-secret",
   }, "subscription-test-key");
   const sandbox = new Bu2Sandbox({ ledger, adapter: new SimulatedPaymentAdapter({ ledger }) });
-  sandbox.createQuote(quoteInput, "webhook-quote-key");
+  await sandbox.createQuote(quoteInput, "webhook-quote-key");
   let calls = 0;
   const receivedIds = [];
   const dispatcher = new WebhookDispatcher({
@@ -164,7 +167,7 @@ test("webhook outbox retries against a real HTTP receiver and preserves event id
     secret: "real-http-secret",
   }, "subscription-http-key");
   const sandbox = new Bu2Sandbox({ ledger, adapter: new SimulatedPaymentAdapter({ ledger }) });
-  sandbox.createQuote(quoteInput, "real-http-webhook");
+  await sandbox.createQuote(quoteInput, "real-http-webhook");
   const dispatcher = new WebhookDispatcher({ ledger, baseDelayMs: 1 });
   assert.equal((await dispatcher.flush({ force: true }))[0].status, "retrying");
   assert.equal((await dispatcher.flush({ force: true }))[0].status, "delivered");
@@ -184,7 +187,7 @@ test("webhook reaches dead letter after bounded attempts and records every attem
     "subscription-dead-letter",
   );
   const sandbox = new Bu2Sandbox({ ledger, adapter: new SimulatedPaymentAdapter({ ledger }) });
-  sandbox.createQuote(quoteInput, "dead-letter-quote-key");
+  await sandbox.createQuote(quoteInput, "dead-letter-quote-key");
   const eventCount = ledger.listLedgerEvents().length;
   const dispatcher = new WebhookDispatcher({
     ledger,
@@ -228,7 +231,7 @@ test("receiver timeout follows the bounded dead-letter path", async () => {
     "subscription-timeout-key",
   );
   const sandbox = new Bu2Sandbox({ ledger, adapter: new SimulatedPaymentAdapter({ ledger }) });
-  sandbox.createQuote(quoteInput, "timeout-webhook-key");
+  await sandbox.createQuote(quoteInput, "timeout-webhook-key");
   const dispatcher = new WebhookDispatcher({
     ledger,
     maxAttempts: 1,
@@ -255,7 +258,7 @@ test("audited replay preserves event identity and is idempotent", async () => {
     "subscription-replay-key",
   );
   const sandbox = new Bu2Sandbox({ ledger, adapter: new SimulatedPaymentAdapter({ ledger }) });
-  sandbox.createQuote(quoteInput, "replay-quote-key");
+  await sandbox.createQuote(quoteInput, "replay-quote-key");
   const eventCount = ledger.listLedgerEvents().length;
   const failed = new WebhookDispatcher({
     ledger,
@@ -316,7 +319,7 @@ test("concurrent dispatchers claim one delivery only once", async () => {
     "subscription-concurrent",
   );
   const sandbox = new Bu2Sandbox({ ledger, adapter: new SimulatedPaymentAdapter({ ledger }) });
-  sandbox.createQuote(quoteInput, "concurrent-webhook-key");
+  await sandbox.createQuote(quoteInput, "concurrent-webhook-key");
   let deliveries = 0;
   const fetchImpl = async () => {
     deliveries += 1;
@@ -349,7 +352,7 @@ test("secret rotation signs with overlapping versions and expires the old versio
     "subscription-rotation",
   );
   const sandbox = new Bu2Sandbox({ ledger, adapter: new SimulatedPaymentAdapter({ ledger }) });
-  sandbox.createQuote(quoteInput, "rotation-first-event");
+  await sandbox.createQuote(quoteInput, "rotation-first-event");
   const rotationInput = {
     version: "v2",
     secret: rotatedSecret,
@@ -401,7 +404,7 @@ test("secret rotation signs with overlapping versions and expires the old versio
     .digest("hex");
   assert.equal(headers[0]["webhook-signature"], `v2=${v2Signature},v1=${v1Signature}`);
 
-  sandbox.createQuote(
+  await sandbox.createQuote(
     { ...quoteInput, item: { ...quoteInput.item, name: "Post-rotation dataset" } },
     "rotation-second-event",
   );
@@ -463,7 +466,7 @@ test("additive migration restores legacy secrets and expired delivery leases", (
     const first = new SqliteLedger(path);
     assert.deepEqual(
       first.schemaMigrations().map((migration) => migration.version),
-      [1, 2, 3, 4, 5],
+      [1, 2, 3, 4, 5, 6],
     );
     const migratedOutbox = first.outboxRows()[0];
     assert.equal(migratedOutbox.request_id, null);

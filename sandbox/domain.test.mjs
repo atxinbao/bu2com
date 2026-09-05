@@ -11,7 +11,7 @@ const quoteInput = {
 };
 
 async function createReviewIntent(sandbox) {
-  const quote = sandbox.createQuote(quoteInput, "quote-key-8421");
+  const quote = await sandbox.createQuote(quoteInput, "quote-key-8421");
   const intent = await sandbox.createPaymentIntent(
     {
       quote_id: quote.id,
@@ -42,7 +42,7 @@ test("full payment flow separates authorization, reservation, delivery, and sett
   assert.equal(sandbox.wallet.available, 96_100);
   assert.equal(sandbox.wallet.reserved, 3900);
 
-  const delivery = sandbox.submitDelivery(
+  const delivery = await sandbox.submitDelivery(
     authorized.transaction_id,
     { type: "dataset_access", evidence_hash: "sha256:9fc2a17e" },
     "delivery-key-8421",
@@ -82,7 +82,7 @@ test("Receipt v0.2 rejects tampering of every signed payment and delivery bindin
     { decision: "authorize" },
     "tamper-authorize-key",
   );
-  sandbox.submitDelivery(
+  await sandbox.submitDelivery(
     authorized.transaction_id,
     { type: "dataset_access", evidence_hash: "sha256:tamper-proof" },
     "tamper-delivery-key",
@@ -118,7 +118,7 @@ test("Receipt verification fails closed when the issuer is unknown", async () =>
     { decision: "authorize" },
     "unknown-issuer-authorize-key",
   );
-  sandbox.submitDelivery(
+  await sandbox.submitDelivery(
     authorized.transaction_id,
     { type: "dataset_access", evidence_hash: "sha256:unknown-issuer" },
     "unknown-issuer-delivery-key",
@@ -139,19 +139,19 @@ test("Receipt verification fails closed when the issuer is unknown", async () =>
   assert.equal(verification.valid, false);
 });
 
-test("same idempotency key and body returns the original resource", () => {
+test("same idempotency key and body returns the original resource", async () => {
   const sandbox = new Bu2Sandbox();
-  const first = sandbox.createQuote(quoteInput, "same-quote-key");
-  const replay = sandbox.createQuote(quoteInput, "same-quote-key");
+  const first = await sandbox.createQuote(quoteInput, "same-quote-key");
+  const replay = await sandbox.createQuote(quoteInput, "same-quote-key");
   assert.deepEqual(replay, first);
   assert.equal(sandbox.quotes.size, 1);
 });
 
-test("same idempotency key with a different body is rejected", () => {
+test("same idempotency key with a different body is rejected", async () => {
   const sandbox = new Bu2Sandbox();
-  sandbox.createQuote(quoteInput, "conflict-key");
-  assert.throws(
-    () =>
+  await sandbox.createQuote(quoteInput, "conflict-key");
+  await assert.rejects(
+    async () =>
       sandbox.createQuote(
         { ...quoteInput, amount: { value: 4000, currency: "CNY" } },
         "conflict-key",
@@ -178,7 +178,7 @@ test("settlement before delivery is rejected without moving money", async () => 
 
 test("payment intent cannot override the quoted amount", async () => {
   const sandbox = new Bu2Sandbox();
-  const quote = sandbox.createQuote(quoteInput, "quote-mismatch");
+  const quote = await sandbox.createQuote(quoteInput, "quote-mismatch");
   await assert.rejects(
     sandbox.createPaymentIntent(
         {
@@ -197,7 +197,7 @@ test("payment intent cannot override the quoted amount", async () => {
 
 test("amount above the mandate is denied", async () => {
   const sandbox = new Bu2Sandbox();
-  const expensiveQuote = sandbox.createQuote(
+  const expensiveQuote = await sandbox.createQuote(
     { ...quoteInput, amount: { value: 8000, currency: "CNY" } },
     "expensive-quote",
   );
@@ -253,7 +253,7 @@ test("adapter settlement failure preserves delivery state and reserved funds", a
     { decision: "authorize" },
     "adapter-settle-auth",
   );
-  sandbox.submitDelivery(
+  await sandbox.submitDelivery(
     authorized.transaction_id,
     { type: "dataset_access", evidence_hash: "sha256:adapterfailure" },
     "adapter-settle-delivery",

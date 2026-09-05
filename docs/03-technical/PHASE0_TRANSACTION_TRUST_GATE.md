@@ -4,7 +4,7 @@
 
 执行者：Codex
 
-状态：In progress · Gate 1 implemented locally
+状态：In progress · Gate 1 merged · Gate 2 implemented locally
 
 风险等级：R2
 
@@ -22,7 +22,7 @@
 - 以追加迁移保存历史公开验证键；服务重启后旧 Receipt 仍可验证，私钥不写入账本。
 - 真实 API 页面按实际状态展示；未签发、未知、旧版或无效 Receipt 不得显示成功。
 
-当前状态：本地实现完成，等待 R2 PR 人工审查。
+当前状态：已通过 PR #15 人工审查并合并。
 
 ### Gate 2：数据库幂等与交易原子性
 
@@ -31,7 +31,7 @@
 - 状态、余额、LedgerEvent、Webhook Outbox 与幂等终态在同一数据库事务提交。
 - 通过并发请求、进程中断和故障注入验证不会重复预留或留下部分状态。
 
-当前状态：未开始；不得与 Gate 1 混入同一 R2 审查。
+当前状态：本地实现完成，等待独立 R2 PR 人工审查；不得与 Gate 3 混入同一审查。
 
 ### Gate 3：x402 Testnet 可信执行
 
