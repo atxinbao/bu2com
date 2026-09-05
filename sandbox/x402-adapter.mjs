@@ -20,12 +20,14 @@ const reference = (prefix, value) =>
 export class X402PaymentAdapter {
   constructor({
     ledger,
+    observer = null,
     resourceUrl,
     paidFetch = null,
     fetchImpl = fetch,
     network = "eip155:84532",
   }) {
     this.ledger = ledger;
+    this.observer = observer;
     this.resourceUrl = resourceUrl;
     this.paidFetch = paidFetch;
     this.fetchImpl = fetchImpl;
@@ -48,19 +50,36 @@ export class X402PaymentAdapter {
         "Adapter idempotency key was reused with different payment details.",
       );
     }
+    this.observer?.record("adapter", "adapter.operation.replayed", {
+      adapter: this.name,
+      operation,
+      transaction_id: key.split(":", 2)[1],
+      provider_reference: row.provider_reference,
+      status: row.status,
+    });
     return row;
   }
 
   save({ key, operation, amount, providerReference, status }) {
-    return this.ledger.saveAdapterOperation({
+    const transactionId = key.split(":", 2)[1];
+    const result = this.ledger.saveAdapterOperation({
       idempotency_key: key,
       operation,
+      transaction_id: transactionId,
       provider_reference: providerReference,
       amount_value: amount.value,
       currency: amount.currency,
       status,
       created_at: new Date().toISOString(),
     });
+    this.observer?.record("adapter", "adapter.operation.completed", {
+      adapter: this.name,
+      operation,
+      transaction_id: transactionId,
+      provider_reference: result.provider_reference,
+      status: result.status,
+    });
+    return result;
   }
 
   async reserve(transactionId, amount) {

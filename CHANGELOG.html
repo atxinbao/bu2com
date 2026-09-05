@@ -188,6 +188,32 @@
 
       <article class="release">
         <div class="release-head">
+          <div><h3>交易链路可观测性 E1.2</h3><time datetime="2026-09-05">2026-09-05</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">完成 Epic E1.2：Reference Sandbox v0.6 将外部 Agent 请求、交易事实、支付通道与 Webhook 投递串联为可查询、可分类和可处置的关联链路。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag added">Added</span>新增 <code>X-Trace-Id</code> 输入与响应契约；<code>request_id</code>、<code>trace_id</code>、<code>transaction_id</code>、<code>event_id</code> 和 provider reference 贯穿 HTTP、LedgerEvent、Adapter、Outbox 与投递审计。</li>
+            <li><span class="tag added">Added</span>新增基于 AsyncLocalStorage 的并发请求上下文，以及 request、validation、policy、state、adapter、unknown_result、webhook 和 internal 分类 JSON 事件。</li>
+            <li><span class="tag added">Added</span><code>/health</code> 新增 Outbox 各状态、最近成功投递时间与 Adapter 未知结果计数；异常时返回 <code>attention_required</code>。</li>
+            <li><span class="tag added">Added</span>新增交易链路可观测性与处置手册，固定死信积压、Adapter 未知结果和 Receipt 验证失败的告警条件与恢复步骤。</li>
+            <li><span class="tag changed">Changed</span>SQLite schema v3 仅增加可空关联列；旧 Ledger、Outbox、Adapter 和投递记录继续可读。</li>
+            <li><span class="tag changed">Changed</span>OpenAPI、HTTP 错误体、Reference Server README、技术索引和 Epic 状态同步升级到 <code>0.6.0</code>。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R2 · 交易事件关联、运行诊断与持久化字段</span></div>
+          <div><b>金融行为影响</b><span>不改变金额、交易状态机、幂等语义或 Adapter 资金动作</span></div>
+          <div><b>兼容性</b><span>数据库仅追加可空列；旧记录无关联值时保持 <code>null</code></span></div>
+          <div><b>验证</b><span>Contract 27 项不变量；Sandbox 32/32；OpenAPI、Prototype 与格式门禁见本次验证记录</span></div>
+          <div><b>恢复</b><span>停止日志输出或 Dispatcher 并前向修复；保留全部 LedgerEvent、Outbox、Adapter 和投递审计</span></div>
+        </div>
+      </article>
+
+      <article class="release">
+        <div class="release-head">
           <div><h3>Webhook 可靠性闭环 E1.1</h3><time datetime="2026-09-05">2026-09-05</time></div>
           <span class="status">Unreleased</span>
         </div>

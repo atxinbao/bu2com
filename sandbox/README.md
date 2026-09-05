@@ -1,4 +1,4 @@
-# BU2 Reference Server v0.5 / x402 Sandbox v0.3
+# BU2 Reference Server v0.6 / x402 Sandbox v0.3
 
 日期：2026-09-05
 执行者：Codex
@@ -31,7 +31,7 @@ node sandbox/demo-agents.mjs
 node --test sandbox/*.test.mjs
 ```
 
-覆盖完整闭环、幂等冲突、报价金额篡改、Mandate 拒绝、交付前非法结算、SQLite 重启恢复、Adapter 防重复、Webhook HTTP 超时/5xx、有限重试、死信、审计重放、并发租约、Secret 轮换和 Receipt 签名验证。
+覆盖完整闭环、幂等冲突、报价金额篡改、Mandate 拒绝、交付前非法结算、SQLite 重启恢复、Adapter 防重复、Webhook HTTP 超时/5xx、有限重试、死信、审计重放、并发租约、Secret 轮换、端到端关联、日志脱敏、健康快照和 Receipt 签名验证。
 
 ## x402 沙盒商户
 
@@ -89,7 +89,7 @@ npm run x402:server
 
 ## 沙盒调试端点
 
-- `GET /health`：服务、数据库、Adapter 和账本事件数量。
+- `GET /health`：服务、数据库、Adapter、账本事件，以及 Outbox 与 Adapter 未知结果健康快照。
 - `GET /v1/transactions?limit=20&cursor=...`：按时间倒序返回交易及其支付、交付、通道和 Receipt 上下文，使用不透明 cursor 分页。
 - `GET /v1/transactions/{id}`：返回单笔完整交易详情。
 - `GET /v1/ledger`：追加式账本事件。
@@ -103,4 +103,6 @@ npm run x402:server
 
 Webhook 默认最多尝试 5 次，指数退避上限 60 秒，Worker 租约 30 秒，请求超时 10 秒。创建订阅、轮换和重放要求 `Idempotency-Key`；公开响应与审计记录不会返回明文 Secret。
 
-所有 HTTP 响应均返回 `X-Request-Id`。公开 `/v1` 请求体、资源 ID、分页参数与 `Idempotency-Key` 会在边界运行时校验；未知字段、非法 cursor 和不匹配的资源前缀返回稳定的 JSON 错误。Reference Server 仅绑定本机 Sandbox/Testnet，当前认证边界不支持公开部署。
+所有 HTTP 响应均返回 `X-Request-Id` 和 `X-Trace-Id`。调用方可传入合法 `X-Trace-Id`，将外部 Agent 执行与 Transaction、LedgerEvent、Adapter、Outbox 和 Webhook 投递关联；省略时由服务生成。公开 `/v1` 请求体、资源 ID、分页参数与 `Idempotency-Key` 会在边界运行时校验；未知字段、非法 cursor、非法 Trace ID 和不匹配的资源前缀返回稳定 JSON 错误。
+
+直接启动服务时，标准输出为分类后的单行 JSON 事件；敏感字段和值在写出前脱敏。字段定义、告警条件和处置步骤见 [交易链路可观测性与处置手册](../docs/03-technical/OBSERVABILITY_RUNBOOK_V0.1.md)。Reference Server 仅绑定本机 Sandbox/Testnet，当前认证边界不支持公开部署。

@@ -123,6 +123,17 @@ test("simulated adapter independently prevents duplicate provider operations", (
   const replay = adapter.reserve("txn_repeat", { value: 3900, currency: "CNY" });
   assert.equal(replay.provider_reference, first.provider_reference);
   assert.equal(ledger.adapterOperations().length, 1);
+  ledger.saveAdapterOperation({
+    idempotency_key: "settle:txn_unknown",
+    operation: "settle",
+    transaction_id: "txn_unknown",
+    provider_reference: "provider_unknown_reference",
+    amount_value: 100,
+    currency: "CNY",
+    status: "provider_unknown",
+    created_at: new Date().toISOString(),
+  });
+  assert.equal(ledger.healthSnapshot().adapter_operations.unknown_results, 1);
   ledger.close();
 });
 
@@ -444,7 +455,11 @@ test("additive migration restores legacy secrets and expired delivery leases", (
     legacy.close();
 
     const first = new SqliteLedger(path);
-    assert.deepEqual(first.schemaMigrations().map((migration) => migration.version), [1, 2]);
+    assert.deepEqual(first.schemaMigrations().map((migration) => migration.version), [1, 2, 3]);
+    const migratedOutbox = first.outboxRows()[0];
+    assert.equal(migratedOutbox.request_id, null);
+    assert.equal(migratedOutbox.trace_id, null);
+    assert.equal(migratedOutbox.transaction_id, null);
     const claimed = first.claimWebhookDeliveries({
       force: true,
       workerId: "whw_before_restart",

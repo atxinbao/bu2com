@@ -208,6 +208,21 @@ Product v0.1 可作为客户访谈、交互原型和工程方案设计的输入�
 
 结论：本次 README 与治理变更为 **GO**，可以提交 PR。
 
+## E1.2 交易链路可观测性验证
+
+日期：2026-09-05
+执行者：Codex
+
+- `request_id`、`trace_id`、`transaction_id`、`event_id` 与 provider reference 已贯穿 HTTP、Transaction Core、LedgerEvent、Adapter、Outbox 和 Webhook 投递审计。
+- 并发请求使用 AsyncLocalStorage 隔离上下文；调用方 Trace 可传入，省略时自动生成，非法 Trace 返回稳定 `400 invalid_trace_id`。
+- `/health` 返回 pending、delivering、retrying、dead-letter、delivered、最近成功投递和 Adapter 未知结果计数。
+- 单行 JSON 事件区分 request、validation、policy、state、adapter、unknown_result、webhook 与 internal，敏感字段和值写出前脱敏。
+- SQLite schema v3 为 additive migration；旧 Outbox 记录升级后关联列为 `null`，历史数据仍可读。
+- 新增告警与处置手册，覆盖死信、Adapter 结果未知和 Receipt 验证失败；未接线外部生产告警系统。
+- `npm --prefix sandbox test`：32/32 通过，包括观测输出通道失败不影响交易执行。
+
+结论：E1.2 本地实现达到 **GO for R2 review**。它不改变交易金额、状态机或既有资金动作，不构成 Mainnet、托管或生产运行授权。
+
 ## E1.0 Transaction API v1 冻结验证
 
 日期：2026-09-05

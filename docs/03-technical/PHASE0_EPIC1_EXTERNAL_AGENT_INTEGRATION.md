@@ -57,12 +57,14 @@
 
 完成证据：Reference Sandbox v0.5 增加事务化 Worker 租约、有限指数退避、确定死信、逐次投递审计、幂等人工重放和 Secret 版本轮换；旧 SQLite 数据通过 additive migration 升级。HTTP、持久化、并发、超时、5xx、重启恢复和签名验证均进入本地自动化测试，重放不增加 `LedgerEvent`，不改变既有交易金额或状态机。
 
-### E1.2 — 交易链路可观测性
+### E1.2 — 交易链路可观测性（已完成）
 
 - API、Transaction Core、Outbox 和 Adapter 贯穿 `request_id`、`trace_id`、`transaction_id`、`event_id` 与 provider reference。
 - `/health` 增加待投递、重试中、死信、Adapter 未知结果和最近成功投递时间。
 - 结构化日志区分 validation、policy、state、adapter、unknown-result 与 internal error，且不包含 Secret 或私钥。
 - 为死信积压、Adapter 未知结果和 Receipt 验证失败定义告警条件与处理手册。
+
+完成证据：Reference Sandbox v0.6 使用 AsyncLocalStorage 隔离并发请求关联，将 `request_id`、`trace_id`、`transaction_id`、`event_id` 和 provider reference 追加保存到 LedgerEvent、Adapter 操作、Outbox 与 Webhook 投递审计；`/health` 提供 Outbox 状态、最近成功投递与未知结果计数。分类 JSON 事件在写出前脱敏，并新增告警与处置手册。Schema v3 为 additive migration，旧记录关联字段保持可空，交易金额、状态机与资金动作不变。
 
 ### E1.3 — x402 Testnet 失败回归
 

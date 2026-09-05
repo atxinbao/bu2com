@@ -6,6 +6,7 @@ import {
   sign,
   verify,
 } from "node:crypto";
+import { classifyOperationalError } from "./observability.mjs";
 
 export class ApiError extends Error {
   constructor(status, type, code, message, details = {}) {
@@ -57,9 +58,15 @@ function validateAmount(amount) {
 }
 
 export class Bu2Sandbox {
-  constructor({ ledger = null, adapter = null, initialWallet = null } = {}) {
+  constructor({
+    ledger = null,
+    adapter = null,
+    initialWallet = null,
+    observer = null,
+  } = {}) {
     this.ledger = ledger;
     this.adapter = adapter;
+    this.observer = observer;
     const restored = ledger?.loadState() ?? {
       resources: {},
       state: {},
@@ -161,15 +168,60 @@ export class Bu2Sandbox {
   }
 
   event(type, resource) {
+    const transactionId = resource.id?.startsWith("txn_")
+      ? resource.id
+      : resource.transaction_id;
+    const paymentIntentId =
+      resource.payment_intent_id ??
+      (resource.id?.startsWith("pi_") ? resource.id : undefined);
+    const providerReference =
+      resource.settlement_provider_reference ??
+      resource.reserve_provider_reference;
     const event = {
       id: prefix("evt"),
       type,
       resource_id: resource.id,
       created_at: new Date().toISOString(),
     };
+    event.correlation = this.observer?.context({
+      event_id: event.id,
+      transaction_id: transactionId,
+      payment_intent_id: paymentIntentId,
+      provider_reference: providerReference,
+    }) ?? Object.fromEntries(
+      Object.entries({
+        event_id: event.id,
+        transaction_id: transactionId,
+        payment_intent_id: paymentIntentId,
+        provider_reference: providerReference,
+      }).filter(([, value]) => value),
+    );
     this.events.push(event);
     this.ledger?.appendEvent(event);
+    this.observer?.record("state", "transaction.event.appended", {
+      event_type: type,
+      resource_id: resource.id,
+      ...event.correlation,
+    });
     return event;
+  }
+
+  async executeAdapter(operation, transactionId, amount) {
+    try {
+      return await this.adapter?.[operation](transactionId, amount);
+    } catch (error) {
+      this.observer?.record(
+        classifyOperationalError(error),
+        "adapter.operation.failed",
+        {
+          operation,
+          transaction_id: transactionId,
+          error_type: error.type ?? "internal_error",
+          error_code: error.code ?? "unexpected_error",
+        },
+      );
+      throw error;
+    }
   }
 
   createQuote(input, key) {
@@ -252,6 +304,13 @@ export class Bu2Sandbox {
         created_at: new Date().toISOString(),
       };
       this.intents.set(intent.id, intent);
+      this.observer?.record("policy", "payment_mandate.evaluated", {
+        payment_intent_id: intent.id,
+        account_id: intent.payer_account_id,
+        agent_id: intent.buyer_agent_id,
+        decision,
+        reason_code,
+      });
       this.event(
         decision === "review_required"
           ? "payment_intent.authorization_required"
@@ -398,7 +457,11 @@ export class Bu2Sandbox {
       refunded_amount: clone(zero),
       created_at: new Date().toISOString(),
     };
-    const provider = await this.adapter?.reserve(transaction.id, intent.amount);
+    const provider = await this.executeAdapter(
+      "reserve",
+      transaction.id,
+      intent.amount,
+    );
     if (provider) transaction.reserve_provider_reference = provider.provider_reference;
     if (emitAuthorization) this.event("payment_intent.authorized", intent);
     this.wallet.available -= intent.amount.value;
@@ -474,7 +537,11 @@ export class Bu2Sandbox {
           { current_state: transaction.status },
         );
       const settledAmount = clone(transaction.reserved_amount);
-      const provider = await this.adapter?.settle(transaction.id, settledAmount);
+      const provider = await this.executeAdapter(
+        "settle",
+        transaction.id,
+        settledAmount,
+      );
       transaction.status = "settled";
       transaction.settled_amount = settledAmount;
       transaction.settlement_id = prefix("stl");
@@ -546,7 +613,7 @@ export class Bu2Sandbox {
       type: "spki",
       format: "der",
     });
-    return {
+    const result = {
       receipt_id: id,
       valid: verify(
         null,
@@ -555,5 +622,13 @@ export class Bu2Sandbox {
         Buffer.from(signature, "base64"),
       ),
     };
+    this.observer?.record(
+      result.valid ? "state" : "internal",
+      result.valid
+        ? "receipt.verification_succeeded"
+        : "receipt.verification_failed",
+      { receipt_id: id, transaction_id: receipt.transaction_id },
+    );
+    return result;
   }
 }

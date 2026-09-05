@@ -34,9 +34,10 @@ function immediateTransaction(db, operation) {
 }
 
 export class SqliteLedger {
-  constructor(path = ":memory:") {
+  constructor(path = ":memory:", { observer = null } = {}) {
     if (path !== ":memory:") mkdirSync(dirname(path), { recursive: true });
     this.path = path;
+    this.observer = observer;
     this.db = new DatabaseSync(path);
     this.db.exec("PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;");
     this.migrate();
@@ -117,6 +118,11 @@ export class SqliteLedger {
         version: 2,
         name: "webhook_reliability",
         apply: () => this.migrateWebhookReliability(),
+      },
+      {
+        version: 3,
+        name: "transaction_observability",
+        apply: () => this.migrateTransactionObservability(),
       },
     ];
     for (const migration of migrations) {
@@ -227,6 +233,24 @@ export class SqliteLedger {
     }
   }
 
+  migrateTransactionObservability() {
+    const ensureColumn = (table, column, definition) => {
+      const columns = this.db.prepare(`PRAGMA table_info(${table})`).all();
+      if (!columns.some((candidate) => candidate.name === column)) {
+        this.db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+      }
+    };
+    for (const table of ["ledger_events", "webhook_outbox", "adapter_operations"]) {
+      ensureColumn(table, "request_id", "TEXT");
+      ensureColumn(table, "trace_id", "TEXT");
+      ensureColumn(table, "transaction_id", "TEXT");
+    }
+    ensureColumn("ledger_events", "provider_reference", "TEXT");
+    ensureColumn("webhook_delivery_attempts", "request_id", "TEXT");
+    ensureColumn("webhook_delivery_attempts", "trace_id", "TEXT");
+    ensureColumn("webhook_delivery_attempts", "transaction_id", "TEXT");
+  }
+
   loadState() {
     const resources = {};
     for (const row of this.db.prepare("SELECT kind, id, data FROM resources").all()) {
@@ -285,27 +309,48 @@ export class SqliteLedger {
   }
 
   appendEvent(event) {
-    this.db
-      .prepare(
-        `INSERT OR IGNORE INTO ledger_events(event_id, event_type, resource_id, payload, created_at) VALUES (?, ?, ?, ?, ?)`,
-      )
-      .run(event.id, event.type, event.resource_id, JSON.stringify(event), event.created_at);
-    const subscriptions = this.db
-      .prepare("SELECT id FROM webhook_subscriptions WHERE active = 1")
-      .all();
-    const enqueue = this.db.prepare(`
-      INSERT OR IGNORE INTO webhook_outbox(id, event_id, subscription_id, payload, status, next_attempt_at)
-      VALUES (?, ?, ?, ?, 'pending', ?)
-    `);
-    for (const subscription of subscriptions) {
-      enqueue.run(
-        `out_${event.id}_${subscription.id}`,
-        event.id,
-        subscription.id,
-        JSON.stringify(event),
-        Date.now(),
-      );
-    }
+    return immediateTransaction(this.db, () => {
+      const correlation = event.correlation ?? {};
+      this.db
+        .prepare(
+          `INSERT OR IGNORE INTO ledger_events(
+            event_id, event_type, resource_id, payload, created_at,
+            request_id, trace_id, transaction_id, provider_reference
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        )
+        .run(
+          event.id,
+          event.type,
+          event.resource_id,
+          JSON.stringify(event),
+          event.created_at,
+          correlation.request_id ?? null,
+          correlation.trace_id ?? null,
+          correlation.transaction_id ?? null,
+          correlation.provider_reference ?? null,
+        );
+      const subscriptions = this.db
+        .prepare("SELECT id FROM webhook_subscriptions WHERE active = 1")
+        .all();
+      const enqueue = this.db.prepare(`
+        INSERT OR IGNORE INTO webhook_outbox(
+          id, event_id, subscription_id, payload, status, next_attempt_at,
+          request_id, trace_id, transaction_id
+        ) VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?)
+      `);
+      for (const subscription of subscriptions) {
+        enqueue.run(
+          `out_${event.id}_${subscription.id}`,
+          event.id,
+          subscription.id,
+          JSON.stringify(event),
+          Date.now(),
+          correlation.request_id ?? null,
+          correlation.trace_id ?? null,
+          correlation.transaction_id ?? null,
+        );
+      }
+    });
   }
 
   listLedgerEvents() {
@@ -579,6 +624,7 @@ export class SqliteLedger {
     maxAttempts,
     secretVersions,
     startedAt,
+    correlation = {},
     now = Date.now(),
   }) {
     return immediateTransaction(this.db, () => {
@@ -625,8 +671,9 @@ export class SqliteLedger {
         .prepare(
           `INSERT INTO webhook_delivery_attempts(
             id, outbox_id, event_id, subscription_id, replay_cycle, attempt_number,
-            worker_id, status, http_status, error, secret_versions, started_at, completed_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            worker_id, status, http_status, error, secret_versions, started_at, completed_at,
+            request_id, trace_id, transaction_id
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         )
         .run(
           `wha_${randomUUID().replaceAll("-", "").slice(0, 16)}`,
@@ -642,6 +689,9 @@ export class SqliteLedger {
           JSON.stringify(secretVersions),
           nowIso(startedAt),
           completedAt,
+          correlation.request_id ?? null,
+          correlation.trace_id ?? null,
+          row.transaction_id ?? correlation.transaction_id ?? null,
         );
       return {
         id: row.id,
@@ -751,7 +801,8 @@ export class SqliteLedger {
       .prepare(
         `SELECT id, outbox_id, event_id, subscription_id, replay_cycle,
                 attempt_number, worker_id, status, http_status, error,
-                secret_versions, started_at, completed_at
+                secret_versions, started_at, completed_at,
+                request_id, trace_id, transaction_id
          FROM webhook_delivery_attempts
          WHERE outbox_id=? ORDER BY sequence`,
       )
@@ -776,6 +827,40 @@ export class SqliteLedger {
     return this.db.prepare("SELECT * FROM webhook_outbox ORDER BY id").all();
   }
 
+  healthSnapshot() {
+    const counts = {
+      pending: 0,
+      delivering: 0,
+      retrying: 0,
+      dead_letter: 0,
+      delivered: 0,
+    };
+    for (const row of this.db
+      .prepare("SELECT status, COUNT(*) AS count FROM webhook_outbox GROUP BY status")
+      .all()) {
+      if (Object.hasOwn(counts, row.status)) counts[row.status] = row.count;
+    }
+    const lastDelivery = this.db
+      .prepare(
+        "SELECT MAX(delivered_at) AS last_successful_delivery_at FROM webhook_outbox",
+      )
+      .get();
+    const unknown = this.db
+      .prepare(
+        `SELECT COUNT(*) AS count FROM adapter_operations
+         WHERE status IN ('unknown', 'provider_unknown', 'result_unknown')`,
+      )
+      .get();
+    return {
+      webhook_outbox: {
+        ...counts,
+        last_successful_delivery_at:
+          lastDelivery.last_successful_delivery_at ?? null,
+      },
+      adapter_operations: { unknown_results: unknown.count },
+    };
+  }
+
   schemaMigrations() {
     return this.db
       .prepare("SELECT version, name, applied_at FROM schema_migrations ORDER BY version")
@@ -790,10 +875,15 @@ export class SqliteLedger {
   }
 
   saveAdapterOperation(operation) {
+    const correlation = this.observer?.context({
+      transaction_id: operation.transaction_id,
+    }) ?? { transaction_id: operation.transaction_id };
     this.db
       .prepare(`
-      INSERT INTO adapter_operations(idempotency_key, operation, provider_reference, amount_value, currency, status, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO adapter_operations(
+        idempotency_key, operation, provider_reference, amount_value, currency,
+        status, created_at, request_id, trace_id, transaction_id
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `)
       .run(
         operation.idempotency_key,
@@ -803,8 +893,16 @@ export class SqliteLedger {
         operation.currency,
         operation.status,
         operation.created_at,
+        correlation.request_id ?? null,
+        correlation.trace_id ?? null,
+        correlation.transaction_id ?? null,
       );
-    return operation;
+    return {
+      ...operation,
+      request_id: correlation.request_id ?? null,
+      trace_id: correlation.trace_id ?? null,
+      transaction_id: correlation.transaction_id ?? null,
+    };
   }
 
   adapterOperations() {

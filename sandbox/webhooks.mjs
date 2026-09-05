@@ -3,6 +3,7 @@ import { createHmac, randomUUID } from "node:crypto";
 export class WebhookDispatcher {
   constructor({
     ledger,
+    observer = null,
     fetchImpl = fetch,
     baseDelayMs = 1000,
     maxDelayMs = 60_000,
@@ -15,6 +16,7 @@ export class WebhookDispatcher {
     workerId = `whw_${randomUUID().replaceAll("-", "").slice(0, 16)}`,
   }) {
     this.ledger = ledger;
+    this.observer = observer;
     this.fetchImpl = fetchImpl;
     this.baseDelayMs = baseDelayMs;
     this.maxDelayMs = maxDelayMs;
@@ -48,6 +50,10 @@ export class WebhookDispatcher {
       const startedAt = this.now();
       const timestamp = Math.floor(startedAt / 1000).toString();
       const versions = job.secrets.map((secret) => secret.version);
+      const correlation = this.observer?.context({
+        event_id: job.event_id,
+        transaction_id: job.transaction_id,
+      }) ?? { transaction_id: job.transaction_id };
       let httpStatus = null;
       try {
         if (job.secrets.length === 0) {
@@ -67,6 +73,7 @@ export class WebhookDispatcher {
             "webhook-timestamp": timestamp,
             "webhook-signature": signatures.join(","),
             "webhook-secret-versions": versions.join(","),
+            ...(job.trace_id ? { "webhook-trace-id": job.trace_id } : {}),
           },
           body: job.payload,
           signal: AbortSignal.timeout(this.requestTimeoutMs),
@@ -82,9 +89,19 @@ export class WebhookDispatcher {
             maxAttempts: this.maxAttempts,
             secretVersions: versions,
             startedAt,
+            correlation,
             now: this.now(),
           }),
         );
+        this.observer?.record("webhook", "webhook.delivery.completed", {
+          outbox_id: job.id,
+          event_id: job.event_id,
+          transaction_id: job.transaction_id,
+          source_request_id: job.request_id,
+          source_trace_id: job.trace_id,
+          http_status: httpStatus,
+          status: "delivered",
+        });
       } catch (error) {
         const result = this.ledger.completeWebhookDelivery({
           outboxId: job.id,
@@ -96,9 +113,20 @@ export class WebhookDispatcher {
           maxAttempts: this.maxAttempts,
           secretVersions: versions,
           startedAt,
+          correlation,
           now: this.now(),
         });
         results.push({ ...result, error: error.message });
+        this.observer?.record("webhook", "webhook.delivery.failed", {
+          outbox_id: job.id,
+          event_id: job.event_id,
+          transaction_id: job.transaction_id,
+          source_request_id: job.request_id,
+          source_trace_id: job.trace_id,
+          http_status: httpStatus,
+          status: result.status,
+          error: error.message,
+        });
       }
     }
     return results;

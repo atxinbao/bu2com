@@ -2,6 +2,12 @@ import { createServer } from "node:http";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { SimulatedPaymentAdapter } from "./adapter.mjs";
 import { ApiError, Bu2Sandbox } from "./domain.mjs";
+import {
+  Observability,
+  classifyOperationalError,
+  createTraceId,
+  isTraceId,
+} from "./observability.mjs";
 import { SqliteLedger } from "./persistence.mjs";
 import { WebhookDispatcher } from "./webhooks.mjs";
 import { X402PaymentAdapter } from "./x402-adapter.mjs";
@@ -58,7 +64,7 @@ function send(response, status, body) {
   response.end(JSON.stringify(body, null, 2));
 }
 
-function errorBody(error, id) {
+function errorBody(error, id, traceId) {
   const known = error instanceof ApiError;
   return {
     status: known ? error.status : 500,
@@ -68,14 +74,21 @@ function errorBody(error, id) {
         code: known ? error.code : "unexpected_error",
         message: known ? error.message : "Unexpected sandbox error.",
         request_id: id,
+        trace_id: traceId,
         details: known ? error.details : {},
       },
     },
   };
 }
 
-export function buildPaymentAdapter({ ledger, mode = "simulated", resourceUrl, buyerPrivateKey } = {}) {
-  if (mode === "simulated") return new SimulatedPaymentAdapter({ ledger });
+export function buildPaymentAdapter({
+  ledger,
+  observer,
+  mode = "simulated",
+  resourceUrl,
+  buyerPrivateKey,
+} = {}) {
+  if (mode === "simulated") return new SimulatedPaymentAdapter({ ledger, observer });
   if (mode !== "x402") {
     throw new ApiError(400, "validation_error", "adapter_mode_invalid", `Unknown adapter: ${mode}`);
   }
@@ -91,41 +104,87 @@ export function buildPaymentAdapter({ ledger, mode = "simulated", resourceUrl, b
     : null;
   return new X402PaymentAdapter({
     ledger,
+    observer,
     resourceUrl: resourceUrl ?? "http://127.0.0.1:4021/premium-data",
     paidFetch,
   });
 }
 
-export function createBu2Server({ sandbox, ledger, dispatcher, adapter, initialWallet } = {}) {
+export function createBu2Server({
+  sandbox,
+  ledger,
+  dispatcher,
+  adapter,
+  initialWallet,
+  observer = new Observability(),
+} = {}) {
   const activeLedger = ledger ?? sandbox?.ledger ?? new SqliteLedger(":memory:");
+  activeLedger.observer = observer;
+  const activeAdapter =
+    adapter ??
+    sandbox?.adapter ??
+    new SimulatedPaymentAdapter({ ledger: activeLedger, observer });
+  activeAdapter.observer = observer;
   const activeSandbox =
     sandbox ??
     new Bu2Sandbox({
       ledger: activeLedger,
-      adapter: adapter ?? new SimulatedPaymentAdapter({ ledger: activeLedger }),
+      adapter: activeAdapter,
       initialWallet,
+      observer,
     });
-  const activeDispatcher = dispatcher ?? new WebhookDispatcher({ ledger: activeLedger });
+  activeSandbox.observer = observer;
+  if (activeSandbox.adapter) activeSandbox.adapter.observer = observer;
+  const activeDispatcher =
+    dispatcher ?? new WebhookDispatcher({ ledger: activeLedger, observer });
+  activeDispatcher.observer = observer;
   const server = createServer(async (request, response) => {
     const id = requestId();
+    const requestedTraceId = request.headers["x-trace-id"];
+    const traceId = isTraceId(requestedTraceId) ? requestedTraceId : createTraceId();
     response.setHeader("x-request-id", id);
-    response.setHeader("access-control-expose-headers", "x-request-id");
+    response.setHeader("x-trace-id", traceId);
+    response.setHeader(
+      "access-control-expose-headers",
+      "x-request-id, x-trace-id",
+    );
     const url = new URL(request.url, "http://127.0.0.1");
     const segments = url.pathname.split("/").filter(Boolean);
     const key = request.headers["idempotency-key"];
-    try {
+    return observer.run({ request_id: id, trace_id: traceId }, async () => {
+      const startedAt = Date.now();
+      observer.record("request", "http.request.started", {
+        method: request.method,
+        path: url.pathname,
+      });
+      try {
+      if (requestedTraceId !== undefined && !isTraceId(requestedTraceId)) {
+        throw new ApiError(
+          400,
+          "validation_error",
+          "invalid_trace_id",
+          "X-Trace-Id must use the trc_ prefix and contain 8 to 251 identifier characters.",
+        );
+      }
       if (url.pathname.startsWith("/v1/") && url.pathname !== "/v1/transactions") {
         validateNoQueryParameters(url.searchParams);
       }
       if (request.method === "OPTIONS") return send(response, 204, {});
       if (request.method === "GET" && url.pathname === "/health") {
+        const snapshot = activeLedger.healthSnapshot();
         return send(response, 200, {
           status: "ok",
+          operational_status:
+            snapshot.webhook_outbox.dead_letter > 0 ||
+            snapshot.adapter_operations.unknown_results > 0
+              ? "attention_required"
+              : "healthy",
           service: "bu2-reference-server",
-          version: "0.5.0",
+          version: "0.6.0",
           persistence: activeLedger.path,
           adapter: activeSandbox.adapter?.name ?? "none",
           ledger_events: activeLedger.listLedgerEvents().length,
+          ...snapshot,
         });
       }
       if (request.method === "GET" && url.pathname === "/v1/events") {
@@ -301,12 +360,37 @@ export function createBu2Server({ sandbox, ledger, dispatcher, adapter, initialW
           return send(response, 200, activeSandbox.getReceipt(receiptId));
       }
       throw new ApiError(404, "resource_not_found", "route_not_found", "Route was not found.");
-    } catch (error) {
-      const result = errorBody(error, id);
-      send(response, result.status, result.body);
-    }
+      } catch (error) {
+        observer.record(
+          classifyOperationalError(error),
+          "http.request.failed",
+          {
+            method: request.method,
+            path: url.pathname,
+            error_type: error.type ?? "internal_error",
+            error_code: error.code ?? "unexpected_error",
+            status: error.status ?? 500,
+          },
+        );
+        const result = errorBody(error, id, traceId);
+        send(response, result.status, result.body);
+      } finally {
+        observer.record("request", "http.request.completed", {
+          method: request.method,
+          path: url.pathname,
+          status: response.statusCode,
+          duration_ms: Date.now() - startedAt,
+        });
+      }
+    });
   });
-  return { server, sandbox: activeSandbox, ledger: activeLedger, dispatcher: activeDispatcher };
+  return {
+    server,
+    sandbox: activeSandbox,
+    ledger: activeLedger,
+    dispatcher: activeDispatcher,
+    observer,
+  };
 }
 
 export async function listen({
@@ -316,13 +400,18 @@ export async function listen({
     fileURLToPath(new URL("./data/bu2-sandbox.sqlite", import.meta.url)),
   ledger,
   dispatcher,
+  observer,
+  logSink = null,
   adapterMode = process.env.BU2_PAYMENT_ADAPTER ?? "simulated",
   x402ResourceUrl = process.env.X402_RESOURCE_URL,
   x402BuyerPrivateKey = process.env.X402_BUYER_PRIVATE_KEY,
 } = {}) {
-  const activeLedger = ledger ?? new SqliteLedger(dbPath);
+  const activeObserver = observer ?? new Observability({ sink: logSink });
+  const activeLedger = ledger ?? new SqliteLedger(dbPath, { observer: activeObserver });
+  activeLedger.observer = activeObserver;
   const adapter = buildPaymentAdapter({
     ledger: activeLedger,
+    observer: activeObserver,
     mode: adapterMode,
     resourceUrl: x402ResourceUrl,
     buyerPrivateKey: x402BuyerPrivateKey,
@@ -336,6 +425,7 @@ export async function listen({
     dispatcher,
     adapter,
     initialWallet,
+    observer: activeObserver,
   });
   await new Promise((resolve, reject) => {
     instance.server.once("error", reject);
@@ -346,6 +436,6 @@ export async function listen({
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
-  const running = await listen();
-  console.log(`BU2 Reference Server v0.5 listening on ${running.url}`);
+  const running = await listen({ logSink: (line) => console.log(line) });
+  console.log(`BU2 Reference Server v0.6 listening on ${running.url}`);
 }
