@@ -136,7 +136,7 @@
         <p class="eyebrow">BU2.COM · AUDITABLE CHANGE HISTORY</p>
         <h1>系统变更日志</h1>
         <p class="lead">记录 BU2 从代码到金融业务行为的每一次可观察变化，使人类与 Agent 都能回答：改了什么、为什么改、影响什么、如何验证、如何恢复。</p>
-        <div class="meta"><span>格式版本 1.0</span><span>最新更新 2026-09-06</span><span>维护者 BU2 Engineering / Codex</span></div>
+        <div class="meta"><span>格式版本 1.0</span><span>最新更新 2026-09-07</span><span>维护者 BU2 Engineering / Codex</span></div>
       </header>
 
       <section class="contract" id="contract">
@@ -152,8 +152,34 @@
       <h2 id="unreleased">Unreleased</h2>
       <article class="release">
         <div class="release-head">
-          <div><h3>ENV-06 · 制品提升、监控、备份与恢复演练</h3><time datetime="2026-09-06">2026-09-06</time></div>
+          <div><h3>ENV-07A · Hosted Sandbox 准入与证据基线</h3><time datetime="2026-09-07">2026-09-07</time></div>
           <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">在已批准的环境、访问与恢复基线上，增加 Sandbox-only 托管启动入口、文件型 Secret、不可变候选、独立限额激活和 E-T13/E-T14/E-T15 机器证据验证器；真实公网部署和 Testnet 双向收付仍未验收。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag added">Added</span>Reference Server 升至 v0.16，并新增 Hosted Sandbox Contract v1；固定 Base Sepolia 84532、x402 exact、机器鉴权和双向结算证据，并明确排除 Live。</li>
+            <li><span class="tag added">Added</span>新增专用启动入口；运行时从绝对路径普通文件读取 API credential metadata、Sandbox buyer key 与 RPC endpoint，拒绝直接 Secret 环境变量、符号链接、空文件、超限文件、原始 API key 和错环境凭据。</li>
+            <li><span class="tag added">Added</span>Candidate 绑定完整 commit、不可变 artifact、非本地 HTTPS origin、Secret 引用与四项本地 Gate；Candidate 固定不授权部署或 Testnet 执行。</li>
+            <li><span class="tag added">Added</span>Activation 必须由外部独立流程提供并绑定 Candidate hash、时间、审查人、付款次数和 Testnet 小额上限；仓库 CLI 只验证，不自行批准。</li>
+            <li><span class="tag added">Added</span>Evidence 验证双向 settled 交易、链上哈希、Receipt 四项信任、重复提交/响应丢失无重复资金，以及边缘机器鉴权无挑战和重定向。</li>
+            <li><span class="tag governance">Boundary</span>ENV-06 已由 PR #23 合并；本变更没有创建云资源、DNS、TLS、正式凭据或托管服务，没有执行 Base Sepolia 付款，Live/Mainnet 继续禁用。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R2 · 涉及 Sandbox Signer 装载入口、Testnet 执行激活和对外证据定义，必须独立审查</span></div>
+          <div><b>金融行为影响</b><span>不改变 Transaction Core；新增托管启动前的失败关闭门槛，任何执行仍要求仓库外独立 Activation</span></div>
+          <div><b>兼容性</b><span>默认 server、共享 Compose、API/MCP/SDK、数据库 schema 和 Receipt v0.2/v0.3 不变</span></div>
+          <div><b>验证</b><span>Secret 文件边界、候选不可变性、Activation 绑定、双向证据、故障收敛、机器鉴权和完整本地回归；干净提交容器门禁证明共享制品仍不加载 Signer、不执行付款；托管 E2E 未执行</span></div>
+          <div><b>恢复</b><span>停止 Hosted Sandbox 新执行并回退专用入口；保留 Candidate、Activation、账本、Attempt 与 Receipt 供只读对账，不自动重试付款</span></div>
+        </div>
+      </article>
+
+      <article class="release">
+        <div class="release-head">
+          <div><h3>ENV-06 · 制品提升、监控、备份与恢复演练</h3><time datetime="2026-09-06">2026-09-06</time></div>
+          <span class="status">Merged · PR #23</span>
         </div>
         <p class="summary">在 ENV-04/05 的隔离部署与受控入口之上，增加可验证的不可变制品候选清单、配置漂移阻断、环境专属 SQLite 在线备份、同环境隔离恢复演练和脱敏运营快照。</p>
         <div class="change-group">

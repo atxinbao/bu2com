@@ -78,7 +78,7 @@ export function createX402Merchant({
 
 export async function listenX402Merchant({
   port = Number(process.env.X402_MERCHANT_PORT ?? 4021),
-  host = "127.0.0.1",
+  host = process.env.X402_MERCHANT_HOST ?? "127.0.0.1",
   ...options
 } = {}) {
   const merchant = createX402Merchant(options);

@@ -1,9 +1,9 @@
-# BU2 Reference Server v0.15 / x402 Sandbox v0.5
+# BU2 Reference Server v0.16 / x402 Sandbox v0.5
 
-日期：2026-09-06
+日期：2026-09-07
 执行者：Codex
 
-本目录实现 Phase 0 Frozen `/v1` Contract 的本地 SQLite Reference Server。它具备追加账本、Webhook Outbox、模拟支付 Adapter、签名 Receipt、稳定分页与运行时请求校验、基于官方 MCP SDK 的外部 Agent 接入样例，以及基于官方 x402 SDK 的 Base Sepolia `exact` 支付通道；ENV-02/03/04 已建立环境、客户端、Receipt 与隔离容器边界，ENV-05 增加环境绑定机器凭据、角色/claims、访问审计、Sandbox 租户重置和脱敏支持包。它不持有真实资金，不可用于生产。
+本目录实现 Phase 0 Frozen `/v1` Contract 的本地 SQLite Reference Server。它具备追加账本、Webhook Outbox、模拟支付 Adapter、签名 Receipt、稳定分页与运行时请求校验、基于官方 MCP SDK 的外部 Agent 接入样例，以及基于官方 x402 SDK 的 Base Sepolia `exact` 支付通道；ENV-02–06 已建立环境、客户端、Receipt、隔离容器、受控访问与恢复边界，ENV-07A 增加 Hosted Sandbox 的专用启动和证据门槛。它不持有真实资金，不可用于生产。
 
 ## 启动
 
@@ -14,6 +14,12 @@ node sandbox/server.mjs
 默认地址：`http://127.0.0.1:3100`。未指定环境时只允许 `local + simulated`。
 
 容器部署可以通过 `BU2_HOST=0.0.0.0` 显式改变容器内监听地址；默认值仍是 loopback。ENV-04 Docker/Compose 模板与错库、错 Signer 验收见 [`deploy/README.md`](../deploy/README.md)。模板中的 Sandbox/Live 均为 `execution_disabled`，不会挂载 Signer。
+
+### Hosted Sandbox 候选入口
+
+托管候选必须使用 `npm run start:hosted-sandbox`，而不是直接启用默认入口。它固定 Sandbox、Base Sepolia、x402、机器鉴权和 `signer_environment=sandbox`，并在监听 API 前检查真实 RPC chain ID。凭据元数据、测试网 buyer key 与 RPC endpoint 必须分别通过 `BU2_API_CREDENTIALS_FILE`、`X402_BUYER_PRIVATE_KEY_FILE`、`BU2_RPC_URL_FILE` 指向只读普通文件；直接 Secret 环境变量会被拒绝。
+
+该入口可启动不代表已获部署或支付授权。完整 Candidate、独立 Activation、双向结算与边缘机器鉴权门槛见 [ENV-07 Hosted Sandbox v1](../docs/03-technical/ENVIRONMENT_HOSTED_SANDBOX_V1.md)。
 
 默认数据库：`sandbox/data/bu2-sandbox.sqlite`。SQLite Schema v9 会为新库写入不可变环境 metadata，并保存只追加访问决策、租户 credential generation 与 reset 审计；错环境数据库拒绝启动。没有 metadata 的旧库必须先鉴别，再用一次性 `BU2_CLAIM_LEGACY_DB_ENVIRONMENT=true` 明确认领，不能默认解释为 Sandbox 或 Live。重启服务后资源、钱包、幂等结果、账本和 Receipt 均会恢复。领域写入先登记数据库 `processing` Claim，再以状态版本 CAS 把资源、余额、LedgerEvent、Webhook Outbox 和幂等终态一次提交；遗留 `processing` 会返回结果未知，禁止自动重放。
 

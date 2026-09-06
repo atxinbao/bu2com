@@ -28,6 +28,9 @@ const deploymentUnits = JSON.parse(
 const operationsContract = JSON.parse(
   readFileSync(join(here, '../../deploy/operations-contract.json'), 'utf8'),
 );
+const hostedSandboxContract = JSON.parse(
+  readFileSync(join(here, '../../deploy/hosted-sandbox-contract.json'), 'utf8'),
+);
 const openapi = readFileSync(join(here, 'openapi.yaml'), 'utf8');
 
 let assertions = 0;
@@ -164,6 +167,26 @@ assert(
 assert(
   versions.environment_operations === operationsContract.schema_version,
   'Version manifest must match the environment operations contract',
+);
+assert(
+  versions.hosted_sandbox_evidence === hostedSandboxContract.schema_version,
+  'Version manifest must match the hosted Sandbox evidence contract',
+);
+assert(
+  hostedSandboxContract.environment === 'sandbox' &&
+    hostedSandboxContract.chain_id === 84532 &&
+    hostedSandboxContract.network === 'eip155:84532' &&
+    hostedSandboxContract.payment_adapter === 'x402' &&
+    hostedSandboxContract.access_mode === 'authenticated',
+  'Hosted Sandbox evidence must bind authenticated x402 to Base Sepolia',
+);
+assert(
+  hostedSandboxContract.required_evidence.bilateral_directions.join(',') ===
+      'buyer_to_seller,seller_to_buyer' &&
+    hostedSandboxContract.required_evidence.edge_machine_auth === true &&
+    hostedSandboxContract.live.included === false &&
+    hostedSandboxContract.live.execution_status === 'execution_disabled',
+  'Hosted Sandbox evidence must be bilateral, machine accessible, and exclude Live',
 );
 assert(
   operationsContract.backup.mechanism === 'node_sqlite_online_backup' &&

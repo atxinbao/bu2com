@@ -348,7 +348,7 @@ test("HTTP server exposes an explicit x402 adapter mode without a signer", async
       ),
   );
   const health = await request(running.url, "/health");
-  assert.equal(health.body.version, "0.15.0");
+  assert.equal(health.body.version, "0.16.0");
   assert.equal(health.body.environment, "sandbox");
   assert.equal(health.body.execution_status, "execution_disabled");
   assert.equal(health.body.payment_execution_readiness, "disabled");

@@ -1,6 +1,6 @@
 {
   "name": "@bu2/reference-sandbox",
-  "version": "0.15.0",
+  "version": "0.16.0",
   "private": true,
   "type": "module",
   "bin": {
@@ -12,12 +12,15 @@
   },
   "scripts": {
     "start": "node server.mjs",
+    "start:hosted-sandbox": "node hosted-sandbox.mjs",
     "test": "node --test *.test.mjs",
     "test:deployment-contract": "node --test ../deploy/deployment-contract.test.mjs",
     "test:operations": "node --test ../deploy/operations.test.mjs",
+    "test:hosted-sandbox": "node --test ../deploy/hosted-sandbox.test.mjs",
     "acceptance:deployment": "node ../deploy/acceptance.mjs",
     "acceptance:operations": "node ../deploy/operations-acceptance.mjs",
     "operations": "node ../deploy/operations-cli.mjs",
+    "hosted-sandbox": "node ../deploy/hosted-sandbox-cli.mjs",
     "demo": "node demo-agents.mjs",
     "demo:external": "node external-agents/demo.mjs",
     "demo:x402": "node demo-x402-agents.mjs",

@@ -1,0 +1,41 @@
+{
+  "schema_version": "1.0",
+  "environment": "sandbox",
+  "chain_id": 84532,
+  "network": "eip155:84532",
+  "payment_adapter": "x402",
+  "provider_scheme": "exact",
+  "access_mode": "authenticated",
+  "execution_status": "execution_enabled",
+  "activation_scope": "sandbox_base_sepolia_test_assets",
+  "candidate_required_gates": [
+    "contract_tests",
+    "sandbox_tests",
+    "prototype_build",
+    "secret_scan"
+  ],
+  "required_secret_references": [
+    "access_credentials",
+    "buyer_signer",
+    "rpc_endpoint"
+  ],
+  "prohibited_direct_secret_environment_variables": [
+    "BU2_API_CREDENTIALS_JSON",
+    "X402_BUYER_PRIVATE_KEY",
+    "BU2_RPC_URL"
+  ],
+  "required_evidence": {
+    "bilateral_directions": ["buyer_to_seller", "seller_to_buyer"],
+    "receipt_checks": [
+      "signature_valid",
+      "issuer_trusted",
+      "settlement_confirmed"
+    ],
+    "failure_scenarios": ["duplicate_submission", "lost_response"],
+    "edge_machine_auth": true
+  },
+  "live": {
+    "included": false,
+    "execution_status": "execution_disabled"
+  }
+}

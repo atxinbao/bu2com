@@ -162,7 +162,7 @@
         <p class="eyebrow">BU2.COM · PROJECT ALIGNMENT &amp; FUTURE ROADMAP</p>
         <h1>项目总纲与监管可演进模型</h1>
         <p class="lead">在 AI Agent 支付法域仍然模糊的阶段，BU2 不等待一个全球统一答案，而是通过可配置的监管状态、有限授权与分层执行模式，在保持技术前进的同时控制真实资金边界。</p>
-        <div class="hero-meta"><span>版本 1.1</span><span>生效日期 2026-09-06</span><span>状态 ENV-06 Implemented · R2 review pending</span><span>维护者 BU2 Engineering / Codex</span></div>
+        <div class="hero-meta"><span>版本 1.1</span><span>生效日期 2026-09-06</span><span>状态 ENV-07A Implemented · hosted evidence pending</span><span>维护者 BU2 Engineering / Codex</span></div>
       </header>
 
       <div class="decision">
@@ -213,7 +213,7 @@ Provider / x402 Facilitator 执行
           <div class="position-card yes"><b>Sandbox</b><ul><li>Base Sepolia · 84532</li><li><code>eip155:84532</code></li><li>x402 测试资产</li><li>托管开放需独立验收</li></ul></div>
           <div class="position-card no"><b>Live</b><ul><li>Base Mainnet · 8453</li><li><code>eip155:8453</code></li><li>初始 <code>execution_disabled</code></li><li>G-L 前禁止签名和广播</li></ul></div>
         </div>
-        <p>Sandbox 与 Live 复用同一不可变软件制品，但数据库、API key、Signer、Receipt 信任域、Webhook、队列、存储、备份和运行身份必须隔离。ENV-02/03/04/05 已由 PR #19–#22 合并；ENV-06 已增加候选制品提升清单、配置漂移阻断、环境专属在线备份、隔离恢复演练和脱敏运营快照，等待 R2 审查。两个部署单元以及所有恢复副本仍为 execution disabled 且不挂载 Signer；旧 Receipt 保留原字段和原签名解释。</p>
+        <p>Sandbox 与 Live 复用同一不可变软件制品，但数据库、API key、Signer、Receipt 信任域、Webhook、队列、存储、备份和运行身份必须隔离。ENV-02–06 已由 PR #19–#23 合并；ENV-07A 已增加 Hosted Sandbox 专用启动、文件型 Secret、不可变候选、独立激活与证据验证器。共享部署单元以及所有恢复副本仍为 execution disabled 且不挂载 Signer；真实托管 Sandbox 和双向 Testnet 证据尚未验收，旧 Receipt 保留原字段和原签名解释。</p>
         <div class="flow">local + simulated
 sandbox + x402 + 84532
 live + x402 + 8453 + execution_disabled

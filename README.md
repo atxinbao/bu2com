@@ -9,22 +9,22 @@ BU2.com 是 Agent 的 AI 收付平台。它嵌入 ChatGPT、Codex、Claude 和�
 | 项目 | 当前基线 |
 | --- | --- |
 | 项目阶段 | Phase 0 · local execution / Sandbox architecture |
-| 当前工程关卡 | ENV-06 · 制品提升、监控、备份与恢复演练（等待 R2 审查） |
+| 当前工程关卡 | ENV-07A · Hosted Sandbox 准入与证据基线（本地实现） |
 | 产品定义 | Product v0.3 · Transaction-first |
 | API 契约 | Agent Payment API v0.3.0 |
-| Reference Server | v0.15 · Node.js + SQLite WAL + MCP + 受控访问 |
+| Reference Server | v0.16 · Node.js + SQLite WAL + MCP + Hosted Sandbox 准入 |
 | TypeScript SDK | `@bu2/sdk` v0.3 · Monorepo private package |
 | MCP 分发 | stdio v0.3 · Codex / Claude Desktop / Generic Host |
 | 接入诊断 | `bu2-doctor` result v0.2 · 本地执行 / 零远程遥测 |
 | Clean-room 验收 | HTTP / TypeScript SDK / MCP · 3/3 Local 通过 |
 | 支付通道 | local Simulated Adapter + x402 Base Sepolia Adapter |
 | 产品界面 | React 19 + TypeScript 双语原型 |
-| 环境契约 | ENV-02/03/04/05 已批准；ENV-06 运营与恢复已实现，等待 R2 审查 |
+| 环境契约 | ENV-02–06 已批准；ENV-07A 本地准入基线已实现，托管验收未完成 |
 | 生产边界 | Live 初始 `execution_disabled`；客户资金托管和法币能力尚未开放 |
 
-当前代码已经形成可运行的 Agent 收付闭环，但仍是本地与 Base Sepolia 测试网证据，不是生产支付系统或法律合规结论。ENV-02/03/04/05 已由 PR #19–#22 合并；ENV-06 为同一不可变制品增加候选提升清单、配置漂移检测、环境专属在线备份、隔离恢复演练和脱敏运营快照，尚未创建托管 Sandbox 或 Live。
+当前代码已经形成可运行的 Agent 收付闭环，但仍是本地与 Base Sepolia 测试网证据，不是生产支付系统或法律合规结论。ENV-02–06 已由 PR #19–#23 合并；ENV-07A 为 Hosted Sandbox 增加专用启动门槛、文件型 Secret、不可变候选、独立激活与证据验证器，但尚未创建托管 Sandbox 或 Live。
 
-[Phase 0 Epic 1：External Agent Transaction Integration & Reliability](docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md) 与 [Phase 0 Epic 2：Developer Integration Scale](docs/03-technical/PHASE0_EPIC2_DEVELOPER_INTEGRATION_SCALE.md) 已完成。Transaction Trust Gate 1–3 已经 PR #15–#17 合并，F01/ENV-01 至 ENV-05 分别由 PR #18–#22 批准。当前 ENV-06 已完成本地实现与自动化验证，等待 R2 审查；合并后才进入 ENV-07 托管 Sandbox 双向 Base Sepolia 验收。[Phase 0 Epic 3](docs/03-technical/PHASE0_EPIC3_EXTERNAL_PILOT_EVIDENCE.md) 保持 Ready，但正式外部证据要求托管 Sandbox 的真实 Base Sepolia 双向收付，不再以 Local Simulation 代替。
+[Phase 0 Epic 1：External Agent Transaction Integration & Reliability](docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md) 与 [Phase 0 Epic 2：Developer Integration Scale](docs/03-technical/PHASE0_EPIC2_DEVELOPER_INTEGRATION_SCALE.md) 已完成。Transaction Trust Gate 1–3 已经 PR #15–#17 合并，F01/ENV-01 至 ENV-06 分别由 PR #18–#23 批准。当前进入 ENV-07：ENV-07A 本地准入与证据契约已实现，ENV-07B 的公网部署、真实 Base Sepolia 双向收付和边缘 E2E 仍未执行。[Phase 0 Epic 3](docs/03-technical/PHASE0_EPIC3_EXTERNAL_PILOT_EVIDENCE.md) 保持 Ready，不能以 Local Simulation 代替正式外部证据。
 
 ## 环境定义
 
@@ -32,7 +32,7 @@ BU2.com 是 Agent 的 AI 收付平台。它嵌入 ChatGPT、Codex、Claude 和�
 - `sandbox`：对外测试环境，固定 Base Sepolia（84532）与 x402；测试资产没有真实金融价值。
 - `live`：对外主网环境，固定 Base Mainnet（8453）；初始 `execution_disabled`，配置存在不等于获准付款。
 
-服务环境、执行后端和资金准入是三个独立维度。完整定义、实现与验收见 [系统环境契约 v1](docs/03-technical/SYSTEM_ENVIRONMENTS_V1.md)、[ADR-0001](docs/03-technical/ADR_0001_SANDBOX_LIVE_ENVIRONMENT_ISOLATION.md)、[环境注册表与链隔离 v1](docs/03-technical/ENVIRONMENT_REGISTRY_AND_CHAIN_ISOLATION_V1.md)、[ENV-04 隔离部署单元](docs/03-technical/ENVIRONMENT_DEPLOYMENT_UNITS_V1.md)、[ENV-05 受控入口](docs/03-technical/ENVIRONMENT_CONTROLLED_ACCESS_V1.md)、[ENV-06 运营与恢复](docs/03-technical/ENVIRONMENT_OPERATIONS_V1.md)和[环境验收矩阵 v1](docs/03-technical/ENVIRONMENT_ACCEPTANCE_MATRIX_V1.md)。
+服务环境、执行后端和资金准入是三个独立维度。完整定义、实现与验收见 [系统环境契约 v1](docs/03-technical/SYSTEM_ENVIRONMENTS_V1.md)、[ADR-0001](docs/03-technical/ADR_0001_SANDBOX_LIVE_ENVIRONMENT_ISOLATION.md)、[环境注册表与链隔离 v1](docs/03-technical/ENVIRONMENT_REGISTRY_AND_CHAIN_ISOLATION_V1.md)、[ENV-04 隔离部署单元](docs/03-technical/ENVIRONMENT_DEPLOYMENT_UNITS_V1.md)、[ENV-05 受控入口](docs/03-technical/ENVIRONMENT_CONTROLLED_ACCESS_V1.md)、[ENV-06 运营与恢复](docs/03-technical/ENVIRONMENT_OPERATIONS_V1.md)、[ENV-07 Hosted Sandbox](docs/03-technical/ENVIRONMENT_HOSTED_SANDBOX_V1.md) 和[环境验收矩阵 v1](docs/03-technical/ENVIRONMENT_ACCEPTANCE_MATRIX_V1.md)。
 
 ## Agent 支付闭环
 
@@ -100,13 +100,14 @@ npm ci --prefix packages/typescript-sdk
 node docs/03-technical/validate-contract.mjs
 npm --prefix sandbox test
 npm --prefix sandbox run test:operations
+npm --prefix sandbox run test:hosted-sandbox
 npm --prefix prototype run lint
 npm --prefix prototype run build
 npm --prefix packages/typescript-sdk test
 npm --prefix sandbox run acceptance:clean-room
 ```
 
-当前基线应得到：Contract 59 项不变量通过、6 个 MCP 工具有效、Reference Server 109/109 通过、TypeScript SDK 10/10 通过、ENV-06 运营专项 6/6 通过、两环境部署与恢复验收通过、三条 clean-room 路径全部生成有效 Local Receipt、Prototype lint 与 build 通过。
+当前基线应得到：Contract 62 项不变量通过、6 个 MCP 工具有效、Reference Server 109/109 通过、TypeScript SDK 10/10 通过、ENV-06 运营专项 6/6 通过、ENV-07A 准入专项 8/8 通过、两环境部署与恢复验收通过、三条 clean-room 路径全部生成有效 Local Receipt、Prototype lint 与 build 通过。
 
 ### 运行接入诊断
 

@@ -80,6 +80,7 @@
 - [`SYSTEM_ENVIRONMENTS_V1.md`](03-technical/SYSTEM_ENVIRONMENTS_V1.md)：Sandbox、Live、执行后端与资金准入的系统环境契约。
 - [`ENVIRONMENT_CONTROLLED_ACCESS_V1.md`](03-technical/ENVIRONMENT_CONTROLLED_ACCESS_V1.md)：ENV-05 环境绑定访问与租户隔离。
 - [`ENVIRONMENT_OPERATIONS_V1.md`](03-technical/ENVIRONMENT_OPERATIONS_V1.md)：ENV-06 制品提升、监控、SQLite 在线备份与隔离恢复演练。
+- [`ENVIRONMENT_HOSTED_SANDBOX_V1.md`](03-technical/ENVIRONMENT_HOSTED_SANDBOX_V1.md)：ENV-07 Hosted Sandbox 启动、激活与双向 Testnet 证据门槛。
 - [`../deploy/operations-contract.json`](../deploy/operations-contract.json)：ENV-06 机器可读运营与恢复契约。
 
 ### 持久化与支付通道

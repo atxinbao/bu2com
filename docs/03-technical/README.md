@@ -32,6 +32,7 @@
 - [ENV-05 受控开发者与运维入口 v1](ENVIRONMENT_CONTROLLED_ACCESS_V1.md)
 - [Access Contract v1](access-contract.json)
 - [ENV-06 制品提升、监控、备份与恢复演练 v1](ENVIRONMENT_OPERATIONS_V1.md)
+- [ENV-07 Hosted Sandbox 双向 Base Sepolia 验收 v1](ENVIRONMENT_HOSTED_SANDBOX_V1.md)
 - [Operations Contract v1](../../deploy/operations-contract.json)
 - [x402 Base Sepolia 测试钱包](X402_TEST_WALLET.md)
 - [x402 Base Sepolia 实结算证据](X402_LIVE_SETTLEMENT_EVIDENCE.md)
@@ -42,4 +43,4 @@
 
 Contract v0.3.0 已具备本地 SQLite Reference Server、数据库 processing 幂等 Claim、状态版本 CAS、原子化 Ledger/Outbox、有限重试与死信、审计重放、Secret 版本轮换、端到端交易关联、结构化观测、环境自描述、签名 Receipt、环境绑定的 Agent/Developer/Operator 访问控制、租户隔离与受控运维入口，以及基于官方 MCP/x402 SDK 的 Agent 支付接入。Epic 1 与 Epic 2 已完成；Transaction Trust Gate 1–3 已经 PR #15–#17 合并。
 
-F01/ENV-01、ENV-02、ENV-03、ENV-04 与 ENV-05 已分别由 PR #18–#22 批准。ENV-06 已实现不可变制品候选清单、配置漂移检测、环境专属 SQLite 在线备份、隔离恢复演练和脱敏运营快照，等待 R2 审查；Compose 仍是本地参考且没有加载 Signer 或执行链上付款。Epic 3/ENV-07 的正式证据仍要求托管 Sandbox 的真实 Base Sepolia 双向收付。SDK/MCP 未公开发布，Live/Mainnet、真实资金托管与生产凭证仍未经独立准入。
+F01/ENV-01 至 ENV-06 已分别由 PR #18–#23 批准。ENV-07A 已实现 Hosted Sandbox 专用启动门槛、文件型 Secret、不可变候选、独立激活和证据验证器；真实托管 Sandbox、Base Sepolia 双向收付与边缘 E2E 仍为 Not yet accepted。SDK/MCP 未公开发布，Live/Mainnet、真实资金托管与生产凭证仍未经独立准入。

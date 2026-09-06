@@ -78,4 +78,4 @@ Settlement recovery 是查询式恢复，不创建第二笔付款，因此即使
 
 建议部署顺序：先部署支持 `/v1/environment` 和 Receipt schema registry 的服务，再升级 Doctor/MCP/SDK，最后允许新 mutation。若回退应用版本，旧 Receipt v0.2 继续可验证；已签发的 v0.3 Receipt 与账本事实不得删除或重签，应保持新验证器只读可用。不得用回滚触发支付重放、跨环境数据库装载或环境自动降级。
 
-ENV-04/05 已由 PR #21/#22 合并。ENV-06 运营与恢复已实现并等待 R2 审查；Live 继续 `execution_disabled`。
+ENV-04/05/06 已由 PR #21/#22/#23 合并。ENV-07A 本地准入基线不构成托管证据；Live 继续 `execution_disabled`。
