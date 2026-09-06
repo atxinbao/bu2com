@@ -114,3 +114,5 @@ CLI 只向标准输出返回 JSON，不回写输入证据，也不会自动重�
 本地下一步已提供 `deploy/hosted-sandbox.compose.yaml` 和对应部署契约测试。它是仅 Sandbox 的部署准备单元，固定不可变镜像、Hosted Sandbox 启动入口、Base Sepolia、文件型 Secret 和机器鉴权配置；它不创建云资源，也不代表已部署。
 
 随后选择并配置一个可审计的托管目标，完成 DNS/TLS、托管 Secret 文件注入和不可变镜像部署后，才执行 ENV-07B。届时需在真实外部网络运行 E-T13、E-T14、E-T15，并保存脱敏证据包；通过之前 Epic 3 继续保持 Ready，不能开始三个外部团队正式试点。
+
+具体执行顺序见 [`deploy/hosted-sandbox-runbook.md`](../../deploy/hosted-sandbox-runbook.md)，证据结构见 [`hosted-sandbox-evidence.schema.json`](hosted-sandbox-evidence.schema.json)。两者均为执行模板，不代表托管目标已经存在或证据已经通过。

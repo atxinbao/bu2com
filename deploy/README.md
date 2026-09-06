@@ -23,6 +23,8 @@ docker compose --file deploy/hosted-sandbox.compose.yaml config
 
 `npm --prefix sandbox run test:hosted-deployment` 只验证本地解析后的部署契约；它不能证明 DNS/TLS、边缘机器鉴权、托管 Secret 或真实 Base Sepolia 交易已经完成。部署前仍必须生成 Candidate、取得独立 Activation，并按 [ENV-07 Hosted Sandbox 验收](../docs/03-technical/ENVIRONMENT_HOSTED_SANDBOX_V1.md) 保存 E-T13/E-T14/E-T15 证据。
 
+外部验收使用 [Hosted Sandbox Runbook](hosted-sandbox-runbook.md)、[Evidence Schema](../docs/03-technical/hosted-sandbox-evidence.schema.json) 和脱敏模板 `hosted-sandbox-evidence.template.json`。模板只用于填写，不应直接作为通过证据提交。
+
 ## 验证
 
 ```bash

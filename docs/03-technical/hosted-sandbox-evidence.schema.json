@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bu2.com/schemas/hosted-sandbox-evidence-v1.0.json",
+  "title": "BU2 Hosted Sandbox Evidence v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "record_type",
+    "candidate_sha256",
+    "api_origin",
+    "environment_document",
+    "edge_machine_auth",
+    "failure_recovery",
+    "transactions",
+    "live"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "record_type": { "const": "hosted_sandbox_evidence" },
+    "candidate_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "api_origin": {
+      "type": "string",
+      "pattern": "^https://[^/?#]+$"
+    },
+    "environment_document": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "environment",
+        "chain_id",
+        "network",
+        "execution_backend",
+        "execution_status",
+        "access_mode",
+        "receipt_issuer"
+      ],
+      "properties": {
+        "environment": { "const": "sandbox" },
+        "chain_id": { "const": 84532 },
+        "network": { "const": "eip155:84532" },
+        "execution_backend": { "const": "x402" },
+        "execution_status": { "const": "execution_enabled" },
+        "access_mode": { "const": "authenticated" },
+        "receipt_issuer": { "type": "object", "minProperties": 1 }
+      }
+    },
+    "edge_machine_auth": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status_code", "interactive_challenge", "redirect_count"],
+      "properties": {
+        "status_code": { "const": 200 },
+        "interactive_challenge": { "const": false },
+        "redirect_count": { "const": 0 }
+      }
+    },
+    "failure_recovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["duplicate_submission", "lost_response"],
+      "properties": {
+        "duplicate_submission": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["duplicate_funds", "converged"],
+          "properties": {
+            "duplicate_funds": { "const": false },
+            "converged": { "const": true }
+          }
+        },
+        "lost_response": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["duplicate_funds", "outcome"],
+          "properties": {
+            "duplicate_funds": { "const": false },
+            "outcome": {
+              "enum": ["confirmed", "reconciled", "explicit_unknown"]
+            }
+          }
+        }
+      }
+    },
+    "transactions": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "direction",
+          "environment",
+          "chain_id",
+          "status",
+          "provider_reference",
+          "receipt_verification"
+        ],
+        "properties": {
+          "direction": {
+            "enum": ["buyer_to_seller", "seller_to_buyer"]
+          },
+          "environment": { "const": "sandbox" },
+          "chain_id": { "const": 84532 },
+          "status": { "const": "settled" },
+          "provider_reference": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{64}$"
+          },
+          "receipt_verification": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "signature_valid",
+              "issuer_trusted",
+              "settlement_confirmed",
+              "environment"
+            ],
+            "properties": {
+              "signature_valid": { "const": true },
+              "issuer_trusted": { "const": true },
+              "settlement_confirmed": { "const": true },
+              "environment": { "const": "sandbox" }
+            }
+          }
+        }
+      }
+    },
+    "live": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["included", "execution_status"],
+      "properties": {
+        "included": { "const": false },
+        "execution_status": { "const": "execution_disabled" }
+      }
+    }
+  }
+}
