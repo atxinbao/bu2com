@@ -8,7 +8,7 @@
 
 ## 1. 五分钟快速开始
 
-要求 Node.js `>=22.13.0` 和 npm。在仓库根目录运行：
+要求 Node.js `>=22.16.0` 和 npm。在仓库根目录运行：
 
 ```bash
 npm ci --prefix sandbox

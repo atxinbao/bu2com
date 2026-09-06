@@ -550,3 +550,22 @@ Product v0.1 可作为客户访谈、交互原型和工程方案设计的输入�
 - 未执行：没有托管 edge E2E、云资源、DNS/TLS、正式 secret manager/凭据签发、Signer 装载、Base Sepolia/Mainnet 付款、生产发布或备份恢复；这些不属于 ENV-05 本地实现范围。
 
 结论：ENV-05 本地实现达到 **GO for R2 review**。E-T04 的 API key 环境绑定、E-T11、E-T12 和 E-T16 已有本地自动化证据；E-T15 的机器认证与 redirect fail-closed 子范围通过，托管 edge E2E 留 ENV-07。API key 不替代 LegalPrincipal/PaymentMandate，Live/Mainnet 与真实资金继续 NO-GO。R2 Domain + Architecture 人工审查合并后，下一项优先进入 ENV-06 制品提升、监控、备份与恢复演练。
+
+## ENV-06 制品提升、监控、备份与恢复演练验证
+
+日期：2026-09-06
+执行者：Codex
+
+- 合并基线：确认 ENV-05 PR #22 已合并，`main` 同步到 `5cc13bb654c68e7ae9881508b0b4b0745bf58f2c`，本地 ENV-05 分支已删除；本工作位于 `feat/env06-artifact-recovery-operations`。
+- Operations Contract：v1 固定单一不可变制品、环境专属备份 scope、禁止覆盖、同环境隔离恢复、恢复后 `execution_disabled + reconciliation_required`、禁止自动 Provider 重放，并明确本地候选清单不授权托管或支付。
+- SQLite：复用 Node 22.16 官方 `node:sqlite backup()` 进行在线备份；数据库 SHA-256、完整性、schema v9、不可变环境元数据与关键事实计数均写入并校验。没有修改 Schema、API、SDK、MCP、Receipt 或交易状态机。
+- 专项测试：`npm --prefix sandbox run test:operations` 通过，6/6；覆盖制品/配置漂移、WAL 一致性备份、数据库篡改、跨环境恢复、恢复禁用状态、脱敏监控、CLI JSON 输出以及报告冲突前置拒绝。
+- Operations 验收：干净提交 `712efc485c50f0dc9a55c46d01764e13169e700e` 构建镜像 `sha256:494502b0747524c5901d45252b3a7008d1bd2b785ba4c792c8e98aebe38be58f`；Sandbox/Live 使用同一镜像，分别生成 scope 隔离、`PRAGMA integrity_check=ok`、Schema v9 的备份并恢复至新副本。
+- 故障注入：Sandbox 备份恢复到 Live 在复制前以 `backup_environment_mismatch` 拒绝；配置指纹漂移进入 `blocked`；两环境恢复副本均要求对账、禁止自动重放，Signer、secret 与支付调用均为 0。
+- 回归门禁：Contract 59 项与 MCP 6/6、Reference Server 109/109、TypeScript SDK 生成/格式/lint/类型/build 与 10/10、部署契约 2/2、容器部署验收、clean-room 3/3、Prototype lint/build 均通过。
+- 文档与浏览器：55 个 Markdown/HTML 文件共 219 个相对链接无失效；29 个核心变更/新增文件未匹配凭据样式值；`git diff --check` 通过。Playwright CLI 验证 PROJECT 状态、阶段准入锚点、CHANGELOG 桌面与 390×844 移动视口，控制台 0 error / 0 warning。
+- Graphify：`graphify update .` 刷新代码图至 2412 nodes / 3798 edges / 158 communities；未配置 Gemini/Google backend，因此未声称完成文档语义重标记。
+- 失败记录：Operations 验收首次在 Docker Hub 拉取 Node 22.16 镜像元数据时因 EOF 中止，尚未进入 BU2 构建；精确拉取同一 digest 后完整重跑通过，未降低验收标准。
+- 未执行：没有部署云资源、DNS/TLS、托管 Sandbox、正式对象存储或通知渠道，没有加载 API credential、Signer、钱包或生产密钥，没有执行 Base Sepolia/Mainnet 支付，也没有启用 Live。
+
+结论：ENV-06 本地实现达到 **GO for R2 review**。E-T06、E-T08 与 E-T10 的本地制品、漂移、备份和恢复子范围具备自动化证据；这不等于托管环境、灾备 SLO、公开 Sandbox 或资金执行准入。R2 审查合并后再进入 ENV-07 托管 Sandbox 双向 Base Sepolia 验收；Live/Mainnet 与真实资金继续 NO-GO。

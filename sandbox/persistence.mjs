@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { existsSync, mkdirSync, statSync } from "node:fs";
 import { dirname } from "node:path";
-import { DatabaseSync } from "node:sqlite";
+import { backup, DatabaseSync } from "node:sqlite";
 import { ApiError } from "./domain.mjs";
 
 const parse = (value, fallback) => (value ? JSON.parse(value) : fallback);
@@ -1397,6 +1397,46 @@ export class SqliteLedger {
       },
       adapter_operations: { unknown_results: unknown.count },
     };
+  }
+
+  schemaVersion() {
+    return (
+      this.db.prepare("SELECT MAX(version) AS version FROM schema_migrations").get()
+        .version ?? 0
+    );
+  }
+
+  databaseIntegrity() {
+    return this.db.prepare("PRAGMA integrity_check").all().map((row) => row.integrity_check);
+  }
+
+  recoveryFactCounts() {
+    const tables = [
+      "resources",
+      "ledger_events",
+      "payment_attempts",
+      "adapter_operations",
+      "webhook_outbox",
+      "access_decisions",
+    ];
+    return Object.fromEntries(
+      tables.map((table) => [
+        table,
+        this.db.prepare(`SELECT COUNT(*) AS count FROM ${table}`).get().count,
+      ]),
+    );
+  }
+
+  async backupTo(destination, options = {}) {
+    if (this.path === ":memory:") {
+      throw new ApiError(
+        409,
+        "state_error",
+        "database_backup_requires_file",
+        "A durable SQLite file is required for an environment backup.",
+      );
+    }
+    return backup(this.db, destination, options);
   }
 
   tenantAccessState(environment, tenantId) {

@@ -72,8 +72,8 @@ npm --prefix sandbox run acceptance:deployment
 
 ENV-04 只允许提升相同 digest，不迁移 Sandbox 数据、余额、API key、Mandate、钱包或 Receipt issuer。配置解析、容器启动或环境握手任一失败时，停止该部署单元；不得换链、共享卷、自动降级为 Simulation 或复制另一环境的秘密。
 
-回退方式是停止两个部署单元并回退 Compose/Dockerfile；环境数据库和账本事实保持原样。若已存在 v0.3 Receipt，继续由版本化验证器只读验证，不重签。备份/恢复演练、监控与制品提升流程将在 ENV-06 独立完成。
+回退方式是停止两个部署单元并回退 Compose/Dockerfile；环境数据库和账本事实保持原样。若已存在 v0.3 Receipt，继续由版本化验证器只读验证，不重签。备份/恢复演练、监控与制品提升流程已在 ENV-06 实现，且恢复副本始终保持执行关闭并等待对账。
 
 ## 6. 后续工作
 
-ENV-04 已由 PR #21 合并。后续 ENV-05 受控开发者与运维入口已实现并等待 R2 审查；ENV-06 将补齐制品提升、监控、备份和恢复演练。Live/Mainnet 继续 `execution_disabled`，不得从容器或访问控制证据推导任何资金许可。
+ENV-04/05 已由 PR #21/#22 合并。ENV-06 已实现制品提升、监控、备份和恢复演练并等待 R2 审查；后续 ENV-07 才进行托管 Sandbox 双向 Base Sepolia 验收。Live/Mainnet 继续 `execution_disabled`，不得从容器、访问控制或恢复证据推导任何资金许可。

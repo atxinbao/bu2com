@@ -1,14 +1,14 @@
 # syntax=docker/dockerfile:1.7
 
-FROM node:22.13.0-bookworm-slim AS dependencies
+FROM node:22.16.0-bookworm-slim AS dependencies
 WORKDIR /opt/bu2/sandbox
 COPY sandbox/package.json sandbox/package-lock.json ./
 RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
 
-FROM node:22.13.0-bookworm-slim AS runtime
+FROM node:22.16.0-bookworm-slim AS runtime
 
 LABEL org.opencontainers.image.title="BU2 Reference Server" \
-      org.opencontainers.image.description="BU2 ENV-04 shared immutable runtime artifact" \
+      org.opencontainers.image.description="BU2 ENV-04/05/06 shared immutable runtime artifact" \
       org.opencontainers.image.source="https://github.com/atxinbao/bu2com"
 
 # 同一制品内预建两个非特权身份；部署单元只能选择与环境对应的 UID/GID。
