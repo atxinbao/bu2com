@@ -46,6 +46,7 @@ const waitForEnvironment = async (port, environment) => {
         const payload = await response.json();
         assert.equal(payload.environment, environment);
         assert.equal(payload.execution_status, "execution_disabled");
+        assert.equal(payload.access_mode, "authenticated");
         return payload;
       }
       lastError = new Error(`HTTP ${response.status}`);
@@ -57,7 +58,7 @@ const waitForEnvironment = async (port, environment) => {
   throw new Error(`${environment} did not become ready: ${lastError?.message ?? "timeout"}`);
 };
 
-const assertPaymentMutationDisabled = async (port, environment) => {
+const assertPrivateMutationRequiresCredential = async (port, environment) => {
   const response = await fetch(`http://127.0.0.1:${port}/v1/quotes`, {
     method: "POST",
     headers: {
@@ -67,8 +68,9 @@ const assertPaymentMutationDisabled = async (port, environment) => {
     body: JSON.stringify({}),
   });
   const payload = await response.json();
-  assert.equal(response.status, 503);
-  assert.equal(payload.error.code, "environment_execution_disabled");
+  assert.equal(response.status, 401);
+  assert.equal(payload.error.code, "credential_required");
+  assert.equal(response.headers.get("www-authenticate"), 'Bearer realm="bu2"');
 };
 
 const runFaultContainer = ({ name, image, volume = null, variables }) => {
@@ -154,8 +156,8 @@ try {
     waitForEnvironment(livePort, "live"),
   ]);
   await Promise.all([
-    assertPaymentMutationDisabled(sandboxPort, "sandbox"),
-    assertPaymentMutationDisabled(livePort, "live"),
+    assertPrivateMutationRequiresCredential(sandboxPort, "sandbox"),
+    assertPrivateMutationRequiresCredential(livePort, "live"),
   ]);
 
   const sandboxVolume = command("docker", [
@@ -204,16 +206,18 @@ try {
         environment: sandboxInfo.environment,
         chain_id: sandboxInfo.chain_id,
         execution_status: sandboxInfo.execution_status,
+        access_mode: sandboxInfo.access_mode,
       },
       live: {
         environment: liveInfo.environment,
         chain_id: liveInfo.chain_id,
         execution_status: liveInfo.execution_status,
+        access_mode: liveInfo.access_mode,
       },
     },
     fault_injection: {
-      sandbox_payment_mutation: "rejected_before_domain_write",
-      live_payment_mutation: "rejected_before_domain_write",
+      sandbox_unauthenticated_mutation: "rejected_before_domain_write",
+      live_unauthenticated_mutation: "rejected_before_domain_write",
       wrong_database_mount: "rejected_before_start",
       cross_environment_signer: "rejected_before_key_load",
       secret_in_logs: false,

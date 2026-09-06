@@ -339,6 +339,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/access": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        /** Read the authenticated principal and its bounded permissions */
+        get: operations["getAccessIdentity"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/operations/support_bundles": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create a redacted operator diagnostic bundle */
+        post: operations["createSupportBundle"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/operations/tenants/{tenant_id}/resets": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Invalidate one Sandbox tenant credential generation without deleting financial facts */
+        post: operations["resetTenantAccess"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -357,13 +417,84 @@ export interface components {
             /** @enum {string} */
             execution_backend: "simulated" | "x402";
             /** @constant */
-            api_contract_version: "0.2.0";
-            mcp_contract_versions: "0.2.0"[];
+            api_contract_version: "0.3.0";
+            mcp_contract_versions: "0.3.0"[];
             receipt_schema_versions: ("0.2" | "0.3")[];
             /** @enum {string} */
             execution_status: "execution_disabled" | "execution_enabled";
+            /** @constant */
+            access_contract_version: "1.0";
+            /** @enum {string} */
+            access_mode: "development_open" | "authenticated";
             public_capabilities: string[];
             receipt_issuer: components["schemas"]["ReceiptIssuer"];
+        };
+        AccessIdentity: {
+            /** @enum {string} */
+            mode: "development_open" | "authenticated";
+            authenticated: boolean;
+            /** @enum {string} */
+            environment: "local" | "sandbox" | "live";
+            principal_id: string | null;
+            tenant_id: string | null;
+            /** @enum {string|null} */
+            role: "agent" | "developer" | "operator" | null;
+            permissions: string[];
+            account_ids: string[];
+            agent_ids: string[];
+            credential_generation: number | null;
+        };
+        CreateSupportBundle: {
+            reason: string;
+            transaction_id?: string;
+            request_id?: string;
+            trace_id?: string;
+        };
+        SupportBundle: {
+            id: string;
+            /** @constant */
+            schema_version: "1.0";
+            /** Format: date-time */
+            generated_at: string;
+            requested_by: string;
+            reason: string;
+            environment: {
+                [key: string]: unknown;
+            };
+            service: {
+                [key: string]: unknown;
+            };
+            correlation: {
+                [key: string]: unknown;
+            };
+            diagnostics: {
+                [key: string]: unknown;
+            };
+            transaction: {
+                [key: string]: unknown;
+            } | null;
+            redaction: {
+                [key: string]: unknown;
+            };
+        } & {
+            [key: string]: unknown;
+        };
+        TenantAccessResetRequest: {
+            reason: string;
+        };
+        TenantAccessReset: {
+            id: string;
+            /** @enum {string} */
+            environment: "sandbox";
+            target_tenant_id: string;
+            previous_generation: number;
+            new_generation: number;
+            requested_by: string;
+            reason: string;
+            request_id: string;
+            trace_id: string;
+            /** Format: date-time */
+            created_at: string;
         };
         ReceiptIssuer: {
             issuer_id: string;
@@ -692,6 +823,29 @@ export interface components {
         };
     };
     responses: {
+        /** @description Missing, invalid, expired, revoked, or reset bearer credential */
+        Unauthorized: {
+            headers: {
+                "X-Request-Id": components["headers"]["RequestId"];
+                "X-Trace-Id": components["headers"]["TraceId"];
+                "WWW-Authenticate"?: string;
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /** @description Authenticated principal lacks the permission or resource claim */
+        Forbidden: {
+            headers: {
+                "X-Request-Id": components["headers"]["RequestId"];
+                "X-Trace-Id": components["headers"]["TraceId"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
         /** @description Invalid body, path identifier, query, cursor, or idempotency key */
         BadRequest: {
             headers: {
@@ -755,6 +909,7 @@ export interface components {
         PaymentIntentId: string;
         TransactionId: string;
         ReceiptId: string;
+        TenantId: string;
         WebhookSubscriptionId: string;
         WebhookOutboxId: string;
         PageLimit: number;
@@ -1338,6 +1493,94 @@ export interface operations {
             409: components["responses"]["Conflict"];
             413: components["responses"]["RequestTooLarge"];
             415: components["responses"]["UnsupportedMediaType"];
+        };
+    };
+    getAccessIdentity: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current access identity without credential material */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessIdentity"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+        };
+    };
+    createSupportBundle: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateSupportBundle"];
+            };
+        };
+        responses: {
+            /** @description Redacted support bundle */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupportBundle"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    resetTenantAccess: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                tenant_id: components["parameters"]["TenantId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TenantAccessResetRequest"];
+            };
+        };
+        responses: {
+            /** @description Tenant access reset audit result */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TenantAccessReset"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
         };
     };
 }

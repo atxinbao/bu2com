@@ -1,0 +1,50 @@
+{
+  "schema_version": "1.0",
+  "credential_type": "bearer_api_key",
+  "token_digest": "sha256",
+  "modes": ["development_open", "authenticated"],
+  "roles": {
+    "agent": [
+      "identity:read",
+      "quotes:create",
+      "payment_intents:create",
+      "payment_intents:read",
+      "transactions:read",
+      "deliveries:create",
+      "receipts:read"
+    ],
+    "developer": [
+      "identity:read",
+      "quotes:create",
+      "payment_intents:create",
+      "payment_intents:read",
+      "transactions:read",
+      "deliveries:create",
+      "receipts:read",
+      "webhooks:manage"
+    ],
+    "operator": [
+      "identity:read",
+      "payment_intents:read",
+      "transactions:read",
+      "receipts:read",
+      "authorizations:decide",
+      "settlements:create",
+      "settlements:recover",
+      "ledger:read",
+      "webhooks:manage",
+      "webhooks:operate",
+      "support:read",
+      "tenants:reset"
+    ]
+  },
+  "public_routes": [
+    "OPTIONS *",
+    "GET /health",
+    "GET /v1/environment",
+    "GET /v1/receipts/{receipt_id}/verify"
+  ],
+  "external_environment_mode": "authenticated",
+  "local_environment_mode": "development_open",
+  "live_execution_status": "execution_disabled"
+}

@@ -3,8 +3,8 @@
 日期：2026-09-06
 维护者：Codex
 
-- [Agent Payment API 契约 v0.2.0](API_CONTRACT_V0.1.md)
-- [OpenAPI v0.2.0](openapi.yaml)
+- [Agent Payment API 契约 v0.3.0](API_CONTRACT_V0.1.md)
+- [OpenAPI v0.3.0](openapi.yaml)
 - [MCP 工具定义](mcp-tools.json)
 - [API / MCP 版本清单](contract-versions.json)
 - [开发者接入诊断 v0.2](DEVELOPER_DIAGNOSTICS_V0.1.md)
@@ -14,7 +14,7 @@
 - [HTTP、SDK 与 MCP clean-room 样例](../../integrations/clean-room/README.md)
 - [外部 Buyer / Seller Agent 快速接入](EXTERNAL_AGENT_QUICKSTART.md)
 - [Codex、Claude Desktop 与通用 MCP Host 配置](../../integrations/mcp/README.md)
-- [TypeScript SDK v0.2](../../packages/typescript-sdk/README.md)
+- [TypeScript SDK v0.3](../../packages/typescript-sdk/README.md)
 - [契约示例](examples/payment-flow.json)
 - [可运行 Reference Server](../../sandbox/README.md)
 - [Persistence、Webhook 与 Adapter v0.6](PERSISTENCE_WEBHOOK_ADAPTER_V0.2.md)
@@ -29,6 +29,8 @@
 - [客户端与 Receipt 环境契约 v1](ENVIRONMENT_CLIENT_AND_RECEIPT_CONTRACT_V1.md)
 - [ENV-04 隔离 Sandbox / Live 部署单元 v1](ENVIRONMENT_DEPLOYMENT_UNITS_V1.md)
 - [ENV-04 Docker / Compose 参考实现](../../deploy/README.md)
+- [ENV-05 受控开发者与运维入口 v1](ENVIRONMENT_CONTROLLED_ACCESS_V1.md)
+- [Access Contract v1](access-contract.json)
 - [x402 Base Sepolia 测试钱包](X402_TEST_WALLET.md)
 - [x402 Base Sepolia 实结算证据](X402_LIVE_SETTLEMENT_EVIDENCE.md)
 - [Phase 0 Epic 1：外部 Agent 交易接入与可靠性](PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md)
@@ -36,6 +38,6 @@
 - [Phase 0 Epic 3：外部试点准备与证据](PHASE0_EPIC3_EXTERNAL_PILOT_EVIDENCE.md)
 - [Phase 0 Transaction Trust Gate](PHASE0_TRANSACTION_TRUST_GATE.md)
 
-Contract v0.2.0 已具备本地 SQLite Reference Server、数据库 processing 幂等 Claim、状态版本 CAS、原子化 Ledger/Outbox、有限重试与死信、审计重放、Secret 版本轮换、端到端交易关联、结构化观测、环境自描述、签名 Receipt、模拟支付 Adapter、基于官方 MCP SDK 的外部 Buyer/Seller Agent 样例，以及基于官方 x402 SDK 的 Base Sepolia Adapter。Epic 1 与 Epic 2 已完成；Transaction Trust Gate 1–3 已经 PR #15–#17 合并。
+Contract v0.3.0 已具备本地 SQLite Reference Server、数据库 processing 幂等 Claim、状态版本 CAS、原子化 Ledger/Outbox、有限重试与死信、审计重放、Secret 版本轮换、端到端交易关联、结构化观测、环境自描述、签名 Receipt、环境绑定的 Agent/Developer/Operator 访问控制、租户隔离与受控运维入口，以及基于官方 MCP/x402 SDK 的 Agent 支付接入。Epic 1 与 Epic 2 已完成；Transaction Trust Gate 1–3 已经 PR #15–#17 合并。
 
-F01/ENV-01、ENV-02 与 ENV-03 已分别由 PR #18/#19/#20 批准。ENV-04 已使用同一不可变镜像实现 Sandbox/Live 两个隔离、disarmed 的本地容器部署单元，等待 R2 审查；它不是托管环境，也没有加载 Signer 或执行链上付款。Epic 3 的正式证据仍要求托管 Sandbox 的真实 Base Sepolia 双向收付；Local/容器隔离证据只作为自动化工具与环境边界证明。SDK 与 MCP 未公开发布，Live/Mainnet、真实资金托管与生产密钥仍未经独立准入。
+F01/ENV-01、ENV-02、ENV-03 与 ENV-04 已分别由 PR #18/#19/#20/#21 批准。ENV-05 已实现受控 API、SDK、MCP、租户重置和脱敏支持包，等待 R2 审查；Compose 仍是本地参考且没有加载 Signer 或执行链上付款。Epic 3 的正式证据仍要求托管 Sandbox 的真实 Base Sepolia 双向收付。SDK/MCP 未公开发布，Live/Mainnet、真实资金托管与生产凭证仍未经独立准入。

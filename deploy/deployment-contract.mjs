@@ -61,6 +61,9 @@ export function validateResolvedDeployment(compose, contract = DEPLOYMENT_UNITS)
     if (variables.BU2_EXECUTION_STATUS !== unit.execution_status) {
       errors.push(`${environment}:execution_status_mismatch`);
     }
+    if (variables.BU2_ACCESS_MODE !== unit.access_mode) {
+      errors.push(`${environment}:access_mode_mismatch`);
+    }
     if (uid !== unit.runtime_uid) errors.push(`${environment}:runtime_uid_mismatch`);
     if (!volumes.includes(unit.data_volume)) errors.push(`${environment}:data_volume_mismatch`);
     if (volumes.length !== 1) errors.push(`${environment}:unexpected_volume_mount`);

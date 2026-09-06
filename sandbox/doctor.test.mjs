@@ -33,7 +33,7 @@ const localEnvironment = Object.freeze({
 function localEnvironmentInfo(overrides = {}) {
   return {
     service: "bu2-reference-server",
-    mcp_contract_versions: ["0.2.0"],
+    mcp_contract_versions: ["0.3.0"],
     ...expectedEnvironmentInfo("local"),
     receipt_issuer: {
       ...expectedEnvironmentInfo("local").receipt_issuer,
@@ -249,6 +249,7 @@ test("doctor distinguishes endpoint environment mismatch from contract failure",
     environment: {
       BU2_ENDPOINT: "http://127.0.0.1:3100",
       BU2_ENVIRONMENT: "sandbox",
+      BU2_API_KEY: `test-${"d".repeat(40)}`,
     },
     preflight: async () => {
       throw new Bu2McpCompatibilityError(

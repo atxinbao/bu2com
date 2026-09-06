@@ -19,6 +19,9 @@ const cleanRoom = JSON.parse(
 const environmentContract = JSON.parse(
   readFileSync(join(here, 'environment-contract.json'), 'utf8'),
 );
+const accessContract = JSON.parse(
+  readFileSync(join(here, 'access-contract.json'), 'utf8'),
+);
 const deploymentUnits = JSON.parse(
   readFileSync(join(here, '../../deploy/environment-units.json'), 'utf8'),
 );
@@ -156,6 +159,24 @@ assert(
   'Version manifest must match the environment deployment-unit contract',
 );
 assert(
+  versions.access_contract === accessContract.schema_version,
+  'Version manifest must match the controlled access contract',
+);
+assert(
+  accessContract.external_environment_mode === 'authenticated' &&
+    accessContract.local_environment_mode === 'development_open',
+  'External access must fail closed while local development remains explicit',
+);
+assert(
+  ['agent', 'developer', 'operator'].every((role) => accessContract.roles[role]),
+  'Access contract must define Agent, Developer, and Operator roles',
+);
+assert(
+  deploymentUnits.units.sandbox.access_mode === 'authenticated' &&
+    deploymentUnits.units.live.access_mode === 'authenticated',
+  'Sandbox and Live deployment units must require authenticated access',
+);
+assert(
   deploymentUnits.artifact_policy.mode === 'single_immutable_image' &&
     deploymentUnits.units.sandbox.execution_status === 'execution_disabled' &&
     deploymentUnits.units.live.execution_status === 'execution_disabled',
@@ -169,6 +190,12 @@ assert(
   'Sandbox and Live deployment units must not share trust boundaries or mount a Live signer',
 );
 assert(openapi.includes('/environment:'), 'OpenAPI must expose environment preflight');
+assert(openapi.includes('/access:'), 'OpenAPI must expose the caller access identity');
+assert(
+  openapi.includes('/operations/support_bundles:') &&
+    openapi.includes('/operations/tenants/{tenant_id}/resets:'),
+  'OpenAPI must expose bounded operator support and Sandbox reset surfaces',
+);
 assert(
   cleanRoom.properties.analytics.properties.remote_enabled.const === false &&
     cleanRoom.properties.analytics.properties.persistence.const === 'none',

@@ -39,3 +39,12 @@ void client.createQuote(quote, {});
 
 // @ts-expect-error 对外环境使用 live，而不是网络名称 Mainnet。
 new Bu2Client({ baseUrl: "https://api.bu2.com/v1", environment: "mainnet" });
+
+// @ts-expect-error Sandbox 和 Live 必须显式提供环境绑定的 API key。
+new Bu2Client({ baseUrl: "https://sandbox.api.bu2.com/v1", environment: "sandbox" });
+
+new Bu2Client({
+  baseUrl: "https://sandbox.api.bu2.com/v1",
+  environment: "sandbox",
+  apiKey: "test-credential-with-more-than-thirty-two-characters",
+});

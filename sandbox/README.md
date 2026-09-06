@@ -1,9 +1,9 @@
-# BU2 Reference Server v0.14 / x402 Sandbox v0.5
+# BU2 Reference Server v0.15 / x402 Sandbox v0.5
 
 日期：2026-09-06
 执行者：Codex
 
-本目录实现 Phase 0 Frozen `/v1` Contract 的本地 SQLite Reference Server。它具备追加账本、Webhook Outbox、模拟支付 Adapter、签名 Receipt、稳定分页与运行时请求校验、基于官方 MCP SDK 的外部 Agent 接入样例，以及基于官方 x402 SDK 的 Base Sepolia `exact` 支付通道；ENV-02/03 已增加 `local/sandbox/live` 注册表、SQLite 环境绑定、版本化环境自描述、客户端预检和 Receipt v0.3 环境签名绑定，ENV-04 增加同一不可变镜像的隔离容器参考。它不持有真实资金，不可用于生产。
+本目录实现 Phase 0 Frozen `/v1` Contract 的本地 SQLite Reference Server。它具备追加账本、Webhook Outbox、模拟支付 Adapter、签名 Receipt、稳定分页与运行时请求校验、基于官方 MCP SDK 的外部 Agent 接入样例，以及基于官方 x402 SDK 的 Base Sepolia `exact` 支付通道；ENV-02/03/04 已建立环境、客户端、Receipt 与隔离容器边界，ENV-05 增加环境绑定机器凭据、角色/claims、访问审计、Sandbox 租户重置和脱敏支持包。它不持有真实资金，不可用于生产。
 
 ## 启动
 
@@ -15,7 +15,11 @@ node sandbox/server.mjs
 
 容器部署可以通过 `BU2_HOST=0.0.0.0` 显式改变容器内监听地址；默认值仍是 loopback。ENV-04 Docker/Compose 模板与错库、错 Signer 验收见 [`deploy/README.md`](../deploy/README.md)。模板中的 Sandbox/Live 均为 `execution_disabled`，不会挂载 Signer。
 
-默认数据库：`sandbox/data/bu2-sandbox.sqlite`。SQLite Schema v8 会为新库写入不可变环境 metadata；错环境数据库拒绝启动。没有 metadata 的旧库必须先鉴别，再用一次性 `BU2_CLAIM_LEGACY_DB_ENVIRONMENT=true` 明确认领，不能默认解释为 Sandbox 或 Live。重启服务后资源、钱包、幂等结果、账本和 Receipt 均会恢复。领域写入先登记数据库 `processing` Claim，再以状态版本 CAS 把资源、余额、LedgerEvent、Webhook Outbox 和幂等终态一次提交；遗留 `processing` 会返回结果未知，禁止自动重放。
+默认数据库：`sandbox/data/bu2-sandbox.sqlite`。SQLite Schema v9 会为新库写入不可变环境 metadata，并保存只追加访问决策、租户 credential generation 与 reset 审计；错环境数据库拒绝启动。没有 metadata 的旧库必须先鉴别，再用一次性 `BU2_CLAIM_LEGACY_DB_ENVIRONMENT=true` 明确认领，不能默认解释为 Sandbox 或 Live。重启服务后资源、钱包、幂等结果、账本和 Receipt 均会恢复。领域写入先登记数据库 `processing` Claim，再以状态版本 CAS 把资源、余额、LedgerEvent、Webhook Outbox 和幂等终态一次提交；遗留 `processing` 会返回结果未知，禁止自动重放。
+
+## 受控访问
+
+`local` 默认是显式开发开放模式；`sandbox/live` 默认是 `authenticated`。公开接口只有 health、environment 和 Receipt verify。外部凭据元数据通过 `BU2_API_CREDENTIALS_JSON` 注入，必须只包含 token SHA-256 摘要，不得包含原始 key；SDK/MCP 从独立的 `BU2_API_KEY` 读取原始 key。角色、字段和生成辅助函数见 [`ENVIRONMENT_CONTROLLED_ACCESS_V1.md`](../docs/03-technical/ENVIRONMENT_CONTROLLED_ACCESS_V1.md) 与 [`access-control.mjs`](access-control.mjs)。
 
 ## 完整 Agent 交易演示
 
@@ -77,7 +81,7 @@ npm --prefix sandbox run acceptance:clean-room
 node --test sandbox/*.test.mjs
 ```
 
-覆盖完整闭环、数据库幂等 Claim、并发预留、状态 CAS、原子提交故障注入、报价金额篡改、Mandate 拒绝、交付前非法结算、SQLite 重启恢复、Adapter 防重复、Webhook HTTP 超时/5xx、有限重试、死信、审计重放、并发租约、Secret 轮换、端到端关联、日志脱敏、健康快照、MCP 外部 Agent 接入、doctor 故障注入、clean-room 证据约束、x402 签名前条款漂移、调用前 Payment Attempt、重启只查询恢复和 Receipt 签名验证。
+覆盖完整闭环、数据库幂等 Claim、并发预留、状态 CAS、原子提交故障注入、报价金额篡改、Mandate 拒绝、交付前非法结算、SQLite 重启恢复、角色/claims 与租户隔离、访问重置、支持包脱敏、Adapter 防重复、Webhook HTTP 超时/5xx、有限重试、死信、审计重放、并发租约、Secret 轮换、端到端关联、日志脱敏、MCP 外部 Agent 接入、doctor 故障注入、clean-room 证据约束、x402 签名前条款漂移、调用前 Payment Attempt、重启只查询恢复和 Receipt 签名验证。
 
 ## x402 沙盒商户
 
@@ -151,6 +155,9 @@ npm run x402:server
 
 - `GET /health`：公开粗粒度存活、版本、环境和 payment execution readiness；不暴露数据库路径、交易数量或内部 Outbox/Adapter 统计。
 - `GET /v1/environment`：版本化环境、链、执行后端、契约、执行状态、公开能力和 Receipt issuer 自描述。
+- `GET /v1/access`：返回当前机器主体、角色、claims 与权限，不返回 API key。
+- `POST /v1/operations/support_bundles`：Operator 生成脱敏诊断快照。
+- `POST /v1/operations/tenants/{tenant_id}/resets`：Operator 幂等失效一个 Sandbox 租户的旧 credential generation，不删除交易事实。
 - `GET /v1/transactions?limit=20&cursor=...`：按时间倒序返回交易及其支付、交付、通道和 Receipt 上下文，使用不透明 cursor 分页。
 - `GET /v1/transactions/{id}`：返回单笔完整交易详情。
 - `POST /v1/transactions/{id}/settlement_recoveries`：幂等查询未知 x402 结算，不重复付款。
@@ -167,4 +174,4 @@ Webhook 默认最多尝试 5 次，指数退避上限 60 秒，Worker 租约 30 
 
 所有 HTTP 响应均返回 `X-Request-Id` 和 `X-Trace-Id`。调用方可传入合法 `X-Trace-Id`，将外部 Agent 执行与 Transaction、LedgerEvent、Adapter、Outbox 和 Webhook 投递关联；省略时由服务生成。公开 `/v1` 请求体、资源 ID、分页参数与 `Idempotency-Key` 会在边界运行时校验；未知字段、非法 cursor、非法 Trace ID 和不匹配的资源前缀返回稳定 JSON 错误。
 
-直接启动服务时，标准输出为分类后的单行 JSON 事件；敏感字段和值在写出前脱敏。字段定义、告警条件和处置步骤见 [交易链路可观测性与处置手册](../docs/03-technical/OBSERVABILITY_RUNBOOK_V0.1.md)。Reference Server 仅绑定本机 Sandbox/Testnet，当前认证边界不支持公开部署。
+直接启动服务时，标准输出为分类后的单行 JSON 事件；敏感字段和值在写出前脱敏。字段定义、告警条件和处置步骤见 [交易链路可观测性与处置手册](../docs/03-technical/OBSERVABILITY_RUNBOOK_V0.1.md)。Reference Server 仍是本地参考实现；ENV-05 的鉴权能力不等于托管公网、生产凭据或 Live 准入。

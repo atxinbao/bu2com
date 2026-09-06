@@ -1,4 +1,4 @@
-# BU2 Agent Payment API 契约 v0.2.0
+# BU2 Agent Payment API 契约 v0.3.0
 
 日期：2026-09-06
 执行者：Codex  
@@ -17,6 +17,7 @@
 - 所有外部请求体、路径参数和查询参数必须在 HTTP 边界运行时校验，未知字段失败关闭。
 - 资源 ID 由固定前缀和 ASCII 字母、数字、下划线或连字符组成，总长度不超过 255 字符。
 - `GET /v1/environment` 是客户端 mutation 前的版本化环境、链、执行后端、Receipt issuer 和 execution status 自描述入口。
+- `GET /health`、`GET /v1/environment` 和 `GET /v1/receipts/{id}/verify` 公开；其余接口使用环境绑定的 Bearer API key，并按 Agent/Developer/Operator 权限与 Account/Agent claims 校验。
 - 对外环境只允许 `sandbox/live`；本机模拟使用显式 `local` 开发模式。任何跨环境不匹配都必须在 mutation 前失败关闭。
 
 ## 2. 稳定资源
@@ -224,7 +225,7 @@ Webhook 使用事件 ID 去重；接收方应按至少一次投递处理，不�
 
 - `/v1` 冻结资源名称、金额模型、状态语义和错误外壳。
 - Phase 0 冻结同时覆盖 Transaction 列表分页、`X-Request-Id`、`X-Trace-Id`、运行时校验与 Receipt verify 响应。
-- 认证方案仍是生产准入的一部分；当前 Reference Server 只提供本地开发和受限测试网实现，不构成可公开部署的无认证支付服务。
+- Access Contract v1 已覆盖环境绑定 API key、权限、claims、访问审计、Sandbox 租户重置与脱敏支持包；正式凭据签发、托管 edge 和 secret manager 仍属于部署准入，当前 Reference Server 不构成公开生产支付服务。
 - x402、AP2、银行卡或稳定币只能作为 Adapter，不改变核心资源。
 - P0 不承诺真实托管、换汇、跨链、收益或开放市场。
 

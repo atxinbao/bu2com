@@ -90,7 +90,20 @@ export function loadBu2McpConfiguration(environment = process.env) {
       "BU2_LOCAL_DEVELOPMENT is only valid with BU2_ENVIRONMENT=local.",
     );
   }
-  return { endpoint, environment: activeEnvironment, localDevelopment };
+  const apiKey = environment.BU2_API_KEY;
+  if (activeEnvironment !== "local" && (!apiKey || apiKey.length < 32)) {
+    throw new Bu2McpCompatibilityError(
+      "credential_required",
+      "BU2_API_KEY with at least 32 characters is required for sandbox and live.",
+    );
+  }
+  if (apiKey !== undefined && apiKey.length < 32) {
+    throw new Bu2McpCompatibilityError(
+      "credential_invalid",
+      "BU2_API_KEY must contain at least 32 characters when provided.",
+    );
+  }
+  return { endpoint, environment: activeEnvironment, localDevelopment, apiKey: apiKey ?? null };
 }
 
 export function expectedEnvironmentInfo(environment) {
@@ -107,6 +120,8 @@ export function expectedEnvironmentInfo(environment) {
     network: expected.network,
     execution_backend: expected.payment_adapter,
     execution_status: expected.default_execution_status,
+    access_contract_version: contractVersions.access_contract,
+    access_mode: environment === "local" ? "development_open" : "authenticated",
     api_contract_version: contractVersions.agent_payment_api,
     api_base_path: contractVersions.api_base_path,
     mcp_contract_version: mcpContract.version,
@@ -133,6 +148,8 @@ export function bu2McpCapability(environmentInfo) {
     network: environmentInfo.network,
     execution_backend: environmentInfo.execution_backend,
     execution_status: environmentInfo.execution_status,
+    access_contract_version: environmentInfo.access_contract_version,
+    access_mode: environmentInfo.access_mode,
     receipt_issuer_id: environmentInfo.receipt_issuer?.issuer_id ?? null,
     receipt_verification_key_id:
       environmentInfo.receipt_issuer?.verification_key_id ?? null,
@@ -181,6 +198,7 @@ export function validateBu2McpHandshake(serverInfo, serverCapabilities, expected
     capability.chain_id !== expected.chain_id ||
     capability.network !== expected.network ||
     capability.execution_backend !== expected.execution_backend ||
+    capability.access_contract_version !== expected.access_contract_version ||
     capability.receipt_issuer_id !== expected.receipt_issuer.issuer_id ||
     !capability.receipt_verification_key_id ||
     (expected.environment === "local"
@@ -206,7 +224,7 @@ export function validateBu2McpHandshake(serverInfo, serverCapabilities, expected
 }
 
 export async function preflightBu2Endpoint(
-  { endpoint, environment },
+  { endpoint, environment, apiKey = null },
   { fetchImpl = fetch, timeoutMs = 5_000 } = {},
 ) {
   const controller = new AbortController();
@@ -261,6 +279,7 @@ export async function preflightBu2Endpoint(
     );
   }
   const expected = expectedEnvironmentInfo(environment);
+  const expectedAccessMode = environment === "local" && !apiKey ? "development_open" : "authenticated";
   if (info.environment !== environment) {
     throw new Bu2McpCompatibilityError(
       "environment_mismatch",
@@ -275,6 +294,10 @@ export async function preflightBu2Endpoint(
     info.chain_id !== expected.chain_id ? "chain_id" : null,
     info.network !== expected.network ? "network" : null,
     info.execution_backend !== expected.execution_backend ? "execution_backend" : null,
+    info.access_contract_version !== expected.access_contract_version
+      ? "access_contract_version"
+      : null,
+    info.access_mode !== expectedAccessMode ? "access_mode" : null,
     info.receipt_issuer?.environment !== environment ? "receipt_issuer.environment" : null,
     info.receipt_issuer?.issuer_id !== expected.receipt_issuer.issuer_id
       ? "receipt_issuer.issuer_id"
@@ -311,6 +334,8 @@ export async function preflightBu2Endpoint(
     network: info.network,
     execution_backend: info.execution_backend,
     execution_status: info.execution_status,
+    access_contract_version: info.access_contract_version,
+    access_mode: info.access_mode,
     receipt_schema_versions: info.receipt_schema_versions,
     receipt_issuer: info.receipt_issuer,
     ...correlation,

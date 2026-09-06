@@ -1,9 +1,9 @@
-# BU2 ENV-04 Deployment Reference
+# BU2 ENV-04/05 Deployment Reference
 
 日期：2026-09-06
 执行者：Codex
 
-本目录提供同一不可变镜像、两个隔离部署单元的本地参考实现。它只用于验证环境边界；不是云部署、公开 Sandbox 或 Live 上线方案。
+本目录提供同一不可变镜像、两个隔离部署单元和外部默认鉴权的本地参考实现。它只用于验证环境与关闭入口边界；不是云部署、公开 Sandbox 或 Live 上线方案。
 
 ## 验证
 
@@ -23,7 +23,7 @@ BU2_ARTIFACT_IMAGE="$(tr -d '\n' < .codex/env04-image-id)" \
   docker compose --file deploy/compose.yaml --profile live up --detach
 ```
 
-默认宿主机地址：Sandbox `http://127.0.0.1:3110`，Live `http://127.0.0.1:3111`。两个单元都返回 `execution_disabled`，没有 Signer，因此只能读取环境与已有事实，不能执行支付。
+默认宿主机地址：Sandbox `http://127.0.0.1:3110`，Live `http://127.0.0.1:3111`。两个单元都返回 `execution_disabled` 且 `access_mode=authenticated`，没有 Signer，也没有内置凭据；公开 health/environment/Receipt verify 可用，其他入口默认返回 401。正式凭据注入和 secret manager 属于托管部署工作，不写入镜像或本参考 Compose。
 
 停止并删除该手工环境：
 

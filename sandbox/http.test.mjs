@@ -44,9 +44,9 @@ test("HTTP reference server completes one signed agent payment", async (context)
   const health = await request(running.url, "/health");
   assert.equal(health.status, 200);
   assert.match(health.requestId, /^req_/);
-  assert.equal(health.body.api_contract_version, "0.2.0");
+  assert.equal(health.body.api_contract_version, "0.3.0");
   assert.equal(health.body.api_base_path, "/v1");
-  assert.deepEqual(health.body.mcp_contract_versions, ["0.2.0"]);
+  assert.deepEqual(health.body.mcp_contract_versions, ["0.3.0"]);
   assert.equal(health.body.environment_contract_version, "1.0");
   assert.equal(health.body.environment, "local");
   assert.equal(health.body.execution_status, "execution_enabled");
@@ -81,7 +81,7 @@ test("HTTP reference server completes one signed agent payment", async (context)
       chain_id: null,
       network: null,
       execution_backend: "simulated",
-      api_contract_version: "0.2.0",
+      api_contract_version: "0.3.0",
       execution_status: "execution_enabled",
       receipt_schema_versions: ["0.2", "0.3"],
       issuer_environment: "local",
@@ -348,7 +348,7 @@ test("HTTP server exposes an explicit x402 adapter mode without a signer", async
       ),
   );
   const health = await request(running.url, "/health");
-  assert.equal(health.body.version, "0.14.0");
+  assert.equal(health.body.version, "0.15.0");
   assert.equal(health.body.environment, "sandbox");
   assert.equal(health.body.execution_status, "execution_disabled");
   assert.equal(health.body.payment_execution_readiness, "disabled");
@@ -368,8 +368,8 @@ test("HTTP server exposes an explicit x402 adapter mode without a signer", async
       expires_at: "2026-09-12T08:00:00Z",
     },
   });
-  assert.equal(denied.status, 503);
-  assert.equal(denied.body.error.code, "environment_execution_disabled");
+  assert.equal(denied.status, 401);
+  assert.equal(denied.body.error.code, "credential_required");
   assert.equal(running.sandbox.quotes.size, 0);
   assert.equal(running.environmentConfig.environment, "sandbox");
   assert.equal(running.environmentConfig.execution_status, "execution_disabled");

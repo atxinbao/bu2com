@@ -9,6 +9,8 @@ import {
   Bu2TransportError,
 } from "../dist/index.js";
 
+const TEST_API_KEY = `test-${"x".repeat(40)}`;
+
 function environmentResponse(environment = "sandbox", executionStatus = "execution_enabled") {
   const sandbox = environment === "sandbox";
   return Response.json({
@@ -18,8 +20,10 @@ function environmentResponse(environment = "sandbox", executionStatus = "executi
     chain_id: sandbox ? 84532 : null,
     network: sandbox ? "eip155:84532" : null,
     execution_backend: sandbox ? "x402" : "simulated",
-    api_contract_version: "0.2.0",
-    mcp_contract_versions: ["0.2.0"],
+    api_contract_version: "0.3.0",
+    mcp_contract_versions: ["0.3.0"],
+    access_contract_version: "1.0",
+    access_mode: environment === "local" ? "development_open" : "authenticated",
     receipt_schema_versions: ["0.2", "0.3"],
     execution_status: executionStatus,
     public_capabilities: ["transactions:read", "receipts:verify"],
@@ -92,6 +96,61 @@ test("SDK configuration requires an explicit Phase 0 environment and /v1 base UR
   assert.throws(
     () => new Bu2Client({ baseUrl: "http://127.0.0.1:3100/v1", environment: "local" }),
     /localDevelopment/,
+  );
+  assert.throws(
+    () =>
+      new Bu2Client({
+        baseUrl: "https://sandbox.example.test/v1",
+        environment: "sandbox",
+      }),
+    /apiKey/,
+  );
+});
+
+test("external SDK sends credentials only after public preflight and never to public verification", async () => {
+  const requests = [];
+  const client = new Bu2Client({
+    baseUrl: "https://sandbox.example.test/v1",
+    environment: "sandbox",
+    apiKey: TEST_API_KEY,
+    fetch: async (request) => {
+      requests.push(request);
+      if (request.url.endsWith("/environment")) return environmentResponse();
+      if (request.url.includes("/verify")) {
+        return Response.json({
+          receipt_id: "rcpt_sdk_public",
+          valid: false,
+          signature_valid: false,
+          issuer_trusted: false,
+          settlement_confirmed: false,
+          environment_valid: false,
+          environment_interpretation: {
+            source: "unknown",
+            original: null,
+            derived: null,
+            evidence: "receipt_not_found",
+          },
+          schema_version: "0.3",
+          canonicalization_version: "RFC8785-JCS-1",
+        });
+      }
+      return Response.json({
+        data: [],
+        page: { limit: 20, has_more: false, next_cursor: null },
+      });
+    },
+  });
+
+  await client.getEnvironment();
+  await client.listTransactions();
+  await client.verifyReceipt("rcpt_sdk_public");
+
+  assert.equal(requests[0].headers.get("authorization"), null);
+  assert.equal(requests[1].headers.get("authorization"), `Bearer ${TEST_API_KEY}`);
+  assert.equal(requests[2].headers.get("authorization"), null);
+  assert.equal(
+    requests.every((request) => request.redirect === "error"),
+    true,
   );
 });
 
@@ -203,6 +262,7 @@ test("settlement recovery maps to the frozen endpoint with an explicit idempoten
   const client = new Bu2Client({
     baseUrl: "http://127.0.0.1:3999/v1",
     environment: "sandbox",
+    apiKey: TEST_API_KEY,
     fetch: async (request) => {
       if (request.url.endsWith("/environment")) {
         return environmentResponse("sandbox", "execution_disabled");
@@ -271,6 +331,7 @@ test("write transport failures require querying state before retry", async () =>
   const client = new Bu2Client({
     baseUrl: "http://127.0.0.1:3999/v1",
     environment: "sandbox",
+    apiKey: TEST_API_KEY,
     fetch: async (request) => {
       calls += 1;
       if (request.url.endsWith("/environment")) return environmentResponse();
@@ -299,6 +360,7 @@ test("write timeout is classified as unknown outcome without an automatic replay
   const client = new Bu2Client({
     baseUrl: "http://127.0.0.1:3999/v1",
     environment: "sandbox",
+    apiKey: TEST_API_KEY,
     defaultTimeoutMs: 5,
     fetch: async (request) => {
       calls += 1;
@@ -327,6 +389,7 @@ test("HTTP 5xx on a write preserves server ids and requires reconciliation", asy
   const client = new Bu2Client({
     baseUrl: "http://127.0.0.1:3999/v1",
     environment: "sandbox",
+    apiKey: TEST_API_KEY,
     fetch: async (request) =>
       request.url.endsWith("/environment")
         ? environmentResponse()
@@ -366,6 +429,7 @@ test("SDK rejects wrong environment and issuer contracts before sending a mutati
   const client = new Bu2Client({
     baseUrl: "http://127.0.0.1:3999/v1",
     environment: "sandbox",
+    apiKey: TEST_API_KEY,
     fetch: async () => {
       calls += 1;
       return environmentResponse("local");
@@ -385,6 +449,7 @@ test("SDK rejects wrong environment and issuer contracts before sending a mutati
   const issuerClient = new Bu2Client({
     baseUrl: "http://127.0.0.1:3999/v1",
     environment: "sandbox",
+    apiKey: TEST_API_KEY,
     fetch: async () => {
       calls += 1;
       const response = await environmentResponse("sandbox").json();

@@ -15,6 +15,7 @@ import { X402PaymentAdapter } from "./x402-adapter.mjs";
 import { loadEnvironmentConfig } from "./environment-config.mjs";
 import { listenX402Merchant } from "./x402-merchant.mjs";
 import { buildPaymentAdapter, listen } from "./server.mjs";
+import { credentialMetadata } from "./access-control.mjs";
 import { generatePrivateKey } from "viem/accounts";
 
 const payTo = "0x1111111111111111111111111111111111111111";
@@ -87,12 +88,13 @@ async function deliveredTransaction(sandbox, suffix = "recovery") {
   return authorized.transaction_id;
 }
 
-async function post(base, path, key) {
+async function post(base, path, key, apiKey = null) {
   const response = await fetch(`${base}${path}`, {
     method: "POST",
     headers: {
       "content-type": "application/json",
       "idempotency-key": key,
+      ...(apiKey ? { authorization: `Bearer ${apiKey}` } : {}),
     },
     body: "{}",
   });
@@ -696,6 +698,17 @@ test("restart preserves provider_unknown and still prevents another paid request
 
 test("HTTP recovery endpoint is idempotent and issues one receipt after confirmation", async (context) => {
   const merchantServer = await merchant(context);
+  const operatorToken = `test-${"o".repeat(40)}`;
+  const operatorCredential = credentialMetadata(
+    {
+      token: operatorToken,
+      id: "key_http_recovery_operator",
+      tenant_id: "ten_http_recovery_operator",
+      principal_id: "usr_http_recovery_operator",
+      role: "operator",
+    },
+    "sandbox",
+  );
   let recoveryCalls = 0;
   const running = await listen({
     port: 0,
@@ -712,6 +725,7 @@ test("HTTP recovery endpoint is idempotent and issues one receipt after confirma
       recoveryCalls += 1;
       return { status: "settled", provider_reference: "0xhttp_recovered" };
     },
+    accessCredentialsJson: JSON.stringify([operatorCredential]),
   });
   context.after(
     () =>
@@ -727,6 +741,7 @@ test("HTTP recovery endpoint is idempotent and issues one receipt after confirma
     running.url,
     `/v1/transactions/${transactionId}/settlements`,
     "http-recovery-settle",
+    operatorToken,
   );
   assert.equal(settlement.status, 503);
   assert.equal(settlement.body.error.code, "x402_settlement_unknown");
@@ -735,6 +750,7 @@ test("HTTP recovery endpoint is idempotent and issues one receipt after confirma
     running.url,
     `/v1/transactions/${transactionId}/settlement_recoveries`,
     "http-recovery-query",
+    operatorToken,
   );
   assert.equal(recovered.status, 200);
   assert.equal(recovered.body.transaction.status, "settled");
@@ -745,6 +761,7 @@ test("HTTP recovery endpoint is idempotent and issues one receipt after confirma
     running.url,
     `/v1/transactions/${transactionId}/settlement_recoveries`,
     "http-recovery-query",
+    operatorToken,
   );
   assert.equal(replay.body.receipt.id, recovered.body.receipt.id);
   assert.equal(recoveryCalls, 1);

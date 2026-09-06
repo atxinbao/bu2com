@@ -2,7 +2,7 @@
 
 日期：2026-09-06
 执行者：Codex
-状态：已实现，等待 R2 Domain + Architecture 审查
+状态：Accepted · PR #21（2026-09-06）
 
 ## 1. 目标与结论
 
@@ -76,4 +76,4 @@ ENV-04 只允许提升相同 digest，不迁移 Sandbox 数据、余额、API ke
 
 ## 6. 后续工作
 
-下一项为 ENV-05 受控开发者与运维入口，复用 F02/F03 的身份、Agent credential 与 PaymentMandate 边界。ENV-06 可并行补齐制品提升、监控、备份和恢复演练。Live/Mainnet 继续 `execution_disabled`，不得从本 PR 的容器证据推导任何资金许可。
+ENV-04 已由 PR #21 合并。后续 ENV-05 受控开发者与运维入口已实现并等待 R2 审查；ENV-06 将补齐制品提升、监控、备份和恢复演练。Live/Mainnet 继续 `execution_disabled`，不得从容器或访问控制证据推导任何资金许可。

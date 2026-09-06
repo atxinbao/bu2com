@@ -20,6 +20,7 @@
       "backup_scope": "bu2-sandbox",
       "provider_scope": "bu2-sandbox",
       "execution_status": "execution_disabled",
+      "access_mode": "authenticated",
       "signer_mount": "forbidden"
     },
     "live": {
@@ -36,6 +37,7 @@
       "backup_scope": "bu2-live",
       "provider_scope": "bu2-live",
       "execution_status": "execution_disabled",
+      "access_mode": "authenticated",
       "signer_mount": "forbidden"
     }
   },

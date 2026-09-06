@@ -1,11 +1,12 @@
 {
-  "agent_payment_api": "0.2.0",
+  "agent_payment_api": "0.3.0",
   "api_base_path": "/v1",
   "clean_room_evidence": "0.2.0",
   "doctor_result": "0.2.0",
   "environment_deployment_units": "1.0",
   "environment_contract": "1.0",
-  "mcp_tools": "0.2.0",
+  "mcp_tools": "0.3.0",
+  "access_contract": "1.0",
   "receipt_current": "0.3",
   "receipt_supported": ["0.2", "0.3"]
 }

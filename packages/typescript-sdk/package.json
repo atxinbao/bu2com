@@ -1,8 +1,8 @@
 {
   "name": "@bu2/sdk",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
-  "description": "Typed Agent Payment API v0.2.0 client with Sandbox and Live environment preflight.",
+  "description": "Typed Agent Payment API v0.3.0 client with controlled Sandbox and Live access.",
   "type": "module",
   "engines": {
     "node": ">=22.13.0"

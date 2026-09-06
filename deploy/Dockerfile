@@ -25,6 +25,7 @@ COPY --from=dependencies /opt/bu2/sandbox/node_modules ./sandbox/node_modules
 COPY sandbox ./sandbox
 COPY docs/03-technical/environment-contract.json ./docs/03-technical/environment-contract.json
 COPY docs/03-technical/contract-versions.json ./docs/03-technical/contract-versions.json
+COPY docs/03-technical/access-contract.json ./docs/03-technical/access-contract.json
 
 ENV NODE_ENV=production
 EXPOSE 3100

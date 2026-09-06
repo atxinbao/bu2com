@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
   title: BU2 Agent Payment API
-  version: 0.2.0
-  description: Transaction-first API for agent-to-agent payment authorization, delivery, settlement, versioned environment preflight, compatible Receipt v0.2/v0.3 verification, reliable Webhook operations, end-to-end correlation, and explicit x402 settlement recovery.
+  version: 0.3.0
+  description: Transaction-first API with environment-bound machine access, tenant-scoped agent operations, controlled operator surfaces, Receipt v0.2/v0.3 verification, reliable Webhooks, and explicit x402 settlement recovery.
   x-bu2-contract-status: phase0-frozen
 servers:
   - url: https://api.bu2.com/v1
@@ -13,6 +13,7 @@ paths:
     parameters:
       - $ref: '#/components/parameters/TraceId'
     get:
+      security: []
       operationId: getEnvironment
       summary: Read the server-authored environment and execution contract before mutations
       responses:
@@ -286,6 +287,7 @@ paths:
     parameters:
       - $ref: '#/components/parameters/TraceId'
     get:
+      security: []
       operationId: verifyReceipt
       summary: Verify a receipt signature and transaction binding
       parameters:
@@ -430,6 +432,63 @@ paths:
         '409': { $ref: '#/components/responses/Conflict' }
         '413': { $ref: '#/components/responses/RequestTooLarge' }
         '415': { $ref: '#/components/responses/UnsupportedMediaType' }
+  /access:
+    parameters:
+      - $ref: '#/components/parameters/TraceId'
+    get:
+      operationId: getAccessIdentity
+      summary: Read the authenticated principal and its bounded permissions
+      responses:
+        '200':
+          description: Current access identity without credential material
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AccessIdentity' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /operations/support_bundles:
+    parameters:
+      - $ref: '#/components/parameters/TraceId'
+    post:
+      operationId: createSupportBundle
+      summary: Create a redacted operator diagnostic bundle
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateSupportBundle' }
+      responses:
+        '201':
+          description: Redacted support bundle
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SupportBundle' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /operations/tenants/{tenant_id}/resets:
+    parameters:
+      - $ref: '#/components/parameters/TraceId'
+    post:
+      operationId: resetTenantAccess
+      summary: Invalidate one Sandbox tenant credential generation without deleting financial facts
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TenantAccessResetRequest' }
+      responses:
+        '201':
+          description: Tenant access reset audit result
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TenantAccessReset' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
 components:
   securitySchemes:
     bearerAuth: { type: http, scheme: bearer }
@@ -460,6 +519,11 @@ components:
       in: path
       required: true
       schema: { type: string, pattern: '^rcpt_[A-Za-z0-9_-]+$', maxLength: 255 }
+    TenantId:
+      name: tenant_id
+      in: path
+      required: true
+      schema: { type: string, pattern: '^ten_[A-Za-z0-9_-]+$', maxLength: 255 }
     WebhookSubscriptionId:
       name: subscription_id
       in: path
@@ -492,7 +556,7 @@ components:
     EnvironmentInfo:
       type: object
       additionalProperties: false
-      required: [service, environment, environment_contract_version, chain_id, network, execution_backend, api_contract_version, mcp_contract_versions, receipt_schema_versions, execution_status, public_capabilities, receipt_issuer]
+      required: [service, environment, environment_contract_version, chain_id, network, execution_backend, api_contract_version, mcp_contract_versions, receipt_schema_versions, execution_status, access_contract_version, access_mode, public_capabilities, receipt_issuer]
       properties:
         service: { type: string, const: bu2-reference-server }
         environment: { type: string, enum: [local, sandbox, live] }
@@ -500,20 +564,83 @@ components:
         chain_id: { type: [integer, 'null'], enum: [null, 84532, 8453] }
         network: { type: [string, 'null'], enum: [null, 'eip155:84532', 'eip155:8453'] }
         execution_backend: { type: string, enum: [simulated, x402] }
-        api_contract_version: { type: string, const: 0.2.0 }
+        api_contract_version: { type: string, const: 0.3.0 }
         mcp_contract_versions:
           type: array
           minItems: 1
-          items: { type: string, enum: [0.2.0] }
+          items: { type: string, enum: [0.3.0] }
         receipt_schema_versions:
           type: array
           minItems: 2
           items: { type: string, enum: ['0.2', '0.3'] }
         execution_status: { type: string, enum: [execution_disabled, execution_enabled] }
+        access_contract_version: { type: string, const: '1.0' }
+        access_mode: { type: string, enum: [development_open, authenticated] }
         public_capabilities:
           type: array
           items: { type: string }
         receipt_issuer: { $ref: '#/components/schemas/ReceiptIssuer' }
+    AccessIdentity:
+      type: object
+      additionalProperties: false
+      required: [mode, authenticated, environment, principal_id, tenant_id, role, permissions, account_ids, agent_ids, credential_generation]
+      properties:
+        mode: { type: string, enum: [development_open, authenticated] }
+        authenticated: { type: boolean }
+        environment: { type: string, enum: [local, sandbox, live] }
+        principal_id: { type: [string, 'null'] }
+        tenant_id: { type: [string, 'null'] }
+        role: { type: [string, 'null'], enum: [agent, developer, operator, null] }
+        permissions: { type: array, items: { type: string } }
+        account_ids: { type: array, items: { type: string } }
+        agent_ids: { type: array, items: { type: string } }
+        credential_generation: { type: [integer, 'null'] }
+    CreateSupportBundle:
+      type: object
+      additionalProperties: false
+      required: [reason]
+      properties:
+        reason: { type: string, minLength: 1, maxLength: 500 }
+        transaction_id: { type: string, pattern: '^txn_[A-Za-z0-9_-]+$', maxLength: 255 }
+        request_id: { type: string, pattern: '^req_[A-Za-z0-9_-]+$', maxLength: 255 }
+        trace_id: { type: string, pattern: '^trc_[A-Za-z0-9_-]{8,251}$', maxLength: 255 }
+    SupportBundle:
+      type: object
+      additionalProperties: true
+      required: [id, schema_version, generated_at, requested_by, reason, environment, service, correlation, diagnostics, transaction, redaction]
+      properties:
+        id: { type: string, pattern: '^sup_[A-Za-z0-9_-]+$' }
+        schema_version: { type: string, const: '1.0' }
+        generated_at: { type: string, format: date-time }
+        requested_by: { type: string }
+        reason: { type: string }
+        environment: { type: object, additionalProperties: true }
+        service: { type: object, additionalProperties: true }
+        correlation: { type: object, additionalProperties: true }
+        diagnostics: { type: object, additionalProperties: true }
+        transaction: { type: [object, 'null'], additionalProperties: true }
+        redaction: { type: object, additionalProperties: true }
+    TenantAccessResetRequest:
+      type: object
+      additionalProperties: false
+      required: [reason]
+      properties:
+        reason: { type: string, minLength: 1, maxLength: 500 }
+    TenantAccessReset:
+      type: object
+      additionalProperties: false
+      required: [id, environment, target_tenant_id, previous_generation, new_generation, requested_by, reason, request_id, trace_id, created_at]
+      properties:
+        id: { type: string, pattern: '^tar_[A-Za-z0-9_-]+$' }
+        environment: { type: string, enum: [sandbox] }
+        target_tenant_id: { type: string, pattern: '^ten_[A-Za-z0-9_-]+$' }
+        previous_generation: { type: integer, minimum: 0 }
+        new_generation: { type: integer, minimum: 2 }
+        requested_by: { type: string }
+        reason: { type: string }
+        request_id: { type: string, pattern: '^req_[A-Za-z0-9_-]+$' }
+        trace_id: { type: string, pattern: '^trc_[A-Za-z0-9_-]{8,251}$' }
+        created_at: { type: string, format: date-time }
     ReceiptIssuer:
       type: object
       additionalProperties: false
@@ -922,6 +1049,23 @@ components:
             trace_id: { type: string, pattern: '^trc_[A-Za-z0-9_-]{8,251}$' }
             details: { type: object, additionalProperties: true }
   responses:
+    Unauthorized:
+      description: Missing, invalid, expired, revoked, or reset bearer credential
+      headers:
+        X-Request-Id: { $ref: '#/components/headers/RequestId' }
+        X-Trace-Id: { $ref: '#/components/headers/TraceId' }
+        WWW-Authenticate: { schema: { type: string } }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Forbidden:
+      description: Authenticated principal lacks the permission or resource claim
+      headers:
+        X-Request-Id: { $ref: '#/components/headers/RequestId' }
+        X-Trace-Id: { $ref: '#/components/headers/TraceId' }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
     BadRequest:
       description: Invalid body, path identifier, query, cursor, or idempotency key
       headers:

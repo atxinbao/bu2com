@@ -9,22 +9,22 @@ BU2.com 是 Agent 的 AI 收付平台。它嵌入 ChatGPT、Codex、Claude 和�
 | 项目 | 当前基线 |
 | --- | --- |
 | 项目阶段 | Phase 0 · local execution / Sandbox architecture |
-| 当前工程关卡 | ENV-04 · 隔离 Sandbox / Live 部署单元（等待 R2 审查） |
+| 当前工程关卡 | ENV-05 · 受控开发者与运维入口（等待 R2 审查） |
 | 产品定义 | Product v0.3 · Transaction-first |
-| API 契约 | Agent Payment API v0.2.0 |
-| Reference Server | v0.14 · Node.js + SQLite WAL + MCP + 容器部署参考 |
-| TypeScript SDK | `@bu2/sdk` v0.2 · Monorepo private package |
-| MCP 分发 | stdio v0.2 · Codex / Claude Desktop / Generic Host |
+| API 契约 | Agent Payment API v0.3.0 |
+| Reference Server | v0.15 · Node.js + SQLite WAL + MCP + 受控访问 |
+| TypeScript SDK | `@bu2/sdk` v0.3 · Monorepo private package |
+| MCP 分发 | stdio v0.3 · Codex / Claude Desktop / Generic Host |
 | 接入诊断 | `bu2-doctor` result v0.2 · 本地执行 / 零远程遥测 |
 | Clean-room 验收 | HTTP / TypeScript SDK / MCP · 3/3 Local 通过 |
 | 支付通道 | local Simulated Adapter + x402 Base Sepolia Adapter |
 | 产品界面 | React 19 + TypeScript 双语原型 |
-| 环境契约 | ENV-02/03 已批准；ENV-04 隔离部署单元已实现，等待 R2 审查 |
+| 环境契约 | ENV-02/03/04 已批准；ENV-05 受控访问已实现，等待 R2 审查 |
 | 生产边界 | Live 初始 `execution_disabled`；客户资金托管和法币能力尚未开放 |
 
-当前代码已经形成可运行的 Agent 收付闭环，但仍是本地与 Base Sepolia 测试网证据，不是生产支付系统或法律合规结论。ENV-02/03 已由 PR #19/#20 合并；ENV-04 使用同一不可变镜像建立两个本地可复现、相互隔离且 execution disabled 的容器单元，尚未创建托管 Sandbox 或 Live。
+当前代码已经形成可运行的 Agent 收付闭环，但仍是本地与 Base Sepolia 测试网证据，不是生产支付系统或法律合规结论。ENV-02/03/04 已由 PR #19/#20/#21 合并；ENV-05 为外部环境增加环境绑定 API key、角色权限、租户隔离、访问审计和脱敏运维入口，尚未创建托管 Sandbox 或 Live。
 
-[Phase 0 Epic 1：External Agent Transaction Integration & Reliability](docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md) 与 [Phase 0 Epic 2：Developer Integration Scale](docs/03-technical/PHASE0_EPIC2_DEVELOPER_INTEGRATION_SCALE.md) 已完成。Transaction Trust Gate 1–3 已经 PR #15–#17 合并，F01/ENV-01、ENV-02 与 ENV-03 分别由 PR #18/#19/#20 批准。当前 ENV-04 已完成本地实现与自动化验证，等待 R2 审查；合并后进入 ENV-05 受控入口，ENV-06 可并行推进制品提升与恢复演练。[Phase 0 Epic 3](docs/03-technical/PHASE0_EPIC3_EXTERNAL_PILOT_EVIDENCE.md) 保持 Ready，但正式外部证据要求托管 Sandbox 的真实 Base Sepolia 双向收付，不再以 Local Simulation 代替。
+[Phase 0 Epic 1：External Agent Transaction Integration & Reliability](docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md) 与 [Phase 0 Epic 2：Developer Integration Scale](docs/03-technical/PHASE0_EPIC2_DEVELOPER_INTEGRATION_SCALE.md) 已完成。Transaction Trust Gate 1–3 已经 PR #15–#17 合并，F01/ENV-01、ENV-02、ENV-03 与 ENV-04 分别由 PR #18/#19/#20/#21 批准。当前 ENV-05 已完成本地实现与自动化验证，等待 R2 审查；合并后优先进入 ENV-06 制品提升、监控、备份与恢复演练。[Phase 0 Epic 3](docs/03-technical/PHASE0_EPIC3_EXTERNAL_PILOT_EVIDENCE.md) 保持 Ready，但正式外部证据要求托管 Sandbox 的真实 Base Sepolia 双向收付，不再以 Local Simulation 代替。
 
 ## 环境定义
 
@@ -32,7 +32,7 @@ BU2.com 是 Agent 的 AI 收付平台。它嵌入 ChatGPT、Codex、Claude 和�
 - `sandbox`：对外测试环境，固定 Base Sepolia（84532）与 x402；测试资产没有真实金融价值。
 - `live`：对外主网环境，固定 Base Mainnet（8453）；初始 `execution_disabled`，配置存在不等于获准付款。
 
-服务环境、执行后端和资金准入是三个独立维度。完整定义、实现与验收见 [系统环境契约 v1](docs/03-technical/SYSTEM_ENVIRONMENTS_V1.md)、[ADR-0001](docs/03-technical/ADR_0001_SANDBOX_LIVE_ENVIRONMENT_ISOLATION.md)、[环境注册表与链隔离 v1](docs/03-technical/ENVIRONMENT_REGISTRY_AND_CHAIN_ISOLATION_V1.md)、[ENV-04 隔离部署单元](docs/03-technical/ENVIRONMENT_DEPLOYMENT_UNITS_V1.md)和[环境验收矩阵 v1](docs/03-technical/ENVIRONMENT_ACCEPTANCE_MATRIX_V1.md)。
+服务环境、执行后端和资金准入是三个独立维度。完整定义、实现与验收见 [系统环境契约 v1](docs/03-technical/SYSTEM_ENVIRONMENTS_V1.md)、[ADR-0001](docs/03-technical/ADR_0001_SANDBOX_LIVE_ENVIRONMENT_ISOLATION.md)、[环境注册表与链隔离 v1](docs/03-technical/ENVIRONMENT_REGISTRY_AND_CHAIN_ISOLATION_V1.md)、[ENV-04 隔离部署单元](docs/03-technical/ENVIRONMENT_DEPLOYMENT_UNITS_V1.md)、[ENV-05 受控入口](docs/03-technical/ENVIRONMENT_CONTROLLED_ACCESS_V1.md)和[环境验收矩阵 v1](docs/03-technical/ENVIRONMENT_ACCEPTANCE_MATRIX_V1.md)。
 
 ## Agent 支付闭环
 
@@ -71,7 +71,7 @@ BU2 将授权、资金预留、交付、结算和退款保存为不同事实。�
 - `GET /v1/environment` 自描述，以及 SDK/MCP/Doctor 的 endpoint、环境、链、执行后端、Receipt issuer 与 execution status 预检。
 - 稳定 MCP CLI、mutation 前二次 preflight、initialize 版本/能力握手，以及三类 Host 配置。
 - 本地 `bu2-doctor`：Node、endpoint、环境、契约、MCP 启动和 Receipt 验证诊断；支持 JSON 与中英文恢复提示。
-- OpenAPI 生成类型的 `@bu2/sdk` v0.2 薄客户端；显式环境、本地开发确认、幂等、无自动重试和错误恢复分类。
+- OpenAPI 生成类型的 `@bu2/sdk` v0.3 薄客户端；显式环境、外部 API key、本地开发确认、幂等、无自动重试和错误恢复分类。
 - HTTP、SDK tarball 和 MCP stdio 三条全新临时项目接入证据；均在 15 分钟内生成有效 Local Simulation Receipt。
 - Receipt v0.3：Ed25519、RFC 8785 JCS、环境/链/后端/issuer 签名绑定，以及签名、签发方、结算和环境四项独立验证；v0.2 历史签名字节保持可验证。
 - 中英文 Transaction-first 产品界面，可展示真实 Reference API 数据并在离线时降级到演示数据。
@@ -172,7 +172,7 @@ bu2com/
 ├── prototype/        # Transaction-first 双语 React/TypeScript 产品界面
 ├── sandbox/          # Reference Server、SQLite、Webhook 与支付 Adapter
 ├── packages/
-│   └── typescript-sdk/ # OpenAPI 生成类型的内部 TypeScript SDK v0.2
+│   └── typescript-sdk/ # OpenAPI 生成类型的内部 TypeScript SDK v0.3
 ├── integrations/
 │   ├── mcp/           # Codex、Claude Desktop 与通用 stdio Host 配置
 │   └── clean-room/    # HTTP、SDK 与 MCP 独立接入样例
@@ -204,7 +204,7 @@ bu2com/
 - [Transaction-first 产品基线](docs/02-product/P0_TRANSACTION_FIRST_BASELINE.md)
 - [MVP PRD v0.3](docs/02-product/MVP_PRD.md)
 - [Transaction P0 验收方案](docs/02-product/TRANSACTION_P0_ACCEPTANCE.md)
-- [Agent Payment API 契约 v0.2.0](docs/03-technical/API_CONTRACT_V0.1.md)
+- [Agent Payment API 契约 v0.3.0](docs/03-technical/API_CONTRACT_V0.1.md)
 - [OpenAPI 3.1](docs/03-technical/openapi.yaml)
 - [x402 Testnet 可信执行 v0.1](docs/03-technical/X402_TRUSTED_EXECUTION_V0.1.md)
 - [系统环境契约 v1](docs/03-technical/SYSTEM_ENVIRONMENTS_V1.md)
@@ -214,7 +214,7 @@ bu2com/
 - [Base Sepolia 实结算证据](docs/03-technical/X402_LIVE_SETTLEMENT_EVIDENCE.md)
 - [Phase 0 Epic 2：开发者接入规模化](docs/03-technical/PHASE0_EPIC2_DEVELOPER_INTEGRATION_SCALE.md)
 - [Phase 0 Epic 3：外部试点准备与证据](docs/03-technical/PHASE0_EPIC3_EXTERNAL_PILOT_EVIDENCE.md)
-- [TypeScript SDK v0.2](packages/typescript-sdk/README.md)
+- [TypeScript SDK v0.3](packages/typescript-sdk/README.md)
 - [MCP Host 配置](integrations/mcp/README.md)
 - [开发者接入诊断 v0.2](docs/03-technical/DEVELOPER_DIAGNOSTICS_V0.1.md)
 - [E2.4 clean-room 接入证据](docs/03-technical/CLEAN_ROOM_ACCEPTANCE_EVIDENCE.md)

@@ -11,11 +11,13 @@ export class Bu2HttpError extends Error {
 export async function bu2Request(
   baseUrl,
   path,
-  { method = "GET", body, idempotencyKey, traceId } = {},
+  { method = "GET", body, idempotencyKey, traceId, apiKey } = {},
 ) {
   const response = await fetch(new URL(path, baseUrl), {
     method,
+    redirect: "error",
     headers: {
+      ...(apiKey ? { authorization: `Bearer ${apiKey}` } : {}),
       ...(body !== undefined ? { "content-type": "application/json" } : {}),
       ...(idempotencyKey ? { "idempotency-key": idempotencyKey } : {}),
       ...(traceId ? { "x-trace-id": traceId } : {}),

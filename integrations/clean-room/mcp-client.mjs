@@ -60,7 +60,7 @@ const transport = new StdioClientTransport({
   },
   stderr: "pipe",
 });
-const client = new Client({ name: "bu2-clean-room-mcp", version: "0.2.0" });
+const client = new Client({ name: "bu2-clean-room-mcp", version: "0.3.0" });
 const startedAt = Date.now();
 
 async function callTool(name, args) {
@@ -77,7 +77,7 @@ try {
   await step("initialize", () => client.connect(transport));
   const capability = client.getServerCapabilities()?.experimental?.["com.bu2.agent-payments"];
   assert.equal(client.getServerVersion()?.name, "bu2-agent-payments");
-  assert.equal(client.getServerVersion()?.version, "0.2.0");
+  assert.equal(client.getServerVersion()?.version, "0.3.0");
   assert.equal(capability?.environment, "local");
   assert.equal(capability?.environment_contract_version, "1.0");
   assert.equal(capability?.local_development, true);

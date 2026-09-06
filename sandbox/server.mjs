@@ -13,6 +13,10 @@ import { SqliteLedger } from "./persistence.mjs";
 import { WebhookDispatcher } from "./webhooks.mjs";
 import { X402PaymentAdapter } from "./x402-adapter.mjs";
 import {
+  loadAccessController,
+  sanitizedAccessContract,
+} from "./access-control.mjs";
+import {
   assertExecutionEnabled,
   assertSignerBinding,
   loadEnvironmentConfig,
@@ -46,7 +50,7 @@ const executionMutation = (method, pathname) =>
     /^\/v1\/transactions\/[^/]+\/deliveries$/.test(pathname) ||
     /^\/v1\/transactions\/[^/]+\/settlements$/.test(pathname));
 
-function environmentDocument(config, sandbox) {
+function environmentDocument(config, sandbox, accessController) {
   const executionEnabled = config.execution_status === "execution_enabled";
   return {
     service: "bu2-reference-server",
@@ -59,10 +63,13 @@ function environmentDocument(config, sandbox) {
     mcp_contract_versions: [contractVersions.mcp_tools],
     receipt_schema_versions: contractVersions.receipt_supported,
     execution_status: config.execution_status,
+    access_contract_version: sanitizedAccessContract().schema_version,
+    access_mode: accessController.mode,
     public_capabilities: [
-      "transactions:read",
+      "environment:read",
       "receipts:verify",
-      ...(executionEnabled ? ["payment_mutations"] : []),
+      ...(accessController.mode === "development_open" ? ["local_development_open"] : []),
+      ...(executionEnabled ? ["authenticated_payment_mutations"] : []),
     ],
     receipt_issuer: sandbox.receiptIssuer(),
   };
@@ -103,6 +110,8 @@ function send(response, status, body) {
   response.writeHead(status, {
     "content-type": "application/json; charset=utf-8",
     "access-control-allow-origin": "*",
+    "access-control-allow-headers":
+      "authorization, content-type, idempotency-key, x-trace-id",
   });
   response.end(JSON.stringify(body, null, 2));
 }
@@ -184,6 +193,8 @@ export function createBu2Server({
   initialWallet,
   observer = new Observability(),
   environmentConfig = loadEnvironmentConfig(),
+  accessController = null,
+  accessSource = process.env,
 } = {}) {
   const activeLedger = ledger ?? sandbox?.ledger ?? new SqliteLedger(":memory:");
   activeLedger.observer = observer;
@@ -207,6 +218,13 @@ export function createBu2Server({
   const activeDispatcher =
     dispatcher ?? new WebhookDispatcher({ ledger: activeLedger, observer });
   activeDispatcher.observer = observer;
+  const activeAccess =
+    accessController ??
+    loadAccessController({
+      environmentConfig,
+      ledger: activeLedger,
+      source: accessSource,
+    });
   const server = createServer(async (request, response) => {
     const id = requestId();
     const requestedTraceId = request.headers["x-trace-id"];
@@ -220,6 +238,12 @@ export function createBu2Server({
     const url = new URL(request.url, "http://127.0.0.1");
     const segments = url.pathname.split("/").filter(Boolean);
     const key = request.headers["idempotency-key"];
+    const accessContext = {
+      method: request.method,
+      pathname: url.pathname,
+      requestId: id,
+      traceId,
+    };
     return observer.run({ request_id: id, trace_id: traceId }, async () => {
       const startedAt = Date.now();
       observer.record("request", "http.request.started", {
@@ -235,10 +259,12 @@ export function createBu2Server({
           "X-Trace-Id must use the trc_ prefix and contain 8 to 251 identifier characters.",
         );
       }
+      if (request.method === "OPTIONS") return send(response, 204, {});
+      const actor = activeAccess.authenticate(request.headers, accessContext);
+      if (actor) response.setHeader("cache-control", "no-store");
       if (url.pathname.startsWith("/v1/") && url.pathname !== "/v1/transactions") {
         validateNoQueryParameters(url.searchParams);
       }
-      if (request.method === "OPTIONS") return send(response, 204, {});
       if (request.method === "GET" && url.pathname === "/health") {
         const snapshot = activeLedger.healthSnapshot();
         return send(response, 200, {
@@ -261,7 +287,14 @@ export function createBu2Server({
         });
       }
       if (request.method === "GET" && url.pathname === "/v1/environment") {
-        return send(response, 200, environmentDocument(environmentConfig, activeSandbox));
+        return send(
+          response,
+          200,
+          environmentDocument(environmentConfig, activeSandbox, activeAccess),
+        );
+      }
+      if (request.method === "GET" && url.pathname === "/v1/access") {
+        return send(response, 200, activeAccess.publicActor(actor));
       }
       if (executionMutation(request.method, url.pathname)) {
         assertExecutionEnabled(environmentConfig, `${request.method} ${url.pathname}`);
@@ -273,10 +306,14 @@ export function createBu2Server({
         return send(response, 200, { data: activeLedger.listLedgerEvents() });
       }
       if (request.method === "GET" && url.pathname === "/v1/transactions") {
+        const visible = activeAccess.filterTransactionViews(
+          actor,
+          activeSandbox.listTransactions(),
+        );
         return send(
           response,
           200,
-          paginateTransactions(activeSandbox.listTransactions(), url.searchParams),
+          paginateTransactions(visible, url.searchParams),
         );
       }
       if (request.method === "GET" && url.pathname === "/v1/webhook_outbox") {
@@ -298,6 +335,11 @@ export function createBu2Server({
       }
       if (request.method === "POST" && url.pathname === "/v1/quotes") {
         const body = validateBody("createQuote", await readJson(request));
+        activeAccess.assertClaims(
+          actor,
+          { accountIds: [body.payee_account_id], agentIds: [body.seller_agent_id] },
+          accessContext,
+        );
         return send(
           response,
           201,
@@ -306,10 +348,119 @@ export function createBu2Server({
       }
       if (request.method === "POST" && url.pathname === "/v1/payment_intents") {
         const body = validateBody("createPaymentIntent", await readJson(request));
+        activeAccess.assertClaims(
+          actor,
+          { accountIds: [body.payer_account_id], agentIds: [body.buyer_agent_id] },
+          accessContext,
+        );
         return send(
           response,
           201,
           await activeSandbox.createPaymentIntent(body, validateIdempotencyKey(key)),
+        );
+      }
+      if (request.method === "POST" && url.pathname === "/v1/operations/support_bundles") {
+        const body = validateBody("supportBundle", await readJson(request));
+        const snapshot = activeLedger.healthSnapshot();
+        let transaction = null;
+        if (body.transaction_id) {
+          const view = activeAccess.assertView(
+            actor,
+            activeSandbox.getTransaction(body.transaction_id),
+            { ...accessContext, resourceId: body.transaction_id },
+          );
+          transaction = {
+            id: view.transaction.id,
+            status: view.transaction.status,
+            receipt_present: view.receipt !== null,
+            settlement_control_status: view.settlement_control?.status ?? null,
+          };
+        }
+        return send(response, 201, {
+          id: `sup_${crypto.randomUUID().replaceAll("-", "").slice(0, 16)}`,
+          schema_version: "1.0",
+          generated_at: new Date().toISOString(),
+          requested_by: actor.principal_id,
+          reason: body.reason,
+          environment: {
+            name: environmentConfig.environment,
+            contract_version: environmentConfig.environment_contract_version,
+            execution_status: environmentConfig.execution_status,
+            chain_id: environmentConfig.chain_id,
+            network: environmentConfig.network,
+          },
+          service: {
+            version: packageMetadata.version,
+            api_contract_version: contractVersions.agent_payment_api,
+          },
+          correlation: {
+            request_id: body.request_id ?? null,
+            trace_id: body.trace_id ?? null,
+            transaction_id: body.transaction_id ?? null,
+          },
+          diagnostics: {
+            operational_status:
+              snapshot.webhook_outbox.dead_letter > 0 ||
+              snapshot.adapter_operations.unknown_results > 0
+                ? "attention_required"
+                : "healthy",
+            webhook_dead_letters: snapshot.webhook_outbox.dead_letter,
+            unknown_payment_results: snapshot.adapter_operations.unknown_results,
+            access_decisions: activeLedger.accessDecisionSummary(environmentConfig.environment),
+          },
+          transaction,
+          redaction: {
+            applied: true,
+            excluded: [
+              "authorization_header",
+              "api_key_material",
+              "database_path",
+              "private_payloads",
+              "receipt_private_key",
+              "webhook_secrets",
+            ],
+          },
+        });
+      }
+      if (
+        request.method === "POST" &&
+        segments[0] === "v1" &&
+        segments[1] === "operations" &&
+        segments[2] === "tenants" &&
+        segments[3] &&
+        segments[4] === "resets" &&
+        segments.length === 5
+      ) {
+        if (environmentConfig.environment !== "sandbox") {
+          throw new ApiError(
+            403,
+            "authorization_error",
+            "tenant_reset_sandbox_only",
+            "Tenant credential reset is only available in Sandbox.",
+          );
+        }
+        const tenantId = validateResourceId(segments[3], "ten", "tenant_id");
+        if (tenantId === actor.tenant_id) {
+          throw new ApiError(
+            403,
+            "authorization_error",
+            "operator_tenant_reset_denied",
+            "An operator cannot reset its own access tenant.",
+          );
+        }
+        const body = validateBody("tenantAccessReset", await readJson(request));
+        return send(
+          response,
+          201,
+          activeLedger.resetTenantAccess({
+            environment: environmentConfig.environment,
+            target_tenant_id: tenantId,
+            idempotency_key: validateIdempotencyKey(key),
+            requested_by: actor.principal_id,
+            reason: body.reason,
+            request_id: id,
+            trace_id: traceId,
+          }),
         );
       }
       if (segments[0] === "v1" && segments[1] === "webhook_subscriptions" && segments[2]) {
@@ -370,7 +521,12 @@ export function createBu2Server({
             "pi",
             "payment_intent_id",
           );
-          return send(response, 200, activeSandbox.getPaymentIntent(paymentIntentId));
+          const intent = activeSandbox.getPaymentIntent(paymentIntentId);
+          activeAccess.assertView(actor, intent, {
+            ...accessContext,
+            resourceId: paymentIntentId,
+          });
+          return send(response, 200, intent);
         }
         if (
           request.method === "POST" &&
@@ -397,10 +553,24 @@ export function createBu2Server({
       if (segments[0] === "v1" && segments[1] === "transactions" && segments[2]) {
         if (request.method === "GET" && segments.length === 3) {
           const transactionId = validateResourceId(segments[2], "txn", "transaction_id");
-          return send(response, 200, activeSandbox.getTransaction(transactionId));
+          const view = activeSandbox.getTransaction(transactionId);
+          activeAccess.assertView(actor, view, {
+            ...accessContext,
+            resourceId: transactionId,
+          });
+          return send(response, 200, view);
         }
         if (request.method === "POST" && segments.length === 4 && segments[3] === "deliveries") {
           const transactionId = validateResourceId(segments[2], "txn", "transaction_id");
+          const view = activeSandbox.getTransaction(transactionId);
+          activeAccess.assertClaims(
+            actor,
+            {
+              accountIds: [view.quote.payee_account_id],
+              agentIds: [view.quote.seller_agent_id],
+            },
+            { ...accessContext, resourceId: transactionId },
+          );
           const body = validateBody("deliveryEvidence", await readJson(request));
           return send(
             response,
@@ -456,8 +626,15 @@ export function createBu2Server({
         const receiptId = validateResourceId(segments[2], "rcpt", "receipt_id");
         if (segments.length === 4 && segments[3] === "verify")
           return send(response, 200, activeSandbox.verifyReceipt(receiptId));
-        if (segments.length === 3)
-          return send(response, 200, activeSandbox.getReceipt(receiptId));
+        if (segments.length === 3) {
+          const receipt = activeSandbox.getReceipt(receiptId);
+          const view = activeSandbox.getTransaction(receipt.transaction_id);
+          activeAccess.assertView(actor, view, {
+            ...accessContext,
+            resourceId: receiptId,
+          });
+          return send(response, 200, receipt);
+        }
       }
       throw new ApiError(404, "resource_not_found", "route_not_found", "Route was not found.");
       } catch (error) {
@@ -473,6 +650,7 @@ export function createBu2Server({
           },
         );
         const result = errorBody(error, id, traceId);
+        if (result.status === 401) response.setHeader("www-authenticate", 'Bearer realm="bu2"');
         send(response, result.status, result.body);
       } finally {
         observer.record("request", "http.request.completed", {
@@ -491,6 +669,7 @@ export function createBu2Server({
     dispatcher: activeDispatcher,
     observer,
     environmentConfig,
+    accessController: activeAccess,
   };
 }
 
@@ -519,6 +698,8 @@ export async function listen({
   x402BuyerPrivateKey = process.env.X402_BUYER_PRIVATE_KEY,
   x402PaidFetch = null,
   x402RecoveryQuery = null,
+  accessMode = process.env.BU2_ACCESS_MODE,
+  accessCredentialsJson = process.env.BU2_API_CREDENTIALS_JSON,
 } = {}) {
   const environmentConfig = loadEnvironmentConfig({
     environment,
@@ -569,6 +750,13 @@ export async function listen({
     initialWallet,
     observer: activeObserver,
     environmentConfig,
+    accessSource: {
+      ...process.env,
+      ...(accessMode === undefined ? {} : { BU2_ACCESS_MODE: accessMode }),
+      ...(accessCredentialsJson === undefined
+        ? {}
+        : { BU2_API_CREDENTIALS_JSON: accessCredentialsJson }),
+    },
   });
   await new Promise((resolve, reject) => {
     instance.server.once("error", reject);

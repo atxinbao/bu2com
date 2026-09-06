@@ -170,6 +170,11 @@ export class SqliteLedger {
         name: "environment_binding",
         apply: () => this.migrateEnvironmentBinding(),
       },
+      {
+        version: 9,
+        name: "controlled_access",
+        apply: () => this.migrateControlledAccess(),
+      },
     ];
     for (const migration of migrations) {
       if (applied.has(migration.version)) continue;
@@ -450,6 +455,57 @@ export class SqliteLedger {
       BEGIN
         SELECT RAISE(ABORT, 'environment_metadata_immutable');
       END;
+    `);
+  }
+
+  migrateControlledAccess() {
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS tenant_access_state (
+        environment TEXT NOT NULL CHECK (environment IN ('local', 'sandbox', 'live')),
+        tenant_id TEXT NOT NULL,
+        generation INTEGER NOT NULL CHECK (generation >= 1),
+        status TEXT NOT NULL CHECK (status IN ('active', 'disabled')),
+        updated_at TEXT NOT NULL,
+        PRIMARY KEY (environment, tenant_id)
+      );
+      CREATE TABLE IF NOT EXISTS access_decisions (
+        sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+        id TEXT UNIQUE NOT NULL,
+        environment TEXT NOT NULL CHECK (environment IN ('local', 'sandbox', 'live')),
+        credential_id TEXT,
+        tenant_id TEXT,
+        principal_id TEXT,
+        role TEXT,
+        permission TEXT NOT NULL,
+        method TEXT NOT NULL,
+        path TEXT NOT NULL,
+        resource_id TEXT,
+        outcome TEXT NOT NULL CHECK (outcome IN ('allowed', 'denied')),
+        reason_code TEXT NOT NULL,
+        request_id TEXT NOT NULL,
+        trace_id TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_access_decisions_environment_time
+        ON access_decisions(environment, created_at);
+      CREATE INDEX IF NOT EXISTS idx_access_decisions_tenant_time
+        ON access_decisions(environment, tenant_id, created_at);
+      CREATE TABLE IF NOT EXISTS tenant_access_resets (
+        sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+        id TEXT UNIQUE NOT NULL,
+        environment TEXT NOT NULL CHECK (environment IN ('local', 'sandbox', 'live')),
+        target_tenant_id TEXT NOT NULL,
+        idempotency_key TEXT NOT NULL,
+        request_fingerprint TEXT NOT NULL,
+        previous_generation INTEGER NOT NULL CHECK (previous_generation >= 1),
+        new_generation INTEGER NOT NULL CHECK (new_generation > previous_generation),
+        requested_by TEXT NOT NULL,
+        reason TEXT NOT NULL,
+        request_id TEXT NOT NULL,
+        trace_id TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        UNIQUE (environment, target_tenant_id, idempotency_key)
+      );
     `);
   }
 
@@ -1341,6 +1397,180 @@ export class SqliteLedger {
       },
       adapter_operations: { unknown_results: unknown.count },
     };
+  }
+
+  tenantAccessState(environment, tenantId) {
+    return (
+      this.db
+        .prepare(
+          `SELECT environment, tenant_id, generation, status, updated_at
+           FROM tenant_access_state WHERE environment=? AND tenant_id=?`,
+        )
+        .get(environment, tenantId) ?? {
+        environment,
+        tenant_id: tenantId,
+        generation: 1,
+        status: "active",
+        updated_at: null,
+      }
+    );
+  }
+
+  recordAccessDecision(decision) {
+    this.db
+      .prepare(`
+        INSERT INTO access_decisions(
+          id, environment, credential_id, tenant_id, principal_id, role,
+          permission, method, path, resource_id, outcome, reason_code,
+          request_id, trace_id, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `)
+      .run(
+        decision.id,
+        decision.environment,
+        decision.credential_id,
+        decision.tenant_id,
+        decision.principal_id,
+        decision.role,
+        decision.permission,
+        decision.method,
+        decision.path,
+        decision.resource_id,
+        decision.outcome,
+        decision.reason_code,
+        decision.request_id,
+        decision.trace_id,
+        decision.created_at,
+      );
+    return { ...decision };
+  }
+
+  accessDecisionSummary(environment, tenantId = null) {
+    const rows = tenantId
+      ? this.db
+          .prepare(
+            `SELECT outcome, COUNT(*) AS count
+             FROM access_decisions
+             WHERE environment=? AND tenant_id=?
+             GROUP BY outcome`,
+          )
+          .all(environment, tenantId)
+      : this.db
+          .prepare(
+            `SELECT outcome, COUNT(*) AS count
+             FROM access_decisions
+             WHERE environment=?
+             GROUP BY outcome`,
+          )
+          .all(environment);
+    const summary = { allowed: 0, denied: 0 };
+    for (const row of rows) summary[row.outcome] = row.count;
+    return summary;
+  }
+
+  accessDecisionRows(environment, tenantId = null) {
+    if (tenantId) {
+      return this.db
+        .prepare(
+          `SELECT id, environment, credential_id, tenant_id, principal_id, role,
+                  permission, method, path, resource_id, outcome, reason_code,
+                  request_id, trace_id, created_at
+           FROM access_decisions
+           WHERE environment=? AND tenant_id=? ORDER BY sequence`,
+        )
+        .all(environment, tenantId);
+    }
+    return this.db
+      .prepare(
+        `SELECT id, environment, credential_id, tenant_id, principal_id, role,
+                permission, method, path, resource_id, outcome, reason_code,
+                request_id, trace_id, created_at
+         FROM access_decisions WHERE environment=? ORDER BY sequence`,
+      )
+      .all(environment);
+  }
+
+  resetTenantAccess({
+    environment,
+    target_tenant_id,
+    idempotency_key,
+    requested_by,
+    reason,
+    request_id,
+    trace_id,
+    created_at = new Date().toISOString(),
+  }) {
+    const fingerprint = requestFingerprint({ target_tenant_id, requested_by, reason });
+    return immediateTransaction(this.db, () => {
+      const existing = this.db
+        .prepare(
+          `SELECT id, environment, target_tenant_id, previous_generation,
+                  new_generation, requested_by, reason, request_id, trace_id, created_at,
+                  request_fingerprint
+           FROM tenant_access_resets
+           WHERE environment=? AND target_tenant_id=? AND idempotency_key=?`,
+        )
+        .get(environment, target_tenant_id, idempotency_key);
+      if (existing) {
+        if (existing.request_fingerprint !== fingerprint) {
+          throw new ApiError(
+            409,
+            "idempotency_conflict",
+            "idempotency_key_reused",
+            "The same tenant reset idempotency key was used with different input.",
+          );
+        }
+        const { request_fingerprint: _fingerprint, ...result } = existing;
+        return result;
+      }
+      const state = this.tenantAccessState(environment, target_tenant_id);
+      const newGeneration = state.generation + 1;
+      this.db
+        .prepare(`
+          INSERT INTO tenant_access_state(environment, tenant_id, generation, status, updated_at)
+          VALUES (?, ?, ?, 'active', ?)
+          ON CONFLICT(environment, tenant_id) DO UPDATE SET
+            generation=excluded.generation,
+            status='active',
+            updated_at=excluded.updated_at
+        `)
+        .run(environment, target_tenant_id, newGeneration, created_at);
+      const reset = {
+        id: `tar_${randomUUID().replaceAll("-", "").slice(0, 16)}`,
+        environment,
+        target_tenant_id,
+        previous_generation: state.generation,
+        new_generation: newGeneration,
+        requested_by,
+        reason,
+        request_id,
+        trace_id,
+        created_at,
+      };
+      this.db
+        .prepare(`
+          INSERT INTO tenant_access_resets(
+            id, environment, target_tenant_id, idempotency_key,
+            request_fingerprint, previous_generation, new_generation,
+            requested_by, reason, request_id, trace_id, created_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `)
+        .run(
+          reset.id,
+          reset.environment,
+          reset.target_tenant_id,
+          idempotency_key,
+          fingerprint,
+          reset.previous_generation,
+          reset.new_generation,
+          reset.requested_by,
+          reset.reason,
+          reset.request_id,
+          reset.trace_id,
+          reset.created_at,
+        );
+      return reset;
+    });
   }
 
   schemaMigrations() {
