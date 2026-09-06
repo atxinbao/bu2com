@@ -5,6 +5,26 @@
 
 本目录提供同一不可变镜像、两个隔离部署单元、外部默认鉴权，以及制品提升、监控、在线备份和隔离恢复的本地参考实现。它只用于验证环境、关闭入口与恢复边界；不是云部署、公开 Sandbox 或 Live 上线方案。
 
+## Internal OrbStack Sandbox 一键流程
+
+`local-sandbox.mjs` 是内部 Sandbox 的本地编排入口。它只启动 `sandbox` 服务，不启动 Live，不删除本地数据卷，并固定使用 loopback、Base Sepolia、x402 和 `execution_disabled`。
+
+```bash
+# 构建不可变本地制品并启动 Sandbox；默认监听 127.0.0.1:3110
+npm --prefix sandbox run sandbox:up
+
+# 检查健康状态、环境契约和执行边界
+npm --prefix sandbox run sandbox:doctor
+
+# 查看 OrbStack/Docker context 与 Compose 状态
+npm --prefix sandbox run sandbox:status
+
+# 停止容器但保留本地 Sandbox 数据卷
+npm --prefix sandbox run sandbox:down
+```
+
+可以通过 `BU2_SANDBOX_HOST_PORT=3115` 使用其他 loopback 端口。该入口不会读取或注入 Signer、API key、RPC secret，也不会把 `execution_disabled` 改成可付款状态；真实 Base Sepolia 执行仍需要单独的受控流程。
+
 ## ENV-07B Hosted Sandbox 部署准备
 
 `hosted-sandbox.compose.yaml` 是仅包含 Sandbox 的托管部署单元。它固定使用不可变镜像、`node sandbox/hosted-sandbox.mjs`、Base Sepolia `84532`、x402 `exact`、机器鉴权和 `execution_enabled`，并通过外部 Compose secrets 将三类托管 Secret 以文件方式挂载。该文件不包含 Live 服务，也不会创建云资源、DNS、TLS 或独立 Activation。

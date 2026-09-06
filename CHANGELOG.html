@@ -152,6 +152,29 @@
       <h2 id="unreleased">Unreleased</h2>
       <article class="release">
         <div class="release-head">
+          <div><h3>Internal Sandbox Product Baseline · OrbStack 本地编排</h3><time datetime="2026-09-06">2026-09-06</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">把 OrbStack 内部 Sandbox 固化为可重复启动、可诊断、可停止且不触碰 Live 或真实付款权限的本地开发基线。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag added">Added</span>新增本地编排入口，自动构建不可变镜像、仅启动 Sandbox、保留数据卷，并提供 up、doctor、status、down 四个操作。</li>
+            <li><span class="tag added">Added</span>新增本地环境预检，固定校验 Sandbox、Base Sepolia 84532、x402、authenticated 和 <code>execution_disabled</code>。</li>
+            <li><span class="tag changed">Changed</span>新增 Sandbox npm 快捷命令和部署 Runbook；默认只绑定 127.0.0.1，不创建公网入口。</li>
+            <li><span class="tag governance">Boundary</span>不加载 Signer、API key 或 RPC secret，不启动 Live，不改变 Transaction Core、账本、Receipt 或支付状态机。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R1 · 本地运维编排与环境预检，不改变资金路径</span></div>
+          <div><b>金融行为影响</b><span>默认保持 <code>execution_disabled</code>，不会产生付款或签名</span></div>
+          <div><b>兼容性</b><span>不改变 API、Schema、数据库、Receipt、Adapter 或现有 Compose 契约</span></div>
+          <div><b>验证</b><span>本地编排计划测试、Sandbox 环境预检和完整 Reference Sandbox 回归</span></div>
+          <div><b>恢复</b><span>执行 <code>sandbox:down</code> 停止容器并保留数据卷；必要时重新执行 <code>sandbox:up</code></span></div>
+        </div>
+      </article>
+      <article class="release">
+        <div class="release-head">
           <div><h3>ENV-07A · Hosted Sandbox 准入与证据基线</h3><time datetime="2026-09-07">2026-09-07</time></div>
           <span class="status">Unreleased</span>
         </div>
