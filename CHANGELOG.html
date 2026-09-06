@@ -171,7 +171,7 @@
           <div><b>风险等级</b><span>R2 · 涉及 Sandbox Signer 装载入口、Testnet 执行激活和对外证据定义，必须独立审查</span></div>
           <div><b>金融行为影响</b><span>不改变 Transaction Core；新增托管启动前的失败关闭门槛，任何执行仍要求仓库外独立 Activation</span></div>
           <div><b>兼容性</b><span>默认 server、共享 Compose、API/MCP/SDK、数据库 schema 和 Receipt v0.2/v0.3 不变</span></div>
-          <div><b>验证</b><span>Secret 文件边界、候选不可变性、Activation 绑定、双向证据、故障收敛、机器鉴权和完整本地回归；托管 E2E 未执行</span></div>
+          <div><b>验证</b><span>Secret 文件边界、候选不可变性、Activation 绑定、双向证据、故障收敛、机器鉴权和完整本地回归；干净提交容器门禁证明共享制品仍不加载 Signer、不执行付款；托管 E2E 未执行</span></div>
           <div><b>恢复</b><span>停止 Hosted Sandbox 新执行并回退专用入口；保留 Candidate、Activation、账本、Attempt 与 Receipt 供只读对账，不自动重试付款</span></div>
         </div>
       </article>

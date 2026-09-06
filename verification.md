@@ -582,6 +582,7 @@ Product v0.1 可作为客户访谈、交互原型和工程方案设计的输入�
 - Candidate/Activation：完整 commit、不可变 artifact、非本地 HTTPS origin、四项 Gate 与契约指纹绑定；Candidate 固定不授权部署/执行。Activation 必须从外部提供并绑定 Candidate hash、审查人、有效期、付款次数和 Testnet 小额总额。
 - Evidence：只接受两条方向唯一的真实 settled 交易、Base Sepolia hash、Receipt signature/issuer/settlement/environment 全部通过、重复提交/响应丢失无重复资金并收敛，以及 edge Bearer 无交互挑战/重定向；Live 必须不包含且 disabled。
 - 自动化：Hosted Sandbox 8/8，Contract 62 + MCP 6，Reference Server 109/109，SDK 10/10，deployment 2/2，operations 6/6，clean-room 3/3，Prototype lint/build 全部通过。
+- 干净提交容器证据：commit `c7e8dd548b4d4500a9426c72f0cde095f705b8ef` 通过 deployment 与 operations acceptance；两个环境分别复用一个不可变镜像，Sandbox/Live 均为 `execution_disabled + authenticated`，错库、错 Signer、跨环境恢复和配置漂移均失败关闭，Signer/Secret/支付调用为 0，恢复副本保持 disabled 且要求对账。
 - 文档与静态检查：53 份 Markdown/HTML、223 个相对链接、0 失效；34 个变更/新增文件高置信 Secret 扫描 0 hit；Node syntax 与 `git diff --check` 通过。
 - 浏览器：Browser 插件不可用，按前端测试技能降级到 Playwright CLI + 本地 Chrome；PROJECT 桌面、CHANGELOG 390×844 移动端均正常，ENV-07A 与 PR #23 状态可见，阶段准入 anchor 可交互，控制台 0 error / 0 warning。
 - 失败与修复：启动测试最初使用错误的 `paymentAdapter` 参数名，修正为服务器契约的 `adapterMode` 后 8/8；一次根目录 npm 命令因仓库无根 package.json 失败，使用 `npm --prefix sandbox` 原样重跑通过。
