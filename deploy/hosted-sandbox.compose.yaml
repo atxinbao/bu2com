@@ -1,0 +1,88 @@
+name: bu2-hosted-sandbox
+
+services:
+  sandbox:
+    image: ${BU2_HOSTED_ARTIFACT_IMAGE:?BU2_HOSTED_ARTIFACT_IMAGE must be an immutable sha256 image reference}
+    command:
+      - node
+      - sandbox/hosted-sandbox.mjs
+    init: true
+    user: "10001:10001"
+    read_only: true
+    restart: "on-failure:3"
+    stop_grace_period: 15s
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3100/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    environment:
+      BU2_HOST: 0.0.0.0
+      BU2_SANDBOX_PORT: "3100"
+      BU2_SANDBOX_DB: /var/lib/bu2/sandbox/bu2.sqlite
+      BU2_ENVIRONMENT: sandbox
+      BU2_PAYMENT_ADAPTER: x402
+      BU2_CHAIN_ID: "84532"
+      BU2_NETWORK: eip155:84532
+      BU2_PROVIDER_NETWORK: eip155:84532
+      BU2_PROVIDER_SCHEME: exact
+      BU2_EXECUTION_STATUS: execution_enabled
+      BU2_ACCESS_MODE: authenticated
+      BU2_API_CREDENTIALS_FILE: /run/secrets/bu2_api_credentials
+      X402_BUYER_PRIVATE_KEY_FILE: /run/secrets/x402_buyer_private_key
+      BU2_RPC_URL_FILE: /run/secrets/base_sepolia_rpc_url
+      X402_RESOURCE_URL: ${X402_RESOURCE_URL:?X402_RESOURCE_URL must be an explicit merchant URL}
+    secrets:
+      - source: bu2_api_credentials
+        target: /run/secrets/bu2_api_credentials
+      - source: x402_buyer_private_key
+        target: /run/secrets/x402_buyer_private_key
+      - source: base_sepolia_rpc_url
+        target: /run/secrets/base_sepolia_rpc_url
+    volumes:
+      - hosted-sandbox-data:/var/lib/bu2/sandbox
+    networks:
+      - hosted-sandbox-network
+    ports:
+      - "127.0.0.1:${BU2_HOSTED_SANDBOX_HOST_PORT:-3120}:3100"
+    labels:
+      com.bu2.deployment-unit: hosted-sandbox
+      com.bu2.environment: sandbox
+      com.bu2.runtime-identity: bu2hostedsandbox
+      com.bu2.secret-namespace: bu2/sandbox
+      com.bu2.backup-scope: bu2-sandbox
+      com.bu2.provider-scope: bu2-sandbox
+      com.bu2.activation-required: "true"
+      com.bu2.live-included: "false"
+
+volumes:
+  hosted-sandbox-data:
+    labels:
+      com.bu2.environment: sandbox
+
+networks:
+  hosted-sandbox-network:
+    labels:
+      com.bu2.environment: sandbox
+
+secrets:
+  bu2_api_credentials:
+    external: true
+    name: ${BU2_SECRET_API_CREDENTIALS:?BU2_SECRET_API_CREDENTIALS must name a managed Sandbox secret}
+  x402_buyer_private_key:
+    external: true
+    name: ${BU2_SECRET_BUYER_SIGNER:?BU2_SECRET_BUYER_SIGNER must name a managed Sandbox secret}
+  base_sepolia_rpc_url:
+    external: true
+    name: ${BU2_SECRET_RPC_ENDPOINT:?BU2_SECRET_RPC_ENDPOINT must name a managed Sandbox secret}

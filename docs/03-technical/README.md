@@ -33,6 +33,7 @@
 - [Access Contract v1](access-contract.json)
 - [ENV-06 制品提升、监控、备份与恢复演练 v1](ENVIRONMENT_OPERATIONS_V1.md)
 - [ENV-07 Hosted Sandbox 双向 Base Sepolia 验收 v1](ENVIRONMENT_HOSTED_SANDBOX_V1.md)
+- [ENV-07B Hosted Sandbox 部署准备契约](../../deploy/hosted-sandbox-deployment.json)
 - [Operations Contract v1](../../deploy/operations-contract.json)
 - [x402 Base Sepolia 测试钱包](X402_TEST_WALLET.md)
 - [x402 Base Sepolia 实结算证据](X402_LIVE_SETTLEMENT_EVIDENCE.md)

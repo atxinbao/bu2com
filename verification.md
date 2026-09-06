@@ -590,3 +590,23 @@ Product v0.1 可作为客户访谈、交互原型和工程方案设计的输入�
 - Graphify：AST 图刷新至 2472 nodes / 3920 edges / 172 communities；未配置 Gemini/Google 语义后端，因此未声称文档语义重标记完成。
 
 结论：ENV-07A 本地实现达到 **GO for R2 review**。E-T13/E-T14/E-T15 的机器契约已建立，但真实托管部分仍为 **Not yet accepted**；下一步需要先选择托管目标并生成可审查的不可变部署 Candidate，再由独立 Activation 开启受限 Testnet 验收。Live/Mainnet 与真实资金继续 NO-GO。
+
+## ENV-07B Hosted Sandbox 部署准备验证
+
+日期：2026-09-06
+执行者：Codex
+
+- 分支基线：确认 PR #24 已合并，工作树切回 `main` 并清理已合并的本地功能分支；本轮工作位于 `feat/env07b-hosted-deployment-prep`。
+- 部署单元：新增 `deploy/hosted-sandbox.compose.yaml`，只包含 Sandbox 服务，固定 `node sandbox/hosted-sandbox.mjs`、Base Sepolia `84532`、x402 `exact`、`authenticated` 和 `execution_enabled`。
+- Secret 边界：三项运行 Secret 只能通过外部 Compose secret 以文件方式挂载到 `/run/secrets/...`；Compose 不包含原始 Secret 值，也不允许直接 Secret 环境变量。
+- 制品与网络：Hosted Compose 要求不可变 `sha256` 镜像，宿主端口只绑定 `127.0.0.1`，并保持单独 Sandbox 数据卷、网络、运行身份和激活标记。
+- 契约：新增 `hosted-sandbox-deployment.json` 与 `hosted-sandbox-deployment.mjs`，验证 Hosted Compose 不含 Live、命令/环境/Secret target/标签/资源边界一致。
+- 未执行：没有创建云资源、DNS/TLS、托管 Secret、独立 Activation、真实 Base Sepolia 交易或公网边缘 E2E；这些仍属于 ENV-07B 外部验收。
+
+验证命令：
+
+```bash
+npm --prefix sandbox run test:hosted-deployment
+```
+
+结论：本地 Hosted Sandbox 部署准备达到 **GO for R2 review**；它只证明托管部署配置可审查，不代表 ENV-07B 的公网部署或真实 Testnet 证据已通过。

@@ -5,6 +5,24 @@
 
 本目录提供同一不可变镜像、两个隔离部署单元、外部默认鉴权，以及制品提升、监控、在线备份和隔离恢复的本地参考实现。它只用于验证环境、关闭入口与恢复边界；不是云部署、公开 Sandbox 或 Live 上线方案。
 
+## ENV-07B Hosted Sandbox 部署准备
+
+`hosted-sandbox.compose.yaml` 是仅包含 Sandbox 的托管部署单元。它固定使用不可变镜像、`node sandbox/hosted-sandbox.mjs`、Base Sepolia `84532`、x402 `exact`、机器鉴权和 `execution_enabled`，并通过外部 Compose secrets 将三类托管 Secret 以文件方式挂载。该文件不包含 Live 服务，也不会创建云资源、DNS、TLS 或独立 Activation。
+
+生成 Compose 解析结果前，必须由托管平台提供以下非秘密配置和已创建的 Secret 名称：
+
+```bash
+export BU2_HOSTED_ARTIFACT_IMAGE='ghcr.io/atxinbao/bu2com@sha256:<64 hex characters>'
+export X402_RESOURCE_URL='https://merchant.sandbox.example/premium-data'
+export BU2_SECRET_API_CREDENTIALS='bu2/sandbox/api-credentials-v1'
+export BU2_SECRET_BUYER_SIGNER='bu2/sandbox/buyer-signer-v1'
+export BU2_SECRET_RPC_ENDPOINT='bu2/sandbox/base-sepolia-rpc-v1'
+
+docker compose --file deploy/hosted-sandbox.compose.yaml config
+```
+
+`npm --prefix sandbox run test:hosted-deployment` 只验证本地解析后的部署契约；它不能证明 DNS/TLS、边缘机器鉴权、托管 Secret 或真实 Base Sepolia 交易已经完成。部署前仍必须生成 Candidate、取得独立 Activation，并按 [ENV-07 Hosted Sandbox 验收](../docs/03-technical/ENVIRONMENT_HOSTED_SANDBOX_V1.md) 保存 E-T13/E-T14/E-T15 证据。
+
 ## 验证
 
 ```bash
