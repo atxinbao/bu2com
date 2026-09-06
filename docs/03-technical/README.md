@@ -25,6 +25,7 @@
 - [系统环境契约 v1](SYSTEM_ENVIRONMENTS_V1.md)
 - [ADR-0001：Sandbox 与 Live 环境隔离](ADR_0001_SANDBOX_LIVE_ENVIRONMENT_ISOLATION.md)
 - [环境验收矩阵 v1](ENVIRONMENT_ACCEPTANCE_MATRIX_V1.md)
+- [环境注册表与链隔离 v1](ENVIRONMENT_REGISTRY_AND_CHAIN_ISOLATION_V1.md)
 - [x402 Base Sepolia 测试钱包](X402_TEST_WALLET.md)
 - [x402 Base Sepolia 实结算证据](X402_LIVE_SETTLEMENT_EVIDENCE.md)
 - [Phase 0 Epic 1：外部 Agent 交易接入与可靠性](PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md)
@@ -34,4 +35,4 @@
 
 Contract v0.1 已具备本地 SQLite Reference Server、数据库 processing 幂等 Claim、状态版本 CAS、原子化 Ledger/Outbox、有限重试与死信、审计重放、Secret 版本轮换、端到端交易关联、结构化观测、健康快照、签名 Receipt、模拟支付 Adapter、基于官方 MCP SDK 的外部 Buyer/Seller Agent 样例，以及基于官方 x402 SDK 的 Base Sepolia Adapter。Epic 1 与 Epic 2 已完成；Transaction Trust Gate 1–3 已经 PR #15–#17 合并。
 
-F01/ENV-01 将目标对外环境冻结为 `sandbox/live`，内部执行环境为 `local`，并明确 Live 初始 `execution_disabled`。现有 API、SDK、MCP、Doctor、Receipt 与运行时仍使用 legacy `simulation/testnet`，必须由 ENV-02/03 完成配置、链隔离与契约迁移后，才能把新语义视为运行控制。Epic 3 的正式证据升级为托管 Sandbox 的真实 Base Sepolia 双向收付；Local Simulation 只作为自动化工具证据。SDK 与 MCP 未公开发布，Live/Mainnet、真实资金托管与生产密钥仍未经独立准入。
+F01/ENV-01 已由 PR #18 批准。ENV-02 已实现运行时环境注册表、非法组合拒绝、SQLite Schema v8 环境绑定、RPC/Signer/Provider 断言和 Live 默认禁用，等待 R2 审查。公开 API、SDK、MCP、Doctor 与 Receipt 仍使用 legacy `simulation/testnet`，由 ENV-03 迁移；不能把内部配置完成写成客户端契约已经完成。Epic 3 的正式证据仍要求托管 Sandbox 的真实 Base Sepolia 双向收付；Local Simulation 只作为自动化工具证据。SDK 与 MCP 未公开发布，Live/Mainnet、真实资金托管与生产密钥仍未经独立准入。

@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
-import { mkdirSync } from "node:fs";
+import { existsSync, mkdirSync, statSync } from "node:fs";
 import { dirname } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { ApiError } from "./domain.mjs";
@@ -34,14 +34,34 @@ function immediateTransaction(db, operation) {
 }
 
 export class SqliteLedger {
-  constructor(path = ":memory:", { observer = null, failureInjector = null } = {}) {
+  constructor(
+    path = ":memory:",
+    {
+      observer = null,
+      failureInjector = null,
+      environmentConfig = null,
+      claimLegacyEnvironment = false,
+    } = {},
+  ) {
+    const hadDatabaseContent =
+      path !== ":memory:" && existsSync(path) && statSync(path).size > 0;
     if (path !== ":memory:") mkdirSync(dirname(path), { recursive: true });
     this.path = path;
     this.observer = observer;
     this.failureInjector = failureInjector;
+    this.hadDatabaseContent = hadDatabaseContent;
     this.db = new DatabaseSync(path);
     this.db.exec("PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;");
-    this.migrate();
+    try {
+      if (environmentConfig) this.assertExistingEnvironment(environmentConfig);
+      this.migrate();
+      if (environmentConfig) {
+        this.bindEnvironment(environmentConfig, { claimLegacyEnvironment });
+      }
+    } catch (error) {
+      this.db.close();
+      throw error;
+    }
   }
 
   migrate() {
@@ -144,6 +164,11 @@ export class SqliteLedger {
         version: 7,
         name: "x402_trusted_execution",
         apply: () => this.migrateX402TrustedExecution(),
+      },
+      {
+        version: 8,
+        name: "environment_binding",
+        apply: () => this.migrateEnvironmentBinding(),
       },
     ];
     for (const migration of migrations) {
@@ -395,6 +420,122 @@ export class SqliteLedger {
       CREATE INDEX IF NOT EXISTS idx_payment_attempts_transaction
         ON payment_attempts(transaction_id, created_at);
     `);
+  }
+
+  migrateEnvironmentBinding() {
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS environment_metadata (
+        singleton INTEGER PRIMARY KEY CHECK (singleton = 1),
+        environment_contract_version TEXT NOT NULL,
+        environment TEXT NOT NULL CHECK (environment IN ('local', 'sandbox', 'live')),
+        payment_adapter TEXT NOT NULL CHECK (payment_adapter IN ('simulated', 'x402')),
+        chain_id INTEGER,
+        network TEXT,
+        asset TEXT,
+        binding_method TEXT NOT NULL CHECK (binding_method IN ('initial', 'legacy_claim')),
+        bound_at TEXT NOT NULL,
+        CHECK (
+          (environment = 'local' AND payment_adapter = 'simulated' AND chain_id IS NULL AND network IS NULL AND asset IS NULL)
+          OR
+          (environment IN ('sandbox', 'live') AND payment_adapter = 'x402' AND chain_id IS NOT NULL AND network IS NOT NULL AND asset IS NOT NULL)
+        )
+      );
+      CREATE TRIGGER IF NOT EXISTS environment_metadata_immutable_update
+      BEFORE UPDATE ON environment_metadata
+      BEGIN
+        SELECT RAISE(ABORT, 'environment_metadata_immutable');
+      END;
+      CREATE TRIGGER IF NOT EXISTS environment_metadata_immutable_delete
+      BEFORE DELETE ON environment_metadata
+      BEGIN
+        SELECT RAISE(ABORT, 'environment_metadata_immutable');
+      END;
+    `);
+  }
+
+  environmentMetadata() {
+    return this.db
+      .prepare(`
+        SELECT environment_contract_version, environment, payment_adapter,
+               chain_id, network, asset, binding_method, bound_at
+        FROM environment_metadata WHERE singleton=1
+      `)
+      .get() ?? null;
+  }
+
+  assertExistingEnvironment(config) {
+    const table = this.db
+      .prepare(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='environment_metadata'",
+      )
+      .get();
+    if (!table) return;
+    const existing = this.environmentMetadata();
+    if (!existing) return;
+    const expected = {
+      environment_contract_version: config.environment_contract_version,
+      environment: config.environment,
+      payment_adapter: config.payment_adapter,
+      chain_id: config.chain_id,
+      network: config.network,
+      asset: config.asset,
+    };
+    const mismatches = Object.keys(expected).filter(
+      (field) => existing[field] !== expected[field],
+    );
+    if (mismatches.length > 0) {
+      throw new ApiError(
+        503,
+        "configuration_error",
+        "database_environment_mismatch",
+        "Database environment metadata does not match the active runtime environment.",
+        { environment: config.environment, mismatches: mismatches.sort() },
+      );
+    }
+  }
+
+  bindEnvironment(config, { claimLegacyEnvironment = false } = {}) {
+    const existing = this.environmentMetadata();
+    const expected = {
+      environment_contract_version: config.environment_contract_version,
+      environment: config.environment,
+      payment_adapter: config.payment_adapter,
+      chain_id: config.chain_id,
+      network: config.network,
+      asset: config.asset,
+    };
+    if (existing) {
+      this.assertExistingEnvironment(config);
+      return existing;
+    }
+    if (this.hadDatabaseContent && !claimLegacyEnvironment) {
+      throw new ApiError(
+        503,
+        "configuration_error",
+        "legacy_database_environment_unclaimed",
+        "An existing database without environment metadata requires an explicit environment claim.",
+        { environment: config.environment },
+      );
+    }
+    const bindingMethod = this.hadDatabaseContent ? "legacy_claim" : "initial";
+    this.db
+      .prepare(`
+        INSERT INTO environment_metadata(
+          singleton, environment_contract_version, environment, payment_adapter,
+          chain_id, network, asset, binding_method, bound_at
+        ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?)
+      `)
+      .run(
+        expected.environment_contract_version,
+        expected.environment,
+        expected.payment_adapter,
+        expected.chain_id,
+        expected.network,
+        expected.asset,
+        bindingMethod,
+        new Date().toISOString(),
+      );
+    return this.environmentMetadata();
   }
 
   registerReceiptVerificationKey({

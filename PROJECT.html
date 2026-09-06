@@ -162,7 +162,7 @@
         <p class="eyebrow">BU2.COM · PROJECT ALIGNMENT &amp; FUTURE ROADMAP</p>
         <h1>项目总纲与监管可演进模型</h1>
         <p class="lead">在 AI Agent 支付法域仍然模糊的阶段，BU2 不等待一个全球统一答案，而是通过可配置的监管状态、有限授权与分层执行模式，在保持技术前进的同时控制真实资金边界。</p>
-        <div class="hero-meta"><span>版本 1.1</span><span>生效日期 2026-09-06</span><span>状态 F01 / ENV-01 Proposed</span><span>维护者 BU2 Engineering / Codex</span></div>
+        <div class="hero-meta"><span>版本 1.1</span><span>生效日期 2026-09-06</span><span>状态 ENV-02 Implemented · R2 review pending</span><span>维护者 BU2 Engineering / Codex</span></div>
       </header>
 
       <div class="decision">
@@ -213,7 +213,7 @@ Provider / x402 Facilitator 执行
           <div class="position-card yes"><b>Sandbox</b><ul><li>Base Sepolia · 84532</li><li><code>eip155:84532</code></li><li>x402 测试资产</li><li>托管开放需独立验收</li></ul></div>
           <div class="position-card no"><b>Live</b><ul><li>Base Mainnet · 8453</li><li><code>eip155:8453</code></li><li>初始 <code>execution_disabled</code></li><li>G-L 前禁止签名和广播</li></ul></div>
         </div>
-        <p>Sandbox 与 Live 复用同一不可变软件制品，但数据库、API key、Signer、Receipt 信任域、Webhook、队列、存储、备份和运行身份必须隔离。现有运行时仍使用 legacy <code>simulation/testnet</code>；本决策由 ENV-02/03 分步实现，旧 Receipt 保留原字段和原签名解释。</p>
+        <p>Sandbox 与 Live 复用同一不可变软件制品，但数据库、API key、Signer、Receipt 信任域、Webhook、队列、存储、备份和运行身份必须隔离。ENV-02 已实现运行时注册表、数据库绑定和链/Signer/Provider 断言；公开 API、SDK、MCP、Doctor 与 Receipt 的 legacy <code>simulation/testnet</code> 由 ENV-03 迁移，旧 Receipt 保留原字段和原签名解释。</p>
         <div class="flow">local + simulated
 sandbox + x402 + 84532
 live + x402 + 8453 + execution_disabled

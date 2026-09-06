@@ -12,6 +12,7 @@ import {
 import { SqliteLedger } from "./persistence.mjs";
 import { Bu2Sandbox } from "./domain.mjs";
 import { X402PaymentAdapter } from "./x402-adapter.mjs";
+import { loadEnvironmentConfig } from "./environment-config.mjs";
 import { listenX402Merchant } from "./x402-merchant.mjs";
 import { buildPaymentAdapter, listen } from "./server.mjs";
 import { generatePrivateKey } from "viem/accounts";
@@ -204,6 +205,12 @@ test("official x402 signing hook rejects changed payTo before a payment is sent"
     mode: "x402",
     resourceUrl: merchant.url,
     buyerPrivateKey: generatePrivateKey(),
+    environmentConfig: loadEnvironmentConfig({
+      environment: "sandbox",
+      paymentAdapter: "x402",
+      executionStatus: "execution_enabled",
+      signerEnvironment: "sandbox",
+    }),
   });
   await adapter.reserve("txn_rotating_payee", { value: 1, currency: "USD" });
   await assert.rejects(
@@ -693,7 +700,10 @@ test("HTTP recovery endpoint is idempotent and issues one receipt after confirma
   const running = await listen({
     port: 0,
     dbPath: ":memory:",
+    environment: "sandbox",
     adapterMode: "x402",
+    executionStatus: "execution_enabled",
+    signerEnvironment: "sandbox",
     x402ResourceUrl: `${merchantServer.url}/premium-data`,
     x402PaidFetch: async () => {
       throw new DOMException("timeout", "AbortError");

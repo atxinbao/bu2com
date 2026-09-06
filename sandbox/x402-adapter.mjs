@@ -2,6 +2,11 @@ import { createHash } from "node:crypto";
 import canonicalize from "canonicalize";
 import { decodePaymentRequiredHeader, decodePaymentResponseHeader } from "@x402/core/http";
 import { ApiError } from "./domain.mjs";
+import {
+  assertExecutionEnabled,
+  EXECUTION_ENABLED,
+  loadEnvironmentConfig,
+} from "./environment-config.mjs";
 
 export const X402_BASE_SEPOLIA_USDC =
   "0x036CbD53842c5426634e7929541eC2318f3dCF7e";
@@ -12,7 +17,7 @@ const expectedAtomicUsdc = (amount) => {
       400,
       "validation_error",
       "x402_currency_not_supported",
-      "The x402 Base Sepolia adapter currently accepts USD amounts only.",
+      "The x402 adapter currently accepts USD amounts only.",
     );
   }
   return String(amount.value * 10_000);
@@ -46,18 +51,34 @@ export class X402PaymentAdapter {
     network = "eip155:84532",
     asset = X402_BASE_SEPOLIA_USDC,
     recoveryQuery = null,
+    environment = "sandbox",
+    executionStatus = EXECUTION_ENABLED,
   }) {
+    const runtimeEnvironment = loadEnvironmentConfig(
+      {
+        environment,
+        paymentAdapter: "x402",
+        network,
+        asset,
+        executionStatus,
+      },
+      {},
+    );
     this.ledger = ledger;
     this.observer = observer;
     this.resourceUrl = normalizedResourceUrl(resourceUrl);
     this.paidFetch = paidFetch;
     this.paidFetchFactory = paidFetchFactory;
     this.fetchImpl = fetchImpl;
-    this.network = network;
-    this.asset = asset;
+    this.network = runtimeEnvironment.network;
+    this.asset = runtimeEnvironment.asset;
     this.recoveryQuery = recoveryQuery;
+    this.environmentConfig = runtimeEnvironment;
     this.inFlightSettlements = new Map();
-    this.name = "x402_exact_base_sepolia";
+    this.name =
+      runtimeEnvironment.environment === "live"
+        ? "x402_exact_base_mainnet"
+        : "x402_exact_base_sepolia";
   }
 
   existing(key, operation, amount) {
@@ -203,6 +224,7 @@ export class X402PaymentAdapter {
   }
 
   async reserve(transactionId, amount, context = {}) {
+    assertExecutionEnabled(this.environmentConfig, "reserve");
     const key = `reserve:${transactionId}`;
     const replay = this.existing(key, "reserve", amount);
     if (replay) return replay;
@@ -270,6 +292,7 @@ export class X402PaymentAdapter {
   }
 
   async settle(transactionId, amount) {
+    assertExecutionEnabled(this.environmentConfig, "settle");
     const key = `settle:${transactionId}`;
     const replay = this.existing(key, "settle", amount);
     if (replay) return replay;

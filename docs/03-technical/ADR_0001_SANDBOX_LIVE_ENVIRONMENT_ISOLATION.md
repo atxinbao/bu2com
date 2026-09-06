@@ -2,7 +2,7 @@
 
 日期：2026-09-06
 执行者：Codex
-状态：Proposed，等待 R2 Domain + Architecture 审查
+状态：Accepted · PR #18（2026-09-06）
 
 ## 背景
 

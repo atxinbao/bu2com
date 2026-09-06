@@ -7,7 +7,10 @@ const running = await listen({
   dbPath:
     process.env.BU2_X402_DB ??
     fileURLToPath(new URL("./data/bu2-x402.sqlite", import.meta.url)),
+  environment: "sandbox",
   adapterMode: "x402",
+  executionStatus: "execution_enabled",
+  signerEnvironment: "sandbox",
   x402ResourceUrl: process.env.X402_RESOURCE_URL ?? "http://127.0.0.1:4021/premium-data",
   x402BuyerPrivateKey: readBuyerPrivateKey(),
 });

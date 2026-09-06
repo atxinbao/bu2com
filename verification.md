@@ -459,3 +459,23 @@ Product v0.1 可作为客户访谈、交互原型和工程方案设计的输入�
 - 未执行：没有创建 DNS、云资源或部署，没有修改运行时环境枚举，没有执行 Base Sepolia 或 Mainnet 支付，没有加载钱包或生产凭证。
 
 结论：F01/ENV-01 达到 **GO for R2 review**。它冻结的是目标环境与迁移契约，不代表 ENV-02/03 已实现，也不构成 Live/Mainnet 执行授权。下一实现项为 ENV-02 环境注册表与链隔离。
+
+## ENV-02 环境注册表与链隔离验证
+
+日期：2026-09-06
+执行者：Codex
+
+- 基线：PR #18 已合并；本地 `main` 已快进至合并提交后创建独立 ENV-02 分支。
+- Reference Server 升级为 v0.12.0；公开 Agent Payment API、事件、SDK、MCP、Doctor 与 Receipt v0.2 契约均保持不变。
+- 环境注册表只允许 `local + simulated`、`sandbox + x402 + eip155:84532`、`live + x402 + eip155:8453`；Sandbox 和 Live 默认 `execution_disabled`，Live 在本阶段不能配置为 enabled。
+- SQLite Schema v8 纯新增不可变 `environment_metadata`；新库首次绑定，错环境数据库在后续 migration 前拒绝，无 metadata 的旧库必须显式一次性认领。
+- 配置在数据库、Signer 与 Provider 构造前验证；RPC、asset、Provider network/scheme 和 Signer environment 任一冲突均失败关闭。
+- x402 Adapter 在 reserve/settle 边界检查 execution status；E-T09 证明禁用状态下 merchant 和 signer 调用均为 0，恢复查询仍不创建第二笔付款。
+- ENV-02 专项 7/7、最终 Reference Server 95/95、Contract 42 项与 MCP 6 个、TypeScript SDK 8/8、HTTP/SDK/MCP clean-room 3/3 全部通过。
+- Prototype `npm run lint` 与 Vinext 五阶段 production build 通过。
+- 文档检查：185 个 Markdown 相对链接、27 个 HTML 相对链接/锚点、4 个 HTML 文件解析、本轮新增内容秘密样式扫描和 `git diff --check` 全部通过；全文件扫描只命中既有链上交易哈希，复核后按新增行扫描为 0 hit。
+- 浏览器：Playwright CLI 使用 Google Chrome 验证 PROJECT、GOVERNANCE 桌面页面和 PROJECT 移动视口；ENV-02 状态、环境边界与 Live disabled 可见，控制台 0 error、0 warning。
+- Graphify：代码图增量更新至 2153 nodes / 3295 edges；文档语义增量因当前未配置 Gemini backend 未重新抽取，不影响源文档与代码验证。
+- 未执行：没有 Base Sepolia 或 Mainnet 支付，没有加载生产密钥，没有部署、DNS、云资源、托管或资金迁移。
+
+结论：ENV-02 本地实现达到 **GO for R2 review**。E-T01/02/03 已在本范围通过；E-T06/07/09 只关闭 ENV-02 子范围，部署恢复与受限 Live E2E 仍分别属于 ENV-04/06/08。ENV-02 合并后下一项为 ENV-03，Mainnet 与真实资金继续 NO-GO。

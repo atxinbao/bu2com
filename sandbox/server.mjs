@@ -12,6 +12,11 @@ import {
 import { SqliteLedger } from "./persistence.mjs";
 import { WebhookDispatcher } from "./webhooks.mjs";
 import { X402PaymentAdapter } from "./x402-adapter.mjs";
+import {
+  assertSignerBinding,
+  loadEnvironmentConfig,
+  verifyRpcChain,
+} from "./environment-config.mjs";
 import { ExactEvmScheme } from "@x402/evm/exact/client";
 import { wrapFetchWithPayment, x402Client } from "@x402/fetch";
 import { privateKeyToAccount } from "viem/accounts";
@@ -27,6 +32,9 @@ const requestId = () => `req_${crypto.randomUUID().replaceAll("-", "").slice(0, 
 const MAX_JSON_BODY_BYTES = 1_048_576;
 const contractVersions = JSON.parse(
   readFileSync(new URL("../docs/03-technical/contract-versions.json", import.meta.url), "utf8"),
+);
+const packageMetadata = JSON.parse(
+  readFileSync(new URL("./package.json", import.meta.url), "utf8"),
 );
 
 async function readJson(request) {
@@ -93,16 +101,30 @@ export function buildPaymentAdapter({
   buyerPrivateKey,
   paidFetch = null,
   recoveryQuery = null,
+  environmentConfig = null,
 } = {}) {
+  const activeEnvironment =
+    environmentConfig ?? loadEnvironmentConfig({ paymentAdapter: mode });
+  if (mode !== activeEnvironment.payment_adapter) {
+    throw new ApiError(
+      503,
+      "configuration_error",
+      "environment_adapter_mismatch",
+      "Payment adapter does not match the active environment configuration.",
+    );
+  }
   if (mode === "simulated") return new SimulatedPaymentAdapter({ ledger, observer });
   if (mode !== "x402") {
     throw new ApiError(400, "validation_error", "adapter_mode_invalid", `Unknown adapter: ${mode}`);
+  }
+  if (buyerPrivateKey || paidFetch) {
+    assertSignerBinding(activeEnvironment, activeEnvironment.signer_environment);
   }
   const paidFetchFactory = buyerPrivateKey
     ? ({ beforePaymentCreation }) => {
         const client = new x402Client()
           .register(
-            "eip155:84532",
+            activeEnvironment.network,
             new ExactEvmScheme(privateKeyToAccount(buyerPrivateKey)),
           )
           .onBeforePaymentCreation(beforePaymentCreation);
@@ -116,6 +138,10 @@ export function buildPaymentAdapter({
     paidFetch,
     paidFetchFactory,
     recoveryQuery,
+    network: activeEnvironment.network,
+    asset: activeEnvironment.asset,
+    environment: activeEnvironment.environment,
+    executionStatus: activeEnvironment.execution_status,
   });
 }
 
@@ -126,6 +152,7 @@ export function createBu2Server({
   adapter,
   initialWallet,
   observer = new Observability(),
+  environmentConfig = loadEnvironmentConfig(),
 } = {}) {
   const activeLedger = ledger ?? sandbox?.ledger ?? new SqliteLedger(":memory:");
   activeLedger.observer = observer;
@@ -189,7 +216,7 @@ export function createBu2Server({
               ? "attention_required"
               : "healthy",
           service: "bu2-reference-server",
-          version: "0.10.0",
+          version: packageMetadata.version,
           api_contract_version: contractVersions.agent_payment_api,
           api_base_path: contractVersions.api_base_path,
           mcp_contract_versions: [contractVersions.mcp_tools],
@@ -427,6 +454,7 @@ export function createBu2Server({
     ledger: activeLedger,
     dispatcher: activeDispatcher,
     observer,
+    environmentConfig,
   };
 }
 
@@ -440,13 +468,49 @@ export async function listen({
   observer,
   logSink = null,
   adapterMode = process.env.BU2_PAYMENT_ADAPTER ?? "simulated",
+  environment = process.env.BU2_ENVIRONMENT,
+  chainId = process.env.BU2_CHAIN_ID,
+  network = process.env.BU2_NETWORK,
+  asset = process.env.BU2_USDC_ADDRESS,
+  executionStatus = process.env.BU2_EXECUTION_STATUS,
+  signerEnvironment = process.env.BU2_SIGNER_ENVIRONMENT,
+  providerNetwork = process.env.BU2_PROVIDER_NETWORK,
+  providerScheme = process.env.BU2_PROVIDER_SCHEME,
+  rpcChainId = process.env.BU2_RPC_CHAIN_ID,
+  rpcChainIdResolver = null,
+  claimLegacyEnvironment = process.env.BU2_CLAIM_LEGACY_DB_ENVIRONMENT === "true",
   x402ResourceUrl = process.env.X402_RESOURCE_URL,
   x402BuyerPrivateKey = process.env.X402_BUYER_PRIVATE_KEY,
   x402PaidFetch = null,
   x402RecoveryQuery = null,
 } = {}) {
+  const environmentConfig = loadEnvironmentConfig({
+    environment,
+    paymentAdapter: adapterMode,
+    chainId,
+    network,
+    asset,
+    executionStatus,
+    signerEnvironment,
+    providerNetwork,
+    providerScheme,
+    rpcChainId,
+  });
+  await verifyRpcChain(environmentConfig, rpcChainIdResolver);
+  if (x402BuyerPrivateKey || x402PaidFetch) {
+    assertSignerBinding(environmentConfig, environmentConfig.signer_environment);
+  }
   const activeObserver = observer ?? new Observability({ sink: logSink });
-  const activeLedger = ledger ?? new SqliteLedger(dbPath, { observer: activeObserver });
+  const activeLedger =
+    ledger ??
+    new SqliteLedger(dbPath, {
+      observer: activeObserver,
+      environmentConfig,
+      claimLegacyEnvironment,
+    });
+  if (ledger) {
+    activeLedger.bindEnvironment(environmentConfig, { claimLegacyEnvironment });
+  }
   activeLedger.observer = activeObserver;
   const adapter = buildPaymentAdapter({
     ledger: activeLedger,
@@ -456,6 +520,7 @@ export async function listen({
     buyerPrivateKey: x402BuyerPrivateKey,
     paidFetch: x402PaidFetch,
     recoveryQuery: x402RecoveryQuery,
+    environmentConfig,
   });
   const initialWallet =
     adapterMode === "x402"
@@ -467,6 +532,7 @@ export async function listen({
     adapter,
     initialWallet,
     observer: activeObserver,
+    environmentConfig,
   });
   await new Promise((resolve, reject) => {
     instance.server.once("error", reject);
@@ -478,5 +544,5 @@ export async function listen({
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
   const running = await listen({ logSink: (line) => console.log(line) });
-  console.log(`BU2 Reference Server v0.10 listening on ${running.url}`);
+  console.log(`BU2 Reference Server v${packageMetadata.version} listening on ${running.url}`);
 }
