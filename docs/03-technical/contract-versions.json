@@ -5,6 +5,7 @@
   "doctor_result": "0.2.0",
   "environment_deployment_units": "1.0",
   "environment_operations": "1.0",
+  "hosted_sandbox_evidence": "1.0",
   "environment_contract": "1.0",
   "mcp_tools": "0.3.0",
   "access_contract": "1.0",

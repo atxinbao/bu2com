@@ -2,7 +2,7 @@
 
 日期：2026-09-06
 执行者：Codex
-状态：F01 / ENV-01 至 ENV-05 已由 PR #18–#22 批准；ENV-06 已实现，等待 R2 独立人工审查
+状态：F01 / ENV-01 至 ENV-06 已由 PR #18–#23 批准；ENV-07A 本地准入基线已实现，ENV-07B 托管验收未完成
 适用范围：BU2 服务、API、SDK、MCP、Doctor、Receipt、部署与运营
 
 ## 1. 决策
@@ -153,8 +153,8 @@ PR local simulation / contract verification
 | ENV-03 | API/SDK/MCP/Doctor/Receipt 环境契约迁移 | ENV-02 后实施 |
 | ENV-04 | 隔离 Sandbox/Live 部署单元 | PR #21 已合并；模板不启用 Live 签名 |
 | ENV-05 | 受控开发者与运维入口 | PR #22 已合并 |
-| ENV-06 | 制品提升、监控、备份与恢复演练 | 已实现；等待 R2 审查；Live execution disabled |
-| ENV-07 | 托管 Sandbox 双向 Base Sepolia 验收 | ENV-02–06 + F03–F16 对应能力 |
+| ENV-06 | 制品提升、监控、备份与恢复演练 | PR #23 已合并；Live execution disabled |
+| ENV-07 | 托管 Sandbox 双向 Base Sepolia 验收 | ENV-07A 本地准入已实现；ENV-07B 托管证据未验收 |
 | ENV-08 | 受限 Live 启用 | G-F、L01、G-L；独立 R3 授权 |
 
 本环境路线复用 F 路线的身份、账本、权限、收付、对账和运营能力，不建设第二套系统。
@@ -163,7 +163,7 @@ PR local simulation / contract verification
 
 F01/ENV-01 只冻结决策，不创建云资源、不配置 DNS、不部署服务、不修改历史数据、不启用 Live，也不执行测试网或主网支付。若决策未获批准，删除本次新增入口并恢复上层文档即可；交易、账本、数据库、Adapter 和 Receipt 均无需回滚。
 
-ENV-02/03 已由 PR #19/#20 合并，实现环境注册表、配置装载、Schema v8 数据库绑定、RPC/Signer/Provider 断言、客户端预检和 Receipt v0.3。ENV-04 已由 PR #21 合并，建立同一不可变镜像、两个隔离且 disarmed 的本地容器部署单元。ENV-05 已由 PR #22 合并，实现 API/SDK/MCP v0.3 的环境绑定机器凭据、角色/claims、Schema v9 访问审计、Sandbox 租户重置与脱敏支持包。ENV-06 在此基础上实现候选制品提升清单、配置漂移检测、环境专属 SQLite Online Backup、隔离恢复演练和脱敏运营快照，等待 R2 审查；说明见[运营与恢复 v1](ENVIRONMENT_OPERATIONS_V1.md)。旧 Receipt 仍保留原始 legacy 值、签名字节和解释规则。
+ENV-02/03 已由 PR #19/#20 合并，实现环境注册表、配置装载、Schema v8 数据库绑定、RPC/Signer/Provider 断言、客户端预检和 Receipt v0.3。ENV-04 已由 PR #21 合并，建立同一不可变镜像、两个隔离且 disarmed 的本地容器部署单元。ENV-05 已由 PR #22 合并，实现 API/SDK/MCP v0.3 的环境绑定机器凭据、角色/claims、Schema v9 访问审计、Sandbox 租户重置与脱敏支持包。ENV-06 已由 PR #23 合并，加入候选制品提升清单、配置漂移检测、环境专属 SQLite Online Backup、隔离恢复演练和脱敏运营快照。ENV-07A 已实现 Hosted Sandbox 专用启动门槛、文件型 Secret、不可变候选、独立激活与机器证据验证器；说明见[Hosted Sandbox v1](ENVIRONMENT_HOSTED_SANDBOX_V1.md)。真实托管部署与双向 Testnet 证据仍未验收。旧 Receipt 保留原始 legacy 值、签名字节和解释规则。
 
 ## 参考来源
 

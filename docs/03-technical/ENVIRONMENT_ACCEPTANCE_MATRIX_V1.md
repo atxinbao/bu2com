@@ -2,7 +2,7 @@
 
 日期：2026-09-06
 执行者：Codex
-状态：F01 / ENV-01 至 ENV-05 已批准；ENV-06 已有本地自动化证据，等待 R2 审查
+状态：F01 / ENV-01 至 ENV-06 已批准；ENV-07A 本地准入基线已实现，托管证据未验收
 
 本矩阵是 ENV-02–ENV-08 的验收来源。除非列出真实执行证据，不得将“已定义”写成“已通过”。
 
@@ -39,7 +39,7 @@
 - E-T16：公开 `/health` 与 Operator 脱敏支持包 **Implemented / Local automated pass**。
 - E-T08：干净提交构建同一不可变镜像，候选提升清单固定 `hosted_deployment=false`、`payment_execution=false`，且未挂载 Signer 或真实凭证，状态为 **Implemented / Local automated pass**；托管发布证明留 ENV-07。
 - E-T10：Sandbox/Live 独立 SQLite Online Backup、SHA-256/integrity/schema/环境/事实计数校验、同环境隔离恢复与跨环境拒绝已通过；恢复结果固定 `execution_disabled + reconciliation_required` 且 Provider 零调用，状态为 **Implemented / Local automated pass**。
-- E-T13–E-T15 的托管与外部团队子范围：**Defined / Not yet accepted**。
+- E-T13–E-T15 已具备不可变 Candidate、独立 Activation、文件型 Secret 与机器证据验证器，状态为 **ENV-07A Implemented / Local automated pass**；托管与外部团队子范围仍为 **Not yet accepted**。
 - 当前仓库已有 local Simulation、Base Sepolia Adapter、Receipt、未知支付恢复、幂等和原子性测试，可作为实现基础，但不能替代新的环境隔离测试。
 - E-T13/E-T14 必须在真实托管 Sandbox 上执行；本地 mock、Simulation 或仓库内自动化不能计作外部团队验收。
 - E-T09/E-T10 只验证 Live disarmed 架构，不授权 Mainnet 付款。

@@ -76,4 +76,4 @@ ENV-04 只允许提升相同 digest，不迁移 Sandbox 数据、余额、API ke
 
 ## 6. 后续工作
 
-ENV-04/05 已由 PR #21/#22 合并。ENV-06 已实现制品提升、监控、备份和恢复演练并等待 R2 审查；后续 ENV-07 才进行托管 Sandbox 双向 Base Sepolia 验收。Live/Mainnet 继续 `execution_disabled`，不得从容器、访问控制或恢复证据推导任何资金许可。
+ENV-04/05/06 已由 PR #21/#22/#23 合并。ENV-07A 已实现本地准入与证据契约；ENV-07B 才进行托管 Sandbox 双向 Base Sepolia 验收。Live/Mainnet 继续 `execution_disabled`，不得从容器、访问控制或恢复证据推导任何资金许可。

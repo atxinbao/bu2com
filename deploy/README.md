@@ -11,10 +11,11 @@
 npm --prefix sandbox run test:deployment-contract
 npm --prefix sandbox run acceptance:deployment
 npm --prefix sandbox run test:operations
+npm --prefix sandbox run test:hosted-sandbox
 npm --prefix sandbox run acceptance:operations
 ```
 
-前两条命令验证 ENV-04/05 的 Compose 和真实 disarmed 容器；后两条命令验证 ENV-06 的候选提升清单、配置漂移、SQLite Online Backup、跨环境拒绝与恢复后禁用执行。完整 operations acceptance 只允许在干净提交上运行，构建的临时镜像、数据库和备份会在结束时删除。
+前两条命令验证 ENV-04/05 的 Compose 和真实 disarmed 容器；ENV-06 命令验证候选提升清单、配置漂移、SQLite Online Backup、跨环境拒绝与恢复后禁用执行；ENV-07A 命令验证 Hosted Sandbox 的 Secret 文件、不可变候选、独立激活与证据契约。完整 operations acceptance 只允许在干净提交上运行，构建的临时镜像、数据库和备份会在结束时删除。
 
 ## ENV-06 运维命令
 

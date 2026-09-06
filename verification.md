@@ -569,3 +569,23 @@ Product v0.1 可作为客户访谈、交互原型和工程方案设计的输入�
 - 未执行：没有部署云资源、DNS/TLS、托管 Sandbox、正式对象存储或通知渠道，没有加载 API credential、Signer、钱包或生产密钥，没有执行 Base Sepolia/Mainnet 支付，也没有启用 Live。
 
 结论：ENV-06 本地实现达到 **GO for R2 review**。E-T06、E-T08 与 E-T10 的本地制品、漂移、备份和恢复子范围具备自动化证据；这不等于托管环境、灾备 SLO、公开 Sandbox 或资金执行准入。R2 审查合并后再进入 ENV-07 托管 Sandbox 双向 Base Sepolia 验收；Live/Mainnet 与真实资金继续 NO-GO。
+
+## ENV-07A Hosted Sandbox 准入与证据基线验证
+
+日期：2026-09-07
+执行者：Codex
+
+- 合并基线：确认 ENV-06 PR #23 已合并，`main` 快进至 `6daa4a9353664f7a3193e74fc29d43ff6fbd595b`，本地 ENV-06 分支已删除；本工作位于 `feat/env07-hosted-sandbox-evidence`。
+- 范围拆分：ENV-07A 只完成 Hosted Sandbox 本地准入与机器证据基线；ENV-07B 才执行公网 HTTPS 部署、真实双向 Base Sepolia 和 edge E2E。当前没有把本地结果写成托管通过。
+- Runtime Secret：只接受绝对路径普通文件，拒绝符号链接、空/超限文件、直接 Secret 环境变量、原始 API key、错环境 credential 与无效 EVM key；Candidate 只保存 `bu2/sandbox/...` 引用名。
+- 启动门槛：专用入口固定 `sandbox + x402 + exact + authenticated + execution_enabled + signer_environment=sandbox`，并通过 Viem 对实际 RPC 执行 `eth_chainId`；84532 启动、8453 在监听前拒绝。
+- Candidate/Activation：完整 commit、不可变 artifact、非本地 HTTPS origin、四项 Gate 与契约指纹绑定；Candidate 固定不授权部署/执行。Activation 必须从外部提供并绑定 Candidate hash、审查人、有效期、付款次数和 Testnet 小额总额。
+- Evidence：只接受两条方向唯一的真实 settled 交易、Base Sepolia hash、Receipt signature/issuer/settlement/environment 全部通过、重复提交/响应丢失无重复资金并收敛，以及 edge Bearer 无交互挑战/重定向；Live 必须不包含且 disabled。
+- 自动化：Hosted Sandbox 8/8，Contract 62 + MCP 6，Reference Server 109/109，SDK 10/10，deployment 2/2，operations 6/6，clean-room 3/3，Prototype lint/build 全部通过。
+- 文档与静态检查：53 份 Markdown/HTML、223 个相对链接、0 失效；34 个变更/新增文件高置信 Secret 扫描 0 hit；Node syntax 与 `git diff --check` 通过。
+- 浏览器：Browser 插件不可用，按前端测试技能降级到 Playwright CLI + 本地 Chrome；PROJECT 桌面、CHANGELOG 390×844 移动端均正常，ENV-07A 与 PR #23 状态可见，阶段准入 anchor 可交互，控制台 0 error / 0 warning。
+- 失败与修复：启动测试最初使用错误的 `paymentAdapter` 参数名，修正为服务器契约的 `adapterMode` 后 8/8；一次根目录 npm 命令因仓库无根 package.json 失败，使用 `npm --prefix sandbox` 原样重跑通过。
+- 未执行：云资源、DNS/TLS、托管 Secret、真实双向 Base Sepolia 支付、外部 Agent 流量、Hosted Provider/Webhook 故障注入、Live/Mainnet、生产凭据或托管。
+- Graphify：AST 图刷新至 2472 nodes / 3920 edges / 172 communities；未配置 Gemini/Google 语义后端，因此未声称文档语义重标记完成。
+
+结论：ENV-07A 本地实现达到 **GO for R2 review**。E-T13/E-T14/E-T15 的机器契约已建立，但真实托管部分仍为 **Not yet accepted**；下一步需要先选择托管目标并生成可审查的不可变部署 Candidate，再由独立 Activation 开启受限 Testnet 验收。Live/Mainnet 与真实资金继续 NO-GO。
