@@ -1,4 +1,4 @@
-# BU2 Reference Server v0.16 / x402 Sandbox v0.5
+# BU2 Reference Server v0.17 / x402 Sandbox v0.5
 
 日期：2026-09-07
 执行者：Codex
@@ -21,11 +21,31 @@ node sandbox/server.mjs
 
 该入口可启动不代表已获部署或支付授权。完整 Candidate、独立 Activation、双向结算与边缘机器鉴权门槛见 [ENV-07 Hosted Sandbox v1](../docs/03-technical/ENVIRONMENT_HOSTED_SANDBOX_V1.md)。
 
-默认数据库：`sandbox/data/bu2-sandbox.sqlite`。SQLite Schema v9 会为新库写入不可变环境 metadata，并保存只追加访问决策、租户 credential generation 与 reset 审计；错环境数据库拒绝启动。没有 metadata 的旧库必须先鉴别，再用一次性 `BU2_CLAIM_LEGACY_DB_ENVIRONMENT=true` 明确认领，不能默认解释为 Sandbox 或 Live。重启服务后资源、钱包、幂等结果、账本和 Receipt 均会恢复。领域写入先登记数据库 `processing` Claim，再以状态版本 CAS 把资源、余额、LedgerEvent、Webhook Outbox 和幂等终态一次提交；遗留 `processing` 会返回结果未知，禁止自动重放。
+默认数据库：`sandbox/data/bu2-sandbox.sqlite`。SQLite Schema v10 会为新库写入不可变环境 metadata、持久 Principal/Account/Agent 归属、只追加访问决策、租户 credential generation 与 reset 审计；错环境数据库拒绝启动。没有 metadata 的旧库必须先鉴别，再用一次性 `BU2_CLAIM_LEGACY_DB_ENVIRONMENT=true` 明确认领，不能默认解释为 Sandbox 或 Live。重启服务后资源、钱包、幂等结果、账本、Receipt 和身份归属均会恢复。领域写入先登记数据库 `processing` Claim，再以状态版本 CAS 把资源、余额、LedgerEvent、Webhook Outbox 和幂等终态一次提交；遗留 `processing` 会返回结果未知，禁止自动重放。
 
 ## 受控访问
 
 `local` 默认是显式开发开放模式；`sandbox/live` 默认是 `authenticated`。公开接口只有 health、environment 和 Receipt verify。外部凭据元数据通过 `BU2_API_CREDENTIALS_JSON` 注入，必须只包含 token SHA-256 摘要，不得包含原始 key；SDK/MCP 从独立的 `BU2_API_KEY` 读取原始 key。角色、字段和生成辅助函数见 [`ENVIRONMENT_CONTROLLED_ACCESS_V1.md`](../docs/03-technical/ENVIRONMENT_CONTROLLED_ACCESS_V1.md) 与 [`access-control.mjs`](access-control.mjs)。
+
+### F06a 持久身份与内部 Sandbox onboarding
+
+F06a 将配置中的 `tenant_id`、`principal_id`、`account_ids` 和 `agent_ids` 映射为 SQLite 中可重启恢复的 Principal、Account、Agent 和 credential binding 记录。启动时只会按当前凭证配置执行明确、幂等的映射；不会猜测历史交易的客户归属，也不会把原始 API key 写入数据库、镜像、日志或 `/v1/access` 响应。
+
+需要建立隔离的内部 Buyer/Seller 租户时，使用只包含摘要的 onboarding 文档：
+
+```bash
+# 文档只允许 token_sha256，不允许 token 原文
+npm run onboarding:bootstrap -- \
+  sandbox/onboarding.example.json \
+  --database ./data/bu2-sandbox.sqlite
+
+# 查看当前环境已持久化的归属，不返回 token digest
+npm run onboarding:inspect -- \
+  --environment sandbox \
+  --database ./data/bu2-sandbox.sqlite
+```
+
+`/v1/access` 会在认证成功后返回当前调用者的持久 Principal、Account 和 Agent 摘要；业务 Agent 仍不能调用 Operator 的租户重置、人工授权、结算或恢复权限。该 onboarding 只建立业务主体与受限凭证归属，不启用 Signer、不改变 `execution_disabled`，也不代表真实 Base Sepolia 资金验收已完成。
 
 ## 完整 Agent 交易演示
 

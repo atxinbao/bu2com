@@ -1,0 +1,75 @@
+{
+  "environment": "sandbox",
+  "requested_by": "usr_sandbox_operator",
+  "idempotency_key": "sandbox-internal-buyer-seller-v1",
+  "tenants": [
+    {
+      "tenant_id": "ten_internal_buyer",
+      "principal": {
+        "id": "usr_internal_buyer",
+        "kind": "human",
+        "display_name": "Internal Buyer Owner"
+      },
+      "accounts": [
+        {
+          "id": "acct_internal_buyer",
+          "display_name": "Internal Buyer Account"
+        }
+      ],
+      "agents": [
+        {
+          "id": "agt_internal_buyer",
+          "display_name": "Internal Buyer Agent"
+        }
+      ],
+      "credentials": [
+        {
+          "id": "key_internal_buyer",
+          "role": "agent",
+          "principal_id": "agt_internal_buyer",
+          "token_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "account_ids": [
+            "acct_internal_buyer"
+          ],
+          "agent_ids": [
+            "agt_internal_buyer"
+          ]
+        }
+      ]
+    },
+    {
+      "tenant_id": "ten_internal_seller",
+      "principal": {
+        "id": "usr_internal_seller",
+        "kind": "human",
+        "display_name": "Internal Seller Owner"
+      },
+      "accounts": [
+        {
+          "id": "acct_internal_seller",
+          "display_name": "Internal Seller Account"
+        }
+      ],
+      "agents": [
+        {
+          "id": "agt_internal_seller",
+          "display_name": "Internal Seller Agent"
+        }
+      ],
+      "credentials": [
+        {
+          "id": "key_internal_seller",
+          "role": "agent",
+          "principal_id": "agt_internal_seller",
+          "token_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "account_ids": [
+            "acct_internal_seller"
+          ],
+          "agent_ids": [
+            "agt_internal_seller"
+          ]
+        }
+      ]
+    }
+  ]
+}

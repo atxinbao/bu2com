@@ -22,6 +22,8 @@ ENV-05 为 BU2 的 Agent、开发者和运维入口建立统一的机器身份�
 
 每次非公开请求都会把 permission、主体、租户、结果、reason code、request/trace ID 写入只追加的 `access_decisions`。Agent/Developer 的 Account 与 Agent 声明在写入前校验，读取按交易参与者过滤；调用方不能通过请求体声明别人的身份。
 
+F06a 在不改变角色权限集合的前提下，把这些声明映射为 SQLite Schema v10 的持久 Principal、Account、Agent 和 credential binding。配置启动只允许按明确的 credential metadata 幂等补齐对应记录；服务端会拒绝环境、租户、主体、generation 或 claims 漂移。`GET /v1/access` 仅返回当前调用者的脱敏归属摘要，onboarding CLI 只接受 token SHA-256 摘要。
+
 ## 3. 凭据配置与客户端传输
 
 - Reference Server 从 `BU2_API_CREDENTIALS_JSON` 读取元数据数组；元数据包含 `token_sha256`、environment、tenant、principal、role、claims、generation、expiry 和 status，不包含原始 token。
@@ -53,7 +55,7 @@ Live 不提供该重置操作。任何凭据问题都不能通过改写交易事
 
 ## 7. 恢复
 
-若需要回退，先停止外部流量，再回退服务、SDK 与 MCP 制品。Schema v9 的访问审计和租户重置记录必须保留；不得删除 Ledger/Receipt、降低为外部 development-open、跨环境复用 key 或自动重复任何支付。Live 仍保持 `execution_disabled`。
+若需要回退，先停止外部流量，再回退服务、SDK 与 MCP 制品。Schema v10 的访问审计、租户重置、身份归属和 onboarding 记录必须保留；不得删除 Ledger/Receipt、降低为外部 development-open、跨环境复用 key 或自动重复任何支付。Live 仍保持 `execution_disabled`。
 
 ## 8. 后续
 

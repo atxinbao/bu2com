@@ -9,6 +9,7 @@ import {
   type Bu2RecoveryAction,
 } from "./errors.js";
 import type {
+  AccessIdentity,
   AuthorizationDecision,
   Bu2ClientOptions,
   Bu2MutationOptions,
@@ -320,6 +321,15 @@ export class Bu2Client {
         }),
     );
     return this.validateEnvironment(info, false);
+  }
+
+  getAccessIdentity(options: Bu2RequestOptions = {}): Promise<AccessIdentity> {
+    return this.execute({ name: "getAccessIdentity", mutation: false }, options, (signal) =>
+      this.api.GET("/access", {
+        params: { header: traceHeaders(options) },
+        signal,
+      }),
+    );
   }
 
   createQuote(body: CreateQuote, options: Bu2MutationOptions): Promise<Quote> {

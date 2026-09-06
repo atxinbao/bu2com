@@ -104,6 +104,7 @@ try {
 
 - `createQuote`
 - `getEnvironment`
+- `getAccessIdentity`
 - `createPaymentIntent`
 - `getPaymentIntent`
 - `decideAuthorization`

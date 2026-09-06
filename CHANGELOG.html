@@ -152,6 +152,29 @@
       <h2 id="unreleased">Unreleased</h2>
       <article class="release">
         <div class="release-head">
+          <div><h3>F06a · 持久 Account / Agent 归属与内部 Sandbox onboarding</h3><time datetime="2026-09-06">2026-09-06</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">把受控访问配置中的 Principal、Account 和 Agent 声明落到可重启恢复的身份记录，为后续资金来源、收款目标和 PaymentMandate 建立可信业务主体基础。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag added">Added</span>新增 SQLite Schema v10：持久 Principal、Account、Agent、credential binding 与 onboarding 审计记录，环境和租户归属不可静默漂移。</li>
+            <li><span class="tag added">Added</span>新增 `sandbox/onboarding.mjs` 与示例文档，按显式、幂等配置建立隔离 Buyer/Seller 租户；只接受 token SHA-256 摘要，不接受原始 token。</li>
+            <li><span class="tag changed">Changed</span>AccessController 在启动和每次认证时校验凭证绑定、主体生命周期、generation、环境、租户和 Account/Agent claims；`/v1/access` 返回脱敏持久归属摘要。</li>
+            <li><span class="tag governance">Boundary</span>不改变 PaymentMandate、5000/knownPayees 演示策略、Signer、x402 付款、Live 或 `execution_disabled`；未知历史交易不会被自动归属到新身份。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R2 · 涉及持久身份归属、访问边界和数据库迁移，不改变资金状态机</span></div>
+          <div><b>金融行为影响</b><span>默认 Sandbox 仍为 <code>execution_disabled</code>；Agent 不能获得 Operator 的批准、结算、恢复或租户重置权限</span></div>
+          <div><b>兼容性</b><span>API v0.3 仅向 <code>AccessIdentity</code> 增加可选持久归属摘要；旧交易资源和历史 Receipt 不重写</span></div>
+          <div><b>验证</b><span>专项身份持久化、重启、幂等、跨租户冒用、raw token 拒绝、凭证重置和 Agent 权限拒绝测试；完整回归随 PR 记录</span></div>
+          <div><b>恢复</b><span>迁移采用追加 Schema 版本；身份绑定冲突失败关闭，租户 reset 只递增 generation，不删除交易事实</span></div>
+        </div>
+      </article>
+      <article class="release">
+        <div class="release-head">
           <div><h3>Internal Sandbox Product Baseline · OrbStack 本地编排</h3><time datetime="2026-09-06">2026-09-06</time></div>
           <span class="status">Unreleased</span>
         </div>

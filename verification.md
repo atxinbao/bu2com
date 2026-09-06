@@ -622,3 +622,38 @@ npm --prefix sandbox run test:hosted-deployment
 - 未执行：云资源、DNS/TLS、托管 Secret、Activation、真实双向 Base Sepolia、外部 Agent 流量和 Hosted edge E2E 仍未执行。
 
 结论：外部验收包达到 **GO for R2 review**；ENV-07B 仍为 `Not yet accepted`，Epic 3 继续保持 Ready。
+
+## F06a 账户/Agent 持久归属与内部开发者接入验证
+
+日期：2026-09-06
+执行者：Codex
+
+### 变更范围
+
+本轮将 Account、Agent、Principal、Credential Binding 和 Onboarding Event 持久化为 Sandbox Schema v10，并把当前明确配置的凭证元数据幂等映射到持久身份。新增 onboarding CLI、`/v1/access` 脱敏身份摘要、OpenAPI/TypeScript SDK `getAccessIdentity()` 以及内部接入文档。
+
+### 验证结果
+
+- Reference Sandbox：112/112。
+- TypeScript SDK：10/10，generated/format/lint/typecheck/build 全部通过。
+- API 契约：63 invariants、6 MCP tools。
+- Deployment contract：2/2。
+- Operations：6/6。
+- Hosted Sandbox contract/runtime：8/8。
+- Clean-room：HTTP/SDK/MCP 3/3，均为 Local Simulation。
+- Prototype：lint 与 build 通过。
+- `git diff --check`：通过。
+- Onboarding CLI：bootstrap/inspect 通过，示例仅包含 `token_sha256`，不包含 raw token。
+
+### F06a 验收判断
+
+| 场景 | 结果 |
+| --- | --- |
+| 持久身份建档、幂等和重启恢复 | 通过 |
+| 跨租户或身份绑定冲突 | 拒绝并保持一致性 |
+| raw token 写入 onboarding | 拒绝 |
+| `/v1/access` 身份摘要 | 通过；不返回 token 或 digest |
+| Agent / Human Principal 分离 | 通过 |
+| 默认 Sandbox 执行边界 | 保持 `execution_disabled` |
+
+结论：F06a 达到 **GO for R2 independent human review**。本轮没有启用 Signer、真实付款、Live/Mainnet、Hosted 公网或托管能力；这些能力仍由后续 PR 和独立门禁控制。

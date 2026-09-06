@@ -2,6 +2,11 @@ import type { components, paths } from "./generated/openapi.js";
 
 export type Amount = components["schemas"]["Amount"];
 export type Authorization = components["schemas"]["Authorization"];
+export type AccessIdentity = components["schemas"]["AccessIdentity"];
+export type IdentityAccount = components["schemas"]["IdentityAccount"];
+export type IdentityAgent = components["schemas"]["IdentityAgent"];
+export type IdentityPrincipal = components["schemas"]["IdentityPrincipal"];
+export type IdentitySummary = components["schemas"]["IdentitySummary"];
 export type CreatePaymentIntent = components["schemas"]["CreatePaymentIntent"];
 export type CreateQuote = components["schemas"]["CreateQuote"];
 export type DeliveryEvidence = components["schemas"]["DeliveryEvidence"];
