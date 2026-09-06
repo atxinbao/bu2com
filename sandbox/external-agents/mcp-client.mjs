@@ -17,6 +17,7 @@ export async function connectBu2McpClient({
   baseUrl,
   environment = "local",
   localDevelopment = environment === "local",
+  apiKey,
   onDiagnostic = () => {},
 } = {}) {
   const transport = new StdioClientTransport({
@@ -27,12 +28,13 @@ export async function connectBu2McpClient({
       BU2_ENDPOINT: baseUrl ?? "http://127.0.0.1:3100",
       BU2_ENVIRONMENT: environment,
       ...(localDevelopment ? { BU2_LOCAL_DEVELOPMENT: "true" } : {}),
+      ...(apiKey ? { BU2_API_KEY: apiKey } : {}),
     },
     stderr: "pipe",
   });
   transport.stderr?.on("data", (chunk) => onDiagnostic(chunk.toString()));
 
-  const client = new Client({ name: "bu2-external-agent-sample", version: "0.2.0" });
+  const client = new Client({ name: "bu2-external-agent-sample", version: "0.3.0" });
   await client.connect(transport);
   let handshake;
   try {

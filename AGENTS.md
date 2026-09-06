@@ -131,7 +131,7 @@ Agent 在修改交易、资金、账本、授权、结算、退款、Receipt、W
 - Sandbox 与 Live 必须使用独立数据库、API 凭证、Signer、Receipt 信任域、Webhook、队列、存储、备份、Provider/RPC 和运行身份；只允许复用同一已验证软件制品与版本化模板。
 - 数据库环境 metadata、RPC chain id、资产、Signer、Provider 和 Receipt issuer 任一不一致时，停止资金启动并保留只读查询、观察与对账。
 - 旧 Receipt 的 `simulation/testnet` 字段、签名字节、schema 和 canonicalization 必须原样保留并按原版本验证；不得批量改名或重签历史。
-- 详细契约以 `docs/03-technical/SYSTEM_ENVIRONMENTS_V1.md`、ADR-0001 和环境验收矩阵为准。ENV-02/03 已由 PR #19/#20 合并；ENV-04 在 R2 审查合并前不得宣称隔离部署单元已获批准，更不得把本地容器证据表述为托管 Sandbox 或 Live 准入。
+- 详细契约以 `docs/03-technical/SYSTEM_ENVIRONMENTS_V1.md`、ADR-0001 和环境验收矩阵为准。ENV-02/03/04 已由 PR #19/#20/#21 合并；ENV-05 在 R2 审查合并前不得宣称受控入口已获批准，更不得把本地访问控制或容器证据表述为托管 Sandbox 或 Live 准入。
 
 ## 5. API、事件和版本兼容
 

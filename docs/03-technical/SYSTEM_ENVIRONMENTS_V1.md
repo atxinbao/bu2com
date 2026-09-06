@@ -2,7 +2,7 @@
 
 日期：2026-09-06
 执行者：Codex
-状态：F01 / ENV-01、ENV-02、ENV-03 已由 PR #18/#19/#20 批准；ENV-04 已实现，等待 R2 独立人工审查
+状态：F01 / ENV-01、ENV-02、ENV-03、ENV-04 已由 PR #18/#19/#20/#21 批准；ENV-05 已实现，等待 R2 独立人工审查
 适用范围：BU2 服务、API、SDK、MCP、Doctor、Receipt、部署与运营
 
 ## 1. 决策
@@ -91,7 +91,7 @@ ENV-03 已冻结版本化环境信息接口 `GET /v1/environment`，最小返回
   "environment_contract_version": "1.0",
   "chain_id": 84532,
   "network": "eip155:84532",
-  "api_contract_version": "0.2.0",
+  "api_contract_version": "0.3.0",
   "receipt_schema_versions": ["0.2", "0.3"],
   "execution_status": "execution_enabled",
   "public_capabilities": [],
@@ -151,8 +151,8 @@ PR local simulation / contract verification
 | F02 | 基础身份、数据所有权和凭证边界 | 可与 ENV-01 后续并行 |
 | ENV-02 | 环境注册表、配置装载、DB/RPC/Signer/Provider 断言 | 前置于新签名路径 |
 | ENV-03 | API/SDK/MCP/Doctor/Receipt 环境契约迁移 | ENV-02 后实施 |
-| ENV-04 | 隔离 Sandbox/Live 部署单元 | 模板不启用 Live 签名 |
-| ENV-05 | 受控开发者与运维入口 | 复用 F06/F08/F15 的身份和权限能力 |
+| ENV-04 | 隔离 Sandbox/Live 部署单元 | PR #21 已合并；模板不启用 Live 签名 |
+| ENV-05 | 受控开发者与运维入口 | 已实现；等待 R2 审查 |
 | ENV-06 | 制品提升、监控、备份与恢复演练 | 与 ENV-04 并行；Live execution disabled |
 | ENV-07 | 托管 Sandbox 双向 Base Sepolia 验收 | ENV-02–06 + F03–F16 对应能力 |
 | ENV-08 | 受限 Live 启用 | G-F、L01、G-L；独立 R3 授权 |
@@ -163,7 +163,7 @@ PR local simulation / contract verification
 
 F01/ENV-01 只冻结决策，不创建云资源、不配置 DNS、不部署服务、不修改历史数据、不启用 Live，也不执行测试网或主网支付。若决策未获批准，删除本次新增入口并恢复上层文档即可；交易、账本、数据库、Adapter 和 Receipt 均无需回滚。
 
-ENV-02/03 已由 PR #19/#20 合并，实现环境注册表、配置装载、Schema v8 数据库绑定、RPC/Signer/Provider 断言、API/SDK/MCP/Doctor/Evidence 预检和 Receipt v0.3；说明见[环境注册表与链隔离 v1](ENVIRONMENT_REGISTRY_AND_CHAIN_ISOLATION_V1.md)及[客户端与 Receipt 环境契约 v1](ENVIRONMENT_CLIENT_AND_RECEIPT_CONTRACT_V1.md)。ENV-04 已实现同一不可变镜像、两个隔离且 disarmed 的本地容器部署单元，等待 R2 审查；说明见 [ENV-04 隔离部署单元 v1](ENVIRONMENT_DEPLOYMENT_UNITS_V1.md)。旧 Receipt 仍保留原始 legacy 值、签名字节和解释规则。
+ENV-02/03 已由 PR #19/#20 合并，实现环境注册表、配置装载、Schema v8 数据库绑定、RPC/Signer/Provider 断言、客户端预检和 Receipt v0.3。ENV-04 已由 PR #21 合并，建立同一不可变镜像、两个隔离且 disarmed 的本地容器部署单元。ENV-05 在此基础上实现 API/SDK/MCP v0.3 的环境绑定机器凭据、角色/claims、Schema v9 访问审计、Sandbox 租户重置与脱敏支持包，等待 R2 审查；说明见[受控开发者与运维入口 v1](ENVIRONMENT_CONTROLLED_ACCESS_V1.md)。旧 Receipt 仍保留原始 legacy 值、签名字节和解释规则。
 
 ## 参考来源
 

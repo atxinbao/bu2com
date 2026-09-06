@@ -384,6 +384,7 @@ export async function runDoctor({
       baseUrl: configuration.endpoint,
       environment: configuration.environment,
       localDevelopment: configuration.localDevelopment,
+      apiKey: configuration.apiKey,
     });
     const tools = await mcp.listTools();
     const actual = tools.map(({ name }) => name).sort();

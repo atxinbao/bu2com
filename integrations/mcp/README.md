@@ -8,6 +8,10 @@
 
 This directory contains versioned host configuration for the BU2 stdio MCP Server. The current entrypoint is distributed only inside this repository; it is not a public npm package or a remotely hosted MCP service.
 
+Sandbox/Live Host 必须通过进程环境提供 `BU2_API_KEY`；Local development-open 不需要。MCP 只在公开 `/v1/environment` 预检通过后，把 key 发送给私有工具请求，并拒绝 HTTP 重定向。示例文件保持 Local 且不包含任何真实凭据。
+
+Sandbox/Live hosts must provide `BU2_API_KEY` through the process environment; Local development-open does not require it. MCP sends the key only on private tool requests after public `/v1/environment` preflight and rejects HTTP redirects. The checked-in examples remain Local and contain no real credentials.
+
 ## 1. 启动前提 / Prerequisites
 
 在仓库根目录安装依赖并启动 Reference Server：
@@ -129,6 +133,8 @@ The MCP initialize response also advertises the API version, MCP version, contra
 | `local` + `BU2_LOCAL_DEVELOPMENT=true` | Local Reference Server | 本地模拟 / local simulation |
 | `sandbox` | Base Sepolia Reference Server | gated testnet execution |
 | `live` | Base Mainnet Reference Server | read/reconcile only; execution disabled |
+
+`sandbox` 和 `live` 还必须设置至少 32 字符的 `BU2_API_KEY`，且 key 必须由目标环境签发。缺失、错环境、过期、吊销或已重置凭据均失败关闭。
 
 legacy `simulation/testnet/mainnet` 名称会在 MCP 进程启动前被拒绝。MCP 在启动和每次 Agent mutation 前读取 `/v1/environment`；不匹配或执行禁用时不会发送 mutation。六个 Agent 工具不包含人工授权和直接结算；未知写入结果不能自动重试。
 

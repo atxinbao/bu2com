@@ -26,7 +26,7 @@ function externalContext(args) {
   };
 }
 
-export async function executeBu2McpTool(baseUrl, name, args) {
+export async function executeBu2McpTool(baseUrl, name, args, { apiKey = null } = {}) {
   switch (name) {
     case "bu2_create_quote":
       return bu2Request(baseUrl, "/v1/quotes", {
@@ -42,6 +42,7 @@ export async function executeBu2McpTool(baseUrl, name, args) {
           amount: amount(args),
           expires_at: args.expires_at,
         },
+        apiKey,
       });
     case "bu2_create_payment_intent":
       return bu2Request(baseUrl, "/v1/payment_intents", {
@@ -56,11 +57,13 @@ export async function executeBu2McpTool(baseUrl, name, args) {
           purpose: args.purpose,
           ...(externalContext(args) ? { external_context: externalContext(args) } : {}),
         },
+        apiKey,
       });
     case "bu2_get_payment_status":
       return bu2Request(
         baseUrl,
         `/v1/payment_intents/${encodeURIComponent(args.payment_intent_id)}`,
+        { apiKey },
       );
     case "bu2_submit_delivery":
       return bu2Request(
@@ -74,10 +77,11 @@ export async function executeBu2McpTool(baseUrl, name, args) {
             evidence_hash: args.evidence_hash,
             ...(args.summary ? { summary: args.summary } : {}),
           },
+          apiKey,
         },
       );
     case "bu2_get_receipt":
-      return bu2Request(baseUrl, `/v1/receipts/${encodeURIComponent(args.receipt_id)}`);
+      return bu2Request(baseUrl, `/v1/receipts/${encodeURIComponent(args.receipt_id)}`, { apiKey });
     case "bu2_verify_receipt":
       return bu2Request(baseUrl, `/v1/receipts/${encodeURIComponent(args.receipt_id)}/verify`);
     default:
@@ -110,6 +114,7 @@ export function createBu2McpServer({
   baseUrl = process.env.BU2_ENDPOINT ?? process.env.BU2_SANDBOX_URL ?? "http://127.0.0.1:3100",
   environment = process.env.BU2_ENVIRONMENT,
   localDevelopment = process.env.BU2_LOCAL_DEVELOPMENT === "true",
+  apiKey = process.env.BU2_API_KEY,
   environmentInfo = null,
   fetchImpl = fetch,
 } = {}) {
@@ -117,6 +122,7 @@ export function createBu2McpServer({
     BU2_ENDPOINT: baseUrl,
     BU2_ENVIRONMENT: environment,
     ...(localDevelopment ? { BU2_LOCAL_DEVELOPMENT: "true" } : {}),
+    ...(apiKey ? { BU2_API_KEY: apiKey } : {}),
   });
   const activeEnvironmentInfo = environmentInfo ?? expectedEnvironmentInfo(configuration.environment);
   const mutationTools = new Set([
@@ -159,7 +165,9 @@ export function createBu2McpServer({
               );
             }
           }
-          const result = await executeBu2McpTool(configuration.endpoint, tool.name, args);
+          const result = await executeBu2McpTool(configuration.endpoint, tool.name, args, {
+            apiKey: configuration.apiKey,
+          });
           return {
             content: [{ type: "text", text: JSON.stringify(result) }],
             structuredContent: result,
@@ -199,7 +207,7 @@ function cliError(error) {
 
 function helpText() {
   return [
-    "BU2 MCP Server v0.2",
+    "BU2 MCP Server v0.3",
     "",
     "Usage: node sandbox/bin/bu2-mcp.mjs [--metadata | --preflight | --version | --help]",
     "",
@@ -207,6 +215,7 @@ function helpText() {
     "  BU2_ENDPOINT       BU2 Reference Server base URL (default http://127.0.0.1:3100)",
     "  BU2_ENVIRONMENT    sandbox or live; local requires BU2_LOCAL_DEVELOPMENT=true",
     "  BU2_LOCAL_DEVELOPMENT  true only for the local simulated Reference Server",
+    "  BU2_API_KEY        required for sandbox and live; never sent during preflight",
     "  BU2_SANDBOX_URL    deprecated alias for BU2_ENDPOINT",
   ].join("\n");
 }
@@ -249,6 +258,7 @@ export async function runBu2McpCli({
       baseUrl: configuration.endpoint,
       environment: configuration.environment,
       localDevelopment: configuration.localDevelopment,
+      apiKey: configuration.apiKey,
       environmentInfo: preflight,
       fetchImpl,
     }),

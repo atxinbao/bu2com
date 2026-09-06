@@ -18,8 +18,10 @@ import {
   validateBu2McpHandshake,
 } from "./external-agents/mcp-runtime.mjs";
 import { listen } from "./server.mjs";
+import { credentialMetadata } from "./access-control.mjs";
 
 const cliPath = fileURLToPath(new URL("./bin/bu2-mcp.mjs", import.meta.url));
+const TEST_API_KEY = `test-${"m".repeat(40)}`;
 
 function cliEnvironment(overrides = {}) {
   const environment = { ...process.env };
@@ -27,6 +29,7 @@ function cliEnvironment(overrides = {}) {
   delete environment.BU2_SANDBOX_URL;
   delete environment.BU2_ENVIRONMENT;
   delete environment.BU2_LOCAL_DEVELOPMENT;
+  delete environment.BU2_API_KEY;
   return { ...environment, ...overrides };
 }
 
@@ -92,7 +95,7 @@ test("stable MCP CLI preflights the endpoint before opening stdio", async (conte
   const preflight = JSON.parse(result.stdout);
   assert.equal(preflight.status, "compatible");
   assert.equal(preflight.environment, "local");
-  assert.equal(preflight.api_contract_version, "0.2.0");
+  assert.equal(preflight.api_contract_version, "0.3.0");
   assert.equal(preflight.environment_contract_version, "1.0");
   assert.equal(preflight.mcp_contract_version, mcpContract.version);
 });
@@ -104,11 +107,49 @@ test("MCP initialize handshake exposes and validates BU2 compatibility", async (
   mcp = await connectBu2McpClient({ baseUrl: running.url });
   assert.equal(mcp.handshake.server.name, mcpContract.name);
   assert.equal(mcp.handshake.server.version, mcpContract.version);
-  assert.equal(mcp.handshake.capability.api_contract_version, "0.2.0");
+  assert.equal(mcp.handshake.capability.api_contract_version, "0.3.0");
   assert.equal(mcp.handshake.capability.environment, "local");
   assert.equal(mcp.handshake.capability.chain_id, null);
   assert.equal(mcp.handshake.capability.mcp_contract_sha256, mcpContractSha256);
   assert.equal((await mcp.listTools()).length, 6);
+});
+
+test("MCP authenticates private Agent tools while keeping environment preflight public", async (context) => {
+  const token = `test-${"a".repeat(40)}`;
+  const credential = credentialMetadata(
+    {
+      token,
+      id: "key_mcp_agent",
+      tenant_id: "ten_mcp",
+      principal_id: "usr_mcp_agent",
+      role: "agent",
+      account_ids: ["acct_mcp_seller"],
+      agent_ids: ["agt_mcp_seller"],
+    },
+    "local",
+  );
+  const running = await listen({
+    port: 0,
+    dbPath: ":memory:",
+    accessMode: "authenticated",
+    accessCredentialsJson: JSON.stringify([credential]),
+  });
+  let mcp;
+  context.after(() => closeRunning(running, mcp));
+  mcp = await connectBu2McpClient({ baseUrl: running.url, apiKey: token });
+
+  const quote = await mcp.call("bu2_create_quote", {
+    seller_agent_id: "agt_mcp_seller",
+    payee_account_id: "acct_mcp_seller",
+    item_name: "Authenticated MCP dataset",
+    delivery_type: "dataset_access",
+    amount_value: 100,
+    currency: "USD",
+    expires_at: "2099-09-06T12:00:00Z",
+    idempotency_key: "mcp-authenticated-quote",
+  });
+  assert.match(quote.id, /^quo_/);
+  assert.equal(running.ledger.accessDecisionSummary("local").allowed > 0, true);
 });
 
 test("MCP rechecks execution status before a mutation and fails closed", async (context) => {
@@ -125,6 +166,7 @@ test("MCP rechecks execution status before a mutation and fails closed", async (
     baseUrl: running.url,
     environment: "sandbox",
     localDevelopment: false,
+    apiKey: TEST_API_KEY,
   });
 
   await assert.rejects(
@@ -216,7 +258,7 @@ test("stable MCP CLI rejects an incompatible API before starting stdio", async (
 test("preflight rejects environment and MCP contract mismatches", async () => {
   const info = {
     service: "bu2-reference-server",
-    api_contract_version: "0.2.0",
+    api_contract_version: "0.3.0",
     mcp_contract_versions: [mcpContract.version],
     ...expectedEnvironmentInfo("local"),
     receipt_issuer: {
@@ -271,6 +313,47 @@ test("stable MCP CLI rejects legacy and network-name environments before startup
   const error = JSON.parse(result.stderr);
   assert.equal(error.code, "environment_invalid");
   assert.equal(error.recovery, "fix_configuration");
+});
+
+test("stable MCP CLI requires an API key for Sandbox and Live configuration", async () => {
+  const result = await runCli(["--metadata"], {
+    BU2_ENVIRONMENT: "sandbox",
+  });
+  assert.equal(result.status, 1);
+  assert.equal(result.stdout, "");
+  const error = JSON.parse(result.stderr);
+  assert.equal(error.code, "credential_required");
+  assert.equal(error.recovery, "fix_configuration");
+  assert.equal(result.stderr.includes(TEST_API_KEY), false);
+});
+
+test("MCP endpoint preflight remains public and refuses redirects", async () => {
+  let requestOptions;
+  await preflightBu2Endpoint(
+    {
+      endpoint: "https://sandbox.example.test",
+      environment: "sandbox",
+      apiKey: TEST_API_KEY,
+    },
+    {
+      fetchImpl: async (_url, options) => {
+        requestOptions = options;
+        return Response.json({
+          service: "bu2-reference-server",
+          mcp_contract_versions: [mcpContract.version],
+          ...expectedEnvironmentInfo("sandbox"),
+          receipt_issuer: {
+            ...expectedEnvironmentInfo("sandbox").receipt_issuer,
+            verification_key_id: "key_mcp_public_preflight",
+            signature_algorithm: "Ed25519",
+            public_key: "mcp-public-preflight-key",
+          },
+        });
+      },
+    },
+  );
+  assert.equal(requestOptions.headers.authorization, undefined);
+  assert.equal(requestOptions.redirect, "error");
 });
 
 test("Host configuration examples point to the stable bounded stdio entry", () => {

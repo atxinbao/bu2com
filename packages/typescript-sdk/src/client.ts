@@ -83,6 +83,25 @@ function timeoutValue(value: number | undefined, fallback: number): number {
   return resolved;
 }
 
+function validateApiKey(
+  environment: Bu2ClientOptions["environment"],
+  value?: string,
+): string | null {
+  if (environment !== "local" && (!value || value.length < 32)) {
+    throw new Bu2ConfigurationError(
+      "apiKey with at least 32 characters is required for sandbox and live.",
+    );
+  }
+  if (value !== undefined && value.length < 32) {
+    throw new Bu2ConfigurationError("apiKey must contain at least 32 characters when provided.");
+  }
+  return value ?? null;
+}
+
+function publicRequest(pathname: string): boolean {
+  return pathname === "/v1/environment" || /^\/v1\/receipts\/[^/]+\/verify$/.test(pathname);
+}
+
 function timedSignal(input: AbortSignal | undefined, timeoutMs: number): TimedSignal {
   const controller = new AbortController();
   let timeoutReached = false;
@@ -165,9 +184,19 @@ export class Bu2Client {
     this.environment = options.environment;
     this.localDevelopment = options.environment === "local";
     this.defaultTimeoutMs = timeoutValue(options.defaultTimeoutMs, 30_000);
+    const apiKey = validateApiKey(options.environment, options.apiKey);
+    const fetchImpl = options.fetch ?? globalThis.fetch;
     this.api = createClient<paths>({
       baseUrl: this.baseUrl,
-      ...(options.fetch ? { fetch: options.fetch } : {}),
+      fetch: async (request) => {
+        const url = new URL(request.url);
+        if (!apiKey || publicRequest(url.pathname)) {
+          return fetchImpl(new Request(request, { redirect: "error" }));
+        }
+        const headers = new Headers(request.headers);
+        headers.set("authorization", `Bearer ${apiKey}`);
+        return fetchImpl(new Request(request, { headers, redirect: "error" }));
+      },
     });
   }
 
@@ -181,6 +210,12 @@ export class Bu2Client {
       info.chain_id !== expected.chain_id ? "chain_id" : null,
       info.network !== expected.network ? "network" : null,
       info.execution_backend !== expected.payment_adapter ? "execution_backend" : null,
+      info.access_contract_version !== "1.0" ? "access_contract_version" : null,
+      this.environment !== "local" && info.access_mode !== "authenticated" ? "access_mode" : null,
+      this.environment === "local" &&
+      !["development_open", "authenticated"].includes(info.access_mode)
+        ? "access_mode"
+        : null,
       info.receipt_issuer?.environment !== this.environment ? "receipt_issuer.environment" : null,
       info.receipt_issuer?.issuer_id !== `bu2-reference-server:${this.environment}`
         ? "receipt_issuer.issuer_id"
@@ -190,7 +225,7 @@ export class Bu2Client {
         ? "receipt_issuer.signature_algorithm"
         : null,
       !info.receipt_issuer?.public_key ? "receipt_issuer.public_key" : null,
-      info.api_contract_version !== "0.2.0" ? "api_contract_version" : null,
+      info.api_contract_version !== "0.3.0" ? "api_contract_version" : null,
       !info.receipt_schema_versions?.includes("0.3") ? "receipt_schema_versions" : null,
     ].filter((value): value is string => value !== null);
     if (mismatches.length > 0) {

@@ -524,3 +524,29 @@ Product v0.1 可作为客户访谈、交互原型和工程方案设计的输入�
 - 未执行：没有云资源、DNS、托管 Sandbox、API credential、钱包/Receipt 私钥、Webhook secret、Base Sepolia/Mainnet 付款、备份恢复或生产发布。
 
 结论：ENV-04 本地实现达到 **GO for R2 review**，关闭 E-T07 的本地部署挂载子范围并补强 disarmed container 证据；它不等于托管 Sandbox 或 Live 准入。合并后下一项为 ENV-05 受控开发者/运维入口，ENV-06 可并行推进制品提升、监控与恢复演练；Live/Mainnet 与真实资金继续 NO-GO。
+
+## ENV-05 受控开发者与运维入口验证
+
+日期：2026-09-06
+执行者：Codex
+
+- 合并基线：确认 ENV-04 PR #21 已合并，`main` 同步到 `360468045e2eec493e617db446e75d5806eec480`，本地 ENV-04 分支已删除；本工作位于 `feat/env05-controlled-access`。
+- Access Contract：外部 Sandbox/Live 固定 `authenticated`，Local 默认 `development_open`；Agent、Developer、Operator 权限和公开路由由机器契约约束。
+- 凭据：配置仅持有 SHA-256 token digest；缺失、未知、过期、吊销、错环境或被租户 generation reset 的 key 均失败关闭，错误与审计不包含原始 token。
+- 租户与角色：Agent/Developer 写入受 Account/Agent claims 限制，交易读取按参与方过滤；Agent 不能执行人工授权、结算、租户 reset 或支持包操作，Operator 权限不会自动授予普通 Agent。
+- 数据迁移：SQLite Schema v9 新增 tenant access state、只追加 access decisions 与幂等 tenant reset；目标 Sandbox 租户 reset 后旧 key 失效，其他租户、Operator、Ledger、Receipt 和链上事实保持不变。
+- 客户端：Agent Payment API、TypeScript SDK 与 MCP 升级到 v0.3；Sandbox/Live 强制 API key，公开 environment preflight 与 Receipt verify 不携带 key，私有请求使用 Bearer 且禁止自动跟随重定向。
+- 运维：Operator 支持包只返回粗粒度环境、版本、关联 ID、诊断计数与可选交易状态，不返回完整交易、路径、Authorization header、key、私钥、Webhook secret 或私有 payload。
+- Contract：`node docs/03-technical/validate-contract.mjs` 通过，56 项 invariant、6 个 MCP tool。
+- Reference Server：`npm --prefix sandbox test` 通过，109/109，0 失败。
+- TypeScript SDK：`npm --prefix packages/typescript-sdk test` 通过，generated、format、lint、typecheck、build 与 10/10 单元/HTTP 测试全部通过。
+- 部署契约：`npm --prefix sandbox run test:deployment-contract` 2/2 通过；Sandbox/Live 均为 `authenticated + execution_disabled`。
+- 容器验收：`npm --prefix sandbox run acceptance:deployment` 通过；同一不可变 image ID 启动两单元，无凭据 mutation 在领域写入前返回 401，错库与跨环境 Signer 失败关闭，日志无 secret，支付尝试 0 次，临时容器/卷/镜像已清理。
+- Clean-room：`npm --prefix sandbox run acceptance:clean-room` 通过；HTTP、SDK、MCP 三个全新 Local 项目均在时限内完成 settled 交易并验证 Receipt，源码不变且临时项目删除。
+- Prototype：`npm --prefix prototype run lint && npm --prefix prototype run build` 通过。
+- 文档浏览器：通过本地 HTTP 使用 Playwright CLI 渲染 PROJECT、GOVERNANCE、CHANGELOG，ENV-05 内容存在，控制台 0 error / 0 warning。
+- 静态质量：`git diff --check` 通过；53 个 Markdown/HTML 文件相对链接 0 失效；55 个本轮修改/新增文件未匹配私钥、OpenAI key 或原始 Bearer credential。
+- Graphify：`graphify update .` 完成 AST 图更新，结果为 2341 nodes、3614 edges、146 communities；未配置语义文档后端，因此没有把文档语义重标记表述为已完成。
+- 未执行：没有托管 edge E2E、云资源、DNS/TLS、正式 secret manager/凭据签发、Signer 装载、Base Sepolia/Mainnet 付款、生产发布或备份恢复；这些不属于 ENV-05 本地实现范围。
+
+结论：ENV-05 本地实现达到 **GO for R2 review**。E-T04 的 API key 环境绑定、E-T11、E-T12 和 E-T16 已有本地自动化证据；E-T15 的机器认证与 redirect fail-closed 子范围通过，托管 edge E2E 留 ENV-07。API key 不替代 LegalPrincipal/PaymentMandate，Live/Mainnet 与真实资金继续 NO-GO。R2 Domain + Architecture 人工审查合并后，下一项优先进入 ENV-06 制品提升、监控、备份与恢复演练。

@@ -39,6 +39,7 @@ services:
       BU2_PROVIDER_NETWORK: eip155:84532
       BU2_PROVIDER_SCHEME: exact
       BU2_EXECUTION_STATUS: execution_disabled
+      BU2_ACCESS_MODE: authenticated
     labels:
       com.bu2.deployment-unit: sandbox
       com.bu2.runtime-identity: bu2sandbox
@@ -68,6 +69,7 @@ services:
       BU2_PROVIDER_NETWORK: eip155:8453
       BU2_PROVIDER_SCHEME: exact
       BU2_EXECUTION_STATUS: execution_disabled
+      BU2_ACCESS_MODE: authenticated
     labels:
       com.bu2.deployment-unit: live
       com.bu2.runtime-identity: bu2live

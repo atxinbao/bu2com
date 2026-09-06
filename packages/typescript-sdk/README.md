@@ -1,4 +1,4 @@
-# @bu2/sdk · TypeScript SDK v0.2
+# @bu2/sdk · TypeScript SDK v0.3
 
 日期：2026-09-06
 执行者：Codex
@@ -7,7 +7,7 @@
 
 ## 中文
 
-`@bu2/sdk` 是 Agent Payment API v0.2.0 的 TypeScript 薄客户端。请求和响应类型由 [`openapi.yaml`](../../docs/03-technical/openapi.yaml) 自动生成，HTTP 调用使用 `openapi-fetch`；SDK 不复制交易状态机、不缓存并覆盖服务端事实，也不自动重试请求。
+`@bu2/sdk` 是 Agent Payment API v0.3.0 的 TypeScript 薄客户端。请求和响应类型由 [`openapi.yaml`](../../docs/03-technical/openapi.yaml) 自动生成，HTTP 调用使用 `openapi-fetch`；SDK 不复制交易状态机、不缓存并覆盖服务端事实，也不自动重试请求。
 
 ### 安装与验证
 
@@ -35,6 +35,18 @@ const bu2 = new Bu2Client({
 ```
 
 `baseUrl` 必须是以 `/v1` 结尾的绝对 HTTP(S) URL。新客户端对外只接受 `sandbox` 或 `live`；连接本机模拟服务必须显式使用 `localDevelopment: true`。每次 mutation 前，SDK 都会验证 `/v1/environment` 的环境、链、执行后端、契约和 Receipt issuer；不匹配或 execution disabled 时不会发送 mutation。
+
+Sandbox/Live 必须提供对应环境签发的 `apiKey`：
+
+```ts
+const bu2 = new Bu2Client({
+  baseUrl: "https://sandbox.api.bu2.com/v1",
+  environment: "sandbox",
+  apiKey: process.env.BU2_API_KEY!,
+});
+```
+
+SDK 不会把 key 发送给公开 `/v1/environment` 预检或公开 Receipt verify，并拒绝自动跟随重定向。不要把 key 写入源码、日志或仓库配置。
 
 ### 完成一笔交易
 
@@ -105,7 +117,7 @@ try {
 
 ## English
 
-`@bu2/sdk` is a thin TypeScript client for Agent Payment API v0.2.0. Request and response types are generated from [`openapi.yaml`](../../docs/03-technical/openapi.yaml), and HTTP transport is provided by `openapi-fetch`. The SDK does not own transaction state, overwrite server facts, or retry requests automatically.
+`@bu2/sdk` is a thin TypeScript client for Agent Payment API v0.3.0. Request and response types are generated from [`openapi.yaml`](../../docs/03-technical/openapi.yaml), and HTTP transport is provided by `openapi-fetch`. The SDK does not own transaction state, overwrite server facts, or retry requests automatically.
 
 ### Install and verify
 
@@ -133,6 +145,8 @@ const bu2 = new Bu2Client({
 ```
 
 `baseUrl` must be an absolute HTTP(S) URL ending in `/v1`. New external clients accept `sandbox` or `live`; connecting to a local simulated server requires explicit `localDevelopment: true`. Before every mutation, the SDK validates `/v1/environment`, including environment, chain, execution backend, contract versions, Receipt issuer, and execution status. A mismatch or disabled execution prevents the mutation from being sent.
+
+Sandbox and Live also require an environment-specific `apiKey`. The SDK never sends it to public environment preflight or public Receipt verification and refuses automatic redirects. Keep the key in an external secret store or process environment, never in source or logs.
 
 Every mutation requires a caller-owned `idempotencyKey`. On a write timeout, network error, or uncertain server response, the SDK returns `query_before_retry` and never replays the operation automatically. Use `getPaymentIntent`, `getTransaction`, or `getReceipt` to reconcile server state first.
 

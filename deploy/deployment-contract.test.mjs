@@ -21,12 +21,14 @@ const resolvedCompose = () =>
     ),
   );
 
-test("ENV-04 Compose resolves to one immutable artifact and two isolated disarmed units", () => {
+test("ENV-04/05 Compose resolves to one immutable artifact and two isolated authenticated units", () => {
   const compose = resolvedCompose();
   assert.deepEqual(validateResolvedDeployment(compose), { valid: true, errors: [] });
   assert.equal(compose.services.sandbox.image, digest);
   assert.equal(compose.services.live.image, digest);
   assert.notEqual(compose.services.sandbox.user, compose.services.live.user);
+  assert.equal(compose.services.sandbox.environment.BU2_ACCESS_MODE, "authenticated");
+  assert.equal(compose.services.live.environment.BU2_ACCESS_MODE, "authenticated");
 });
 
 test("ENV-04 deployment contract rejects shared state, mutable images, signer mounts and enabled Live", () => {
@@ -39,6 +41,7 @@ test("ENV-04 deployment contract rejects shared state, mutable images, signer mo
     compose.services.sandbox.labels["com.bu2.secret-namespace"];
   compose.services.live.environment.BU2_SANDBOX_DB = "/var/lib/bu2/sandbox/bu2.sqlite";
   compose.services.live.environment.BU2_EXECUTION_STATUS = "execution_enabled";
+  compose.services.live.environment.BU2_ACCESS_MODE = "development_open";
   compose.services.live.environment.X402_BUYER_PRIVATE_KEY = "blocked";
   compose.services.live.secrets = [{ source: "live-signer", target: "/run/secrets/signer" }];
 
@@ -48,6 +51,7 @@ test("ENV-04 deployment contract rejects shared state, mutable images, signer mo
     result.errors,
     [
       "artifact:image_reference_differs",
+      "live:access_mode_mismatch",
       "live:data_volume_mismatch",
       "live:database_path_mismatch",
       "live:execution_status_mismatch",

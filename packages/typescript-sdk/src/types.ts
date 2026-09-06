@@ -43,8 +43,8 @@ interface Bu2ClientBaseOptions {
 
 export type Bu2ClientOptions = Bu2ClientBaseOptions &
   (
-    | { environment: Bu2ExternalEnvironment; localDevelopment?: false }
-    | { environment: "local"; localDevelopment: true }
+    | { environment: Bu2ExternalEnvironment; localDevelopment?: false; apiKey: string }
+    | { environment: "local"; localDevelopment: true; apiKey?: string }
   );
 
 export interface Bu2RequestOptions {

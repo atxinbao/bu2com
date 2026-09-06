@@ -51,7 +51,7 @@ npm --prefix sandbox run doctor -- --receipt-id rcpt_...
 | `configuration` | endpoint 合法，环境为 `local/sandbox/live`；Local 明确确认 | 否 |
 | `endpoint` | `/v1/environment` 可达且属于 BU2 Reference Server | 否 |
 | `environment` | 环境、链、执行后端、execution status 与 Receipt issuer 一致 | 否 |
-| `contract` | API v0.2.0、environment v1.0、Receipt v0.3 与 MCP v0.2.0 兼容 | 否 |
+| `contract` | API v0.3.0、environment v1.0、Receipt v0.3 与 MCP v0.3.0 兼容 | 否 |
 | `mcp_startup` | 真实 stdio initialize、能力握手和 6 个冻结工具一致 | 否 |
 | `receipt_verification` | 验证工具可用，或对显式 Receipt ID 执行只读验证 | 否 |
 
@@ -125,7 +125,7 @@ Without `--receipt-id`, the doctor only confirms that MCP exposes and can call `
 | `configuration` | Endpoint is valid; environment is `local/sandbox/live`; Local is explicit | No |
 | `endpoint` | `/v1/environment` identifies a BU2 Reference Server | No |
 | `environment` | Environment, chain, backend, execution status, and Receipt issuer match | No |
-| `contract` | API v0.2.0, environment v1.0, Receipt v0.3, and MCP v0.2.0 are compatible | No |
+| `contract` | API v0.3.0, environment v1.0, Receipt v0.3, and MCP v0.3.0 are compatible | No |
 | `mcp_startup` | Real stdio initialize, capability handshake, and six frozen tools match | No |
 | `receipt_verification` | Verification tool is available, or a supplied Receipt ID is verified read-only | No |
 

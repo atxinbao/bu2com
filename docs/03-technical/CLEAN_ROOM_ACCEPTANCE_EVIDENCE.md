@@ -68,7 +68,7 @@ There were no failed steps in the final run, so `failures` and `recovery_actions
 ## 6. 金融与产品边界
 
 - Transaction Core、金额、状态机、PaymentMandate、Ledger、Webhook 和 Adapter 资金语义均未修改；新 Receipt 使用 v0.3 环境签名绑定。
-- HTTP、SDK 和 MCP 都调用同一 Agent Payment API v0.2.0；SDK/MCP 不拥有交易状态。
+- HTTP、SDK 和 MCP 当前都调用同一 Agent Payment API v0.3.0；SDK/MCP 不拥有交易状态。原 E2.4 结果 Schema 继续保持 v0.2.0，避免重写历史证据格式。
 - 人工授权和 BU2 结算保持显式控制面操作，Agent MCP 工具不自批授权、不直接结算。
 - 结果只证明 Local simulated execution 的重复接入能力，不构成公开分发、托管 Sandbox、Live/Mainnet、真实资金、托管或法律合规证明。
 

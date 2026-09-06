@@ -125,6 +125,29 @@ const schemas = {
       reason: { type: "string", minLength: 1, maxLength: 500 },
     },
   },
+  supportBundle: {
+    type: "object",
+    additionalProperties: false,
+    required: ["reason"],
+    properties: {
+      reason: { type: "string", minLength: 1, maxLength: 500 },
+      transaction_id: identifier("txn"),
+      request_id: identifier("req"),
+      trace_id: {
+        type: "string",
+        pattern: "^trc_[A-Za-z0-9_-]{8,251}$",
+        maxLength: 255,
+      },
+    },
+  },
+  tenantAccessReset: {
+    type: "object",
+    additionalProperties: false,
+    required: ["reason"],
+    properties: {
+      reason: { type: "string", minLength: 1, maxLength: 500 },
+    },
+  },
 };
 
 const ajv = new Ajv({ allErrors: true, strict: true });
