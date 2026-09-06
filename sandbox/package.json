@@ -18,6 +18,7 @@
     "test:operations": "node --test ../deploy/operations.test.mjs",
     "test:hosted-sandbox": "node --test ../deploy/hosted-sandbox.test.mjs",
     "test:hosted-deployment": "node --test ../deploy/hosted-sandbox-deployment.test.mjs",
+    "test:hosted-evidence-schema": "node --test ../deploy/hosted-sandbox-evidence-schema.test.mjs",
     "acceptance:deployment": "node ../deploy/acceptance.mjs",
     "acceptance:operations": "node ../deploy/operations-acceptance.mjs",
     "operations": "node ../deploy/operations-cli.mjs",

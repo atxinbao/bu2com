@@ -1,0 +1,65 @@
+{
+  "_instructions": "复制本文件后填写真实脱敏证据；不要把本模板直接作为验收证据提交。",
+  "schema_version": "1.0",
+  "record_type": "hosted_sandbox_evidence",
+  "candidate_sha256": "<candidate sha256>",
+  "api_origin": "https://api.sandbox.example",
+  "environment_document": {
+    "environment": "sandbox",
+    "chain_id": 84532,
+    "network": "eip155:84532",
+    "execution_backend": "x402",
+    "execution_status": "execution_enabled",
+    "access_mode": "authenticated",
+    "receipt_issuer": {
+      "id": "<receipt issuer id>"
+    }
+  },
+  "edge_machine_auth": {
+    "status_code": 200,
+    "interactive_challenge": false,
+    "redirect_count": 0
+  },
+  "failure_recovery": {
+    "duplicate_submission": {
+      "duplicate_funds": false,
+      "converged": true
+    },
+    "lost_response": {
+      "duplicate_funds": false,
+      "outcome": "reconciled"
+    }
+  },
+  "transactions": [
+    {
+      "direction": "buyer_to_seller",
+      "environment": "sandbox",
+      "chain_id": 84532,
+      "status": "settled",
+      "provider_reference": "0x<64 hex transaction hash>",
+      "receipt_verification": {
+        "signature_valid": true,
+        "issuer_trusted": true,
+        "settlement_confirmed": true,
+        "environment": "sandbox"
+      }
+    },
+    {
+      "direction": "seller_to_buyer",
+      "environment": "sandbox",
+      "chain_id": 84532,
+      "status": "settled",
+      "provider_reference": "0x<64 hex transaction hash>",
+      "receipt_verification": {
+        "signature_valid": true,
+        "issuer_trusted": true,
+        "settlement_confirmed": true,
+        "environment": "sandbox"
+      }
+    }
+  ],
+  "live": {
+    "included": false,
+    "execution_status": "execution_disabled"
+  }
+}

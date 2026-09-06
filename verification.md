@@ -610,3 +610,15 @@ npm --prefix sandbox run test:hosted-deployment
 ```
 
 结论：本地 Hosted Sandbox 部署准备达到 **GO for R2 review**；它只证明托管部署配置可审查，不代表 ENV-07B 的公网部署或真实 Testnet 证据已通过。
+
+## ENV-07B Hosted Sandbox 外部验收包验证
+
+日期：2026-09-06
+执行者：Codex
+
+- 本地交付：新增 `deploy/hosted-sandbox-runbook.md`、`deploy/hosted-sandbox-evidence.template.json` 和 `docs/03-technical/hosted-sandbox-evidence.schema.json`。
+- 证据边界：Schema 固定 Sandbox、Base Sepolia `84532`、x402、机器鉴权、双向交易、Receipt 三项信任、重复/丢响应处置和 Live 排除；禁止原始凭据、私钥、Bearer、Prompt 和完整交易载荷进入证据包。
+- 执行边界：Runbook 明确托管目标、DNS/TLS、Secret、Candidate、独立 Activation 和边缘机器鉴权的前置条件，以及 E-T13/E-T14/E-T15 的停止与恢复步骤。
+- 未执行：云资源、DNS/TLS、托管 Secret、Activation、真实双向 Base Sepolia、外部 Agent 流量和 Hosted edge E2E 仍未执行。
+
+结论：外部验收包达到 **GO for R2 review**；ENV-07B 仍为 `Not yet accepted`，Epic 3 继续保持 Ready。

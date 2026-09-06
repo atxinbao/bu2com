@@ -31,6 +31,9 @@ const operationsContract = JSON.parse(
 const hostedSandboxContract = JSON.parse(
   readFileSync(join(here, '../../deploy/hosted-sandbox-contract.json'), 'utf8'),
 );
+const hostedSandboxEvidenceSchema = JSON.parse(
+  readFileSync(join(here, 'hosted-sandbox-evidence.schema.json'), 'utf8'),
+);
 const openapi = readFileSync(join(here, 'openapi.yaml'), 'utf8');
 
 let assertions = 0;
@@ -187,6 +190,16 @@ assert(
     hostedSandboxContract.live.included === false &&
     hostedSandboxContract.live.execution_status === 'execution_disabled',
   'Hosted Sandbox evidence must be bilateral, machine accessible, and exclude Live',
+);
+assert(
+  hostedSandboxEvidenceSchema.$id ===
+      'https://bu2.com/schemas/hosted-sandbox-evidence-v1.0.json' &&
+    hostedSandboxEvidenceSchema.properties.schema_version.const ===
+      hostedSandboxContract.schema_version &&
+    hostedSandboxEvidenceSchema.properties.environment_document.properties.chain_id.const ===
+      hostedSandboxContract.chain_id &&
+    hostedSandboxEvidenceSchema.properties.live.properties.included.const === false,
+  'Hosted Sandbox Evidence Schema must match the runtime evidence contract',
 );
 assert(
   operationsContract.backup.mechanism === 'node_sqlite_online_backup' &&
