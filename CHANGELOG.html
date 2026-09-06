@@ -152,6 +152,30 @@
       <h2 id="unreleased">Unreleased</h2>
       <article class="release">
         <div class="release-head">
+          <div><h3>ENV-04 · 隔离 Sandbox / Live 部署单元</h3><time datetime="2026-09-06">2026-09-06</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">把已批准的环境与客户端契约落实为同一不可变容器镜像、两个独立且 disarmed 的部署单元；Sandbox 与 Live 分离运行身份、网络、SQLite 卷、数据路径、秘密命名空间、Provider scope 和备份 scope。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag added">Added</span>新增 Dockerfile、Compose 与 <code>environment-units.json</code> v1.0；Compose 只接受 SHA-256 镜像引用，Sandbox/Live 必须复用同一制品且不得共享状态边界。</li>
+            <li><span class="tag added">Added</span>新增静态部署契约与真实容器验收；同一镜像分别返回 Sandbox 84532、Live 8453，两个单元均为 <code>execution_disabled</code>。</li>
+            <li><span class="tag changed">Changed</span>Reference Server 升至 v0.14，增加显式容器监听地址和 SIGTERM/SIGINT 优雅关闭；默认本机监听仍为 loopback。</li>
+            <li><span class="tag governance">Boundary</span>Live 只在显式 profile 中创建，模板禁止 Signer 与 legacy DB claim；本变更没有创建云资源、DNS、凭证或托管环境，也没有执行测试网/主网支付。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R2 · 部署、数据库挂载、运行身份和环境信任边界，必须由 Domain + Architecture 独立人工审查后合并</span></div>
+          <div><b>金融行为影响</b><span>不改变金额、状态机、账本或 Provider 操作；两个部署单元都禁用执行且不加载 Signer</span></div>
+          <div><b>兼容性</b><span>API v0.2、SDK/MCP v0.2、Receipt v0.2/v0.3 与 SQLite Schema v8 不变；Reference Server 仅小版本升级</span></div>
+          <div><b>验证</b><span>部署契约 2/2、Contract 50 项、Reference Server 101/101、SDK 9/9、clean-room 3/3 与 Prototype lint/build；真实容器复用一个 image ID 启动两环境，错库和错 Signer 均在启动前拒绝且日志无 secret</span></div>
+          <div><b>恢复</b><span>停止并移除部署单元；保留环境数据库、账本和 Receipt，不复制跨环境数据、不重签、不重放支付</span></div>
+        </div>
+      </article>
+
+      <article class="release">
+        <div class="release-head">
           <div><h3>ENV-03 · 客户端与 Receipt 环境契约迁移</h3><time datetime="2026-09-06">2026-09-06</time></div>
           <span class="status">Unreleased</span>
         </div>

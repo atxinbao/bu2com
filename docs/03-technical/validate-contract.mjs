@@ -19,6 +19,9 @@ const cleanRoom = JSON.parse(
 const environmentContract = JSON.parse(
   readFileSync(join(here, 'environment-contract.json'), 'utf8'),
 );
+const deploymentUnits = JSON.parse(
+  readFileSync(join(here, '../../deploy/environment-units.json'), 'utf8'),
+);
 const openapi = readFileSync(join(here, 'openapi.yaml'), 'utf8');
 
 let assertions = 0;
@@ -147,6 +150,23 @@ assert(
     JSON.stringify(versions.receipt_supported) ===
       JSON.stringify(environmentContract.receipt_schema_versions),
   'Version manifest must match environment and Receipt compatibility contracts',
+);
+assert(
+  versions.environment_deployment_units === deploymentUnits.schema_version,
+  'Version manifest must match the environment deployment-unit contract',
+);
+assert(
+  deploymentUnits.artifact_policy.mode === 'single_immutable_image' &&
+    deploymentUnits.units.sandbox.execution_status === 'execution_disabled' &&
+    deploymentUnits.units.live.execution_status === 'execution_disabled',
+  'Sandbox and Live deployment units must reuse one immutable artifact and remain disarmed',
+);
+assert(
+  deploymentUnits.must_not_share.every(
+    (field) => deploymentUnits.units.sandbox[field] !== deploymentUnits.units.live[field],
+  ) &&
+    deploymentUnits.units.live.signer_mount === 'forbidden',
+  'Sandbox and Live deployment units must not share trust boundaries or mount a Live signer',
 );
 assert(openapi.includes('/environment:'), 'OpenAPI must expose environment preflight');
 assert(

@@ -2,7 +2,7 @@
 
 日期：2026-09-06
 执行者：Codex
-状态：ENV-03 已实现，等待 R2 Domain + Architecture 审查
+状态：Accepted · PR #20（2026-09-06）
 风险等级：R2
 
 ## 1. 目标与边界
@@ -76,4 +76,4 @@ Settlement recovery 是查询式恢复，不创建第二笔付款，因此即使
 
 建议部署顺序：先部署支持 `/v1/environment` 和 Receipt schema registry 的服务，再升级 Doctor/MCP/SDK，最后允许新 mutation。若回退应用版本，旧 Receipt v0.2 继续可验证；已签发的 v0.3 Receipt 与账本事实不得删除或重签，应保持新验证器只读可用。不得用回滚触发支付重放、跨环境数据库装载或环境自动降级。
 
-下一项为 ENV-04 隔离 Sandbox/Live 部署单元；Live 继续 `execution_disabled`。
+ENV-04 已实现隔离 Sandbox/Live 容器部署单元，等待 R2 审查；Live 继续 `execution_disabled`。

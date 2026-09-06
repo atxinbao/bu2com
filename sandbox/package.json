@@ -1,6 +1,6 @@
 {
   "name": "@bu2/reference-sandbox",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "private": true,
   "type": "module",
   "bin": {
@@ -13,6 +13,8 @@
   "scripts": {
     "start": "node server.mjs",
     "test": "node --test *.test.mjs",
+    "test:deployment-contract": "node --test ../deploy/deployment-contract.test.mjs",
+    "acceptance:deployment": "node ../deploy/acceptance.mjs",
     "demo": "node demo-agents.mjs",
     "demo:external": "node external-agents/demo.mjs",
     "demo:x402": "node demo-x402-agents.mjs",

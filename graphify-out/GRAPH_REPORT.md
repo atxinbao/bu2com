@@ -1,16 +1,16 @@
 # Graph Report - bu2com  (2026-09-06)
 
 ## Corpus Check
-- 182 files · ~96,118 words
+- 189 files · ~98,871 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 2243 nodes · 3446 edges · 143 communities (136 shown, 3 thin omitted)
-- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 30 edges (avg confidence: 0.81)
+- 2286 nodes · 3500 edges · 143 communities (135 shown, 3 thin omitted)
+- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 31 edges (avg confidence: 0.81)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `2353e950`
+- Built from commit: `d9c65b84`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -30,7 +30,7 @@
 - scripts
 - BU2 Task-first P0 正式用户测试方案（已废止）
 - components.json
-- x402.test.mjs
+- x402-wallet.mjs
 - BU2 MVP 产品需求文档 v0.3（Transaction-first）
 - utils.ts
 - combobox.tsx
@@ -62,7 +62,7 @@
 - BU2 信息架构 v0.2（Transaction-first）
 - BU2 Task-first P0 产品基线（已废止）
 - button.tsx
-- BU2 Reference Server v0.13 / x402 Sandbox v0.5
+- BU2 Reference Server v0.14 / x402 Sandbox v0.5
 - 1. 首发客户画像
 - SqliteLedger
 - layout.tsx
@@ -75,7 +75,7 @@
 - bubble.tsx
 - properties
 - clean-room.mjs
-- x402-adapter.mjs
+- X402PaymentAdapter
 - Phase 0 Epic 2：Developer Integration Scale
 - Phase 0 Epic 3：External Pilot Readiness & Evidence
 - 03-technical/README.md
@@ -94,7 +94,7 @@
 - required
 - validate-contract.mjs
 - failed
-- required
+- acceptance.mjs
 - compilerOptions
 - $ref
 - English
@@ -105,7 +105,7 @@
 - 中文
 - properties
 - null
-- enum
+- properties
 - properties
 - properties
 - BU2 P0 可点击原型
@@ -123,7 +123,7 @@
 - clean-room/mcp-client.mjs
 - listen
 - step
-- doctor-result.schema.json
+- 6. P0 功能需求
 - failure
 - clean-room-evidence.schema.json
 - summary
@@ -138,22 +138,21 @@
 - BU2 x402 Testnet 可信执行 v0.1
 - required
 - BU2 Clean-room Integration Samples / 接入样例
-- BU2 产品文档
+- observability.mjs
 - BU2 环境验收矩阵 v1
 - BU2 客户端与 Receipt 环境契约 v1
 - toggle-group.tsx
 - BU2 环境注册表与链隔离 v1
 - checks
 - required
-- 5. 正式测试任务
+- ENV-04：隔离 Sandbox / Live 部署单元 v1
 - marker.tsx
 - paths
 - started_at
-- definitions
-- properties
-- 3. 产品原则
-- enum
-- type
+- doctor-result.schema.json
+- BU2 ENV-04 Deployment Reference
+- 7. 原型实验
+- BU2 Transaction-first P0 验收方案
 
 ## God Nodes (most connected - your core abstractions)
 1. `cn()` - 343 edges
@@ -170,14 +169,14 @@
 ## Surprising Connections (you probably didn't know these)
 - `Agent 预算与费用治理` --rationale_for--> `Agent Wallet`  [INFERRED]
   README.md → docs/01-business-plan/BU2_AI_Agent_Wallet_BP_v0.1.pdf
+- `resolvedCompose()` --indirect_call--> `digest()`  [INFERRED]
+  deploy/deployment-contract.test.mjs → sandbox/x402-adapter.mjs
 - `Agent 开发者与 AI 团队` --conceptually_related_to--> `Agent 预算与费用治理`  [EXTRACTED]
   docs/01-business-plan/BU2_AI_Agent_Wallet_BP_v0.1.pdf → README.md
 - `非托管与预算编排优先` --rationale_for--> `Agent 预算与费用治理`  [EXTRACTED]
   docs/01-business-plan/BU2_AI_Agent_Wallet_BP_v0.1.pdf → README.md
 - `Policy Engine` --conceptually_related_to--> `Agent 支付权限`  [EXTRACTED]
   docs/01-business-plan/BU2_AI_Agent_Wallet_BP_v0.1.pdf → README.md
-- `BU2` --conceptually_related_to--> `AI Agent 财务与支付治理平台`  [EXTRACTED]
-  README.md → docs/01-business-plan/BU2_AI_Agent_Wallet_BP_v0.1.pdf
 
 ## Import Cycles
 - None detected.
@@ -239,23 +238,23 @@ Nodes (31): compilerOptions, allowJs, esModuleInterop, incremental, isolatedModu
 
 ### Community 12 - "scripts"
 Cohesion: 0.04
-Nodes (46): ajv, ajv-formats, canonicalize, express, @modelcontextprotocol/client, @modelcontextprotocol/server, bin, bu2-doctor (+38 more)
+Nodes (48): ajv, ajv-formats, canonicalize, express, @modelcontextprotocol/client, @modelcontextprotocol/server, bin, bu2-doctor (+40 more)
 
 ### Community 13 - "BU2 Task-first P0 正式用户测试方案（已废止）"
-Cohesion: 0.14
-Nodes (14): 10. 测试结论分级, 11. 测试完成后的交付物, 1. 测试目标, 2. 目标参与者, 3. 测试设置, 4. 主持人开场脚本, 6. 结束访谈问题, 7. 单场记录表 (+6 more)
+Cohesion: 0.09
+Nodes (22): 10. 测试结论分级, 11. 测试完成后的交付物, 1. 测试目标, 2. 目标参与者, 3. 测试设置, 4. 主持人开场脚本, 5. 正式测试任务, 6. 结束访谈问题 (+14 more)
 
 ### Community 14 - "components.json"
 Cohesion: 0.09
 Nodes (21): aliases, components, hooks, lib, ui, utils, iconLibrary, menuAccent (+13 more)
 
-### Community 15 - "x402.test.mjs"
-Cohesion: 0.08
-Nodes (24): createX402Merchant(), defaultPayTo(), listenX402Merchant(), X402_FACILITATOR, X402_NETWORK, X402_PRICE, capability, challenge (+16 more)
+### Community 15 - "x402-wallet.mjs"
+Cohesion: 0.11
+Nodes (20): createX402Merchant(), defaultPayTo(), listenX402Merchant(), X402_FACILITATOR, X402_NETWORK, X402_PRICE, capability, challenge (+12 more)
 
 ### Community 16 - "BU2 MVP 产品需求文档 v0.3（Transaction-first）"
-Cohesion: 0.10
-Nodes (20): 1. 目标, 2. 目标用户, 3. P0 成功标准, 4. 核心对象, 5.1 Agent 付款, 5.2 Agent 收款, 5. 核心流程, 6. P0 功能需求 (+12 more)
+Cohesion: 0.18
+Nodes (11): 1. 目标, 2. 目标用户, 3. P0 成功标准, 4. 核心对象, 5.1 Agent 付款, 5.2 Agent 收款, 5. 核心流程, 7. P0 页面 (+3 more)
 
 ### Community 17 - "utils.ts"
 Cohesion: 0.09
@@ -270,8 +269,8 @@ Cohesion: 0.10
 Nodes (21): rules, import/no-anonymous-default-export, no-array-constructor, no-var, prefer-const, prefer-rest-params, prefer-spread, react/display-name (+13 more)
 
 ### Community 20 - "BU2 指标与验证计划 v0.1"
-Cohesion: 0.10
-Nodes (19): 1. 验证目标, 2. 北极星指标, 3. 漏斗指标, 4. 价值指标, 5. 可靠性指标, 6. 客户访谈计划, 7. 原型实验, 8. Go / Iterate / Stop 门槛 (+11 more)
+Cohesion: 0.14
+Nodes (14): 1. 验证目标, 2. 北极星指标, 3. 漏斗指标, 4. 价值指标, 5. 可靠性指标, 6. 客户访谈计划, 8. Go / Iterate / Stop 门槛, 9. 90 天验证节奏 (+6 more)
 
 ### Community 21 - "page.tsx"
 Cohesion: 0.09
@@ -343,7 +342,7 @@ Nodes (10): categories, correctness, env, browser, builtin, node, options, typeA
 
 ### Community 38 - "README 重构与单人 R3 治理验证"
 Cohesion: 0.06
-Nodes (31): Agent Payment API Contract v0.1 验证, BU2 Product v0.1 验证结论, docs/README 当前目录对齐验证, E1.0 Transaction API v1 冻结验证, E1.1 Webhook 可靠性闭环验证, E1.2 交易链路可观测性验证, E1.3 x402 Testnet 失败恢复验证, E1.4 外部 Buyer / Seller Agent 接入样例验证 (+23 more)
+Nodes (32): Agent Payment API Contract v0.1 验证, BU2 Product v0.1 验证结论, docs/README 当前目录对齐验证, E1.0 Transaction API v1 冻结验证, E1.1 Webhook 可靠性闭环验证, E1.2 交易链路可观测性验证, E1.3 x402 Testnet 失败恢复验证, E1.4 外部 Buyer / Seller Agent 接入样例验证 (+24 more)
 
 ### Community 39 - "client.ts"
 Cohesion: 0.07
@@ -354,8 +353,8 @@ Cohesion: 0.20
 Nodes (10): 1. 产品定位, 2. P0 核心闭环, 3. 核心对象, 4. 不可破坏契约, 5. 状态机, 6. P0 产品页面, 7. P0 演示验收, 8. P0 非目标 (+2 more)
 
 ### Community 41 - "BU2 产品战略 v0.1"
-Cohesion: 0.22
-Nodes (9): 1. 产品愿景, 2. 当前产品切口, 4.1 MVP 范围, 4.2 MVP 明确不做, 4. 产品范围, 5. 阶段路线, 6. 核心假设, 7. 北极星价值 (+1 more)
+Cohesion: 0.12
+Nodes (16): 1. 产品愿景, 2. 当前产品切口, 3.1 先治理，后支付, 3.2 模型提出理由，规则决定权限, 3.3 默认最小权限, 3.4 任务是最小归因单元, 3.5 协议中立, 3.6 证据优先 (+8 more)
 
 ### Community 42 - "navigation-menu.tsx"
 Cohesion: 0.22
@@ -377,9 +376,9 @@ Nodes (9): 1. 产品定位, 2. 连续交付顺序, 3. 核心对象, 4. 不可破
 Cohesion: 0.12
 Nodes (16): Button(), buttonVariants, Calendar(), CalendarDayButton(), MessageScroller(), MessageScrollerButton(), MessageScrollerContent(), MessageScrollerItem() (+8 more)
 
-### Community 47 - "BU2 Reference Server v0.13 / x402 Sandbox v0.5"
+### Community 47 - "BU2 Reference Server v0.14 / x402 Sandbox v0.5"
 Cohesion: 0.17
-Nodes (12): BU2 Reference Server v0.13 / x402 Sandbox v0.5, x402 沙盒商户, 三路径 clean-room 验收, 启动, 启动完整 x402 BU2 链路, 外部 Buyer / Seller Agent 与 MCP, 完整 Agent 交易演示, 恢复未知 x402 结算 (+4 more)
+Nodes (12): BU2 Reference Server v0.14 / x402 Sandbox v0.5, x402 沙盒商户, 三路径 clean-room 验收, 启动, 启动完整 x402 BU2 链路, 外部 Buyer / Seller Agent 与 MCP, 完整 Agent 交易演示, 恢复未知 x402 结算 (+4 more)
 
 ### Community 48 - "1. 首发客户画像"
 Cohesion: 0.15
@@ -387,7 +386,7 @@ Nodes (12): 1. 首发客户画像, 2. 优先场景, 3. 端到端使用故事, 4.
 
 ### Community 49 - "SqliteLedger"
 Cohesion: 0.07
-Nodes (7): canonical(), immediateTransaction(), nowIso(), parse(), requestFingerprint(), secretFingerprint(), SqliteLedger
+Nodes (8): canonical(), immediateTransaction(), nowIso(), parse(), requestFingerprint(), secretFingerprint(), SqliteLedger, persistAuthorization()
 
 ### Community 50 - "layout.tsx"
 Cohesion: 0.25
@@ -402,12 +401,12 @@ Cohesion: 0.25
 Nodes (8): plugins, eslint, import, jsx-a11y, nextjs, oxc, typescript, unicorn
 
 ### Community 53 - "02-product/README.md"
-Cohesion: 0.16
-Nodes (4): BU2 Transaction-first P0 验收方案, 主路径, 结论规则, 辅助路径
+Cohesion: 0.15
+Nodes (5): BU2 产品文档, 产品定义, 产品阶段, 当前状态, 文档导航
 
 ### Community 54 - "ApiError"
-Cohesion: 0.10
-Nodes (30): ajv, amount, decodeCursor(), encodeCursor(), paginateTransactions(), schemas, validateBody(), validateIdempotencyKey() (+22 more)
+Cohesion: 0.14
+Nodes (25): ajv, amount, decodeCursor(), encodeCursor(), paginateTransactions(), schemas, validateBody(), validateIdempotencyKey() (+17 more)
 
 ### Community 55 - "BU2 x402 Base Sepolia 测试钱包"
 Cohesion: 0.25
@@ -429,9 +428,9 @@ Nodes (11): properties, const, const, deletion, persistence, remote_enabled, ret
 Cohesion: 0.12
 Nodes (23): childEnvironment(), cleanRoomSchema, closeReferenceServer(), contractVersions, executeFile, integrationDir, mcpEntry, parseClientResult() (+15 more)
 
-### Community 60 - "x402-adapter.mjs"
-Cohesion: 0.21
-Nodes (9): assertExecutionEnabled(), digest(), expectedAtomicUsdc(), normalizedAddress(), normalizedResourceUrl(), paymentResourceUrl(), reference(), X402_BASE_SEPOLIA_USDC (+1 more)
+### Community 60 - "X402PaymentAdapter"
+Cohesion: 0.31
+Nodes (4): digest(), expectedAtomicUsdc(), reference(), X402PaymentAdapter
 
 ### Community 61 - "Phase 0 Epic 2：Developer Integration Scale"
 Cohesion: 0.09
@@ -474,8 +473,8 @@ Cohesion: 0.14
 Nodes (5): SimulatedPaymentAdapter, stack(), quoteInput, stack(), WebhookDispatcher
 
 ### Community 72 - "properties"
-Cohesion: 0.18
-Nodes (11): type, properties, code, recovery, request_id, trace_id, type, pattern (+3 more)
+Cohesion: 0.12
+Nodes (16): type, properties, code, recovery, request_id, retry, trace_id, type (+8 more)
 
 ### Community 73 - "definitions"
 Cohesion: 0.14
@@ -494,16 +493,16 @@ Cohesion: 0.14
 Nodes (15): analytics, environment, schema_version, started_at, required, enum, checks, configuration (+7 more)
 
 ### Community 77 - "validate-contract.mjs"
-Cohesion: 0.20
-Nodes (8): cleanRoom, doctor, environmentContract, flow, here, mcp, openapi, versions
+Cohesion: 0.18
+Nodes (9): cleanRoom, deploymentUnits, doctor, environmentContract, flow, here, mcp, openapi (+1 more)
 
 ### Community 78 - "failed"
 Cohesion: 0.18
 Nodes (11): maximum, minimum, type, maximum, minimum, type, failed, passed (+3 more)
 
-### Community 79 - "required"
-Cohesion: 0.53
-Nodes (6): required, required, duration_ms, error_code, stage, result_category
+### Community 79 - "acceptance.mjs"
+Cohesion: 0.10
+Nodes (20): baseLiveVariables, command(), composeFile, createdContainers, here, iidFile, root, runFaultContainer() (+12 more)
 
 ### Community 80 - "compilerOptions"
 Cohesion: 0.14
@@ -545,9 +544,9 @@ Nodes (14): const, const, const, format, type, const, properties, environment (+
 Cohesion: 0.22
 Nodes (10): null, string, receipt_id, receipt_valid, transaction_status, pattern, type, type (+2 more)
 
-### Community 90 - "enum"
-Cohesion: 0.24
-Nodes (10): failed, passed, receipt_verification, result, enum, enum, enum, blocked (+2 more)
+### Community 90 - "properties"
+Cohesion: 0.13
+Nodes (18): $ref, failed, passed, properties, failure, receipt_verification, result, schema_version (+10 more)
 
 ### Community 91 - "properties"
 Cohesion: 0.22
@@ -590,8 +589,8 @@ Cohesion: 0.20
 Nodes (10): analytics, environment, execution_backend, schema_version, required, environment_contract_version, generated_at, max_elapsed_ms (+2 more)
 
 ### Community 106 - "null"
-Cohesion: 0.21
-Nodes (12): enum, type, type, null, string, type, environment, receipt_issuer_id (+4 more)
+Cohesion: 0.13
+Nodes (18): type, enum, type, type, null, string, enum, type (+10 more)
 
 ### Community 107 - "domain.mjs"
 Cohesion: 0.20
@@ -606,16 +605,16 @@ Cohesion: 0.25
 Nodes (4): client, startedAt, steps, transport
 
 ### Community 110 - "listen"
-Cohesion: 0.19
-Nodes (16): sdkServer(), assertSignerBinding(), configurationError(), configured(), ENVIRONMENT_CONTRACT, ENVIRONMENT_CONTRACT_VERSION, ENVIRONMENT_REGISTRY, EXECUTION_DISABLED (+8 more)
+Cohesion: 0.12
+Nodes (23): sdkServer(), assertSignerBinding(), configurationError(), configured(), ENVIRONMENT_CONTRACT, ENVIRONMENT_CONTRACT_VERSION, ENVIRONMENT_REGISTRY, EXECUTION_DISABLED (+15 more)
 
 ### Community 111 - "step"
 Cohesion: 0.29
 Nodes (7): step, duration_ms, additionalProperties, required, type, name, status
 
-### Community 112 - "doctor-result.schema.json"
-Cohesion: 0.29
-Nodes (6): additionalProperties, allOf, $id, $schema, title, type
+### Community 112 - "6. P0 功能需求"
+Cohesion: 0.22
+Nodes (9): 6. P0 功能需求, F01 Agent Identity, F02 Wallet 与限额, F03 Payment Mandate, F04 Quote 与 Payment Intent, F05 Authorization 与资金预留, F06 Delivery 与 Settlement, F07 Receipt 与账本 (+1 more)
 
 ### Community 113 - "failure"
 Cohesion: 0.29
@@ -646,8 +645,8 @@ Cohesion: 0.15
 Nodes (7): toast, ToastAction(), ToastClose(), ToastContent(), ToastDescription(), ToastTitle(), ToastViewport()
 
 ### Community 121 - "properties"
-Cohesion: 0.13
-Nodes (15): properties, enum, enum, enum, execution_backend, execution_status, network, version (+7 more)
+Cohesion: 0.15
+Nodes (13): enum, properties, enum, enum, chain_id, execution_backend, execution_status, version (+5 more)
 
 ### Community 122 - "BU2 Transaction Atomicity v0.1"
 Cohesion: 0.22
@@ -669,9 +668,9 @@ Nodes (10): node, versions, additionalProperties, required, type, api_contract, 
 Cohesion: 0.67
 Nodes (3): BU2 Clean-room Integration Samples / 接入样例, 自动验收 / Automated acceptance, 路径边界 / Path boundaries
 
-### Community 127 - "BU2 产品文档"
-Cohesion: 0.40
-Nodes (5): BU2 产品文档, 产品定义, 产品阶段, 当前状态, 文档导航
+### Community 127 - "observability.mjs"
+Cohesion: 0.26
+Nodes (6): CATEGORIES, classifyOperationalError(), createTraceId(), isTraceId(), Observability, sanitize()
 
 ### Community 128 - "BU2 环境验收矩阵 v1"
 Cohesion: 0.50
@@ -697,9 +696,9 @@ Nodes (11): items, maxItems, minItems, type, $ref, checks, records, items (+3 mo
 Cohesion: 0.20
 Nodes (10): additionalProperties, required, type, persistence, remote_enabled, retention, upload_attempted, analytics (+2 more)
 
-### Community 134 - "5. 正式测试任务"
-Cohesion: 0.25
-Nodes (8): 5. 正式测试任务, UT-01 识别工作重点, UT-02 解释任务费用, UT-03 理解治理模式, UT-04 处理异常, UT-05 验证决策结果, UT-06 检查另一项异常, UT-07 语言切换
+### Community 134 - "ENV-04：隔离 Sandbox / Live 部署单元 v1"
+Cohesion: 0.29
+Nodes (7): 1. 目标与结论, 2. 制品与部署边界, 3. 机器契约, 4. 自动化验收, 5. 发布、失败与恢复, 6. 后续工作, ENV-04：隔离 Sandbox / Live 部署单元 v1
 
 ### Community 135 - "marker.tsx"
 Cohesion: 0.50
@@ -713,42 +712,38 @@ Nodes (4): maxItems, minItems, type, paths
 Cohesion: 0.67
 Nodes (3): started_at, format, type
 
-### Community 138 - "definitions"
-Cohesion: 0.25
-Nodes (8): additionalProperties, type, additionalProperties, type, definitions, analyticsRecord, check, stage
+### Community 138 - "doctor-result.schema.json"
+Cohesion: 0.11
+Nodes (20): additionalProperties, allOf, additionalProperties, required, type, additionalProperties, required, type (+12 more)
 
-### Community 139 - "properties"
-Cohesion: 0.25
-Nodes (8): $ref, properties, failure, schema_version, started_at, const, format, type
+### Community 139 - "BU2 ENV-04 Deployment Reference"
+Cohesion: 0.67
+Nodes (3): BU2 ENV-04 Deployment Reference, 手工查看 disarmed 单元, 验证
 
-### Community 140 - "3. 产品原则"
-Cohesion: 0.29
-Nodes (7): 3.1 先治理，后支付, 3.2 模型提出理由，规则决定权限, 3.3 默认最小权限, 3.4 任务是最小归因单元, 3.5 协议中立, 3.6 证据优先, 3. 产品原则
-
-### Community 141 - "enum"
+### Community 141 - "7. 原型实验"
 Cohesion: 0.40
-Nodes (5): retry, enum, query_before_retry, retry_after_fix, retry_safe
+Nodes (5): 7. 原型实验, 实验一：费用归因, 实验三：开发者接入, 实验二：策略配置, 实验四：付费意愿
 
-### Community 142 - "type"
+### Community 142 - "BU2 Transaction-first P0 验收方案"
 Cohesion: 0.50
-Nodes (4): enum, type, chain_id, integer
+Nodes (4): BU2 Transaction-first P0 验收方案, 主路径, 结论规则, 辅助路径
 
 ## Knowledge Gaps
-- **983 isolated node(s):** `$schema`, `$id`, `title`, `type`, `additionalProperties` (+978 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1103 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **1006 isolated node(s):** `here`, `root`, `composeFile`, `runId`, `work` (+1001 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1130 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
 - **3 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `cn()` connect `cn` to `toggle-group.tsx`, `sidebar.tsx`, `marker.tsx`, `menubar.tsx`, `utils.ts`, `combobox.tsx`, `page.tsx`, `context-menu.tsx`, `drawer.tsx`, `carousel.tsx`, `alert.tsx`, `chart.tsx`, `item.tsx`, `attachment.tsx`, `react`, `navigation-menu.tsx`, `button.tsx`, `empty.tsx`, `bubble.tsx`, `command.tsx`, `tabs.tsx`, `alert-dialog.tsx`, `toast.tsx`?**
-  _High betweenness centrality (0.055) - this node is a cross-community bridge._
+  _High betweenness centrality (0.049) - this node is a cross-community bridge._
 - **Why does `react` connect `react` to `toggle-group.tsx`, `cn`, `sidebar.tsx`, `marker.tsx`, `menubar.tsx`, `utils.ts`, `combobox.tsx`, `page.tsx`, `context-menu.tsx`, `drawer.tsx`, `carousel.tsx`, `alert.tsx`, `chart.tsx`, `item.tsx`, `attachment.tsx`, `button.tsx`, `plugins`, `bubble.tsx`, `command.tsx`, `alert-dialog.tsx`, `toast.tsx`?**
-  _High betweenness centrality (0.016) - this node is a cross-community bridge._
-- **Why does `plugins` connect `plugins` to `react`, `.oxlintrc.json`?**
   _High betweenness centrality (0.014) - this node is a cross-community bridge._
-- **What connects `$schema`, `$id`, `title` to the rest of the system?**
-  _983 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Why does `plugins` connect `plugins` to `react`, `.oxlintrc.json`?**
+  _High betweenness centrality (0.011) - this node is a cross-community bridge._
+- **What connects `here`, `root`, `composeFile` to the rest of the system?**
+  _1006 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `cn` be split into smaller, more focused modules?**
   _Cohesion score 0.04984779299847793 - nodes in this community are weakly interconnected._
 - **Should `sidebar.tsx` be split into smaller, more focused modules?**

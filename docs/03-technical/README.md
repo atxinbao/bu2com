@@ -27,6 +27,8 @@
 - [环境验收矩阵 v1](ENVIRONMENT_ACCEPTANCE_MATRIX_V1.md)
 - [环境注册表与链隔离 v1](ENVIRONMENT_REGISTRY_AND_CHAIN_ISOLATION_V1.md)
 - [客户端与 Receipt 环境契约 v1](ENVIRONMENT_CLIENT_AND_RECEIPT_CONTRACT_V1.md)
+- [ENV-04 隔离 Sandbox / Live 部署单元 v1](ENVIRONMENT_DEPLOYMENT_UNITS_V1.md)
+- [ENV-04 Docker / Compose 参考实现](../../deploy/README.md)
 - [x402 Base Sepolia 测试钱包](X402_TEST_WALLET.md)
 - [x402 Base Sepolia 实结算证据](X402_LIVE_SETTLEMENT_EVIDENCE.md)
 - [Phase 0 Epic 1：外部 Agent 交易接入与可靠性](PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md)
@@ -36,4 +38,4 @@
 
 Contract v0.2.0 已具备本地 SQLite Reference Server、数据库 processing 幂等 Claim、状态版本 CAS、原子化 Ledger/Outbox、有限重试与死信、审计重放、Secret 版本轮换、端到端交易关联、结构化观测、环境自描述、签名 Receipt、模拟支付 Adapter、基于官方 MCP SDK 的外部 Buyer/Seller Agent 样例，以及基于官方 x402 SDK 的 Base Sepolia Adapter。Epic 1 与 Epic 2 已完成；Transaction Trust Gate 1–3 已经 PR #15–#17 合并。
 
-F01/ENV-01 已由 PR #18 批准，ENV-02 已由 PR #19 批准。ENV-03 已把 `local/sandbox/live` 契约落实到 `GET /v1/environment`、SDK/MCP/Doctor 预检、clean-room Evidence 和新 Receipt v0.3，等待 R2 审查；历史 Receipt v0.2 保留原字段与原签名算法。Epic 3 的正式证据仍要求托管 Sandbox 的真实 Base Sepolia 双向收付；Local Simulation 只作为自动化工具证据。SDK 与 MCP 未公开发布，Live/Mainnet、真实资金托管与生产密钥仍未经独立准入。
+F01/ENV-01、ENV-02 与 ENV-03 已分别由 PR #18/#19/#20 批准。ENV-04 已使用同一不可变镜像实现 Sandbox/Live 两个隔离、disarmed 的本地容器部署单元，等待 R2 审查；它不是托管环境，也没有加载 Signer 或执行链上付款。Epic 3 的正式证据仍要求托管 Sandbox 的真实 Base Sepolia 双向收付；Local/容器隔离证据只作为自动化工具与环境边界证明。SDK 与 MCP 未公开发布，Live/Mainnet、真实资金托管与生产密钥仍未经独立准入。

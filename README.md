@@ -9,22 +9,22 @@ BU2.com 是 Agent 的 AI 收付平台。它嵌入 ChatGPT、Codex、Claude 和�
 | 项目 | 当前基线 |
 | --- | --- |
 | 项目阶段 | Phase 0 · local execution / Sandbox architecture |
-| 当前工程关卡 | ENV-03 · 客户端与 Receipt 环境契约（等待 R2 审查） |
+| 当前工程关卡 | ENV-04 · 隔离 Sandbox / Live 部署单元（等待 R2 审查） |
 | 产品定义 | Product v0.3 · Transaction-first |
 | API 契约 | Agent Payment API v0.2.0 |
-| Reference Server | v0.13 · Node.js + SQLite WAL + MCP（legacy package 名称含 sandbox） |
+| Reference Server | v0.14 · Node.js + SQLite WAL + MCP + 容器部署参考 |
 | TypeScript SDK | `@bu2/sdk` v0.2 · Monorepo private package |
 | MCP 分发 | stdio v0.2 · Codex / Claude Desktop / Generic Host |
 | 接入诊断 | `bu2-doctor` result v0.2 · 本地执行 / 零远程遥测 |
 | Clean-room 验收 | HTTP / TypeScript SDK / MCP · 3/3 Local 通过 |
 | 支付通道 | local Simulated Adapter + x402 Base Sepolia Adapter |
 | 产品界面 | React 19 + TypeScript 双语原型 |
-| 环境契约 | ENV-02 已批准；ENV-03 API/SDK/MCP/Doctor/Receipt 已实现，等待 R2 审查 |
+| 环境契约 | ENV-02/03 已批准；ENV-04 隔离部署单元已实现，等待 R2 审查 |
 | 生产边界 | Live 初始 `execution_disabled`；客户资金托管和法币能力尚未开放 |
 
-当前代码已经形成可运行的 Agent 收付闭环，但仍是本地与 Base Sepolia 测试网证据，不是生产支付系统或法律合规结论。ENV-02 已由 PR #19 合并；ENV-03 已在公开 API、SDK、MCP、Doctor、Evidence 和新 Receipt 中实施 `local/sandbox/live`，旧 Receipt 继续按原始 legacy 语义验证。
+当前代码已经形成可运行的 Agent 收付闭环，但仍是本地与 Base Sepolia 测试网证据，不是生产支付系统或法律合规结论。ENV-02/03 已由 PR #19/#20 合并；ENV-04 使用同一不可变镜像建立两个本地可复现、相互隔离且 execution disabled 的容器单元，尚未创建托管 Sandbox 或 Live。
 
-[Phase 0 Epic 1：External Agent Transaction Integration & Reliability](docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md) 与 [Phase 0 Epic 2：Developer Integration Scale](docs/03-technical/PHASE0_EPIC2_DEVELOPER_INTEGRATION_SCALE.md) 已完成。Transaction Trust Gate 1–3 已经 PR #15–#17 合并，F01/ENV-01 与 ENV-02 分别由 PR #18/#19 批准。当前 ENV-03 已完成本地实现与自动化验证，等待 R2 审查；合并后进入 ENV-04 隔离部署单元。[Phase 0 Epic 3](docs/03-technical/PHASE0_EPIC3_EXTERNAL_PILOT_EVIDENCE.md) 保持 Ready，但正式外部证据要求托管 Sandbox 的真实 Base Sepolia 双向收付，不再以 Local Simulation 代替。
+[Phase 0 Epic 1：External Agent Transaction Integration & Reliability](docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md) 与 [Phase 0 Epic 2：Developer Integration Scale](docs/03-technical/PHASE0_EPIC2_DEVELOPER_INTEGRATION_SCALE.md) 已完成。Transaction Trust Gate 1–3 已经 PR #15–#17 合并，F01/ENV-01、ENV-02 与 ENV-03 分别由 PR #18/#19/#20 批准。当前 ENV-04 已完成本地实现与自动化验证，等待 R2 审查；合并后进入 ENV-05 受控入口，ENV-06 可并行推进制品提升与恢复演练。[Phase 0 Epic 3](docs/03-technical/PHASE0_EPIC3_EXTERNAL_PILOT_EVIDENCE.md) 保持 Ready，但正式外部证据要求托管 Sandbox 的真实 Base Sepolia 双向收付，不再以 Local Simulation 代替。
 
 ## 环境定义
 
@@ -32,7 +32,7 @@ BU2.com 是 Agent 的 AI 收付平台。它嵌入 ChatGPT、Codex、Claude 和�
 - `sandbox`：对外测试环境，固定 Base Sepolia（84532）与 x402；测试资产没有真实金融价值。
 - `live`：对外主网环境，固定 Base Mainnet（8453）；初始 `execution_disabled`，配置存在不等于获准付款。
 
-服务环境、执行后端和资金准入是三个独立维度。完整定义、实现与验收见 [系统环境契约 v1](docs/03-technical/SYSTEM_ENVIRONMENTS_V1.md)、[ADR-0001](docs/03-technical/ADR_0001_SANDBOX_LIVE_ENVIRONMENT_ISOLATION.md)、[环境注册表与链隔离 v1](docs/03-technical/ENVIRONMENT_REGISTRY_AND_CHAIN_ISOLATION_V1.md) 和[环境验收矩阵 v1](docs/03-technical/ENVIRONMENT_ACCEPTANCE_MATRIX_V1.md)。
+服务环境、执行后端和资金准入是三个独立维度。完整定义、实现与验收见 [系统环境契约 v1](docs/03-technical/SYSTEM_ENVIRONMENTS_V1.md)、[ADR-0001](docs/03-technical/ADR_0001_SANDBOX_LIVE_ENVIRONMENT_ISOLATION.md)、[环境注册表与链隔离 v1](docs/03-technical/ENVIRONMENT_REGISTRY_AND_CHAIN_ISOLATION_V1.md)、[ENV-04 隔离部署单元](docs/03-technical/ENVIRONMENT_DEPLOYMENT_UNITS_V1.md)和[环境验收矩阵 v1](docs/03-technical/ENVIRONMENT_ACCEPTANCE_MATRIX_V1.md)。
 
 ## Agent 支付闭环
 

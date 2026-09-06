@@ -1,0 +1,14 @@
+.git
+.github
+.codex
+.playwright-cli
+graphify-out
+prototype
+packages
+node_modules
+**/node_modules
+**/dist
+**/*.sqlite
+**/*.sqlite-shm
+**/*.sqlite-wal
+**/.DS_Store

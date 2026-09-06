@@ -501,3 +501,26 @@ Product v0.1 可作为客户访谈、交互原型和工程方案设计的输入�
 - 未执行：没有 Base Sepolia 或 Mainnet 付款，没有加载钱包、生产密钥或 API credential，没有部署、DNS、云资源、托管、资金或历史数据迁移。
 
 结论：ENV-03 本地实现达到 **GO for R2 review**。这是新客户端环境枚举和 Receipt 签名契约的 R2 变更，必须经 Domain + Architecture 人工审查后合并。合并后下一项为 ENV-04 隔离 Sandbox/Live 部署单元；Live/Mainnet 与真实资金继续 NO-GO。
+
+## ENV-04 隔离 Sandbox / Live 部署单元验证
+
+日期：2026-09-06
+执行者：Codex
+
+- 基线：PR #20 已合并；本地 `main` 快进至 `d9c65b8` 后删除 ENV-03 分支，并创建 `feat/env04-isolated-deployment-units`。
+- 制品：新增 Node.js 22.13 多阶段 Dockerfile；依赖只安装一次，Sandbox 与 Live 必须使用同一个 `sha256` image ID 或 registry digest，普通 tag 与不同镜像由机器契约拒绝。
+- 隔离：两个 Compose 单元使用不同 service、UID/GID、SQLite volume、data path、network、secret namespace、Provider scope 与 backup scope；只共享镜像、Compose 模板和环境契约版本。
+- 禁用执行：Sandbox 与 Live 均为 `execution_disabled`，模板禁止 `X402_BUYER_PRIVATE_KEY`、`BU2_SIGNER_ENVIRONMENT` 和 legacy DB claim；Live 还要求显式 `live` profile。本轮没有商户、Signer、Facilitator 或 Provider 调用。
+- 运行时：Reference Server 升至 v0.14，增加显式 `BU2_HOST` 容器监听；默认仍为 `127.0.0.1`。SIGTERM/SIGINT 会停止 HTTP 并关闭 SQLite，新增进程测试通过。
+- 部署契约：`npm --prefix sandbox run test:deployment-contract` 2/2 通过，覆盖合法拓扑以及共享卷/网络/身份/秘密命名空间、mutable image、Signer mount 和 Live enabled 的拒绝。
+- 容器验收：`npm --prefix sandbox run acceptance:deployment` 通过；最终一次构建得到 `sha256:2c897d703e2328e1800d4f708470f2b7a11a0ce53f78b3161a267bd7bc19e0f1`，同一 image ID 同时启动 Sandbox 84532 与 Live 8453，二者均返回 disabled；对两个环境发送支付 mutation 均在领域写入前稳定拒绝。
+- E-T07：把真实 Sandbox volume 故意挂入 Live，进程以 `database_environment_mismatch` 拒绝；注入 Sandbox Signer environment 与测试 sentinel 时在密钥解析前以环境不匹配拒绝，日志未出现 sentinel。
+- 全项目门禁：Contract 50 项与 MCP 6/6、Reference Server 101/101、TypeScript SDK 生成/格式/lint/类型/build 与 9/9、HTTP/SDK/MCP clean-room 3/3、Prototype lint 与 Vinext 五阶段 build 全部通过。
+- Clean-room：HTTP / SDK / MCP 最终耗时 212ms / 3814ms / 4381ms，均为 `local + simulated`、settled、Receipt v0.3 valid，不能作为托管 Sandbox 证据。
+- 浏览器：Playwright CLI 使用 Google Chrome 验证 PROJECT、GOVERNANCE、CHANGELOG；桌面状态与 390×844 CHANGELOG 新条目可见，控制台 0 error、0 warning。
+- Graphify：代码图增量更新至 2286 nodes / 3500 edges / 143 communities；当前无 Gemini/Google backend，文档语义未重新抽取，不影响源文档、链接、容器与运行时验证。
+- 故障与修复：首次容器验收因 Docker daemon 未运行而未开始，启动 Docker Desktop 后重试；随后发现镜像漏装 `contract-versions.json`，补齐 Dockerfile 并保留失败日志后最终通过。全量回归发现一处 v0.13 固定断言，更新到 v0.14 后 101/101 通过。
+- 清理：每次验收使用随机 Compose project，并在 finally 中删除本次容器、卷、网络、镜像和临时文件；未触碰任何持久环境。
+- 未执行：没有云资源、DNS、托管 Sandbox、API credential、钱包/Receipt 私钥、Webhook secret、Base Sepolia/Mainnet 付款、备份恢复或生产发布。
+
+结论：ENV-04 本地实现达到 **GO for R2 review**，关闭 E-T07 的本地部署挂载子范围并补强 disarmed container 证据；它不等于托管 Sandbox 或 Live 准入。合并后下一项为 ENV-05 受控开发者/运维入口，ENV-06 可并行推进制品提升、监控与恢复演练；Live/Mainnet 与真实资金继续 NO-GO。

@@ -1,0 +1,98 @@
+name: bu2-environment-units
+
+x-bu2-runtime: &bu2-runtime
+  image: ${BU2_ARTIFACT_IMAGE:?BU2_ARTIFACT_IMAGE must be one immutable sha256 image reference}
+  pull_policy: never
+  init: true
+  read_only: true
+  restart: "on-failure:3"
+  stop_grace_period: 15s
+  cap_drop:
+    - ALL
+  security_opt:
+    - no-new-privileges:true
+  healthcheck:
+    test:
+      - CMD
+      - node
+      - -e
+      - "fetch('http://127.0.0.1:3100/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"
+    interval: 5s
+    timeout: 3s
+    retries: 12
+    start_period: 5s
+  tmpfs:
+    - /tmp:size=16m,mode=1777
+
+services:
+  sandbox:
+    <<: *bu2-runtime
+    user: "10001:10001"
+    environment:
+      BU2_HOST: 0.0.0.0
+      BU2_SANDBOX_PORT: "3100"
+      BU2_SANDBOX_DB: /var/lib/bu2/sandbox/bu2.sqlite
+      BU2_ENVIRONMENT: sandbox
+      BU2_PAYMENT_ADAPTER: x402
+      BU2_CHAIN_ID: "84532"
+      BU2_NETWORK: eip155:84532
+      BU2_PROVIDER_NETWORK: eip155:84532
+      BU2_PROVIDER_SCHEME: exact
+      BU2_EXECUTION_STATUS: execution_disabled
+    labels:
+      com.bu2.deployment-unit: sandbox
+      com.bu2.runtime-identity: bu2sandbox
+      com.bu2.secret-namespace: bu2/sandbox
+      com.bu2.backup-scope: bu2-sandbox
+      com.bu2.provider-scope: bu2-sandbox
+    ports:
+      - "127.0.0.1:${BU2_SANDBOX_HOST_PORT:-3110}:3100"
+    volumes:
+      - sandbox-data:/var/lib/bu2/sandbox
+    networks:
+      - sandbox-network
+
+  live:
+    <<: *bu2-runtime
+    profiles:
+      - live
+    user: "10002:10002"
+    environment:
+      BU2_HOST: 0.0.0.0
+      BU2_SANDBOX_PORT: "3100"
+      BU2_SANDBOX_DB: /var/lib/bu2/live/bu2.sqlite
+      BU2_ENVIRONMENT: live
+      BU2_PAYMENT_ADAPTER: x402
+      BU2_CHAIN_ID: "8453"
+      BU2_NETWORK: eip155:8453
+      BU2_PROVIDER_NETWORK: eip155:8453
+      BU2_PROVIDER_SCHEME: exact
+      BU2_EXECUTION_STATUS: execution_disabled
+    labels:
+      com.bu2.deployment-unit: live
+      com.bu2.runtime-identity: bu2live
+      com.bu2.secret-namespace: bu2/live
+      com.bu2.backup-scope: bu2-live
+      com.bu2.provider-scope: bu2-live
+    ports:
+      - "127.0.0.1:${BU2_LIVE_HOST_PORT:-3111}:3100"
+    volumes:
+      - live-data:/var/lib/bu2/live
+    networks:
+      - live-network
+
+volumes:
+  sandbox-data:
+    labels:
+      com.bu2.environment: sandbox
+  live-data:
+    labels:
+      com.bu2.environment: live
+
+networks:
+  sandbox-network:
+    labels:
+      com.bu2.environment: sandbox
+  live-network:
+    labels:
+      com.bu2.environment: live
