@@ -152,6 +152,31 @@
       <h2 id="unreleased">Unreleased</h2>
       <article class="release">
         <div class="release-head">
+          <div><h3>ENV-03 · 客户端与 Receipt 环境契约迁移</h3><time datetime="2026-09-06">2026-09-06</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">把 PR #19 已批准的 local/Sandbox/Live 注册表扩展到 Agent Payment API v0.2、TypeScript SDK v0.2、MCP v0.2、Doctor result v0.2、clean-room Evidence v0.2 和新 Receipt v0.3；客户端在 mutation 前验证环境、链、执行后端、契约、issuer 和执行状态。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag added">Added</span>新增机器可读 <code>environment-contract.json</code> 与 <code>GET /v1/environment</code>；公开 health 收窄为粗粒度状态，不再暴露数据库路径、交易量或内部 Outbox/Adapter 统计。</li>
+            <li><span class="tag changed">Changed</span>SDK、MCP 与 Doctor 统一使用 <code>local/sandbox/live</code>；Local 必须显式确认开发模式，MCP/SDK 在每次 mutation 前重新预检，不匹配或 execution disabled 时 mutation 0 次。</li>
+            <li><span class="tag changed">Changed</span>新 Receipt 升级到 v0.3，把 environment contract、environment、execution backend、chain/network 与 issuer ID 纳入 Ed25519/JCS 签名字节，并独立返回 <code>environment_valid</code>。</li>
+            <li><span class="tag added">Added</span>Receipt schema registry 和静态 v0.2 Simulation fixture；历史 Receipt 保持原始字节、签名算法与字段，旧 testnet 缺少 Base Sepolia Provider 证据时保持 unknown。</li>
+            <li><span class="tag governance">Boundary</span>本变更没有创建部署、执行 Base Sepolia/Mainnet 付款或加载钱包/生产凭证；API key 和正式 PaymentMandate 的跨环境隔离仍留 ENV-05 与 F02/F03。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R2 · API/SDK/MCP/Receipt 兼容与交易执行前置条件，必须由 Domain + Architecture 独立人工审查后合并</span></div>
+          <div><b>金融行为影响</b><span>新增 mutation 前失败关闭和 Receipt 环境真实性；不改变金额、Transaction 状态机、账本、资金所有权或结算恢复语义</span></div>
+          <div><b>兼容性</b><span>新客户端采用破坏性环境枚举；旧 Receipt v0.1/v0.2 不重写、不重签并继续由 schema registry 验证</span></div>
+          <div><b>验证</b><span>Contract 47 项、MCP 6 个、Reference Server 100/100、SDK 9/9 和 clean-room 3/3；完整 Prototype、文档、秘密扫描、浏览器和图谱证据见 verification.md</span></div>
+          <div><b>恢复</b><span>停止新 mutation 并回退客户端/服务制品；已签发 v0.3 Receipt 和账本事实必须保留，新验证器继续只读；不得重放支付或自动降级环境</span></div>
+        </div>
+      </article>
+
+      <article class="release">
+        <div class="release-head">
           <div><h3>ENV-02 · 环境注册表与链隔离</h3><time datetime="2026-09-06">2026-09-06</time></div>
           <span class="status">Unreleased</span>
         </div>

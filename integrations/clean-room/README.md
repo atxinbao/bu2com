@@ -2,7 +2,7 @@
 
 日期：2026-09-06<br>
 执行者：Codex<br>
-适用环境：Phase 0 Simulation
+适用环境：Phase 0 Local simulated execution
 
 本目录提供 E2.4 使用的三条独立客户端入口。正式验收不会从这些文件所在目录直接执行，而是将对应文件复制到三个全新的系统临时项目，再分别通过 HTTP、TypeScript SDK tarball 和 MCP stdio 完成交易。
 
@@ -25,7 +25,7 @@ npm --prefix sandbox run acceptance:clean-room
 The runner executes `http`, `sdk`, and `mcp` in that order. Every path:
 
 - 从空目录开始，并拥有独立 `package.json` / starts from an empty directory with its own `package.json`;
-- 使用独立内存 Simulation Reference Server / uses an independent in-memory Simulation Reference Server;
+- 使用独立内存 `local + simulated` Reference Server / uses an independent in-memory `local + simulated` Reference Server;
 - 完成 Quote → PaymentIntent → Authorization → DeliveryEvidence → Settlement → Receipt；
 - 在 15 分钟内得到 `receipt_valid=true` / obtains `receipt_valid=true` within 15 minutes;
 - 运行前后校验相关 BU2 源码哈希，并在结束后删除临时项目 / verifies relevant BU2 source hashes before and after execution and removes the temporary project;
@@ -43,6 +43,6 @@ See [E2.4 clean-room acceptance evidence](../../docs/03-technical/CLEAN_ROOM_ACC
 | SDK | [`sdk-client.mjs`](sdk-client.mjs) | 从临时 tarball 安装 `@bu2/sdk`，不使用仓库相对 import |
 | MCP | [`mcp-client.mjs`](mcp-client.mjs) | 只依赖官方 MCP Client，通过文档化 `sandbox/bin/bu2-mcp.mjs` stdio 入口连接 |
 
-人工授权和结算仍由 HTTP 控制面显式完成；六个 Agent MCP 工具没有获得自批授权或直接结算能力。所有路径只使用 Simulation。公开 npm 发布、远程 MCP 托管、Mainnet、真实资金、托管和生产 Secret 不在本验收范围内。
+人工授权和结算仍由 HTTP 控制面显式完成；六个 Agent MCP 工具没有获得自批授权或直接结算能力。所有路径只使用显式 Local 开发模式。公开 npm 发布、远程 MCP 托管、Sandbox 链上执行、Live/Mainnet、真实资金、托管和生产 Secret 不在本验收范围内。
 
-Human authorization and settlement remain explicit HTTP control-plane actions. The six Agent MCP tools do not gain self-authorization or direct-settlement capabilities. Every path is Simulation-only. Public npm publication, remote MCP hosting, Mainnet, real funds, custody, and production secrets are outside this acceptance scope.
+Human authorization and settlement remain explicit HTTP control-plane actions. The six Agent MCP tools do not gain self-authorization or direct-settlement capabilities. Every path uses explicit Local development mode. Public npm publication, remote MCP hosting, Sandbox chain execution, Live/Mainnet, real funds, custody, and production secrets are outside this acceptance scope.

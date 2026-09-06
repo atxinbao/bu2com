@@ -3,18 +3,18 @@
 日期：2026-09-06
 维护者：Codex
 
-- [Agent Payment API 契约 v0.1](API_CONTRACT_V0.1.md)
-- [OpenAPI v0.1](openapi.yaml)
+- [Agent Payment API 契约 v0.2.0](API_CONTRACT_V0.1.md)
+- [OpenAPI v0.2.0](openapi.yaml)
 - [MCP 工具定义](mcp-tools.json)
 - [API / MCP 版本清单](contract-versions.json)
-- [开发者接入诊断 v0.1](DEVELOPER_DIAGNOSTICS_V0.1.md)
-- [Doctor 机器结果 Schema v0.1](doctor-result.schema.json)
+- [开发者接入诊断 v0.2](DEVELOPER_DIAGNOSTICS_V0.1.md)
+- [Doctor 机器结果 Schema v0.2](doctor-result.schema.json)
 - [E2.4 外部 clean-room 接入证据](CLEAN_ROOM_ACCEPTANCE_EVIDENCE.md)
-- [Clean-room 机器结果 Schema v0.1](clean-room-evidence.schema.json)
+- [Clean-room 机器结果 Schema v0.2](clean-room-evidence.schema.json)
 - [HTTP、SDK 与 MCP clean-room 样例](../../integrations/clean-room/README.md)
 - [外部 Buyer / Seller Agent 快速接入](EXTERNAL_AGENT_QUICKSTART.md)
 - [Codex、Claude Desktop 与通用 MCP Host 配置](../../integrations/mcp/README.md)
-- [TypeScript SDK v0.1](../../packages/typescript-sdk/README.md)
+- [TypeScript SDK v0.2](../../packages/typescript-sdk/README.md)
 - [契约示例](examples/payment-flow.json)
 - [可运行 Reference Server](../../sandbox/README.md)
 - [Persistence、Webhook 与 Adapter v0.6](PERSISTENCE_WEBHOOK_ADAPTER_V0.2.md)
@@ -26,6 +26,7 @@
 - [ADR-0001：Sandbox 与 Live 环境隔离](ADR_0001_SANDBOX_LIVE_ENVIRONMENT_ISOLATION.md)
 - [环境验收矩阵 v1](ENVIRONMENT_ACCEPTANCE_MATRIX_V1.md)
 - [环境注册表与链隔离 v1](ENVIRONMENT_REGISTRY_AND_CHAIN_ISOLATION_V1.md)
+- [客户端与 Receipt 环境契约 v1](ENVIRONMENT_CLIENT_AND_RECEIPT_CONTRACT_V1.md)
 - [x402 Base Sepolia 测试钱包](X402_TEST_WALLET.md)
 - [x402 Base Sepolia 实结算证据](X402_LIVE_SETTLEMENT_EVIDENCE.md)
 - [Phase 0 Epic 1：外部 Agent 交易接入与可靠性](PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md)
@@ -33,6 +34,6 @@
 - [Phase 0 Epic 3：外部试点准备与证据](PHASE0_EPIC3_EXTERNAL_PILOT_EVIDENCE.md)
 - [Phase 0 Transaction Trust Gate](PHASE0_TRANSACTION_TRUST_GATE.md)
 
-Contract v0.1 已具备本地 SQLite Reference Server、数据库 processing 幂等 Claim、状态版本 CAS、原子化 Ledger/Outbox、有限重试与死信、审计重放、Secret 版本轮换、端到端交易关联、结构化观测、健康快照、签名 Receipt、模拟支付 Adapter、基于官方 MCP SDK 的外部 Buyer/Seller Agent 样例，以及基于官方 x402 SDK 的 Base Sepolia Adapter。Epic 1 与 Epic 2 已完成；Transaction Trust Gate 1–3 已经 PR #15–#17 合并。
+Contract v0.2.0 已具备本地 SQLite Reference Server、数据库 processing 幂等 Claim、状态版本 CAS、原子化 Ledger/Outbox、有限重试与死信、审计重放、Secret 版本轮换、端到端交易关联、结构化观测、环境自描述、签名 Receipt、模拟支付 Adapter、基于官方 MCP SDK 的外部 Buyer/Seller Agent 样例，以及基于官方 x402 SDK 的 Base Sepolia Adapter。Epic 1 与 Epic 2 已完成；Transaction Trust Gate 1–3 已经 PR #15–#17 合并。
 
-F01/ENV-01 已由 PR #18 批准。ENV-02 已实现运行时环境注册表、非法组合拒绝、SQLite Schema v8 环境绑定、RPC/Signer/Provider 断言和 Live 默认禁用，等待 R2 审查。公开 API、SDK、MCP、Doctor 与 Receipt 仍使用 legacy `simulation/testnet`，由 ENV-03 迁移；不能把内部配置完成写成客户端契约已经完成。Epic 3 的正式证据仍要求托管 Sandbox 的真实 Base Sepolia 双向收付；Local Simulation 只作为自动化工具证据。SDK 与 MCP 未公开发布，Live/Mainnet、真实资金托管与生产密钥仍未经独立准入。
+F01/ENV-01 已由 PR #18 批准，ENV-02 已由 PR #19 批准。ENV-03 已把 `local/sandbox/live` 契约落实到 `GET /v1/environment`、SDK/MCP/Doctor 预检、clean-room Evidence 和新 Receipt v0.3，等待 R2 审查；历史 Receipt v0.2 保留原字段与原签名算法。Epic 3 的正式证据仍要求托管 Sandbox 的真实 Base Sepolia 双向收付；Local Simulation 只作为自动化工具证据。SDK 与 MCP 未公开发布，Live/Mainnet、真实资金托管与生产密钥仍未经独立准入。

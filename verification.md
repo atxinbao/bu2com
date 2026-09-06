@@ -479,3 +479,25 @@ Product v0.1 可作为客户访谈、交互原型和工程方案设计的输入�
 - 未执行：没有 Base Sepolia 或 Mainnet 支付，没有加载生产密钥，没有部署、DNS、云资源、托管或资金迁移。
 
 结论：ENV-02 本地实现达到 **GO for R2 review**。E-T01/02/03 已在本范围通过；E-T06/07/09 只关闭 ENV-02 子范围，部署恢复与受限 Live E2E 仍分别属于 ENV-04/06/08。ENV-02 合并后下一项为 ENV-03，Mainnet 与真实资金继续 NO-GO。
+
+## ENV-03 客户端与 Receipt 环境契约验证
+
+日期：2026-09-06
+执行者：Codex
+
+- 基线：PR #19 已合并；本地 `main` 快进至 `2353e9501a51ff94cf8b48313ef288a21df586a8` 后删除 ENV-02 本地分支，并创建 `feat/env03-environment-contract-migration`。
+- 唯一契约：新增 `environment-contract.json` v1.0；运行时、SDK 生成器和 MCP 共享 `local/sandbox/live`、Base chain/network、Adapter 与默认执行状态。
+- API：Agent Payment API 升至 v0.2.0，Reference Server 升至 v0.13.0；`GET /v1/environment` 返回环境、链、后端、版本、execution status、公开能力和 Receipt issuer。公开 `/health` 不再返回数据库路径、账本数量或内部 Outbox/Adapter 统计。
+- 客户端：`@bu2/sdk` 与 MCP contract 升至 v0.2.0，Doctor/clean-room result 升至 v0.2.0；新客户端只接受 `sandbox/live`，本地模拟必须显式 `local + localDevelopment`。SDK/MCP 在 mutation 前验证 endpoint、环境、链、后端、契约、issuer 和 execution status，错误或禁用时 mutation 0 次；Settlement recovery 保持只查询、不重付。
+- Receipt：新签发版本为 v0.3，签名覆盖 environment contract、environment、execution backend、chain/network 和 issuer ID；验证独立区分 signature、issuer、settlement 与 environment。静态 v0.2 Simulation fixture 没有私钥，原始签名字节由独立 schema registry 验证，篡改拒绝；legacy testnet 缺少 Base Sepolia channel/provider 证据时保持 unknown。
+- E-T04：endpoint、SDK、MCP 与 Receipt 的跨环境拒绝已通过；仓库尚无正式 API key 和结构化 PaymentMandate 对象，因此这两项明确留 ENV-05 与 F02/F03，不宣称关闭整个 E-T04。
+- E-T05：历史 Receipt v0.2 原字段、原 canonicalization 和原签名验证通过；不重写、不重签。
+- E-T16：公开 health 的 ENV-03 子范围通过；支持包权限仍留 ENV-05。
+- 自动化：Contract 47 项不变量与 6 个 MCP 工具通过；Reference Server 100/100；TypeScript SDK 生成漂移、格式、lint、类型、build 与 9/9；Prototype lint 与 Vinext 五阶段 production build 通过。
+- Clean-room：HTTP / SDK tarball / MCP stdio 三个全新临时项目 3/3 通过，最终耗时 103ms / 1425ms / 610ms，均为 `local + simulated`、Receipt v0.3、`valid=true`，源码未变化且临时目录已删除。
+- 文档：191 个 Markdown 相对链接、27 个 HTML 相对链接/锚点、4 份 HTML 基本解析和 `git diff --check` 通过；本次 diff 秘密样式扫描 0 hit。
+- 浏览器：Playwright CLI 使用 Google Chrome 验证 PROJECT、GOVERNANCE 与 CHANGELOG；ENV-03 状态、Receipt v0.3、R2 边界和 100/100 证据在桌面/390×844 视口可见，控制台 0 error、0 warning。
+- Graphify：代码图增量更新到 2243 nodes / 3446 edges / 143 communities；当前没有 Gemini/Google backend，文档语义未重新抽取，不影响源文档、链接和运行时验证。
+- 未执行：没有 Base Sepolia 或 Mainnet 付款，没有加载钱包、生产密钥或 API credential，没有部署、DNS、云资源、托管、资金或历史数据迁移。
+
+结论：ENV-03 本地实现达到 **GO for R2 review**。这是新客户端环境枚举和 Receipt 签名契约的 R2 变更，必须经 Domain + Architecture 人工审查后合并。合并后下一项为 ENV-04 隔离 Sandbox/Live 部署单元；Live/Mainnet 与真实资金继续 NO-GO。

@@ -2,14 +2,14 @@
 
 日期：2026-09-06
 执行者：Codex
-状态：ENV-02 已实现，等待 R2 Domain + Architecture 审查
+状态：ENV-02 已由 PR #19 批准并合并
 风险等级：R2
 
 ## 1. 目标与边界
 
 ENV-02 把已批准的 `local / sandbox / live` 环境决策落实为 Reference Server 的运行时前置条件。配置必须在数据库、Signer 或 Provider 建立前完成验证；失败时不启动资金执行，不跨链、不降级到 Simulation，也不生成假成功。
 
-本工作不修改公开 API、SDK、MCP、Doctor 或 Receipt v0.2 的 legacy `simulation/testnet` 语义。这些契约由 ENV-03 采用 expand → backfill → verify → switch 迁移。本工作不执行 Base Sepolia 或 Mainnet 付款，不加载生产密钥。
+ENV-02 合并时没有修改公开 API、SDK、MCP、Doctor 或 Receipt v0.2 的 legacy `simulation/testnet` 语义。后续 ENV-03 已实现 expand → verify → switch 迁移，并继续保留历史 Receipt 的原始签名。本工作本身没有执行 Base Sepolia 或 Mainnet 付款，也没有加载生产密钥。
 
 ## 2. 唯一注册表
 
@@ -76,11 +76,11 @@ SQLite Schema v8 新增单行 `environment_metadata`：
 
 ## 7. 兼容与恢复
 
-- API contract、事件、MCP、SDK 与 Receipt schema/version 均不变。
-- `/health.environment` 暂时继续输出 legacy `simulation/testnet`，避免 ENV-02 越权修改 ENV-03 客户端契约。
+- ENV-02 合并时 API contract、事件、MCP、SDK 与 Receipt schema/version 均不变；后续 ENV-03 通过独立 R2 变更迁移这些客户端契约。
+- `/health.environment` 已由 ENV-03 切换为 `local/sandbox/live`，详细环境信息由版本化 `GET /v1/environment` 返回。
 - Schema v8 为纯新增；旧数据不重写。若本实现未获批准，停止新版本服务并恢复到旧制品。已写入的 metadata 保留为审计事实，旧版本会忽略新表。
 - ENV-03 必须复用本注册表输出 `GET /v1/environment`，不得重新定义第二套环境映射。
 
 ## 8. 下一步
 
-ENV-02 经 R2 审查合并后，下一 PR 为 ENV-03：迁移 API、SDK、MCP、Doctor、Evidence 与 Receipt 环境契约，同时保留旧 Receipt 的原签名验证和可追溯解释。
+ENV-03 已实现 API、SDK、MCP、Doctor、Evidence 与 Receipt 环境契约迁移，说明见 [客户端与 Receipt 环境契约 v1](ENVIRONMENT_CLIENT_AND_RECEIPT_CONTRACT_V1.md)。其 R2 审查合并后，下一项为 ENV-04 隔离部署单元。

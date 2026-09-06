@@ -64,3 +64,13 @@ export class Bu2ConfigurationError extends Bu2SdkError {
     this.name = "Bu2ConfigurationError";
   }
 }
+
+export class Bu2EnvironmentError extends Bu2SdkError {
+  readonly details: Record<string, unknown>;
+
+  constructor(message: string, code: string, details: Record<string, unknown> = {}) {
+    super(message, { code, recovery: "fix_request" });
+    this.name = "Bu2EnvironmentError";
+    this.details = details;
+  }
+}

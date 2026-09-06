@@ -46,6 +46,11 @@ async function request(path, { method = "GET", body, idempotencyKey } = {}) {
 }
 
 const startedAt = Date.now();
+const environmentInfo = await step("preflight_environment", () => request("/v1/environment"));
+assert.equal(environmentInfo.environment, "local");
+assert.equal(environmentInfo.environment_contract_version, "1.0");
+assert.equal(environmentInfo.execution_backend, "simulated");
+assert.equal(environmentInfo.execution_status, "execution_enabled");
 const quote = await step("create_quote", () =>
   request("/v1/quotes", {
     method: "POST",
@@ -81,7 +86,7 @@ if (intent.status === "requires_authorization") {
     request(`/v1/payment_intents/${intent.id}/authorization`, {
       method: "POST",
       idempotencyKey: `clean-http-authorize-${runId}`,
-      body: { decision: "authorize", reason: "Explicit local Simulation acceptance" },
+      body: { decision: "authorize", reason: "Explicit local simulated acceptance" },
     }),
   );
 }
@@ -116,7 +121,7 @@ assert.equal(verification.valid, true);
 console.log(
   JSON.stringify({
     path: "http",
-    environment: "simulation",
+    environment: "local",
     transaction_status: settlement.transaction.status,
     receipt_id: receipt.id,
     receipt_valid: verification.valid,

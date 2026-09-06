@@ -1,14 +1,20 @@
 import {
   createHash,
-  createPublicKey,
   generateKeyPairSync,
   randomUUID,
   sign,
-  verify,
 } from "node:crypto";
 import { AsyncLocalStorage } from "node:async_hooks";
-import canonicalize from "canonicalize";
 import { classifyOperationalError } from "./observability.mjs";
+import {
+  CURRENT_RECEIPT_SCHEMA_VERSION,
+  RECEIPT_CANONICALIZATION_VERSION,
+  RECEIPT_SIGNATURE_ALGORITHM,
+  canonicalReceiptPayload,
+  interpretReceiptEnvironment,
+  receiptEnvironmentMatches,
+  verifyReceiptSignature,
+} from "./receipt-contract.mjs";
 
 export class ApiError extends Error {
   constructor(status, type, code, message, details = {}) {
@@ -22,12 +28,7 @@ export class ApiError extends Error {
 
 const prefix = (value) => `${value}_${randomUUID().replaceAll("-", "").slice(0, 16)}`;
 const clone = (value) => structuredClone(value);
-const legacyCanonical = (value) => JSON.stringify(value, Object.keys(value).sort());
-const receiptCanonical = (value) => canonicalize(value);
 const hash = (value) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
-const RECEIPT_SCHEMA_VERSION = "0.2";
-const RECEIPT_CANONICALIZATION_VERSION = "RFC8785-JCS-1";
-const RECEIPT_SIGNATURE_ALGORITHM = "Ed25519";
 
 function requireFields(value, fields) {
   for (const field of fields) {
@@ -69,10 +70,19 @@ export class Bu2Sandbox {
     adapter = null,
     initialWallet = null,
     observer = null,
+    environmentConfig = null,
   } = {}) {
     this.ledger = ledger;
     this.adapter = adapter;
     this.observer = observer;
+    this.environmentConfig = environmentConfig ?? {
+      environment_contract_version: "1.0",
+      environment: "local",
+      payment_adapter: "simulated",
+      chain_id: null,
+      network: null,
+      execution_status: "execution_enabled",
+    };
     const restored = ledger?.loadState() ?? {
       resources: {},
       state: {},
@@ -778,9 +788,10 @@ export class Bu2Sandbox {
     quote.status = "accepted";
     this.event("transaction.settled", transaction);
     const signedAt = new Date().toISOString();
+    const receiptIssuerId = `bu2-reference-server:${this.environmentConfig.environment}`;
     const receiptPayload = {
-      version: RECEIPT_SCHEMA_VERSION,
-      schema_version: RECEIPT_SCHEMA_VERSION,
+      version: CURRENT_RECEIPT_SCHEMA_VERSION,
+      schema_version: CURRENT_RECEIPT_SCHEMA_VERSION,
       canonicalization_version: RECEIPT_CANONICALIZATION_VERSION,
       transaction_id: transaction.id,
       settlement_id: transaction.settlement_id,
@@ -795,8 +806,12 @@ export class Bu2Sandbox {
       payment_mandate_id: intent.payment_mandate_id,
       delivery_id: transaction.delivery_id,
       delivery_evidence_hash: this.deliveries.get(transaction.delivery_id).evidence_hash,
-      environment:
-        this.adapter?.name === "x402_exact_base_sepolia" ? "testnet" : "simulation",
+      environment_contract_version: this.environmentConfig.environment_contract_version,
+      environment: this.environmentConfig.environment,
+      execution_backend: this.environmentConfig.payment_adapter,
+      chain_id: this.environmentConfig.chain_id,
+      network: this.environmentConfig.network,
+      receipt_issuer_id: receiptIssuerId,
       payment_channel: this.adapter?.name ?? "none",
       provider_reference: transaction.settlement_provider_reference ?? null,
       signed_at: signedAt,
@@ -804,7 +819,7 @@ export class Bu2Sandbox {
     };
     const signature = sign(
       null,
-      Buffer.from(receiptCanonical(receiptPayload)),
+      Buffer.from(canonicalReceiptPayload(receiptPayload)),
       this.privateKey,
     ).toString("base64");
     const receipt = {
@@ -830,38 +845,9 @@ export class Bu2Sandbox {
 
   verifyReceipt(id) {
     const receipt = this.getReceipt(id);
-    const {
-      id: _id,
-      signature,
-      signature_algorithm: _algorithm,
-      verification_key_id: _keyId,
-      public_key: _publicKey,
-      ...payload
-    } = receipt;
-    const schemaVersion = receipt.schema_version ?? receipt.version ?? "0.1";
-    const canonicalizationVersion =
-      receipt.canonicalization_version ?? "BU2-LEGACY-0.1";
-    let signatureValid = false;
-    try {
-      const receiptPublicKey = createPublicKey({
-        key: Buffer.from(receipt.public_key, "base64"),
-        type: "spki",
-        format: "der",
-      });
-      const serialized =
-        schemaVersion === RECEIPT_SCHEMA_VERSION &&
-        canonicalizationVersion === RECEIPT_CANONICALIZATION_VERSION
-          ? receiptCanonical(payload)
-          : legacyCanonical(payload);
-      signatureValid = verify(
-        null,
-        Buffer.from(serialized),
-        receiptPublicKey,
-        Buffer.from(signature, "base64"),
-      );
-    } catch {
-      signatureValid = false;
-    }
+    const signature = verifyReceiptSignature(receipt);
+    const interpretation = interpretReceiptEnvironment(receipt);
+    const environmentValid = receiptEnvironmentMatches(receipt, this.environmentConfig);
     const registeredKey =
       this.ledger?.getReceiptVerificationKey(receipt.verification_key_id) ??
       this.trustedVerificationKeys.get(receipt.verification_key_id);
@@ -884,16 +870,18 @@ export class Bu2Sandbox {
     const result = {
       receipt_id: id,
       valid:
-        schemaVersion === RECEIPT_SCHEMA_VERSION &&
-        canonicalizationVersion === RECEIPT_CANONICALIZATION_VERSION &&
-        signatureValid &&
+        signature.schema_supported &&
+        signature.signature_valid &&
         issuerTrusted &&
-        settlementConfirmed,
-      signature_valid: signatureValid,
+        settlementConfirmed &&
+        environmentValid,
+      signature_valid: signature.signature_valid,
       issuer_trusted: issuerTrusted,
       settlement_confirmed: settlementConfirmed,
-      schema_version: schemaVersion,
-      canonicalization_version: canonicalizationVersion,
+      environment_valid: environmentValid,
+      environment_interpretation: interpretation,
+      schema_version: signature.schema_version,
+      canonicalization_version: signature.canonicalization_version,
     };
     this.observer?.record(
       result.valid ? "state" : "internal",
@@ -903,5 +891,15 @@ export class Bu2Sandbox {
       { receipt_id: id, transaction_id: receipt.transaction_id },
     );
     return result;
+  }
+
+  receiptIssuer() {
+    return {
+      issuer_id: `bu2-reference-server:${this.environmentConfig.environment}`,
+      environment: this.environmentConfig.environment,
+      verification_key_id: this.verificationKeyId,
+      signature_algorithm: RECEIPT_SIGNATURE_ALGORITHM,
+      public_key: this.publicKeyBase64,
+    };
   }
 }

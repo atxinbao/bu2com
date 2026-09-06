@@ -16,6 +16,9 @@ const doctor = JSON.parse(
 const cleanRoom = JSON.parse(
   readFileSync(join(here, 'clean-room-evidence.schema.json'), 'utf8'),
 );
+const environmentContract = JSON.parse(
+  readFileSync(join(here, 'environment-contract.json'), 'utf8'),
+);
 const openapi = readFileSync(join(here, 'openapi.yaml'), 'utf8');
 
 let assertions = 0;
@@ -45,9 +48,17 @@ assert(
   'receipt must bind to transaction',
 );
 assert(
-  flow.receipt.schema_version === '0.2' &&
+  flow.receipt.schema_version === versions.receipt_current &&
     flow.receipt.canonicalization_version === 'RFC8785-JCS-1',
-  'receipt example must use trusted v0.2 canonicalization',
+  'receipt example must use the current trusted canonicalization',
+);
+assert(
+  flow.receipt.environment_contract_version === environmentContract.schema_version &&
+    flow.receipt.environment === 'local' &&
+    flow.receipt.execution_backend === 'simulated' &&
+    flow.receipt.chain_id === null &&
+    flow.receipt.network === null,
+  'receipt example must bind the local simulated environment contract',
 );
 const { authorized_amount, reserved_amount, settled_amount, refunded_amount } =
   flow.transaction;
@@ -114,10 +125,30 @@ assert(
   'Clean-room evidence must preserve exactly three integration paths',
 );
 assert(
-  cleanRoom.properties.environment.const === 'simulation' &&
+  cleanRoom.properties.environment.const === 'local' &&
+    cleanRoom.properties.environment_contract_version.const ===
+      environmentContract.schema_version &&
+    cleanRoom.properties.execution_backend.const === 'simulated' &&
     cleanRoom.properties.max_elapsed_ms.const === 900000,
-  'Clean-room evidence must remain Simulation-only and bounded to 15 minutes',
+  'Clean-room evidence must remain local simulated and bounded to 15 minutes',
 );
+assert(
+  environmentContract.public_environments.join(',') === 'sandbox,live',
+  'Public environment contract must expose only sandbox and live',
+);
+assert(
+  environmentContract.environments.local.payment_adapter === 'simulated' &&
+    environmentContract.environments.sandbox.network === 'eip155:84532' &&
+    environmentContract.environments.live.network === 'eip155:8453',
+  'Environment contract must preserve the three approved runtime combinations',
+);
+assert(
+  versions.environment_contract === environmentContract.schema_version &&
+    JSON.stringify(versions.receipt_supported) ===
+      JSON.stringify(environmentContract.receipt_schema_versions),
+  'Version manifest must match environment and Receipt compatibility contracts',
+);
+assert(openapi.includes('/environment:'), 'OpenAPI must expose environment preflight');
 assert(
   cleanRoom.properties.analytics.properties.remote_enabled.const === false &&
     cleanRoom.properties.analytics.properties.persistence.const === 'none',
@@ -138,7 +169,7 @@ assert(
   'OpenAPI must expose receipt verification',
 );
 assert(
-  ['signature_valid', 'issuer_trusted', 'settlement_confirmed'].every((field) =>
+  ['signature_valid', 'issuer_trusted', 'settlement_confirmed', 'environment_valid'].every((field) =>
     openapi.includes(`${field}:`),
   ),
   'OpenAPI must separate signature, issuer trust, and settlement confirmation',

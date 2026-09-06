@@ -7,7 +7,8 @@ import {
 
 const client = new Bu2Client({
   baseUrl: "http://127.0.0.1:3100/v1",
-  environment: "simulation",
+  environment: "local",
+  localDevelopment: true,
 });
 
 const quote: CreateQuote = {
@@ -36,5 +37,5 @@ void client.listTransactions(query);
 // @ts-expect-error 写操作必须显式提供幂等键。
 void client.createQuote(quote, {});
 
-// @ts-expect-error Phase 0 SDK 不允许 Mainnet 环境。
+// @ts-expect-error 对外环境使用 live，而不是网络名称 Mainnet。
 new Bu2Client({ baseUrl: "https://api.bu2.com/v1", environment: "mainnet" });

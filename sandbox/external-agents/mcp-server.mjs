@@ -7,6 +7,7 @@ import {
   Bu2McpCompatibilityError,
   bu2McpCapability,
   bu2McpMetadata,
+  expectedEnvironmentInfo,
   loadBu2McpConfiguration,
   mcpContract,
   preflightBu2Endpoint,
@@ -86,6 +87,16 @@ export async function executeBu2McpTool(baseUrl, name, args) {
 
 function toolError(error) {
   if (error instanceof Bu2HttpError) return error.payload;
+  if (error instanceof Bu2McpCompatibilityError) {
+    return {
+      error: {
+        type: "configuration_error",
+        code: error.code,
+        message: error.message,
+        details: error.details,
+      },
+    };
+  }
   return {
     error: {
       type: "internal_error",
@@ -97,18 +108,28 @@ function toolError(error) {
 
 export function createBu2McpServer({
   baseUrl = process.env.BU2_ENDPOINT ?? process.env.BU2_SANDBOX_URL ?? "http://127.0.0.1:3100",
-  environment = process.env.BU2_ENVIRONMENT ?? "simulation",
+  environment = process.env.BU2_ENVIRONMENT,
+  localDevelopment = process.env.BU2_LOCAL_DEVELOPMENT === "true",
+  environmentInfo = null,
+  fetchImpl = fetch,
 } = {}) {
   const configuration = loadBu2McpConfiguration({
     BU2_ENDPOINT: baseUrl,
     BU2_ENVIRONMENT: environment,
+    ...(localDevelopment ? { BU2_LOCAL_DEVELOPMENT: "true" } : {}),
   });
+  const activeEnvironmentInfo = environmentInfo ?? expectedEnvironmentInfo(configuration.environment);
+  const mutationTools = new Set([
+    "bu2_create_quote",
+    "bu2_create_payment_intent",
+    "bu2_submit_delivery",
+  ]);
   const server = new McpServer(
     { name: mcpContract.name, version: mcpContract.version, title: "BU2 Agent Payments" },
     {
       capabilities: {
         experimental: {
-          [BU2_MCP_CAPABILITY_NAMESPACE]: bu2McpCapability(configuration.environment),
+          [BU2_MCP_CAPABILITY_NAMESPACE]: bu2McpCapability(activeEnvironmentInfo),
         },
       },
       instructions:
@@ -125,6 +146,19 @@ export function createBu2McpServer({
       },
       async (args) => {
         try {
+          if (mutationTools.has(tool.name)) {
+            const current = await preflightBu2Endpoint(configuration, { fetchImpl });
+            if (current.execution_status !== "execution_enabled") {
+              throw new Bu2McpCompatibilityError(
+                "environment_execution_disabled",
+                "BU2 payment execution is disabled for this environment.",
+                {
+                  environment: current.environment,
+                  execution_status: current.execution_status,
+                },
+              );
+            }
+          }
           const result = await executeBu2McpTool(configuration.endpoint, tool.name, args);
           return {
             content: [{ type: "text", text: JSON.stringify(result) }],
@@ -165,13 +199,14 @@ function cliError(error) {
 
 function helpText() {
   return [
-    "BU2 MCP Server v0.1",
+    "BU2 MCP Server v0.2",
     "",
     "Usage: node sandbox/bin/bu2-mcp.mjs [--metadata | --preflight | --version | --help]",
     "",
     "Environment:",
     "  BU2_ENDPOINT       BU2 Reference Server base URL (default http://127.0.0.1:3100)",
-    "  BU2_ENVIRONMENT    simulation or testnet (default simulation)",
+    "  BU2_ENVIRONMENT    sandbox or live; local requires BU2_LOCAL_DEVELOPMENT=true",
+    "  BU2_LOCAL_DEVELOPMENT  true only for the local simulated Reference Server",
     "  BU2_SANDBOX_URL    deprecated alias for BU2_ENDPOINT",
   ].join("\n");
 }
@@ -213,6 +248,9 @@ export async function runBu2McpCli({
     createBu2McpServer({
       baseUrl: configuration.endpoint,
       environment: configuration.environment,
+      localDevelopment: configuration.localDevelopment,
+      environmentInfo: preflight,
+      fetchImpl,
     }),
   );
   stderr(

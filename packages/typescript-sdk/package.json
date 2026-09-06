@@ -1,8 +1,8 @@
 {
   "name": "@bu2/sdk",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
-  "description": "Typed Agent Payment API v1 client for BU2 Simulation and Testnet integrations.",
+  "description": "Typed Agent Payment API v0.2.0 client with Sandbox and Live environment preflight.",
   "type": "module",
   "engines": {
     "node": ">=22.13.0"

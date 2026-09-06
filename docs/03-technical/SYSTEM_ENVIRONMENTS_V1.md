@@ -2,7 +2,7 @@
 
 日期：2026-09-06
 执行者：Codex
-状态：F01 / ENV-01 已由 PR #18 批准；ENV-02 已实现，等待 R2 独立人工审查
+状态：F01 / ENV-01 已由 PR #18 批准；ENV-02 已由 PR #19 批准；ENV-03 已实现，等待 R2 独立人工审查
 适用范围：BU2 服务、API、SDK、MCP、Doctor、Receipt、部署与运营
 
 ## 1. 决策
@@ -16,7 +16,7 @@ BU2 对外只提供两个服务环境：
 
 `Mainnet` 是 Live 的网络描述，不是第三个环境枚举。`Simulation` 是内部本地执行方式，不是对外服务环境；本地开发、单元测试和故障注入使用 `environment=local` 与 `payment_adapter=simulated`。
 
-当前代码中的 `simulation/testnet` 是待 ENV-02/ENV-03 迁移的 legacy 值。本文件冻结目标语义，不宣称现有运行时已经执行这些约束，也不授权批量改写历史 Receipt。
+旧 Receipt 中的 `simulation/testnet` 是必须保留的 legacy 值；当前运行时和新客户端已经使用 `local/sandbox/live`。本文件不授权批量改写或重签历史 Receipt。
 
 ## 2. 三个正交维度
 
@@ -91,8 +91,8 @@ ENV-03 应冻结版本化环境信息接口，建议为 `GET /v1/environment`，
   "environment_contract_version": "1.0",
   "chain_id": 84532,
   "network": "eip155:84532",
-  "api_contract_version": "0.1.4",
-  "receipt_schema_versions": ["0.1", "0.2"],
+  "api_contract_version": "0.2.0",
+  "receipt_schema_versions": ["0.2", "0.3"],
   "execution_status": "execution_enabled",
   "public_capabilities": [],
   "receipt_issuer": {}
@@ -163,7 +163,7 @@ PR local simulation / contract verification
 
 F01/ENV-01 只冻结决策，不创建云资源、不配置 DNS、不部署服务、不修改历史数据、不启用 Live，也不执行测试网或主网支付。若决策未获批准，删除本次新增入口并恢复上层文档即可；交易、账本、数据库、Adapter 和 Receipt 均无需回滚。
 
-ENV-02 已实现环境注册表、配置装载、Schema v8 数据库绑定、RPC/Signer/Provider 断言和 Live execution disabled，等待 R2 审查；实现说明见 [环境注册表与链隔离 v1](ENVIRONMENT_REGISTRY_AND_CHAIN_ISOLATION_V1.md)。下一实现 PR 为 ENV-03。在 ENV-03 合并前，公开 API、SDK、MCP、Doctor 与 Receipt 仍使用 legacy `simulation/testnet`，不得把内部配置迁移误写为客户端契约已经完成。
+ENV-02 已由 PR #19 合并，实现环境注册表、配置装载、Schema v8 数据库绑定、RPC/Signer/Provider 断言和 Live execution disabled；说明见 [环境注册表与链隔离 v1](ENVIRONMENT_REGISTRY_AND_CHAIN_ISOLATION_V1.md)。ENV-03 已实现 API/SDK/MCP/Doctor/Evidence 预检和 Receipt v0.3，等待 R2 审查；说明见 [客户端与 Receipt 环境契约 v1](ENVIRONMENT_CLIENT_AND_RECEIPT_CONTRACT_V1.md)。旧 Receipt 仍保留原始 legacy 值、签名字节和解释规则。
 
 ## 参考来源
 

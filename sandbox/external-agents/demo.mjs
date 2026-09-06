@@ -44,7 +44,7 @@ export async function runExternalAgentDemo({
       quoteId: quote.id,
       payerAccountId: "acct_external_buyer",
       buyerAgentId: "agt_external_buyer",
-      paymentMandateId: "mdt_external_simulation",
+      paymentMandateId: "mdt_external_local",
       amountValue: 3900,
       currency: "CNY",
       purpose: "Buy the external Agent research dataset",
@@ -63,7 +63,7 @@ export async function runExternalAgentDemo({
           idempotencyKey: `owner-authorize-${runId}`,
           body: {
             decision: "authorize",
-            reason: "Explicit approval in the local Simulation demo",
+            reason: "Explicit approval in the local simulated demo",
           },
         },
       );
@@ -97,7 +97,7 @@ export async function runExternalAgentDemo({
     const verification = await buyer.verifyReceipt(receipt.id);
     const elapsedMs = Date.now() - startedAt;
     const summary = {
-      environment: "simulation",
+      environment: "local",
       payment_intent_id: finalStatus.id,
       transaction_id: finalStatus.transaction_id,
       transaction_status: settlement.transaction.status,

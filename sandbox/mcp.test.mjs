@@ -148,9 +148,9 @@ test("external Buyer and Seller Agents share one HTTP Transaction Core", async (
   assert.equal(transaction.receipt.id, receipt.id);
 });
 
-test("one-command external Agent demo completes a Simulation transaction within 15 minutes", async () => {
+test("one-command external Agent demo completes a local simulated transaction within 15 minutes", async () => {
   const summary = await runExternalAgentDemo({ log: () => {} });
-  assert.equal(summary.environment, "simulation");
+  assert.equal(summary.environment, "local");
   assert.equal(summary.transaction_status, "settled");
   assert.equal(summary.receipt_valid, true);
   assert.ok(summary.elapsed_ms < 15 * 60 * 1000);

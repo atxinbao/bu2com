@@ -2,7 +2,7 @@
 
 日期：2026-09-06
 执行者：Codex
-适用环境：Phase 0 Simulation / Base Sepolia Testnet
+适用环境：Phase 0 Local / Sandbox / Live（Live execution disabled）
 
 本目录提供 BU2 stdio MCP Server 的版本化 Host 配置。当前入口是仓库内私有分发，不是公开 npm 包或远程 MCP 服务。
 
@@ -25,7 +25,8 @@ Use the doctor before adding the Host configuration:
 
 ```bash
 BU2_ENDPOINT=http://127.0.0.1:3100 \
-BU2_ENVIRONMENT=simulation \
+BU2_ENVIRONMENT=local \
+BU2_LOCAL_DEVELOPMENT=true \
 npm --prefix sandbox run doctor
 ```
 
@@ -53,8 +54,9 @@ Copy [`codex-config.toml.example`](codex-config.toml.example) into the Codex con
 
 ```bash
 codex mcp add --env BU2_ENDPOINT=http://127.0.0.1:3100 \
-  --env BU2_ENVIRONMENT=simulation \
-  bu2-simulation -- node /absolute/path/to/bu2com/sandbox/bin/bu2-mcp.mjs
+  --env BU2_ENVIRONMENT=local \
+  --env BU2_LOCAL_DEVELOPMENT=true \
+  bu2-local -- node /absolute/path/to/bu2com/sandbox/bin/bu2-mcp.mjs
 ```
 
 验证配置：
@@ -62,7 +64,7 @@ codex mcp add --env BU2_ENDPOINT=http://127.0.0.1:3100 \
 Verify the configuration:
 
 ```bash
-codex mcp get bu2-simulation --json
+codex mcp get bu2-local --json
 ```
 
 ## 3. Claude Desktop / Claude Code
@@ -74,8 +76,9 @@ Claude Desktop uses [`claude-desktop-config.json.example`](claude-desktop-config
 ```bash
 claude mcp add --transport stdio \
   --env BU2_ENDPOINT=http://127.0.0.1:3100 \
-  --env BU2_ENVIRONMENT=simulation \
-  bu2-simulation -- node /absolute/path/to/bu2com/sandbox/bin/bu2-mcp.mjs
+  --env BU2_ENVIRONMENT=local \
+  --env BU2_LOCAL_DEVELOPMENT=true \
+  bu2-local -- node /absolute/path/to/bu2com/sandbox/bin/bu2-mcp.mjs
 ```
 
 项目级 Claude 配置第一次使用时可能要求用户确认该 stdio Server。此确认不等于授权任何付款；BU2 的 PaymentMandate、异常审批与结算边界保持不变。
@@ -95,11 +98,13 @@ Hosts using the `mcpServers` JSON convention can start from [`generic-stdio-conf
 Inspect static metadata and probe the configured endpoint before connecting a host:
 
 ```bash
-BU2_ENVIRONMENT=simulation \
+BU2_ENVIRONMENT=local \
+BU2_LOCAL_DEVELOPMENT=true \
   node sandbox/bin/bu2-mcp.mjs --metadata
 
 BU2_ENDPOINT=http://127.0.0.1:3100 \
-BU2_ENVIRONMENT=simulation \
+BU2_ENVIRONMENT=local \
+BU2_LOCAL_DEVELOPMENT=true \
   node sandbox/bin/bu2-mcp.mjs --preflight
 ```
 
@@ -109,7 +114,8 @@ Normal startup performs the same preflight automatically. Before opening the std
 
 - endpoint 是 BU2 Reference Server / the endpoint identifies a BU2 Reference Server;
 - Agent Payment API contract version 与 `/v1` base path；
-- configured `simulation` or `testnet` environment;
+- configured `local`, `sandbox`, or `live` environment plus environment contract;
+- chain, network, execution backend, execution status and Receipt issuer;
 - MCP contract version compatibility.
 
 MCP initialize 响应还会在 `capabilities.experimental["com.bu2.agent-payments"]` 中公开 API version、MCP version、contract SHA-256、环境、工具数量以及“不自动重试 mutation”的边界。Host 或自建 Client 应在调用工具前校验它；仓库内示例 Client 已强制校验。
@@ -118,20 +124,21 @@ The MCP initialize response also advertises the API version, MCP version, contra
 
 ## 6. 环境边界 / Environment boundary
 
-| `BU2_ENVIRONMENT` | Endpoint                              | 允许范围 / Allowed scope          |
-| ----------------- | ------------------------------------- | --------------------------------- |
-| `simulation`      | Local Reference Server                | 模拟交易 / simulated transactions |
-| `testnet`         | Base Sepolia-enabled Reference Server | 测试网交易 / testnet transactions |
+| `BU2_ENVIRONMENT` | Endpoint | 允许范围 / Allowed scope |
+| --- | --- | --- |
+| `local` + `BU2_LOCAL_DEVELOPMENT=true` | Local Reference Server | 本地模拟 / local simulation |
+| `sandbox` | Base Sepolia Reference Server | gated testnet execution |
+| `live` | Base Mainnet Reference Server | read/reconcile only; execution disabled |
 
-`mainnet` 会在 MCP 进程启动前被拒绝。六个 Agent 工具不包含人工授权和直接结算；未知写入结果不能自动重试。
+legacy `simulation/testnet/mainnet` 名称会在 MCP 进程启动前被拒绝。MCP 在启动和每次 Agent mutation 前读取 `/v1/environment`；不匹配或执行禁用时不会发送 mutation。六个 Agent 工具不包含人工授权和直接结算；未知写入结果不能自动重试。
 
-`mainnet` is rejected before the MCP process starts. The six Agent tools do not expose human authorization or direct settlement; an unknown mutation result must not be retried automatically.
+Legacy `simulation/testnet/mainnet` names are rejected before MCP startup. MCP reads `/v1/environment` both at startup and before every Agent mutation; a mismatch or disabled execution prevents the mutation. The six Agent tools do not expose human authorization or direct settlement, and an unknown mutation result must not be retried automatically.
 
 ## 7. Clean-room 验收 / Clean-room acceptance
 
 E2.4 会把一个只依赖官方 MCP Client 的 Host 样例复制到全新临时项目，通过上述稳定 stdio 入口完成 Simulation 交易并验证 Receipt。该路径不会导入仓库内的示例 Client，也不会公开发布或远程托管 MCP Server。
 
-E2.4 copies a host sample that depends only on the official MCP Client into a fresh temporary project, then completes a Simulation transaction and verifies its Receipt through the stable stdio entrypoint above. The path does not import the repository sample Client and does not publish or remotely host the MCP Server.
+E2.4 copies a host sample that depends only on the official MCP Client into a fresh temporary project, then completes a `local + simulated` transaction and verifies its Receipt through the stable stdio entrypoint above. The path does not import the repository sample Client and does not publish or remotely host the MCP Server.
 
 运行方式与结果见 [clean-room 样例](../clean-room/README.md) 和 [E2.4 验收证据](../../docs/03-technical/CLEAN_ROOM_ACCEPTANCE_EVIDENCE.md)。
 

@@ -1,39 +1,29 @@
+import { readFileSync } from "node:fs";
 import { base, baseSepolia } from "viem/chains";
 import { ApiError } from "./domain.mjs";
 
-export const ENVIRONMENT_CONTRACT_VERSION = "1.0";
+export const ENVIRONMENT_CONTRACT = Object.freeze(
+  JSON.parse(
+    readFileSync(
+      new URL("../docs/03-technical/environment-contract.json", import.meta.url),
+      "utf8",
+    ),
+  ),
+);
+export const ENVIRONMENT_CONTRACT_VERSION = ENVIRONMENT_CONTRACT.schema_version;
 export const EXECUTION_DISABLED = "execution_disabled";
 export const EXECUTION_ENABLED = "execution_enabled";
 
-const registry = {
-  local: {
-    environment: "local",
-    payment_adapter: "simulated",
-    chain_id: null,
-    network: null,
-    asset: null,
-    asset_decimals: null,
-    default_execution_status: EXECUTION_ENABLED,
-  },
-  sandbox: {
-    environment: "sandbox",
-    payment_adapter: "x402",
-    chain_id: baseSepolia.id,
-    network: `eip155:${baseSepolia.id}`,
-    asset: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
-    asset_decimals: 6,
-    default_execution_status: EXECUTION_DISABLED,
-  },
-  live: {
-    environment: "live",
-    payment_adapter: "x402",
-    chain_id: base.id,
-    network: `eip155:${base.id}`,
-    asset: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-    asset_decimals: 6,
-    default_execution_status: EXECUTION_DISABLED,
-  },
-};
+const registry = ENVIRONMENT_CONTRACT.environments;
+
+if (
+  registry.sandbox.chain_id !== baseSepolia.id ||
+  registry.sandbox.network !== `eip155:${baseSepolia.id}` ||
+  registry.live.chain_id !== base.id ||
+  registry.live.network !== `eip155:${base.id}`
+) {
+  throw new Error("Environment contract does not match the official Viem Base chain definitions.");
+}
 
 export const ENVIRONMENT_REGISTRY = Object.freeze(
   Object.fromEntries(

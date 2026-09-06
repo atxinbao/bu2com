@@ -3,6 +3,7 @@ import type { paths } from "./generated/openapi.js";
 import {
   Bu2ApiError,
   Bu2ConfigurationError,
+  Bu2EnvironmentError,
   Bu2SdkError,
   Bu2TransportError,
   type Bu2RecoveryAction,
@@ -16,6 +17,7 @@ import type {
   CreateQuote,
   DeliveryEvidence,
   DeliveryResult,
+  EnvironmentInfo,
   PaymentIntent,
   Quote,
   Receipt,
@@ -26,6 +28,7 @@ import type {
   TransactionPage,
   TransactionView,
 } from "./types.js";
+import { ENVIRONMENT_CONTRACT } from "./generated/environment.js";
 
 type OpenApiResult<T> = {
   data?: T;
@@ -36,6 +39,7 @@ type OpenApiResult<T> = {
 type Operation = {
   name: string;
   mutation: boolean;
+  requiresExecution?: boolean;
 };
 
 type TimedSignal = {
@@ -144,15 +148,22 @@ function apiError(response: Response, payload: unknown, operation: Operation): B
 export class Bu2Client {
   readonly baseUrl: string;
   readonly environment: Bu2ClientOptions["environment"];
+  readonly localDevelopment: boolean;
   readonly defaultTimeoutMs: number;
   private readonly api: ReturnType<typeof createClient<paths>>;
 
   constructor(options: Bu2ClientOptions) {
-    if (!options || !["simulation", "testnet"].includes(options.environment)) {
-      throw new Bu2ConfigurationError("environment must be simulation or testnet.");
+    if (!options || !["local", "sandbox", "live"].includes(options.environment)) {
+      throw new Bu2ConfigurationError("environment must be local, sandbox, or live.");
+    }
+    if (options.environment === "local" && options.localDevelopment !== true) {
+      throw new Bu2ConfigurationError(
+        "local requires localDevelopment: true and cannot be used as an external environment.",
+      );
     }
     this.baseUrl = normalizeBaseUrl(options.baseUrl);
     this.environment = options.environment;
+    this.localDevelopment = options.environment === "local";
     this.defaultTimeoutMs = timeoutValue(options.defaultTimeoutMs, 30_000);
     this.api = createClient<paths>({
       baseUrl: this.baseUrl,
@@ -160,11 +171,61 @@ export class Bu2Client {
     });
   }
 
+  private validateEnvironment(info: EnvironmentInfo, requireExecution: boolean): EnvironmentInfo {
+    const expected = ENVIRONMENT_CONTRACT.environments[this.environment];
+    const mismatches = [
+      info.environment !== this.environment ? "environment" : null,
+      info.environment_contract_version !== ENVIRONMENT_CONTRACT.schema_version
+        ? "environment_contract_version"
+        : null,
+      info.chain_id !== expected.chain_id ? "chain_id" : null,
+      info.network !== expected.network ? "network" : null,
+      info.execution_backend !== expected.payment_adapter ? "execution_backend" : null,
+      info.receipt_issuer?.environment !== this.environment ? "receipt_issuer.environment" : null,
+      info.receipt_issuer?.issuer_id !== `bu2-reference-server:${this.environment}`
+        ? "receipt_issuer.issuer_id"
+        : null,
+      !info.receipt_issuer?.verification_key_id ? "receipt_issuer.verification_key_id" : null,
+      info.receipt_issuer?.signature_algorithm !== "Ed25519"
+        ? "receipt_issuer.signature_algorithm"
+        : null,
+      !info.receipt_issuer?.public_key ? "receipt_issuer.public_key" : null,
+      info.api_contract_version !== "0.2.0" ? "api_contract_version" : null,
+      !info.receipt_schema_versions?.includes("0.3") ? "receipt_schema_versions" : null,
+    ].filter((value): value is string => value !== null);
+    if (mismatches.length > 0) {
+      throw new Bu2EnvironmentError(
+        "BU2 endpoint does not match the expected environment contract.",
+        "environment_contract_mismatch",
+        { expected_environment: this.environment, mismatches },
+      );
+    }
+    if (requireExecution && info.execution_status !== "execution_enabled") {
+      throw new Bu2EnvironmentError(
+        "BU2 payment execution is disabled for the selected environment.",
+        "environment_execution_disabled",
+        { environment: this.environment, execution_status: info.execution_status },
+      );
+    }
+    return info;
+  }
+
+  private async preflightMutation(
+    options: Bu2RequestOptions | undefined,
+    requireExecution: boolean,
+  ): Promise<void> {
+    const info = await this.getEnvironment(options);
+    this.validateEnvironment(info, requireExecution);
+  }
+
   private async execute<T>(
     operation: Operation,
     options: Bu2RequestOptions | Bu2MutationOptions | undefined,
     perform: (signal: AbortSignal) => Promise<OpenApiResult<T>>,
   ): Promise<T> {
+    if (operation.mutation) {
+      await this.preflightMutation(options, operation.requiresExecution !== false);
+    }
     const activeSignal = timedSignal(
       options?.signal,
       timeoutValue(options?.timeoutMs, this.defaultTimeoutMs),
@@ -211,6 +272,19 @@ export class Bu2Client {
     } finally {
       activeSignal.cleanup();
     }
+  }
+
+  async getEnvironment(options: Bu2RequestOptions = {}): Promise<EnvironmentInfo> {
+    const info = await this.execute(
+      { name: "getEnvironment", mutation: false },
+      options,
+      (signal) =>
+        this.api.GET("/environment", {
+          params: { header: traceHeaders(options) },
+          signal,
+        }),
+    );
+    return this.validateEnvironment(info, false);
   }
 
   createQuote(body: CreateQuote, options: Bu2MutationOptions): Promise<Quote> {
@@ -327,7 +401,7 @@ export class Bu2Client {
     options: Bu2MutationOptions,
   ): Promise<SettlementRecoveryResult> {
     return this.execute(
-      { name: "recoverTransactionSettlement", mutation: true },
+      { name: "recoverTransactionSettlement", mutation: true, requiresExecution: false },
       options,
       (signal) =>
         this.api.POST("/transactions/{transaction_id}/settlement_recoveries", {

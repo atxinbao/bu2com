@@ -15,7 +15,8 @@ export class Bu2McpToolError extends Error {
 
 export async function connectBu2McpClient({
   baseUrl,
-  environment = "simulation",
+  environment = "local",
+  localDevelopment = environment === "local",
   onDiagnostic = () => {},
 } = {}) {
   const transport = new StdioClientTransport({
@@ -25,12 +26,13 @@ export async function connectBu2McpClient({
       ...getDefaultEnvironment(),
       BU2_ENDPOINT: baseUrl ?? "http://127.0.0.1:3100",
       BU2_ENVIRONMENT: environment,
+      ...(localDevelopment ? { BU2_LOCAL_DEVELOPMENT: "true" } : {}),
     },
     stderr: "pipe",
   });
   transport.stderr?.on("data", (chunk) => onDiagnostic(chunk.toString()));
 
-  const client = new Client({ name: "bu2-external-agent-sample", version: "0.1.0" });
+  const client = new Client({ name: "bu2-external-agent-sample", version: "0.2.0" });
   await client.connect(transport);
   let handshake;
   try {

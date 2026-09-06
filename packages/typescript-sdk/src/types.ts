@@ -9,6 +9,7 @@ export type DeliveryRecord = components["schemas"]["DeliveryRecord"];
 export type PaymentIntent = components["schemas"]["PaymentIntent"];
 export type Quote = components["schemas"]["Quote"];
 export type Receipt = components["schemas"]["Receipt"];
+export type EnvironmentInfo = components["schemas"]["EnvironmentInfo"];
 export type SettlementRecoveryResult = components["schemas"]["SettlementRecoveryResult"];
 export type Transaction = components["schemas"]["Transaction"];
 export type TransactionPage = components["schemas"]["TransactionPage"];
@@ -31,14 +32,20 @@ export type TransactionListQuery = NonNullable<
   paths["/transactions"]["get"]["parameters"]["query"]
 >;
 
-export type Bu2Environment = "simulation" | "testnet";
+export type Bu2ExternalEnvironment = "sandbox" | "live";
+export type Bu2Environment = "local" | Bu2ExternalEnvironment;
 
-export interface Bu2ClientOptions {
+interface Bu2ClientBaseOptions {
   baseUrl: string;
-  environment: Bu2Environment;
   defaultTimeoutMs?: number;
   fetch?: typeof globalThis.fetch;
 }
+
+export type Bu2ClientOptions = Bu2ClientBaseOptions &
+  (
+    | { environment: Bu2ExternalEnvironment; localDevelopment?: false }
+    | { environment: "local"; localDevelopment: true }
+  );
 
 export interface Bu2RequestOptions {
   traceId?: string;

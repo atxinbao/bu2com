@@ -1,9 +1,9 @@
-# BU2 Reference Server v0.12 / x402 Sandbox v0.5
+# BU2 Reference Server v0.13 / x402 Sandbox v0.5
 
 日期：2026-09-06
 执行者：Codex
 
-本目录实现 Phase 0 Frozen `/v1` Contract 的本地 SQLite Reference Server。它具备追加账本、Webhook Outbox、模拟支付 Adapter、签名 Receipt、稳定分页与运行时请求校验、基于官方 MCP SDK 的外部 Agent 接入样例，以及基于官方 x402 SDK 的 Base Sepolia `exact` 支付通道；ENV-02 已增加 `local/sandbox/live` 环境注册表、SQLite 环境绑定和链/Signer/Provider 断言。它不持有真实资金，不可用于生产。
+本目录实现 Phase 0 Frozen `/v1` Contract 的本地 SQLite Reference Server。它具备追加账本、Webhook Outbox、模拟支付 Adapter、签名 Receipt、稳定分页与运行时请求校验、基于官方 MCP SDK 的外部 Agent 接入样例，以及基于官方 x402 SDK 的 Base Sepolia `exact` 支付通道；ENV-02/03 已增加 `local/sandbox/live` 注册表、SQLite 环境绑定、版本化环境自描述、客户端预检和 Receipt v0.3 环境签名绑定。它不持有真实资金，不可用于生产。
 
 ## 启动
 
@@ -37,11 +37,12 @@ npm run demo:external
 
 ```bash
 BU2_ENDPOINT=http://127.0.0.1:3100 \
-BU2_ENVIRONMENT=simulation \
+BU2_ENVIRONMENT=local \
+BU2_LOCAL_DEVELOPMENT=true \
 npm run mcp
 ```
 
-`npm run mcp` 使用稳定入口 `bin/bu2-mcp.mjs`，先校验 endpoint、API contract、环境和 MCP contract compatibility，再打开 stdio。Agent 只获得冻结的 6 个 MCP 工具；人工授权和 BU2 结算仍留在 HTTP 控制面。MCP 层只转发 `/v1`，不会直接修改领域状态或账本。完整配置、角色边界和五分钟快速开始见 [外部 Agent 快速接入](../docs/03-technical/EXTERNAL_AGENT_QUICKSTART.md)；Codex、Claude Desktop 与通用 Host 示例见 [MCP Host 配置](../integrations/mcp/README.md)。
+`npm run mcp` 使用稳定入口 `bin/bu2-mcp.mjs`，先校验 endpoint、API/environment/MCP contract、链、执行后端、执行状态和 Receipt issuer，再打开 stdio；每次 Agent mutation 前重新预检。Agent 只获得冻结的 6 个 MCP 工具；人工授权和 BU2 结算仍留在 HTTP 控制面。MCP 层只转发 `/v1`，不会直接修改领域状态或账本。完整配置、角色边界和五分钟快速开始见 [外部 Agent 快速接入](../docs/03-technical/EXTERNAL_AGENT_QUICKSTART.md)；Codex、Claude Desktop 与通用 Host 示例见 [MCP Host 配置](../integrations/mcp/README.md)。
 
 ## 接入诊断
 
@@ -49,7 +50,8 @@ Reference Server 启动后运行本地 doctor：
 
 ```bash
 BU2_ENDPOINT=http://127.0.0.1:3100 \
-BU2_ENVIRONMENT=simulation \
+BU2_ENVIRONMENT=local \
+BU2_LOCAL_DEVELOPMENT=true \
 npm run doctor
 ```
 
@@ -145,7 +147,8 @@ npm run x402:server
 
 ## 沙盒调试端点
 
-- `GET /health`：服务、API/MCP 兼容版本、环境、数据库、Adapter、账本事件，以及 Outbox 与 Adapter 未知结果健康快照。
+- `GET /health`：公开粗粒度存活、版本、环境和 payment execution readiness；不暴露数据库路径、交易数量或内部 Outbox/Adapter 统计。
+- `GET /v1/environment`：版本化环境、链、执行后端、契约、执行状态、公开能力和 Receipt issuer 自描述。
 - `GET /v1/transactions?limit=20&cursor=...`：按时间倒序返回交易及其支付、交付、通道和 Receipt 上下文，使用不透明 cursor 分页。
 - `GET /v1/transactions/{id}`：返回单笔完整交易详情。
 - `POST /v1/transactions/{id}/settlement_recoveries`：幂等查询未知 x402 结算，不重复付款。

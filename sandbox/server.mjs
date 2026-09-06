@@ -13,6 +13,7 @@ import { SqliteLedger } from "./persistence.mjs";
 import { WebhookDispatcher } from "./webhooks.mjs";
 import { X402PaymentAdapter } from "./x402-adapter.mjs";
 import {
+  assertExecutionEnabled,
   assertSignerBinding,
   loadEnvironmentConfig,
   verifyRpcChain,
@@ -36,6 +37,36 @@ const contractVersions = JSON.parse(
 const packageMetadata = JSON.parse(
   readFileSync(new URL("./package.json", import.meta.url), "utf8"),
 );
+
+const executionMutation = (method, pathname) =>
+  method === "POST" &&
+  (/^\/v1\/quotes$/.test(pathname) ||
+    /^\/v1\/payment_intents$/.test(pathname) ||
+    /^\/v1\/payment_intents\/[^/]+\/authorization$/.test(pathname) ||
+    /^\/v1\/transactions\/[^/]+\/deliveries$/.test(pathname) ||
+    /^\/v1\/transactions\/[^/]+\/settlements$/.test(pathname));
+
+function environmentDocument(config, sandbox) {
+  const executionEnabled = config.execution_status === "execution_enabled";
+  return {
+    service: "bu2-reference-server",
+    environment: config.environment,
+    environment_contract_version: config.environment_contract_version,
+    chain_id: config.chain_id,
+    network: config.network,
+    execution_backend: config.payment_adapter,
+    api_contract_version: contractVersions.agent_payment_api,
+    mcp_contract_versions: [contractVersions.mcp_tools],
+    receipt_schema_versions: contractVersions.receipt_supported,
+    execution_status: config.execution_status,
+    public_capabilities: [
+      "transactions:read",
+      "receipts:verify",
+      ...(executionEnabled ? ["payment_mutations"] : []),
+    ],
+    receipt_issuer: sandbox.receiptIssuer(),
+  };
+}
 
 async function readJson(request) {
   if (!request.headers["content-type"]?.toLowerCase().startsWith("application/json")) {
@@ -168,8 +199,10 @@ export function createBu2Server({
       adapter: activeAdapter,
       initialWallet,
       observer,
+      environmentConfig,
     });
   activeSandbox.observer = observer;
+  activeSandbox.environmentConfig = environmentConfig;
   if (activeSandbox.adapter) activeSandbox.adapter.observer = observer;
   const activeDispatcher =
     dispatcher ?? new WebhookDispatcher({ ledger: activeLedger, observer });
@@ -220,15 +253,18 @@ export function createBu2Server({
           api_contract_version: contractVersions.agent_payment_api,
           api_base_path: contractVersions.api_base_path,
           mcp_contract_versions: [contractVersions.mcp_tools],
-          environment:
-            activeSandbox.adapter?.name === "x402_exact_base_sepolia"
-              ? "testnet"
-              : "simulation",
-          persistence: activeLedger.path,
-          adapter: activeSandbox.adapter?.name ?? "none",
-          ledger_events: activeLedger.listLedgerEvents().length,
-          ...snapshot,
+          environment_contract_version: environmentConfig.environment_contract_version,
+          environment: environmentConfig.environment,
+          execution_status: environmentConfig.execution_status,
+          payment_execution_readiness:
+            environmentConfig.execution_status === "execution_enabled" ? "ready" : "disabled",
         });
+      }
+      if (request.method === "GET" && url.pathname === "/v1/environment") {
+        return send(response, 200, environmentDocument(environmentConfig, activeSandbox));
+      }
+      if (executionMutation(request.method, url.pathname)) {
+        assertExecutionEnabled(environmentConfig, `${request.method} ${url.pathname}`);
       }
       if (request.method === "GET" && url.pathname === "/v1/events") {
         return send(response, 200, { data: activeLedger.listLedgerEvents() });

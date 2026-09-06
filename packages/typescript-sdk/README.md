@@ -1,13 +1,13 @@
-# @bu2/sdk · TypeScript SDK v0.1
+# @bu2/sdk · TypeScript SDK v0.2
 
 日期：2026-09-06
 执行者：Codex
-适用环境：BU2 Phase 0 Simulation / Base Sepolia Testnet
+适用环境：BU2 Phase 0 Local / Sandbox / Live（Live execution disabled）
 发布状态：Monorepo 内部包，未发布到 npm registry
 
 ## 中文
 
-`@bu2/sdk` 是冻结 Agent Payment API v1 的 TypeScript 薄客户端。请求和响应类型由 [`openapi.yaml`](../../docs/03-technical/openapi.yaml) 自动生成，HTTP 调用使用 `openapi-fetch`；SDK 不复制交易状态机、不缓存并覆盖服务端事实，也不自动重试请求。
+`@bu2/sdk` 是 Agent Payment API v0.2.0 的 TypeScript 薄客户端。请求和响应类型由 [`openapi.yaml`](../../docs/03-technical/openapi.yaml) 自动生成，HTTP 调用使用 `openapi-fetch`；SDK 不复制交易状态机、不缓存并覆盖服务端事实，也不自动重试请求。
 
 ### 安装与验证
 
@@ -29,11 +29,12 @@ import { Bu2Client } from "@bu2/sdk";
 
 const bu2 = new Bu2Client({
   baseUrl: "http://127.0.0.1:3100/v1",
-  environment: "simulation",
+  environment: "local",
+  localDevelopment: true,
 });
 ```
 
-`baseUrl` 必须是以 `/v1` 结尾的绝对 HTTP(S) URL。`environment` 只允许 `simulation` 或 `testnet`，不会因修改字符串而启用 Mainnet。
+`baseUrl` 必须是以 `/v1` 结尾的绝对 HTTP(S) URL。新客户端对外只接受 `sandbox` 或 `live`；连接本机模拟服务必须显式使用 `localDevelopment: true`。每次 mutation 前，SDK 都会验证 `/v1/environment` 的环境、链、执行后端、契约和 Receipt issuer；不匹配或 execution disabled 时不会发送 mutation。
 
 ### 完成一笔交易
 
@@ -90,6 +91,7 @@ try {
 ### API
 
 - `createQuote`
+- `getEnvironment`
 - `createPaymentIntent`
 - `getPaymentIntent`
 - `decideAuthorization`
@@ -103,7 +105,7 @@ try {
 
 ## English
 
-`@bu2/sdk` is a thin TypeScript client for the frozen Agent Payment API v1. Request and response types are generated from [`openapi.yaml`](../../docs/03-technical/openapi.yaml), and HTTP transport is provided by `openapi-fetch`. The SDK does not own transaction state, overwrite server facts, or retry requests automatically.
+`@bu2/sdk` is a thin TypeScript client for Agent Payment API v0.2.0. Request and response types are generated from [`openapi.yaml`](../../docs/03-technical/openapi.yaml), and HTTP transport is provided by `openapi-fetch`. The SDK does not own transaction state, overwrite server facts, or retry requests automatically.
 
 ### Install and verify
 
@@ -125,11 +127,12 @@ import { Bu2Client } from "@bu2/sdk";
 
 const bu2 = new Bu2Client({
   baseUrl: "http://127.0.0.1:3100/v1",
-  environment: "simulation",
+  environment: "local",
+  localDevelopment: true,
 });
 ```
 
-`baseUrl` must be an absolute HTTP(S) URL ending in `/v1`. `environment` accepts only `simulation` or `testnet`; changing this label cannot enable Mainnet.
+`baseUrl` must be an absolute HTTP(S) URL ending in `/v1`. New external clients accept `sandbox` or `live`; connecting to a local simulated server requires explicit `localDevelopment: true`. Before every mutation, the SDK validates `/v1/environment`, including environment, chain, execution backend, contract versions, Receipt issuer, and execution status. A mismatch or disabled execution prevents the mutation from being sent.
 
 Every mutation requires a caller-owned `idempotencyKey`. On a write timeout, network error, or uncertain server response, the SDK returns `query_before_retry` and never replays the operation automatically. Use `getPaymentIntent`, `getTransaction`, or `getReceipt` to reconcile server state first.
 

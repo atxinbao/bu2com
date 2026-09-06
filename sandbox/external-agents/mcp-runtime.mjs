@@ -11,6 +11,13 @@ export const contractVersions = JSON.parse(
   readFileSync(new URL("../../docs/03-technical/contract-versions.json", import.meta.url), "utf8"),
 );
 
+export const environmentContract = JSON.parse(
+  readFileSync(
+    new URL("../../docs/03-technical/environment-contract.json", import.meta.url),
+    "utf8",
+  ),
+);
+
 export const mcpContractSha256 = createHash("sha256")
   .update(JSON.stringify(mcpContract))
   .digest("hex");
@@ -62,26 +69,75 @@ export function loadBu2McpConfiguration(environment = process.env) {
     );
   }
   const endpoint = normalizeEndpoint(currentEndpoint ?? legacyEndpoint ?? "http://127.0.0.1:3100");
-  const activeEnvironment = environment.BU2_ENVIRONMENT ?? "simulation";
-  if (!["simulation", "testnet"].includes(activeEnvironment)) {
+  const activeEnvironment = environment.BU2_ENVIRONMENT;
+  if (!["local", "sandbox", "live"].includes(activeEnvironment)) {
     throw new Bu2McpCompatibilityError(
       "environment_invalid",
-      "BU2_ENVIRONMENT must be simulation or testnet.",
-      { actual: activeEnvironment },
+      "BU2_ENVIRONMENT must be local, sandbox, or live.",
+      { actual: activeEnvironment ?? null },
     );
   }
-  return { endpoint, environment: activeEnvironment };
+  const localDevelopment = environment.BU2_LOCAL_DEVELOPMENT === "true";
+  if (activeEnvironment === "local" && !localDevelopment) {
+    throw new Bu2McpCompatibilityError(
+      "local_development_confirmation_required",
+      "BU2_LOCAL_DEVELOPMENT=true is required when BU2_ENVIRONMENT=local.",
+    );
+  }
+  if (activeEnvironment !== "local" && environment.BU2_LOCAL_DEVELOPMENT !== undefined) {
+    throw new Bu2McpCompatibilityError(
+      "local_development_flag_invalid",
+      "BU2_LOCAL_DEVELOPMENT is only valid with BU2_ENVIRONMENT=local.",
+    );
+  }
+  return { endpoint, environment: activeEnvironment, localDevelopment };
 }
 
-export function bu2McpCapability(environment) {
+export function expectedEnvironmentInfo(environment) {
+  const expected = environmentContract.environments[environment];
+  if (!expected) {
+    throw new Bu2McpCompatibilityError("environment_invalid", "Unknown BU2 environment.", {
+      actual: environment,
+    });
+  }
+  return {
+    environment,
+    environment_contract_version: environmentContract.schema_version,
+    chain_id: expected.chain_id,
+    network: expected.network,
+    execution_backend: expected.payment_adapter,
+    execution_status: expected.default_execution_status,
+    api_contract_version: contractVersions.agent_payment_api,
+    api_base_path: contractVersions.api_base_path,
+    mcp_contract_version: mcpContract.version,
+    mcp_contract_sha256: mcpContractSha256,
+    tool_count: mcpContract.tools.length,
+    receipt_schema_versions: environmentContract.receipt_schema_versions,
+    receipt_issuer: {
+      issuer_id: `bu2-reference-server:${environment}`,
+      environment,
+    },
+  };
+}
+
+export function bu2McpCapability(environmentInfo) {
   return {
     api_contract_version: contractVersions.agent_payment_api,
     api_base_path: contractVersions.api_base_path,
     mcp_contract_version: mcpContract.version,
     mcp_contract_sha256: mcpContractSha256,
     contract_status: mcpContract.contract_status,
-    environment,
-    supported_environments: ["simulation", "testnet"],
+    environment_contract_version: environmentInfo.environment_contract_version,
+    environment: environmentInfo.environment,
+    chain_id: environmentInfo.chain_id,
+    network: environmentInfo.network,
+    execution_backend: environmentInfo.execution_backend,
+    execution_status: environmentInfo.execution_status,
+    receipt_issuer_id: environmentInfo.receipt_issuer?.issuer_id ?? null,
+    receipt_verification_key_id:
+      environmentInfo.receipt_issuer?.verification_key_id ?? null,
+    supported_environments: environmentContract.public_environments,
+    local_development: environmentInfo.environment === "local",
     transport: "stdio",
     tool_count: mcpContract.tools.length,
     automatic_mutation_retry: false,
@@ -91,6 +147,7 @@ export function bu2McpCapability(environment) {
 }
 
 export function bu2McpMetadata(environment) {
+  const environmentInfo = expectedEnvironmentInfo(environment);
   return {
     server: {
       name: mcpContract.name,
@@ -98,7 +155,7 @@ export function bu2McpMetadata(environment) {
       title: "BU2 Agent Payments",
     },
     capability_namespace: BU2_MCP_CAPABILITY_NAMESPACE,
-    capability: bu2McpCapability(environment),
+    capability: bu2McpCapability(environmentInfo),
     tool_names: mcpContract.tools.map(({ name }) => name),
   };
 }
@@ -112,15 +169,23 @@ export function validateBu2McpHandshake(serverInfo, serverCapabilities, expected
     );
   }
   const capability = serverCapabilities?.experimental?.[BU2_MCP_CAPABILITY_NAMESPACE];
-  const expected = bu2McpCapability(expectedEnvironment);
+  const expected = expectedEnvironmentInfo(expectedEnvironment);
   if (
     !capability ||
     capability.api_contract_version !== expected.api_contract_version ||
     capability.api_base_path !== expected.api_base_path ||
     capability.mcp_contract_version !== expected.mcp_contract_version ||
     capability.mcp_contract_sha256 !== expected.mcp_contract_sha256 ||
+    capability.environment_contract_version !== expected.environment_contract_version ||
     capability.environment !== expected.environment ||
-    !capability.supported_environments?.includes(expected.environment) ||
+    capability.chain_id !== expected.chain_id ||
+    capability.network !== expected.network ||
+    capability.execution_backend !== expected.execution_backend ||
+    capability.receipt_issuer_id !== expected.receipt_issuer.issuer_id ||
+    !capability.receipt_verification_key_id ||
+    (expected.environment === "local"
+      ? capability.local_development !== true
+      : !capability.supported_environments?.includes(expected.environment)) ||
     capability.transport !== "stdio" ||
     capability.tool_count !== expected.tool_count ||
     capability.automatic_mutation_retry !== false ||
@@ -148,8 +213,9 @@ export async function preflightBu2Endpoint(
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   let response;
   try {
-    response = await fetchImpl(new URL("/health", `${endpoint}/`), {
+    response = await fetchImpl(new URL("/v1/environment", `${endpoint}/`), {
       headers: { accept: "application/json" },
+      redirect: "error",
       signal: controller.signal,
     });
   } catch (error) {
@@ -160,21 +226,21 @@ export async function preflightBu2Endpoint(
   } finally {
     clearTimeout(timer);
   }
-  let health;
+  let info;
   const correlation = {
     request_id: response.headers.get("x-request-id"),
     trace_id: response.headers.get("x-trace-id"),
   };
   try {
-    health = await response.json();
+    info = await response.json();
   } catch {
     throw new Bu2McpCompatibilityError(
       "endpoint_response_invalid",
-      "BU2 endpoint health response must be valid JSON.",
+      "BU2 endpoint environment response must be valid JSON.",
       { status: response.status, ...correlation },
     );
   }
-  if (!response.ok || health.status !== "ok" || health.service !== "bu2-reference-server") {
+  if (!response.ok || info.service !== "bu2-reference-server") {
     throw new Bu2McpCompatibilityError(
       "endpoint_incompatible",
       "BU2 endpoint did not identify a compatible Reference Server.",
@@ -182,44 +248,71 @@ export async function preflightBu2Endpoint(
     );
   }
   if (
-    health.api_contract_version !== contractVersions.agent_payment_api ||
-    health.api_base_path !== contractVersions.api_base_path
+    info.api_contract_version !== contractVersions.agent_payment_api
   ) {
     throw new Bu2McpCompatibilityError(
       "api_contract_version_mismatch",
       "BU2 endpoint API contract is incompatible with this MCP server.",
       {
         expected: contractVersions.agent_payment_api,
-        actual: health.api_contract_version ?? null,
+        actual: info.api_contract_version ?? null,
         ...correlation,
       },
     );
   }
-  if (health.environment !== environment) {
+  const expected = expectedEnvironmentInfo(environment);
+  if (info.environment !== environment) {
     throw new Bu2McpCompatibilityError(
       "environment_mismatch",
       "BU2 endpoint environment does not match BU2_ENVIRONMENT.",
-      { expected: environment, actual: health.environment ?? null, ...correlation },
+      { expected: environment, actual: info.environment ?? null, ...correlation },
     );
   }
-  if (
-    !Array.isArray(health.mcp_contract_versions) ||
-    !health.mcp_contract_versions.includes(mcpContract.version)
-  ) {
+  const mismatches = [
+    info.environment_contract_version !== expected.environment_contract_version
+      ? "environment_contract_version"
+      : null,
+    info.chain_id !== expected.chain_id ? "chain_id" : null,
+    info.network !== expected.network ? "network" : null,
+    info.execution_backend !== expected.execution_backend ? "execution_backend" : null,
+    info.receipt_issuer?.environment !== environment ? "receipt_issuer.environment" : null,
+    info.receipt_issuer?.issuer_id !== expected.receipt_issuer.issuer_id
+      ? "receipt_issuer.issuer_id"
+      : null,
+    !info.receipt_issuer?.verification_key_id
+      ? "receipt_issuer.verification_key_id"
+      : null,
+    info.receipt_issuer?.signature_algorithm !== "Ed25519"
+      ? "receipt_issuer.signature_algorithm"
+      : null,
+    !info.receipt_issuer?.public_key ? "receipt_issuer.public_key" : null,
+    !info.receipt_schema_versions?.includes(contractVersions.receipt_current)
+      ? "receipt_schema_versions"
+      : null,
+    !info.mcp_contract_versions?.includes(mcpContract.version)
+      ? "mcp_contract_versions"
+      : null,
+  ].filter(Boolean);
+  if (mismatches.length > 0) {
     throw new Bu2McpCompatibilityError(
-      "mcp_contract_version_unsupported",
-      "BU2 endpoint does not advertise support for this MCP contract version.",
-      { expected: mcpContract.version, ...correlation },
+      "environment_contract_mismatch",
+      "BU2 endpoint does not match the required environment contract.",
+      { expected_environment: environment, mismatches, ...correlation },
     );
   }
   return {
     endpoint,
     environment,
-    service: health.service,
-    service_version: health.version,
-    api_contract_version: health.api_contract_version,
+    service: info.service,
+    api_contract_version: info.api_contract_version,
     mcp_contract_version: mcpContract.version,
-    adapter: health.adapter,
+    environment_contract_version: info.environment_contract_version,
+    chain_id: info.chain_id,
+    network: info.network,
+    execution_backend: info.execution_backend,
+    execution_status: info.execution_status,
+    receipt_schema_versions: info.receipt_schema_versions,
+    receipt_issuer: info.receipt_issuer,
     ...correlation,
   };
 }

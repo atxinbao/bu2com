@@ -4,9 +4,14 @@ import { createServer } from "node:http";
 import { fileURLToPath } from "node:url";
 import { spawn } from "node:child_process";
 import test from "node:test";
-import { connectBu2McpClient } from "./external-agents/mcp-client.mjs";
+import {
+  Bu2McpToolError,
+  connectBu2McpClient,
+} from "./external-agents/mcp-client.mjs";
 import {
   BU2_MCP_CAPABILITY_NAMESPACE,
+  bu2McpCapability,
+  expectedEnvironmentInfo,
   mcpContract,
   mcpContractSha256,
   preflightBu2Endpoint,
@@ -21,6 +26,7 @@ function cliEnvironment(overrides = {}) {
   delete environment.BU2_ENDPOINT;
   delete environment.BU2_SANDBOX_URL;
   delete environment.BU2_ENVIRONMENT;
+  delete environment.BU2_LOCAL_DEVELOPMENT;
   return { ...environment, ...overrides };
 }
 
@@ -50,7 +56,10 @@ async function closeRunning(running, mcp) {
 }
 
 test("stable MCP CLI exposes deterministic version and capability metadata", async () => {
-  const result = await runCli(["--metadata"], { BU2_ENVIRONMENT: "simulation" });
+  const result = await runCli(["--metadata"], {
+    BU2_ENVIRONMENT: "local",
+    BU2_LOCAL_DEVELOPMENT: "true",
+  });
   assert.equal(result.status, 0);
   assert.equal(result.stderr, "");
   const metadata = JSON.parse(result.stdout);
@@ -58,7 +67,9 @@ test("stable MCP CLI exposes deterministic version and capability metadata", asy
   assert.equal(metadata.server.version, mcpContract.version);
   assert.equal(metadata.capability_namespace, BU2_MCP_CAPABILITY_NAMESPACE);
   assert.equal(metadata.capability.mcp_contract_sha256, mcpContractSha256);
-  assert.equal(metadata.capability.environment, "simulation");
+  assert.equal(metadata.capability.environment, "local");
+  assert.equal(metadata.capability.environment_contract_version, "1.0");
+  assert.equal(metadata.capability.local_development, true);
   assert.equal(metadata.capability.automatic_mutation_retry, false);
   assert.equal(metadata.capability.agent_authorization_tool, false);
   assert.equal(metadata.capability.agent_settlement_tool, false);
@@ -73,14 +84,16 @@ test("stable MCP CLI preflights the endpoint before opening stdio", async (conte
   context.after(() => closeRunning(running));
   const result = await runCli(["--preflight"], {
     BU2_ENDPOINT: running.url,
-    BU2_ENVIRONMENT: "simulation",
+    BU2_ENVIRONMENT: "local",
+    BU2_LOCAL_DEVELOPMENT: "true",
   });
   assert.equal(result.status, 0);
   assert.equal(result.stderr, "");
   const preflight = JSON.parse(result.stdout);
   assert.equal(preflight.status, "compatible");
-  assert.equal(preflight.environment, "simulation");
-  assert.equal(preflight.api_contract_version, "0.1.4");
+  assert.equal(preflight.environment, "local");
+  assert.equal(preflight.api_contract_version, "0.2.0");
+  assert.equal(preflight.environment_contract_version, "1.0");
   assert.equal(preflight.mcp_contract_version, mcpContract.version);
 });
 
@@ -91,35 +104,70 @@ test("MCP initialize handshake exposes and validates BU2 compatibility", async (
   mcp = await connectBu2McpClient({ baseUrl: running.url });
   assert.equal(mcp.handshake.server.name, mcpContract.name);
   assert.equal(mcp.handshake.server.version, mcpContract.version);
-  assert.equal(mcp.handshake.capability.api_contract_version, "0.1.4");
-  assert.equal(mcp.handshake.capability.environment, "simulation");
+  assert.equal(mcp.handshake.capability.api_contract_version, "0.2.0");
+  assert.equal(mcp.handshake.capability.environment, "local");
+  assert.equal(mcp.handshake.capability.chain_id, null);
   assert.equal(mcp.handshake.capability.mcp_contract_sha256, mcpContractSha256);
   assert.equal((await mcp.listTools()).length, 6);
 });
 
+test("MCP rechecks execution status before a mutation and fails closed", async (context) => {
+  const running = await listen({
+    port: 0,
+    dbPath: ":memory:",
+    environment: "sandbox",
+    adapterMode: "x402",
+    executionStatus: "execution_disabled",
+  });
+  let mcp;
+  context.after(() => closeRunning(running, mcp));
+  mcp = await connectBu2McpClient({
+    baseUrl: running.url,
+    environment: "sandbox",
+    localDevelopment: false,
+  });
+
+  await assert.rejects(
+    mcp.call("bu2_create_quote", {
+      seller_agent_id: "agt_mcp_disabled",
+      payee_account_id: "acct_mcp_disabled",
+      item_name: "Disabled environment",
+      delivery_type: "dataset_access",
+      amount_value: 100,
+      currency: "USD",
+      expires_at: "2099-09-06T12:00:00Z",
+      idempotency_key: "mcp-disabled-quote",
+    }),
+    (error) => {
+      assert.ok(error instanceof Bu2McpToolError);
+      assert.equal(
+        error.result.structuredContent.error.code,
+        "environment_execution_disabled",
+      );
+      return true;
+    },
+  );
+  assert.equal(running.sandbox.quotes.size, 0);
+});
+
 test("MCP handshake validation rejects an unexpected configured environment", () => {
+  const capability = bu2McpCapability({
+    ...expectedEnvironmentInfo("local"),
+    receipt_issuer: {
+      ...expectedEnvironmentInfo("local").receipt_issuer,
+      verification_key_id: "key_mcp_local",
+    },
+  });
   assert.throws(
     () =>
       validateBu2McpHandshake(
         { name: mcpContract.name, version: mcpContract.version },
         {
           experimental: {
-            [BU2_MCP_CAPABILITY_NAMESPACE]: {
-              api_contract_version: "0.1.4",
-              api_base_path: "/v1",
-              mcp_contract_version: mcpContract.version,
-              mcp_contract_sha256: mcpContractSha256,
-              environment: "simulation",
-              supported_environments: ["simulation", "testnet"],
-              transport: "stdio",
-              tool_count: 6,
-              automatic_mutation_retry: false,
-              agent_authorization_tool: false,
-              agent_settlement_tool: false,
-            },
+            [BU2_MCP_CAPABILITY_NAMESPACE]: capability,
           },
         },
-        "testnet",
+        "sandbox",
       ),
     (error) => error.code === "mcp_capability_mismatch",
   );
@@ -132,14 +180,18 @@ test("stable MCP CLI rejects an incompatible API before starting stdio", async (
     response.writeHead(200, { "content-type": "application/json" });
     response.end(
       JSON.stringify({
-        status: "ok",
         service: "bu2-reference-server",
-        version: "0.0.0",
         api_contract_version: "0.0.0",
-        api_base_path: "/v1",
         mcp_contract_versions: [mcpContract.version],
-        environment: "simulation",
-        adapter: "bu2_simulated_provider",
+        ...expectedEnvironmentInfo("local"),
+        api_contract_version: "0.0.0",
+        receipt_issuer: {
+          issuer_id: "bu2-reference-server:local",
+          environment: "local",
+          verification_key_id: "key_mcp_preflight",
+          signature_algorithm: "Ed25519",
+          public_key: "mcp-test-public-key",
+        },
       }),
     );
   });
@@ -148,7 +200,8 @@ test("stable MCP CLI rejects an incompatible API before starting stdio", async (
   const address = server.address();
   const result = await runCli(["--preflight"], {
     BU2_ENDPOINT: `http://127.0.0.1:${address.port}`,
-    BU2_ENVIRONMENT: "simulation",
+    BU2_ENVIRONMENT: "local",
+    BU2_LOCAL_DEVELOPMENT: "true",
   });
   assert.equal(result.status, 1);
   assert.equal(result.stdout, "");
@@ -161,38 +214,58 @@ test("stable MCP CLI rejects an incompatible API before starting stdio", async (
 });
 
 test("preflight rejects environment and MCP contract mismatches", async () => {
-  const health = {
-    status: "ok",
+  const info = {
     service: "bu2-reference-server",
-    version: "0.10.0",
-    api_contract_version: "0.1.4",
-    api_base_path: "/v1",
+    api_contract_version: "0.2.0",
     mcp_contract_versions: [mcpContract.version],
-    environment: "simulation",
-    adapter: "bu2_simulated_provider",
+    ...expectedEnvironmentInfo("local"),
+    receipt_issuer: {
+      issuer_id: "bu2-reference-server:local",
+      environment: "local",
+      verification_key_id: "key_mcp_preflight",
+      signature_algorithm: "Ed25519",
+      public_key: "mcp-test-public-key",
+    },
   };
   await assert.rejects(
     () =>
       preflightBu2Endpoint(
-        { endpoint: "http://127.0.0.1:3100", environment: "testnet" },
-        { fetchImpl: async () => Response.json(health) },
+        { endpoint: "http://127.0.0.1:3100", environment: "sandbox" },
+        { fetchImpl: async () => Response.json(info) },
       ),
     (error) => error.code === "environment_mismatch",
   );
   await assert.rejects(
     () =>
       preflightBu2Endpoint(
-        { endpoint: "http://127.0.0.1:3100", environment: "simulation" },
+        { endpoint: "http://127.0.0.1:3100", environment: "local" },
         {
-          fetchImpl: async () => Response.json({ ...health, mcp_contract_versions: ["0.0.0"] }),
+          fetchImpl: async () =>
+            Response.json({ ...info, environment_contract_version: "0.0" }),
         },
       ),
-    (error) => error.code === "mcp_contract_version_unsupported",
+    (error) => error.code === "environment_contract_mismatch",
+  );
+  await assert.rejects(
+    () =>
+      preflightBu2Endpoint(
+        { endpoint: "http://127.0.0.1:3100", environment: "local" },
+        {
+          fetchImpl: async () =>
+            Response.json({
+              ...info,
+              receipt_issuer: { ...info.receipt_issuer, signature_algorithm: "unknown" },
+            }),
+        },
+      ),
+    (error) =>
+      error.code === "environment_contract_mismatch" &&
+      error.details.mismatches.includes("receipt_issuer.signature_algorithm"),
   );
 });
 
-test("stable MCP CLI rejects Mainnet configuration before startup", async () => {
-  const result = await runCli(["--metadata"], { BU2_ENVIRONMENT: "mainnet" });
+test("stable MCP CLI rejects legacy and network-name environments before startup", async () => {
+  const result = await runCli(["--metadata"], { BU2_ENVIRONMENT: "testnet" });
   assert.equal(result.status, 1);
   assert.equal(result.stdout, "");
   const error = JSON.parse(result.stderr);
@@ -209,17 +282,19 @@ test("Host configuration examples point to the stable bounded stdio entry", () =
     "../integrations/mcp/claude-desktop-config.json.example",
     "../integrations/mcp/generic-stdio-config.json.example",
   ];
-  assert.match(codex, /^\[mcp_servers\.bu2-simulation\]/m);
+  assert.match(codex, /^\[mcp_servers\.bu2-local\]/m);
   assert.match(codex, /sandbox\/bin\/bu2-mcp\.mjs/);
-  assert.match(codex, /BU2_ENVIRONMENT = "simulation"/);
+  assert.match(codex, /BU2_ENVIRONMENT = "local"/);
+  assert.match(codex, /BU2_LOCAL_DEVELOPMENT = "true"/);
   for (const path of jsonFiles) {
     const configuration = JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
-    const server = configuration.mcpServers["bu2-simulation"];
+    const server = configuration.mcpServers["bu2-local"];
     assert.equal(server.type ?? "stdio", "stdio");
     assert.equal(server.command, "node");
     assert.match(server.args[0], /sandbox\/bin\/bu2-mcp\.mjs$/);
     assert.equal(server.env.BU2_ENDPOINT, "http://127.0.0.1:3100");
-    assert.equal(server.env.BU2_ENVIRONMENT, "simulation");
+    assert.equal(server.env.BU2_ENVIRONMENT, "local");
+    assert.equal(server.env.BU2_LOCAL_DEVELOPMENT, "true");
     assert.equal(
       server.args.some((value) => /mainnet/i.test(value)),
       false,

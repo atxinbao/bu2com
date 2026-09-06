@@ -1,5 +1,11 @@
 export { Bu2Client } from "./client.js";
-export { Bu2ApiError, Bu2ConfigurationError, Bu2SdkError, Bu2TransportError } from "./errors.js";
+export {
+  Bu2ApiError,
+  Bu2ConfigurationError,
+  Bu2EnvironmentError,
+  Bu2SdkError,
+  Bu2TransportError,
+} from "./errors.js";
 export type {
   Bu2ApiErrorOptions,
   Bu2ErrorOptions,
@@ -12,6 +18,7 @@ export type {
   AuthorizationDecision,
   Bu2ClientOptions,
   Bu2Environment,
+  Bu2ExternalEnvironment,
   Bu2MutationOptions,
   Bu2RequestOptions,
   CreatePaymentIntent,
@@ -19,6 +26,7 @@ export type {
   DeliveryEvidence,
   DeliveryRecord,
   DeliveryResult,
+  EnvironmentInfo,
   PaymentIntent,
   Quote,
   Receipt,

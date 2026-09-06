@@ -1,7 +1,37 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { listen } from "../../../sandbox/server.mjs";
-import { Bu2ApiError, Bu2Client, Bu2ConfigurationError, Bu2TransportError } from "../dist/index.js";
+import {
+  Bu2ApiError,
+  Bu2Client,
+  Bu2ConfigurationError,
+  Bu2EnvironmentError,
+  Bu2TransportError,
+} from "../dist/index.js";
+
+function environmentResponse(environment = "sandbox", executionStatus = "execution_enabled") {
+  const sandbox = environment === "sandbox";
+  return Response.json({
+    service: "bu2-reference-server",
+    environment,
+    environment_contract_version: "1.0",
+    chain_id: sandbox ? 84532 : null,
+    network: sandbox ? "eip155:84532" : null,
+    execution_backend: sandbox ? "x402" : "simulated",
+    api_contract_version: "0.2.0",
+    mcp_contract_versions: ["0.2.0"],
+    receipt_schema_versions: ["0.2", "0.3"],
+    execution_status: executionStatus,
+    public_capabilities: ["transactions:read", "receipts:verify"],
+    receipt_issuer: {
+      issuer_id: `bu2-reference-server:${environment}`,
+      environment,
+      verification_key_id: "key_sdk_test",
+      signature_algorithm: "Ed25519",
+      public_key: "sdk-test-public-key",
+    },
+  });
+}
 
 const quoteInput = (name = "SDK dataset") => ({
   seller_agent_id: "agt_sdk_seller",
@@ -26,31 +56,46 @@ async function sdkServer(context) {
     running,
     client: new Bu2Client({
       baseUrl: `${running.url}/v1`,
-      environment: "simulation",
+      environment: "local",
+      localDevelopment: true,
     }),
   };
 }
 
 test("SDK configuration requires an explicit Phase 0 environment and /v1 base URL", () => {
   assert.throws(
-    () => new Bu2Client({ baseUrl: "not-a-url", environment: "simulation" }),
+    () =>
+      new Bu2Client({
+        baseUrl: "not-a-url",
+        environment: "local",
+        localDevelopment: true,
+      }),
     Bu2ConfigurationError,
   );
   assert.throws(
-    () => new Bu2Client({ baseUrl: "http://127.0.0.1:3100", environment: "simulation" }),
+    () =>
+      new Bu2Client({
+        baseUrl: "http://127.0.0.1:3100",
+        environment: "local",
+        localDevelopment: true,
+      }),
     /end in \/v1/,
   );
   assert.throws(
     () =>
       new Bu2Client({
         baseUrl: "http://127.0.0.1:3100/v1",
-        environment: "mainnet",
+        environment: "simulation",
       }),
-    /simulation or testnet/,
+    /local, sandbox, or live/,
+  );
+  assert.throws(
+    () => new Bu2Client({ baseUrl: "http://127.0.0.1:3100/v1", environment: "local" }),
+    /localDevelopment/,
   );
 });
 
-test("typed SDK completes one Simulation transaction and verifies its Receipt", async (context) => {
+test("typed SDK completes one local simulated transaction and verifies Receipt v0.3", async (context) => {
   const { client } = await sdkServer(context);
   const quote = await client.createQuote(quoteInput(), { idempotencyKey: "sdk-quote-full" });
   const intent = await client.createPaymentIntent(
@@ -100,7 +145,10 @@ test("typed SDK completes one Simulation transaction and verifies its Receipt", 
   assert.equal(verification.valid, true);
   assert.equal(detail.receipt?.id, receipt.id);
   assert.equal(transactions.data[0]?.transaction.id, authorized.transaction_id);
-  assert.equal(client.environment, "simulation");
+  assert.equal(receipt.schema_version, "0.3");
+  assert.equal(receipt.environment, "local");
+  assert.equal(verification.environment_valid, true);
+  assert.equal(client.environment, "local");
 });
 
 test("SDK preserves stable API errors, correlation ids, and recovery action", async (context) => {
@@ -154,8 +202,11 @@ test("settlement recovery maps to the frozen endpoint with an explicit idempoten
   let requestSeen;
   const client = new Bu2Client({
     baseUrl: "http://127.0.0.1:3999/v1",
-    environment: "testnet",
+    environment: "sandbox",
     fetch: async (request) => {
+      if (request.url.endsWith("/environment")) {
+        return environmentResponse("sandbox", "execution_disabled");
+      }
       requestSeen = request;
       return new Response(
         JSON.stringify({
@@ -197,7 +248,8 @@ test("read transport failures are retry-safe and never retried automatically", a
   let calls = 0;
   const client = new Bu2Client({
     baseUrl: "http://127.0.0.1:3999/v1",
-    environment: "simulation",
+    environment: "local",
+    localDevelopment: true,
     fetch: async () => {
       calls += 1;
       throw new TypeError("offline");
@@ -218,9 +270,10 @@ test("write transport failures require querying state before retry", async () =>
   let calls = 0;
   const client = new Bu2Client({
     baseUrl: "http://127.0.0.1:3999/v1",
-    environment: "testnet",
-    fetch: async () => {
+    environment: "sandbox",
+    fetch: async (request) => {
       calls += 1;
+      if (request.url.endsWith("/environment")) return environmentResponse();
       throw new TypeError("connection reset");
     },
   });
@@ -238,17 +291,18 @@ test("write transport failures require querying state before retry", async () =>
       return true;
     },
   );
-  assert.equal(calls, 1);
+  assert.equal(calls, 2);
 });
 
 test("write timeout is classified as unknown outcome without an automatic replay", async () => {
   let calls = 0;
   const client = new Bu2Client({
     baseUrl: "http://127.0.0.1:3999/v1",
-    environment: "testnet",
+    environment: "sandbox",
     defaultTimeoutMs: 5,
     fetch: async (request) => {
       calls += 1;
+      if (request.url.endsWith("/environment")) return environmentResponse();
       return new Promise((resolve, reject) => {
         request.signal.addEventListener("abort", () => reject(request.signal.reason), {
           once: true,
@@ -266,30 +320,32 @@ test("write timeout is classified as unknown outcome without an automatic replay
       return true;
     },
   );
-  assert.equal(calls, 1);
+  assert.equal(calls, 2);
 });
 
 test("HTTP 5xx on a write preserves server ids and requires reconciliation", async () => {
   const client = new Bu2Client({
     baseUrl: "http://127.0.0.1:3999/v1",
-    environment: "testnet",
-    fetch: async () =>
-      new Response(
-        JSON.stringify({
-          error: {
-            type: "provider_error",
-            code: "provider_unavailable",
-            message: "Provider result is unavailable.",
-            request_id: "req_sdk_5xx",
-            trace_id: "trc_sdk_5xx_test",
-            details: {},
-          },
-        }),
-        {
-          status: 500,
-          headers: { "content-type": "application/json" },
-        },
-      ),
+    environment: "sandbox",
+    fetch: async (request) =>
+      request.url.endsWith("/environment")
+        ? environmentResponse()
+        : new Response(
+            JSON.stringify({
+              error: {
+                type: "provider_error",
+                code: "provider_unavailable",
+                message: "Provider result is unavailable.",
+                request_id: "req_sdk_5xx",
+                trace_id: "trc_sdk_5xx_test",
+                details: {},
+              },
+            }),
+            {
+              status: 500,
+              headers: { "content-type": "application/json" },
+            },
+          ),
   });
 
   await assert.rejects(
@@ -303,4 +359,49 @@ test("HTTP 5xx on a write preserves server ids and requires reconciliation", asy
       return true;
     },
   );
+});
+
+test("SDK rejects wrong environment and issuer contracts before sending a mutation", async () => {
+  let calls = 0;
+  const client = new Bu2Client({
+    baseUrl: "http://127.0.0.1:3999/v1",
+    environment: "sandbox",
+    fetch: async () => {
+      calls += 1;
+      return environmentResponse("local");
+    },
+  });
+
+  await assert.rejects(
+    client.createQuote(quoteInput(), { idempotencyKey: "sdk-wrong-environment" }),
+    (error) => {
+      assert.ok(error instanceof Bu2EnvironmentError);
+      assert.equal(error.code, "environment_contract_mismatch");
+      return true;
+    },
+  );
+  assert.equal(calls, 1);
+
+  const issuerClient = new Bu2Client({
+    baseUrl: "http://127.0.0.1:3999/v1",
+    environment: "sandbox",
+    fetch: async () => {
+      calls += 1;
+      const response = await environmentResponse("sandbox").json();
+      return Response.json({
+        ...response,
+        receipt_issuer: { ...response.receipt_issuer, signature_algorithm: "unknown" },
+      });
+    },
+  });
+  await assert.rejects(
+    issuerClient.createQuote(quoteInput(), { idempotencyKey: "sdk-wrong-issuer" }),
+    (error) => {
+      assert.ok(error instanceof Bu2EnvironmentError);
+      assert.equal(error.code, "environment_contract_mismatch");
+      assert.deepEqual(error.details.mismatches, ["receipt_issuer.signature_algorithm"]);
+      return true;
+    },
+  );
+  assert.equal(calls, 2);
 });

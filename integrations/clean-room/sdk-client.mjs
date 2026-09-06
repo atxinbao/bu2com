@@ -9,7 +9,8 @@ if (!endpoint) throw new Error("BU2_ENDPOINT is required.");
 
 const bu2 = new Bu2Client({
   baseUrl: new URL("/v1", `${endpoint}/`).toString(),
-  environment: "simulation",
+  environment: "local",
+  localDevelopment: true,
 });
 const steps = [];
 
@@ -63,7 +64,7 @@ if (intent.status === "requires_authorization") {
   intent = await step("authorize", () =>
     bu2.decideAuthorization(
       intent.id,
-      { decision: "authorize", reason: "Explicit local Simulation acceptance" },
+      { decision: "authorize", reason: "Explicit local simulated acceptance" },
       { idempotencyKey: `clean-sdk-authorize-${runId}` },
     ),
   );
@@ -95,7 +96,7 @@ assert.equal(verification.valid, true);
 console.log(
   JSON.stringify({
     path: "sdk",
-    environment: "simulation",
+    environment: "local",
     transaction_status: settlement.transaction.status,
     receipt_id: receipt.id,
     receipt_valid: verification.valid,

@@ -2,7 +2,7 @@
 
 日期：2026-09-06
 执行者：Codex
-状态：F01 / ENV-01 已批准；ENV-02 范围测试已有本地自动化证据
+状态：F01 / ENV-01 与 ENV-02 已批准；ENV-03 范围测试已有本地自动化证据，等待 R2 审查
 
 本矩阵是 ENV-02–ENV-08 的验收来源。除非列出真实执行证据，不得将“已定义”写成“已通过”。
 
@@ -27,11 +27,14 @@
 
 ## 当前状态
 
-- E-T01、E-T02、E-T03：**Implemented / Local automated pass**，等待 ENV-02 R2 审查。
+- E-T01、E-T02、E-T03：**Approved / Local automated pass**，ENV-02 已由 PR #19 合并。
 - E-T06：ENV-02 的 RPC 错链拒绝已通过；ENV-06 的故障恢复与 Attempt 审计仍为 **Not yet accepted**。
 - E-T07：ENV-02 的数据库 metadata 错环境拒绝已通过；ENV-04 的真实部署挂载隔离仍为 **Not yet accepted**。
 - E-T09：ENV-02 的 Live disarmed 配置和 Adapter 零调用已通过；ENV-08 的受限 Live E2E 仍为 **Not yet accepted**，且不授权主网付款。
-- E-T04、E-T05、E-T08、E-T10–E-T16：**Defined / Not yet accepted**。
+- E-T04：endpoint、SDK、MCP 与 Receipt 子范围 **Implemented / Local automated pass**；API key 和正式 PaymentMandate 对象尚不存在，留 ENV-05 与 F02/F03。
+- E-T05：**Implemented / Local automated pass**；v0.2 静态 fixture 保持原始签名字节并由独立验证器验证。
+- E-T16：公开 `/health` 的 ENV-03 子范围 **Implemented / Local automated pass**；ENV-05 支持包权限仍未验收。
+- E-T08、E-T10–E-T15：**Defined / Not yet accepted**。
 - 当前仓库已有 local Simulation、Base Sepolia Adapter、Receipt、未知支付恢复、幂等和原子性测试，可作为实现基础，但不能替代新的环境隔离测试。
 - E-T13/E-T14 必须在真实托管 Sandbox 上执行；本地 mock、Simulation 或仓库内自动化不能计作外部团队验收。
 - E-T09/E-T10 只验证 Live disarmed 架构，不授权 Mainnet 付款。
