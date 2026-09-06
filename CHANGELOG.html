@@ -152,6 +152,32 @@
       <h2 id="unreleased">Unreleased</h2>
       <article class="release">
         <div class="release-head">
+          <div><h3>ENV-06 · 制品提升、监控、备份与恢复演练</h3><time datetime="2026-09-06">2026-09-06</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">在 ENV-04/05 的隔离部署与受控入口之上，增加可验证的不可变制品候选清单、配置漂移阻断、环境专属 SQLite 在线备份、同环境隔离恢复演练和脱敏运营快照。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag added">Added</span>新增 Operations Contract v1；候选清单绑定完整 Git commit、同一 artifact digest、部署/运营契约指纹、schema 与三项本地 Gate，固定不授权托管部署和资金执行。</li>
+            <li><span class="tag added">Added</span>使用 Node 官方 <code>node:sqlite backup()</code> 建立 WAL 一致性备份，manifest 绑定环境、chain、backup scope、artifact、配置、数据库 SHA-256、schema、完整性和关键事实计数。</li>
+            <li><span class="tag added">Added</span>恢复只允许写入新的同环境隔离副本；跨环境、篡改、错 artifact、错配置和覆盖目标均失败关闭，结果固定 <code>execution_disabled + reconciliation_required</code>，不自动重放 Provider。</li>
+            <li><span class="tag added">Added</span>新增 JSON 运维 CLI 与脱敏运营快照，区分 healthy、attention_required 和 blocked；备份阈值由环境 Owner 调用时定义，不在代码中伪造 SLO/RPO。</li>
+            <li><span class="tag changed">Changed</span>Node 最低版本提升到 22.16，以使用官方 SQLite Online Backup API；API、事件、Receipt、Transaction Core、金额和数据库 schema 保持不变。</li>
+            <li><span class="tag governance">Boundary</span>ENV-05 已由 PR #22 合并；本变更没有创建云资源、DNS、生产凭证、Signer 或托管环境，没有执行 Base Sepolia/Mainnet 付款，Live 继续 <code>execution_disabled</code>。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R2 · 涉及环境数据库备份、恢复和发布证据，必须由 Domain + Architecture 独立人工审查后合并</span></div>
+          <div><b>金融行为影响</b><span>不改变交易状态、余额、LedgerEvent、Outbox、Receipt 或 Adapter；恢复副本在对账完成前不能执行或自动重放支付</span></div>
+          <div><b>兼容性</b><span>运行时 Node 从 ≥22.13 调整为 ≥22.16；SQLite schema v9、API/MCP/SDK v0.3 与 Receipt v0.2/v0.3 继续兼容</span></div>
+          <div><b>验证</b><span>制品/配置指纹、在线备份、manifest 篡改、跨环境拒绝、恢复事实计数、运营状态与完整本地回归；托管发布和真实 Testnet E2E 未执行</span></div>
+          <div><b>恢复</b><span>停止制品提升并保留源库、备份与 manifest；仅删除本次新建的失败恢复副本，保持只读查询、观察和对账，禁止通过旧备份自动恢复支付执行</span></div>
+        </div>
+      </article>
+
+      <article class="release">
+        <div class="release-head">
           <div><h3>ENV-05 · 受控开发者与运维入口</h3><time datetime="2026-09-06">2026-09-06</time></div>
           <span class="status">Unreleased</span>
         </div>

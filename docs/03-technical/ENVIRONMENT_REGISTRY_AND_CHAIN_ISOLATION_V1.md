@@ -83,4 +83,4 @@ SQLite Schema v8 新增单行 `environment_metadata`：
 
 ## 8. 下一步
 
-ENV-03 与 ENV-04 已由 PR #20/#21 合并，API、SDK、MCP、Doctor、Evidence 与 Receipt 环境契约迁移说明见[客户端与 Receipt 环境契约 v1](ENVIRONMENT_CLIENT_AND_RECEIPT_CONTRACT_V1.md)，部署说明见 [ENV-04 隔离部署单元 v1](ENVIRONMENT_DEPLOYMENT_UNITS_V1.md)。ENV-05 受控入口已实现并等待 R2 审查。
+ENV-03、ENV-04 与 ENV-05 已由 PR #20/#21/#22 合并，API、SDK、MCP、Doctor、Evidence 与 Receipt 环境契约迁移说明见[客户端与 Receipt 环境契约 v1](ENVIRONMENT_CLIENT_AND_RECEIPT_CONTRACT_V1.md)，部署说明见 [ENV-04 隔离部署单元 v1](ENVIRONMENT_DEPLOYMENT_UNITS_V1.md)，运营与恢复说明见 [ENV-06 运营与恢复 v1](ENVIRONMENT_OPERATIONS_V1.md)。ENV-06 已实现并等待 R2 审查。

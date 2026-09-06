@@ -8,13 +8,16 @@
     "bu2-mcp": "bin/bu2-mcp.mjs"
   },
   "engines": {
-    "node": ">=22.13.0"
+    "node": ">=22.16.0"
   },
   "scripts": {
     "start": "node server.mjs",
     "test": "node --test *.test.mjs",
     "test:deployment-contract": "node --test ../deploy/deployment-contract.test.mjs",
+    "test:operations": "node --test ../deploy/operations.test.mjs",
     "acceptance:deployment": "node ../deploy/acceptance.mjs",
+    "acceptance:operations": "node ../deploy/operations-acceptance.mjs",
+    "operations": "node ../deploy/operations-cli.mjs",
     "demo": "node demo-agents.mjs",
     "demo:external": "node external-agents/demo.mjs",
     "demo:x402": "node demo-x402-agents.mjs",

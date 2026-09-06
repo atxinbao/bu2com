@@ -2,7 +2,7 @@
 
 日期：2026-09-06
 执行者：Codex
-状态：Implemented / Local automated pass / R2 review pending
+状态：Accepted · PR #22（2026-09-06）
 
 ## 1. 目标与边界
 
@@ -57,4 +57,4 @@ Live 不提供该重置操作。任何凭据问题都不能通过改写交易事
 
 ## 8. 后续
 
-ENV-05 经 R2 审查合并后，优先推进 ENV-06 制品提升、监控、备份与恢复演练；托管 edge、正式 secret manager 和真实 Sandbox 凭据签发属于后续部署准入。PaymentMandate 的主体信任仍是 F02/F03 独立工作，不由 API key 自动替代。
+ENV-05 已由 PR #22 合并。ENV-06 制品提升、监控、备份与恢复演练已实现并等待 R2 审查；托管 edge、正式 secret manager 和真实 Sandbox 凭据签发属于 ENV-07 部署准入。PaymentMandate 的主体信任仍是 F02/F03 独立工作，不由 API key 自动替代。

@@ -2,7 +2,7 @@
 
 日期：2026-09-06
 执行者：Codex
-状态：F01 / ENV-01、ENV-02、ENV-03、ENV-04 已批准；ENV-05 已有本地自动化证据，等待 R2 审查
+状态：F01 / ENV-01 至 ENV-05 已批准；ENV-06 已有本地自动化证据，等待 R2 审查
 
 本矩阵是 ENV-02–ENV-08 的验收来源。除非列出真实执行证据，不得将“已定义”写成“已通过”。
 
@@ -28,7 +28,7 @@
 ## 当前状态
 
 - E-T01、E-T02、E-T03：**Approved / Local automated pass**，ENV-02 已由 PR #19 合并。
-- E-T06：ENV-02 的 RPC 错链拒绝已通过；ENV-06 的故障恢复与 Attempt 审计仍为 **Not yet accepted**。
+- E-T06：ENV-02 的 RPC 错链拒绝已通过；ENV-06 的配置漂移检测会阻断制品提升，且既有未知 Attempt 继续保留并禁止自动重放，子范围为 **Implemented / Local automated pass**。
 - E-T07：ENV-02 的数据库 metadata 错环境拒绝已通过；ENV-04 已使用真实本地容器证明 Sandbox 数据卷挂入 Live 时启动拒绝、跨环境 Signer 在密钥解析前拒绝且日志不泄密，状态为 **Implemented / Local automated pass**；托管环境秘密管理仍留 ENV-05/06。
 - E-T09：ENV-02 的 Live disarmed 配置和 Adapter 零调用已通过；ENV-08 的受限 Live E2E 仍为 **Not yet accepted**，且不授权主网付款。
 - E-T04：endpoint、SDK、MCP、Receipt 与 API key 环境绑定子范围 **Implemented / Local automated pass**；正式 PaymentMandate 主体信任仍留 F02/F03。
@@ -37,8 +37,9 @@
 - E-T12：Agent/Developer/Operator 权限矩阵、claims 和只追加访问决策 **Implemented / Local automated pass**。
 - E-T15：机器 Bearer、公开预检不携带 key 和 redirect fail-closed **Implemented / Local automated pass**；托管 edge E2E 留 ENV-07。
 - E-T16：公开 `/health` 与 Operator 脱敏支持包 **Implemented / Local automated pass**。
-- E-T08：ENV-04 容器验收未挂载 Signer、未传入真实凭证且明确标记本地部署边界，子范围为 **Implemented / Local automated pass**；托管发布证明留 ENV-06。
-- E-T10–E-T15：**Defined / Not yet accepted**。
+- E-T08：干净提交构建同一不可变镜像，候选提升清单固定 `hosted_deployment=false`、`payment_execution=false`，且未挂载 Signer 或真实凭证，状态为 **Implemented / Local automated pass**；托管发布证明留 ENV-07。
+- E-T10：Sandbox/Live 独立 SQLite Online Backup、SHA-256/integrity/schema/环境/事实计数校验、同环境隔离恢复与跨环境拒绝已通过；恢复结果固定 `execution_disabled + reconciliation_required` 且 Provider 零调用，状态为 **Implemented / Local automated pass**。
+- E-T13–E-T15 的托管与外部团队子范围：**Defined / Not yet accepted**。
 - 当前仓库已有 local Simulation、Base Sepolia Adapter、Receipt、未知支付恢复、幂等和原子性测试，可作为实现基础，但不能替代新的环境隔离测试。
 - E-T13/E-T14 必须在真实托管 Sandbox 上执行；本地 mock、Simulation 或仓库内自动化不能计作外部团队验收。
 - E-T09/E-T10 只验证 Live disarmed 架构，不授权 Mainnet 付款。

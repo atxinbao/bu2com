@@ -25,6 +25,9 @@ const accessContract = JSON.parse(
 const deploymentUnits = JSON.parse(
   readFileSync(join(here, '../../deploy/environment-units.json'), 'utf8'),
 );
+const operationsContract = JSON.parse(
+  readFileSync(join(here, '../../deploy/operations-contract.json'), 'utf8'),
+);
 const openapi = readFileSync(join(here, 'openapi.yaml'), 'utf8');
 
 let assertions = 0;
@@ -157,6 +160,22 @@ assert(
 assert(
   versions.environment_deployment_units === deploymentUnits.schema_version,
   'Version manifest must match the environment deployment-unit contract',
+);
+assert(
+  versions.environment_operations === operationsContract.schema_version,
+  'Version manifest must match the environment operations contract',
+);
+assert(
+  operationsContract.backup.mechanism === 'node_sqlite_online_backup' &&
+    operationsContract.restore_rehearsal.execution_status === 'execution_disabled' &&
+    operationsContract.restore_rehearsal.automatic_provider_replay === false,
+  'Environment recovery must use consistent backup and remain disarmed without replay',
+);
+assert(
+  operationsContract.artifact_promotion.payment_execution_authorized === false &&
+    operationsContract.artifact_promotion.hosted_deployment_authorized === false &&
+    operationsContract.artifact_promotion.live_execution_status === 'execution_disabled',
+  'Local artifact promotion evidence must not authorize hosting or payment execution',
 );
 assert(
   versions.access_contract === accessContract.schema_version,

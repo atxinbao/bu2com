@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.0",
+  "artifact_promotion": {
+    "mode": "single_immutable_artifact",
+    "source_environment": "sandbox",
+    "target_environment": "live",
+    "required_gates": [
+      "local_contract",
+      "isolated_deployment",
+      "backup_restore_rehearsal"
+    ],
+    "live_execution_status": "execution_disabled",
+    "hosted_deployment_authorized": false,
+    "payment_execution_authorized": false
+  },
+  "backup": {
+    "mechanism": "node_sqlite_online_backup",
+    "minimum_node_version": "22.16.0",
+    "manifest_suffix": ".manifest.json",
+    "integrity_check": "PRAGMA integrity_check",
+    "overwrite": "forbidden",
+    "minimum_schema_version": 9,
+    "scopes": {
+      "sandbox": "bu2-sandbox",
+      "live": "bu2-live"
+    }
+  },
+  "restore_rehearsal": {
+    "mode": "isolated_copy",
+    "execution_status": "execution_disabled",
+    "reconciliation_status": "required",
+    "automatic_provider_replay": false,
+    "cross_environment_restore": "forbidden"
+  },
+  "monitoring": {
+    "statuses": ["healthy", "attention_required", "blocked"],
+    "blocked_conditions": [
+      "configuration_drift",
+      "database_integrity_failed",
+      "environment_binding_mismatch"
+    ],
+    "attention_conditions": [
+      "backup_missing",
+      "backup_stale",
+      "unknown_payment_results",
+      "webhook_dead_letters"
+    ],
+    "sensitive_fields_forbidden": [
+      "api_key_material",
+      "authorization_header",
+      "database_path",
+      "private_key",
+      "receipt_private_key",
+      "webhook_secret"
+    ]
+  }
+}

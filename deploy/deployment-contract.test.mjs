@@ -21,7 +21,7 @@ const resolvedCompose = () =>
     ),
   );
 
-test("ENV-04/05 Compose resolves to one immutable artifact and two isolated authenticated units", () => {
+test("ENV-04/05/06 Compose resolves to one immutable artifact and two isolated authenticated units", () => {
   const compose = resolvedCompose();
   assert.deepEqual(validateResolvedDeployment(compose), { valid: true, errors: [] });
   assert.equal(compose.services.sandbox.image, digest);
@@ -31,7 +31,7 @@ test("ENV-04/05 Compose resolves to one immutable artifact and two isolated auth
   assert.equal(compose.services.live.environment.BU2_ACCESS_MODE, "authenticated");
 });
 
-test("ENV-04 deployment contract rejects shared state, mutable images, signer mounts and enabled Live", () => {
+test("ENV-04/05/06 deployment contract rejects shared state, mutable images, signer mounts and enabled Live", () => {
   const compose = resolvedCompose();
   compose.services.live.image = "bu2/reference:latest";
   compose.services.live.user = compose.services.sandbox.user;

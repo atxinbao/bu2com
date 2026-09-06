@@ -1,18 +1,66 @@
-# BU2 ENV-04/05 Deployment Reference
+# BU2 ENV-04/05/06 Deployment and Operations Reference
 
 日期：2026-09-06
 执行者：Codex
 
-本目录提供同一不可变镜像、两个隔离部署单元和外部默认鉴权的本地参考实现。它只用于验证环境与关闭入口边界；不是云部署、公开 Sandbox 或 Live 上线方案。
+本目录提供同一不可变镜像、两个隔离部署单元、外部默认鉴权，以及制品提升、监控、在线备份和隔离恢复的本地参考实现。它只用于验证环境、关闭入口与恢复边界；不是云部署、公开 Sandbox 或 Live 上线方案。
 
 ## 验证
 
 ```bash
 npm --prefix sandbox run test:deployment-contract
 npm --prefix sandbox run acceptance:deployment
+npm --prefix sandbox run test:operations
+npm --prefix sandbox run acceptance:operations
 ```
 
-第一条命令解析 Compose 并检查机器契约；第二条命令真实构建一次镜像，启动 Sandbox/Live 两个 disarmed 容器，执行错库与错 Signer 故障注入，然后删除本次临时资源。
+前两条命令验证 ENV-04/05 的 Compose 和真实 disarmed 容器；后两条命令验证 ENV-06 的候选提升清单、配置漂移、SQLite Online Backup、跨环境拒绝与恢复后禁用执行。完整 operations acceptance 只允许在干净提交上运行，构建的临时镜像、数据库和备份会在结束时删除。
+
+## ENV-06 运维命令
+
+CLI 不会创建源数据库，也不会覆盖既有备份或恢复目标。下面的 `BU2_OPS_ARTIFACT` 必须是 `sha256:<image-id>` 或 registry digest，`BU2_OPS_CONFIG_SHA` 是已解析部署配置的 SHA-256：
+
+```bash
+BU2_OPS_ARTIFACT='sha256:<64 hex characters>'
+BU2_OPS_CONFIG_SHA='<64 hex characters>'
+
+node deploy/operations-cli.mjs backup \
+  --environment sandbox \
+  --database .codex/operations/sandbox/bu2.sqlite \
+  --destination .codex/operations/sandbox/backups/snapshot.sqlite \
+  --artifact "$BU2_OPS_ARTIFACT" \
+  --configuration-sha256 "$BU2_OPS_CONFIG_SHA"
+
+node deploy/operations-cli.mjs verify \
+  --environment sandbox \
+  --backup .codex/operations/sandbox/backups/snapshot.sqlite \
+  --artifact "$BU2_OPS_ARTIFACT" \
+  --configuration-sha256 "$BU2_OPS_CONFIG_SHA"
+
+node deploy/operations-cli.mjs restore-rehearsal \
+  --environment sandbox \
+  --backup .codex/operations/sandbox/backups/snapshot.sqlite \
+  --destination .codex/operations/sandbox/restore/rehearsal.sqlite \
+  --artifact "$BU2_OPS_ARTIFACT" \
+  --configuration-sha256 "$BU2_OPS_CONFIG_SHA" \
+  --report .codex/operations/sandbox/restore/rehearsal.json
+```
+
+运营快照必须显式提供备份年龄阈值；阈值由环境 Owner 定义，不在代码中冒充已批准的 SLO：
+
+```bash
+node deploy/operations-cli.mjs snapshot \
+  --environment sandbox \
+  --database .codex/operations/sandbox/bu2.sqlite \
+  --backup .codex/operations/sandbox/backups/snapshot.sqlite \
+  --artifact "$BU2_OPS_ARTIFACT" \
+  --expected-configuration-sha256 "$BU2_OPS_CONFIG_SHA" \
+  --actual-configuration-sha256 "$BU2_OPS_CONFIG_SHA" \
+  --max-backup-age-seconds 3600 \
+  --destination .codex/operations/sandbox/status.json
+```
+
+`promotion-manifest` 接收 `docker compose config --format json` 的落盘结果、完整 commit SHA、当前 schema 和三项显式 `passed` Gate，并以新文件保存候选制品证据。恢复输出始终是 `execution_disabled` 与 `blocked_pending_reconciliation`。完成 Ledger、Payment Attempt、链上事实和外部 Provider 对账前，不得把隔离副本投入服务，也不得自动重放支付。
 
 ## 手工查看 disarmed 单元
 
@@ -32,4 +80,4 @@ BU2_ARTIFACT_IMAGE="$(tr -d '\n' < .codex/env04-image-id)" \
   docker compose --file deploy/compose.yaml --profile live down --volumes
 ```
 
-删除 `--volumes` 会移除该 Compose 项目的本地测试数据库；不得对任何需要保留的环境照抄此命令。完整边界与验收说明见 [ENV-04 技术说明](../docs/03-technical/ENVIRONMENT_DEPLOYMENT_UNITS_V1.md)。
+删除 `--volumes` 会移除该 Compose 项目的本地测试数据库；不得对任何需要保留的环境照抄此命令。完整边界与验收说明见 [ENV-04 技术说明](../docs/03-technical/ENVIRONMENT_DEPLOYMENT_UNITS_V1.md)和[ENV-06 运营与恢复说明](../docs/03-technical/ENVIRONMENT_OPERATIONS_V1.md)。

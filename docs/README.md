@@ -74,9 +74,13 @@
 - [`clean-room-evidence.schema.json`](03-technical/clean-room-evidence.schema.json)：E2.4 机器结果、计时、失败与恢复字段约束。
 - [`../integrations/clean-room/README.md`](../integrations/clean-room/README.md)：三条独立客户端样例与自动验收入口。
 - [`../integrations/mcp/README.md`](../integrations/mcp/README.md)：Codex、Claude Desktop 与通用 MCP Host 配置。
-- [`../packages/typescript-sdk/README.md`](../packages/typescript-sdk/README.md)：TypeScript SDK v0.1 的中英文接入、错误恢复与契约生成说明。
+- [`../packages/typescript-sdk/README.md`](../packages/typescript-sdk/README.md)：TypeScript SDK v0.3 的中英文接入、环境凭据、错误恢复与契约生成说明。
 - [`examples/payment-flow.json`](03-technical/examples/payment-flow.json)：完整交易示例载荷。
 - [`validate-contract.mjs`](03-technical/validate-contract.mjs)：本地契约一致性验证脚本。
+- [`SYSTEM_ENVIRONMENTS_V1.md`](03-technical/SYSTEM_ENVIRONMENTS_V1.md)：Sandbox、Live、执行后端与资金准入的系统环境契约。
+- [`ENVIRONMENT_CONTROLLED_ACCESS_V1.md`](03-technical/ENVIRONMENT_CONTROLLED_ACCESS_V1.md)：ENV-05 环境绑定访问与租户隔离。
+- [`ENVIRONMENT_OPERATIONS_V1.md`](03-technical/ENVIRONMENT_OPERATIONS_V1.md)：ENV-06 制品提升、监控、SQLite 在线备份与隔离恢复演练。
+- [`../deploy/operations-contract.json`](../deploy/operations-contract.json)：ENV-06 机器可读运营与恢复契约。
 
 ### 持久化与支付通道
 
