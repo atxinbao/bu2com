@@ -1,9 +1,9 @@
-# BU2 Reference Server v0.13 / x402 Sandbox v0.5
+# BU2 Reference Server v0.14 / x402 Sandbox v0.5
 
 日期：2026-09-06
 执行者：Codex
 
-本目录实现 Phase 0 Frozen `/v1` Contract 的本地 SQLite Reference Server。它具备追加账本、Webhook Outbox、模拟支付 Adapter、签名 Receipt、稳定分页与运行时请求校验、基于官方 MCP SDK 的外部 Agent 接入样例，以及基于官方 x402 SDK 的 Base Sepolia `exact` 支付通道；ENV-02/03 已增加 `local/sandbox/live` 注册表、SQLite 环境绑定、版本化环境自描述、客户端预检和 Receipt v0.3 环境签名绑定。它不持有真实资金，不可用于生产。
+本目录实现 Phase 0 Frozen `/v1` Contract 的本地 SQLite Reference Server。它具备追加账本、Webhook Outbox、模拟支付 Adapter、签名 Receipt、稳定分页与运行时请求校验、基于官方 MCP SDK 的外部 Agent 接入样例，以及基于官方 x402 SDK 的 Base Sepolia `exact` 支付通道；ENV-02/03 已增加 `local/sandbox/live` 注册表、SQLite 环境绑定、版本化环境自描述、客户端预检和 Receipt v0.3 环境签名绑定，ENV-04 增加同一不可变镜像的隔离容器参考。它不持有真实资金，不可用于生产。
 
 ## 启动
 
@@ -12,6 +12,8 @@ node sandbox/server.mjs
 ```
 
 默认地址：`http://127.0.0.1:3100`。未指定环境时只允许 `local + simulated`。
+
+容器部署可以通过 `BU2_HOST=0.0.0.0` 显式改变容器内监听地址；默认值仍是 loopback。ENV-04 Docker/Compose 模板与错库、错 Signer 验收见 [`deploy/README.md`](../deploy/README.md)。模板中的 Sandbox/Live 均为 `execution_disabled`，不会挂载 Signer。
 
 默认数据库：`sandbox/data/bu2-sandbox.sqlite`。SQLite Schema v8 会为新库写入不可变环境 metadata；错环境数据库拒绝启动。没有 metadata 的旧库必须先鉴别，再用一次性 `BU2_CLAIM_LEGACY_DB_ENVIRONMENT=true` 明确认领，不能默认解释为 Sandbox 或 Live。重启服务后资源、钱包、幂等结果、账本和 Receipt 均会恢复。领域写入先登记数据库 `processing` Claim，再以状态版本 CAS 把资源、余额、LedgerEvent、Webhook Outbox 和幂等终态一次提交；遗留 `processing` 会返回结果未知，禁止自动重放。
 

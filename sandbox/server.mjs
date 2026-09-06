@@ -496,7 +496,7 @@ export function createBu2Server({
 
 export async function listen({
   port = Number(process.env.BU2_SANDBOX_PORT ?? 3100),
-  host = "127.0.0.1",
+  host = process.env.BU2_HOST ?? "127.0.0.1",
   dbPath = process.env.BU2_SANDBOX_DB ??
     fileURLToPath(new URL("./data/bu2-sandbox.sqlite", import.meta.url)),
   ledger,
@@ -581,4 +581,19 @@ export async function listen({
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
   const running = await listen({ logSink: (line) => console.log(line) });
   console.log(`BU2 Reference Server v${packageMetadata.version} listening on ${running.url}`);
+
+  // 容器停止时先停止接收请求，再关闭数据库，避免 SQLite WAL 留下未完成写入。
+  let shuttingDown = false;
+  const shutdown = (signal) => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    console.log(JSON.stringify({ category: "runtime", event: "shutdown.started", signal }));
+    running.server.close(() => {
+      running.ledger.close();
+      console.log(JSON.stringify({ category: "runtime", event: "shutdown.completed", signal }));
+      process.exitCode = 0;
+    });
+  };
+  process.once("SIGTERM", () => shutdown("SIGTERM"));
+  process.once("SIGINT", () => shutdown("SIGINT"));
 }

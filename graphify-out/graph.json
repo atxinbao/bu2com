@@ -51,6 +51,19 @@
   },
   "nodes": [
     {
+      "id": "sandbox_observability_observability",
+      "label": "Observability",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 127,
+      "community_name": "observability.mjs",
+      "file_type": "code",
+      "norm_label": "observability",
+      "source_file": "sandbox/observability.mjs",
+      "source_location": "L66"
+    },
+    {
       "id": "prototype_components_ui_native_select_nativeselectprops",
       "label": "NativeSelectProps",
       "_callable": true,
@@ -961,26 +974,13 @@
       "source_location": "L19"
     },
     {
-      "id": "sandbox_observability_observability",
-      "label": "Observability",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 54,
-      "community_name": "ApiError",
-      "file_type": "code",
-      "norm_label": "observability",
-      "source_file": "sandbox/observability.mjs",
-      "source_location": "L66"
-    },
-    {
       "id": "sandbox_x402_adapter_x402paymentadapter",
       "label": "X402PaymentAdapter",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 60,
-      "community_name": "x402-adapter.mjs",
+      "community_name": "X402PaymentAdapter",
       "file_type": "code",
       "norm_label": "x402paymentadapter",
       "source_file": "sandbox/x402-adapter.mjs",
@@ -1325,6 +1325,102 @@
       "source_location": "L497"
     },
     {
+      "id": "sandbox_x402_adapter_normalizedaddress",
+      "label": "normalizedAddress()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 110,
+      "community_name": "listen",
+      "file_type": "code",
+      "norm_label": "normalizedaddress()",
+      "source_file": "sandbox/x402-adapter.mjs",
+      "source_location": "L28"
+    },
+    {
+      "id": "sandbox_x402_adapter_normalizedresourceurl",
+      "label": "normalizedResourceUrl()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 110,
+      "community_name": "listen",
+      "file_type": "code",
+      "norm_label": "normalizedresourceurl()",
+      "source_file": "sandbox/x402-adapter.mjs",
+      "source_location": "L29"
+    },
+    {
+      "id": "sandbox_x402_adapter_paymentresourceurl",
+      "label": "paymentResourceUrl()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 110,
+      "community_name": "listen",
+      "file_type": "code",
+      "norm_label": "paymentresourceurl()",
+      "source_file": "sandbox/x402-adapter.mjs",
+      "source_location": "L36"
+    },
+    {
+      "id": "sandbox_x402_adapter_x402paymentadapter_constructor",
+      "label": ".constructor()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 110,
+      "community_name": "listen",
+      "file_type": "code",
+      "norm_label": ".constructor()",
+      "source_file": "sandbox/x402-adapter.mjs",
+      "source_location": "L44"
+    },
+    {
+      "id": "sandbox_x402_test_alteredchallenge",
+      "label": "alteredChallenge()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 110,
+      "community_name": "listen",
+      "file_type": "code",
+      "norm_label": "alteredchallenge()",
+      "source_file": "sandbox/x402.test.mjs",
+      "source_location": "L41"
+    },
+    {
+      "id": "sandbox_x402_test_paymentrequired",
+      "label": "paymentRequired()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 110,
+      "community_name": "listen",
+      "file_type": "code",
+      "norm_label": "paymentrequired()",
+      "source_file": "sandbox/x402.test.mjs",
+      "source_location": "L118"
+    },
+    {
+      "id": "sandbox_x402_test_post",
+      "label": "post()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 110,
+      "community_name": "listen",
+      "file_type": "code",
+      "norm_label": "post()",
+      "source_file": "sandbox/x402.test.mjs",
+      "source_location": "L90"
+    },
+    {
+      "id": "sandbox_x402_test_rotatingchallengeserver",
+      "label": "rotatingChallengeServer()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 110,
+      "community_name": "listen",
+      "file_type": "code",
+      "norm_label": "rotatingchallengeserver()",
+      "source_file": "sandbox/x402.test.mjs",
+      "source_location": "L142"
+    },
+    {
       "id": "integrations_clean_room_http_client_request",
       "label": "request()",
       "_callable": true,
@@ -1505,6 +1601,102 @@
       "source_location": "L27"
     },
     {
+      "id": "sandbox_observability_classifyoperationalerror",
+      "label": "classifyOperationalError()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 127,
+      "community_name": "observability.mjs",
+      "file_type": "code",
+      "norm_label": "classifyoperationalerror()",
+      "source_file": "sandbox/observability.mjs",
+      "source_location": "L47"
+    },
+    {
+      "id": "sandbox_observability_createtraceid",
+      "label": "createTraceId()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 127,
+      "community_name": "observability.mjs",
+      "file_type": "code",
+      "norm_label": "createtraceid()",
+      "source_file": "sandbox/observability.mjs",
+      "source_location": "L20"
+    },
+    {
+      "id": "sandbox_observability_istraceid",
+      "label": "isTraceId()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 127,
+      "community_name": "observability.mjs",
+      "file_type": "code",
+      "norm_label": "istraceid()",
+      "source_file": "sandbox/observability.mjs",
+      "source_location": "L23"
+    },
+    {
+      "id": "sandbox_observability_observability_constructor",
+      "label": ".constructor()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 127,
+      "community_name": "observability.mjs",
+      "file_type": "code",
+      "norm_label": ".constructor()",
+      "source_file": "sandbox/observability.mjs",
+      "source_location": "L67"
+    },
+    {
+      "id": "sandbox_observability_observability_context",
+      "label": ".context()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 127,
+      "community_name": "observability.mjs",
+      "file_type": "code",
+      "norm_label": ".context()",
+      "source_file": "sandbox/observability.mjs",
+      "source_location": "L80"
+    },
+    {
+      "id": "sandbox_observability_observability_record",
+      "label": ".record()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 127,
+      "community_name": "observability.mjs",
+      "file_type": "code",
+      "norm_label": ".record()",
+      "source_file": "sandbox/observability.mjs",
+      "source_location": "L88"
+    },
+    {
+      "id": "sandbox_observability_observability_run",
+      "label": ".run()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 127,
+      "community_name": "observability.mjs",
+      "file_type": "code",
+      "norm_label": ".run()",
+      "source_file": "sandbox/observability.mjs",
+      "source_location": "L76"
+    },
+    {
+      "id": "sandbox_observability_sanitize",
+      "label": "sanitize()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 127,
+      "community_name": "observability.mjs",
+      "file_type": "code",
+      "norm_label": "sanitize()",
+      "source_file": "sandbox/observability.mjs",
+      "source_location": "L27"
+    },
+    {
       "id": "prototype_components_ui_toggle_group_togglegroup",
       "label": "ToggleGroup()",
       "_callable": true,
@@ -1577,36 +1769,12 @@
       "source_location": "L44"
     },
     {
-      "id": "sandbox_persistence_sqliteledger_getx402authorization",
-      "label": ".getX402Authorization()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 15,
-      "community_name": "x402.test.mjs",
-      "file_type": "code",
-      "norm_label": ".getx402authorization()",
-      "source_file": "sandbox/persistence.mjs",
-      "source_location": "L1441"
-    },
-    {
-      "id": "sandbox_persistence_sqliteledger_savex402authorization",
-      "label": ".saveX402Authorization()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 15,
-      "community_name": "x402.test.mjs",
-      "file_type": "code",
-      "norm_label": ".savex402authorization()",
-      "source_file": "sandbox/persistence.mjs",
-      "source_location": "L1398"
-    },
-    {
       "id": "sandbox_x402_merchant_createx402merchant",
       "label": "createX402Merchant()",
       "_callable": true,
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402.test.mjs",
+      "community_name": "x402-wallet.mjs",
       "file_type": "code",
       "norm_label": "createx402merchant()",
       "source_file": "sandbox/x402-merchant.mjs",
@@ -1618,7 +1786,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402.test.mjs",
+      "community_name": "x402-wallet.mjs",
       "file_type": "code",
       "norm_label": "defaultpayto()",
       "source_file": "sandbox/x402-merchant.mjs",
@@ -1630,23 +1798,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402.test.mjs",
+      "community_name": "x402-wallet.mjs",
       "file_type": "code",
       "norm_label": "listenx402merchant()",
       "source_file": "sandbox/x402-merchant.mjs",
       "source_location": "L79"
-    },
-    {
-      "id": "sandbox_x402_test_alteredchallenge",
-      "label": "alteredChallenge()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 15,
-      "community_name": "x402.test.mjs",
-      "file_type": "code",
-      "norm_label": "alteredchallenge()",
-      "source_file": "sandbox/x402.test.mjs",
-      "source_location": "L41"
     },
     {
       "id": "sandbox_x402_test_merchant",
@@ -1654,59 +1810,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402.test.mjs",
+      "community_name": "x402-wallet.mjs",
       "file_type": "code",
       "norm_label": "merchant()",
       "source_file": "sandbox/x402.test.mjs",
       "source_location": "L31"
-    },
-    {
-      "id": "sandbox_x402_test_paymentrequired",
-      "label": "paymentRequired()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 15,
-      "community_name": "x402.test.mjs",
-      "file_type": "code",
-      "norm_label": "paymentrequired()",
-      "source_file": "sandbox/x402.test.mjs",
-      "source_location": "L118"
-    },
-    {
-      "id": "sandbox_x402_test_persistauthorization",
-      "label": "persistAuthorization()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 15,
-      "community_name": "x402.test.mjs",
-      "file_type": "code",
-      "norm_label": "persistauthorization()",
-      "source_file": "sandbox/x402.test.mjs",
-      "source_location": "L102"
-    },
-    {
-      "id": "sandbox_x402_test_post",
-      "label": "post()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 15,
-      "community_name": "x402.test.mjs",
-      "file_type": "code",
-      "norm_label": "post()",
-      "source_file": "sandbox/x402.test.mjs",
-      "source_location": "L90"
-    },
-    {
-      "id": "sandbox_x402_test_rotatingchallengeserver",
-      "label": "rotatingChallengeServer()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 15,
-      "community_name": "x402.test.mjs",
-      "file_type": "code",
-      "norm_label": "rotatingchallengeserver()",
-      "source_file": "sandbox/x402.test.mjs",
-      "source_location": "L142"
     },
     {
       "id": "sandbox_x402_wallet_buyeraccount",
@@ -1714,7 +1822,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402.test.mjs",
+      "community_name": "x402-wallet.mjs",
       "file_type": "code",
       "norm_label": "buyeraccount()",
       "source_file": "sandbox/x402-wallet.mjs",
@@ -1726,7 +1834,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402.test.mjs",
+      "community_name": "x402-wallet.mjs",
       "file_type": "code",
       "norm_label": "merchantaccount()",
       "source_file": "sandbox/x402-wallet.mjs",
@@ -1738,7 +1846,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402.test.mjs",
+      "community_name": "x402-wallet.mjs",
       "file_type": "code",
       "norm_label": "readbuyerprivatekey()",
       "source_file": "sandbox/x402-wallet.mjs",
@@ -1750,7 +1858,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402.test.mjs",
+      "community_name": "x402-wallet.mjs",
       "file_type": "code",
       "norm_label": "readkeychainprivatekey()",
       "source_file": "sandbox/x402-wallet.mjs",
@@ -1762,7 +1870,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402.test.mjs",
+      "community_name": "x402-wallet.mjs",
       "file_type": "code",
       "norm_label": "walletstatus()",
       "source_file": "sandbox/x402-wallet.mjs",
@@ -6149,6 +6257,18 @@
       "source_location": "L900"
     },
     {
+      "id": "sandbox_persistence_sqliteledger_getx402authorization",
+      "label": ".getX402Authorization()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 49,
+      "community_name": "SqliteLedger",
+      "file_type": "code",
+      "norm_label": ".getx402authorization()",
+      "source_file": "sandbox/persistence.mjs",
+      "source_location": "L1441"
+    },
+    {
       "id": "sandbox_persistence_sqliteledger_healthsnapshot",
       "label": ".healthSnapshot()",
       "_callable": true,
@@ -6401,6 +6521,18 @@
       "source_location": "L1359"
     },
     {
+      "id": "sandbox_persistence_sqliteledger_savex402authorization",
+      "label": ".saveX402Authorization()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 49,
+      "community_name": "SqliteLedger",
+      "file_type": "code",
+      "norm_label": ".savex402authorization()",
+      "source_file": "sandbox/persistence.mjs",
+      "source_location": "L1398"
+    },
+    {
       "id": "sandbox_persistence_sqliteledger_schemamigrations",
       "label": ".schemaMigrations()",
       "_callable": true,
@@ -6447,6 +6579,18 @@
       "norm_label": ".webhookreplayrows()",
       "source_file": "sandbox/persistence.mjs",
       "source_location": "L1295"
+    },
+    {
+      "id": "sandbox_x402_test_persistauthorization",
+      "label": "persistAuthorization()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 49,
+      "community_name": "SqliteLedger",
+      "file_type": "code",
+      "norm_label": "persistauthorization()",
+      "source_file": "sandbox/x402.test.mjs",
+      "source_location": "L102"
     },
     {
       "id": "prototype_components_ui_sheet_sheet",
@@ -7145,100 +7289,16 @@
       "source_location": "L284"
     },
     {
-      "id": "sandbox_observability_classifyoperationalerror",
-      "label": "classifyOperationalError()",
+      "id": "sandbox_environment_config_assertexecutionenabled",
+      "label": "assertExecutionEnabled()",
       "_callable": true,
       "_origin": "ast",
       "community": 54,
       "community_name": "ApiError",
       "file_type": "code",
-      "norm_label": "classifyoperationalerror()",
-      "source_file": "sandbox/observability.mjs",
-      "source_location": "L47"
-    },
-    {
-      "id": "sandbox_observability_createtraceid",
-      "label": "createTraceId()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 54,
-      "community_name": "ApiError",
-      "file_type": "code",
-      "norm_label": "createtraceid()",
-      "source_file": "sandbox/observability.mjs",
-      "source_location": "L20"
-    },
-    {
-      "id": "sandbox_observability_istraceid",
-      "label": "isTraceId()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 54,
-      "community_name": "ApiError",
-      "file_type": "code",
-      "norm_label": "istraceid()",
-      "source_file": "sandbox/observability.mjs",
-      "source_location": "L23"
-    },
-    {
-      "id": "sandbox_observability_observability_constructor",
-      "label": ".constructor()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 54,
-      "community_name": "ApiError",
-      "file_type": "code",
-      "norm_label": ".constructor()",
-      "source_file": "sandbox/observability.mjs",
-      "source_location": "L67"
-    },
-    {
-      "id": "sandbox_observability_observability_context",
-      "label": ".context()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 54,
-      "community_name": "ApiError",
-      "file_type": "code",
-      "norm_label": ".context()",
-      "source_file": "sandbox/observability.mjs",
-      "source_location": "L80"
-    },
-    {
-      "id": "sandbox_observability_observability_record",
-      "label": ".record()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 54,
-      "community_name": "ApiError",
-      "file_type": "code",
-      "norm_label": ".record()",
-      "source_file": "sandbox/observability.mjs",
-      "source_location": "L88"
-    },
-    {
-      "id": "sandbox_observability_observability_run",
-      "label": ".run()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 54,
-      "community_name": "ApiError",
-      "file_type": "code",
-      "norm_label": ".run()",
-      "source_file": "sandbox/observability.mjs",
-      "source_location": "L76"
-    },
-    {
-      "id": "sandbox_observability_sanitize",
-      "label": "sanitize()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 54,
-      "community_name": "ApiError",
-      "file_type": "code",
-      "norm_label": "sanitize()",
-      "source_file": "sandbox/observability.mjs",
-      "source_location": "L27"
+      "norm_label": "assertexecutionenabled()",
+      "source_file": "sandbox/environment-config.mjs",
+      "source_location": "L193"
     },
     {
       "id": "sandbox_server_createbu2server",
@@ -7529,24 +7589,12 @@
       "source_location": "L120"
     },
     {
-      "id": "sandbox_environment_config_assertexecutionenabled",
-      "label": "assertExecutionEnabled()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 60,
-      "community_name": "x402-adapter.mjs",
-      "file_type": "code",
-      "norm_label": "assertexecutionenabled()",
-      "source_file": "sandbox/environment-config.mjs",
-      "source_location": "L193"
-    },
-    {
       "id": "sandbox_x402_adapter_digest",
       "label": "digest()",
       "_callable": true,
       "_origin": "ast",
       "community": 60,
-      "community_name": "x402-adapter.mjs",
+      "community_name": "X402PaymentAdapter",
       "file_type": "code",
       "norm_label": "digest()",
       "source_file": "sandbox/x402-adapter.mjs",
@@ -7558,47 +7606,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 60,
-      "community_name": "x402-adapter.mjs",
+      "community_name": "X402PaymentAdapter",
       "file_type": "code",
       "norm_label": "expectedatomicusdc()",
       "source_file": "sandbox/x402-adapter.mjs",
       "source_location": "L14"
-    },
-    {
-      "id": "sandbox_x402_adapter_normalizedaddress",
-      "label": "normalizedAddress()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 60,
-      "community_name": "x402-adapter.mjs",
-      "file_type": "code",
-      "norm_label": "normalizedaddress()",
-      "source_file": "sandbox/x402-adapter.mjs",
-      "source_location": "L28"
-    },
-    {
-      "id": "sandbox_x402_adapter_normalizedresourceurl",
-      "label": "normalizedResourceUrl()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 60,
-      "community_name": "x402-adapter.mjs",
-      "file_type": "code",
-      "norm_label": "normalizedresourceurl()",
-      "source_file": "sandbox/x402-adapter.mjs",
-      "source_location": "L29"
-    },
-    {
-      "id": "sandbox_x402_adapter_paymentresourceurl",
-      "label": "paymentResourceUrl()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 60,
-      "community_name": "x402-adapter.mjs",
-      "file_type": "code",
-      "norm_label": "paymentresourceurl()",
-      "source_file": "sandbox/x402-adapter.mjs",
-      "source_location": "L36"
     },
     {
       "id": "sandbox_x402_adapter_reference",
@@ -7606,23 +7618,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 60,
-      "community_name": "x402-adapter.mjs",
+      "community_name": "X402PaymentAdapter",
       "file_type": "code",
       "norm_label": "reference()",
       "source_file": "sandbox/x402-adapter.mjs",
       "source_location": "L27"
-    },
-    {
-      "id": "sandbox_x402_adapter_x402paymentadapter_constructor",
-      "label": ".constructor()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 60,
-      "community_name": "x402-adapter.mjs",
-      "file_type": "code",
-      "norm_label": ".constructor()",
-      "source_file": "sandbox/x402-adapter.mjs",
-      "source_location": "L44"
     },
     {
       "id": "sandbox_x402_adapter_x402paymentadapter_existing",
@@ -7630,7 +7630,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 60,
-      "community_name": "x402-adapter.mjs",
+      "community_name": "X402PaymentAdapter",
       "file_type": "code",
       "norm_label": ".existing()",
       "source_file": "sandbox/x402-adapter.mjs",
@@ -7642,7 +7642,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 60,
-      "community_name": "x402-adapter.mjs",
+      "community_name": "X402PaymentAdapter",
       "file_type": "code",
       "norm_label": ".marksettlementunknown()",
       "source_file": "sandbox/x402-adapter.mjs",
@@ -7654,7 +7654,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 60,
-      "community_name": "x402-adapter.mjs",
+      "community_name": "X402PaymentAdapter",
       "file_type": "code",
       "norm_label": ".recoversettlement()",
       "source_file": "sandbox/x402-adapter.mjs",
@@ -7666,7 +7666,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 60,
-      "community_name": "x402-adapter.mjs",
+      "community_name": "X402PaymentAdapter",
       "file_type": "code",
       "norm_label": ".rejectpaymentattempt()",
       "source_file": "sandbox/x402-adapter.mjs",
@@ -7678,7 +7678,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 60,
-      "community_name": "x402-adapter.mjs",
+      "community_name": "X402PaymentAdapter",
       "file_type": "code",
       "norm_label": ".reserve()",
       "source_file": "sandbox/x402-adapter.mjs",
@@ -7690,7 +7690,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 60,
-      "community_name": "x402-adapter.mjs",
+      "community_name": "X402PaymentAdapter",
       "file_type": "code",
       "norm_label": ".save()",
       "source_file": "sandbox/x402-adapter.mjs",
@@ -7702,7 +7702,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 60,
-      "community_name": "x402-adapter.mjs",
+      "community_name": "X402PaymentAdapter",
       "file_type": "code",
       "norm_label": ".settle()",
       "source_file": "sandbox/x402-adapter.mjs",
@@ -7714,7 +7714,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 60,
-      "community_name": "x402-adapter.mjs",
+      "community_name": "X402PaymentAdapter",
       "file_type": "code",
       "norm_label": ".settleonce()",
       "source_file": "sandbox/x402-adapter.mjs",
@@ -7726,7 +7726,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 60,
-      "community_name": "x402-adapter.mjs",
+      "community_name": "X402PaymentAdapter",
       "file_type": "code",
       "norm_label": ".validaterequirement()",
       "source_file": "sandbox/x402-adapter.mjs",
@@ -8186,7 +8186,139 @@
       "file_type": "code",
       "norm_label": "assert()",
       "source_file": "docs/03-technical/validate-contract.mjs",
-      "source_location": "L25"
+      "source_location": "L28"
+    },
+    {
+      "id": "deploy_acceptance_assertpaymentmutationdisabled",
+      "label": "assertPaymentMutationDisabled()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 79,
+      "community_name": "acceptance.mjs",
+      "file_type": "code",
+      "norm_label": "assertpaymentmutationdisabled()",
+      "source_file": "deploy/acceptance.mjs",
+      "source_location": "L60"
+    },
+    {
+      "id": "deploy_acceptance_command",
+      "label": "command()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 79,
+      "community_name": "acceptance.mjs",
+      "file_type": "code",
+      "norm_label": "command()",
+      "source_file": "deploy/acceptance.mjs",
+      "source_location": "L21"
+    },
+    {
+      "id": "deploy_acceptance_reserveport",
+      "label": "reservePort()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 79,
+      "community_name": "acceptance.mjs",
+      "file_type": "code",
+      "norm_label": "reserveport()",
+      "source_file": "deploy/acceptance.mjs",
+      "source_location": "L29"
+    },
+    {
+      "id": "deploy_acceptance_runfaultcontainer",
+      "label": "runFaultContainer()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 79,
+      "community_name": "acceptance.mjs",
+      "file_type": "code",
+      "norm_label": "runfaultcontainer()",
+      "source_file": "deploy/acceptance.mjs",
+      "source_location": "L74"
+    },
+    {
+      "id": "deploy_acceptance_waitforenvironment",
+      "label": "waitForEnvironment()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 79,
+      "community_name": "acceptance.mjs",
+      "file_type": "code",
+      "norm_label": "waitforenvironment()",
+      "source_file": "deploy/acceptance.mjs",
+      "source_location": "L39"
+    },
+    {
+      "id": "deploy_deployment_contract_asenvironment",
+      "label": "asEnvironment()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 79,
+      "community_name": "acceptance.mjs",
+      "file_type": "code",
+      "norm_label": "asenvironment()",
+      "source_file": "deploy/deployment-contract.mjs",
+      "source_location": "L14"
+    },
+    {
+      "id": "deploy_deployment_contract_immutableimage",
+      "label": "immutableImage()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 79,
+      "community_name": "acceptance.mjs",
+      "file_type": "code",
+      "norm_label": "immutableimage()",
+      "source_file": "deploy/deployment-contract.mjs",
+      "source_location": "L11"
+    },
+    {
+      "id": "deploy_deployment_contract_networknames",
+      "label": "networkNames()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 79,
+      "community_name": "acceptance.mjs",
+      "file_type": "code",
+      "norm_label": "networknames()",
+      "source_file": "deploy/deployment-contract.mjs",
+      "source_location": "L24"
+    },
+    {
+      "id": "deploy_deployment_contract_test_resolvedcompose",
+      "label": "resolvedCompose()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 79,
+      "community_name": "acceptance.mjs",
+      "file_type": "code",
+      "norm_label": "resolvedcompose()",
+      "source_file": "deploy/deployment-contract.test.mjs",
+      "source_location": "L12"
+    },
+    {
+      "id": "deploy_deployment_contract_validateresolveddeployment",
+      "label": "validateResolvedDeployment()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 79,
+      "community_name": "acceptance.mjs",
+      "file_type": "code",
+      "norm_label": "validateresolveddeployment()",
+      "source_file": "deploy/deployment-contract.mjs",
+      "source_location": "L27"
+    },
+    {
+      "id": "deploy_deployment_contract_volumesources",
+      "label": "volumeSources()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 79,
+      "community_name": "acceptance.mjs",
+      "file_type": "code",
+      "norm_label": "volumesources()",
+      "source_file": "deploy/deployment-contract.mjs",
+      "source_location": "L19"
     },
     {
       "id": "prototype_components_ui_alert_dialog_alertdialog",
@@ -9392,6 +9524,17 @@
       "source_location": "L7"
     },
     {
+      "id": "docs_03_technical_doctor_result_schema_chain_id_type",
+      "label": "type",
+      "_origin": "ast",
+      "community": 106,
+      "community_name": "null",
+      "file_type": "code",
+      "norm_label": "type",
+      "source_file": "docs/03-technical/doctor-result.schema.json",
+      "source_location": "L31"
+    },
+    {
       "id": "docs_03_technical_doctor_result_schema_environment_enum",
       "label": "enum",
       "_origin": "ast",
@@ -9425,6 +9568,17 @@
       "source_location": "L112"
     },
     {
+      "id": "docs_03_technical_doctor_result_schema_network_enum",
+      "label": "enum",
+      "_origin": "ast",
+      "community": 106,
+      "community_name": "null",
+      "file_type": "code",
+      "norm_label": "enum",
+      "source_file": "docs/03-technical/doctor-result.schema.json",
+      "source_location": "L32"
+    },
+    {
       "id": "docs_03_technical_doctor_result_schema_network_type",
       "label": "type",
       "_origin": "ast",
@@ -9445,6 +9599,17 @@
       "norm_label": "environment",
       "source_file": "docs/03-technical/doctor-result.schema.json",
       "source_location": "L24"
+    },
+    {
+      "id": "docs_03_technical_doctor_result_schema_properties_network",
+      "label": "network",
+      "_origin": "ast",
+      "community": 106,
+      "community_name": "null",
+      "file_type": "code",
+      "norm_label": "network",
+      "source_file": "docs/03-technical/doctor-result.schema.json",
+      "source_location": "L32"
     },
     {
       "id": "docs_03_technical_doctor_result_schema_properties_receipt_issuer_id",
@@ -9489,6 +9654,39 @@
       "norm_label": "string",
       "source_file": "docs/03-technical/doctor-result.schema.json",
       "source_location": "L24"
+    },
+    {
+      "id": "ref_eip155_8453",
+      "label": "eip155:8453",
+      "_origin": "ast",
+      "community": 106,
+      "community_name": "null",
+      "file_type": "concept",
+      "norm_label": "eip155:8453",
+      "source_file": "docs/03-technical/doctor-result.schema.json",
+      "source_location": "L32"
+    },
+    {
+      "id": "ref_eip155_84532",
+      "label": "eip155:84532",
+      "_origin": "ast",
+      "community": 106,
+      "community_name": "null",
+      "file_type": "concept",
+      "norm_label": "eip155:84532",
+      "source_file": "docs/03-technical/doctor-result.schema.json",
+      "source_location": "L32"
+    },
+    {
+      "id": "ref_integer",
+      "label": "integer",
+      "_origin": "ast",
+      "community": 106,
+      "community_name": "null",
+      "file_type": "concept",
+      "norm_label": "integer",
+      "source_file": "docs/03-technical/doctor-result.schema.json",
+      "source_location": "L31"
     },
     {
       "id": "ref_live",
@@ -10225,6 +10423,50 @@
       "source_location": "L1"
     },
     {
+      "id": "sandbox_x402_adapter",
+      "label": "x402-adapter.mjs",
+      "_origin": "ast",
+      "community": 110,
+      "community_name": "listen",
+      "file_type": "code",
+      "norm_label": "x402-adapter.mjs",
+      "source_file": "sandbox/x402-adapter.mjs",
+      "source_location": "L1"
+    },
+    {
+      "id": "sandbox_x402_adapter_x402_base_sepolia_usdc",
+      "label": "X402_BASE_SEPOLIA_USDC",
+      "_origin": "ast",
+      "community": 110,
+      "community_name": "listen",
+      "file_type": "code",
+      "norm_label": "x402_base_sepolia_usdc",
+      "source_file": "sandbox/x402-adapter.mjs",
+      "source_location": "L11"
+    },
+    {
+      "id": "sandbox_x402_test",
+      "label": "x402.test.mjs",
+      "_origin": "ast",
+      "community": 110,
+      "community_name": "listen",
+      "file_type": "code",
+      "norm_label": "x402.test.mjs",
+      "source_file": "sandbox/x402.test.mjs",
+      "source_location": "L1"
+    },
+    {
+      "id": "sandbox_x402_test_facilitatorclient",
+      "label": "facilitatorClient",
+      "_origin": "ast",
+      "community": 110,
+      "community_name": "listen",
+      "file_type": "code",
+      "norm_label": "facilitatorclient",
+      "source_file": "sandbox/x402.test.mjs",
+      "source_location": "L21"
+    },
+    {
       "id": "docs_03_technical_clean_room_evidence_schema_definitions_step",
       "label": "step",
       "_origin": "ast",
@@ -10302,81 +10544,112 @@
       "source_location": "L57"
     },
     {
-      "id": "docs_03_technical_doctor_result_schema",
-      "label": "doctor-result.schema.json",
+      "id": "docs_02_product_mvp_prd_6_p0_\u529f\u80fd\u9700\u6c42",
+      "label": "6. P0 \u529f\u80fd\u9700\u6c42",
       "_origin": "ast",
       "community": 112,
-      "community_name": "doctor-result.schema.json",
-      "file_type": "code",
-      "norm_label": "doctor-result.schema.json",
-      "source_file": "docs/03-technical/doctor-result.schema.json",
-      "source_location": "L1"
+      "community_name": "6. P0 \u529f\u80fd\u9700\u6c42",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "6. p0 \u529f\u80fd\u9700\u6c42",
+      "source_file": "docs/02-product/MVP_PRD.md",
+      "source_location": "L75"
     },
     {
-      "id": "docs_03_technical_doctor_result_schema_additionalproperties",
-      "label": "additionalProperties",
+      "id": "docs_02_product_mvp_prd_f01_agent_identity",
+      "label": "F01 Agent Identity",
       "_origin": "ast",
       "community": 112,
-      "community_name": "doctor-result.schema.json",
-      "file_type": "code",
-      "norm_label": "additionalproperties",
-      "source_file": "docs/03-technical/doctor-result.schema.json",
-      "source_location": "L6"
+      "community_name": "6. P0 \u529f\u80fd\u9700\u6c42",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "f01 agent identity",
+      "source_file": "docs/02-product/MVP_PRD.md",
+      "source_location": "L77"
     },
     {
-      "id": "docs_03_technical_doctor_result_schema_allof",
-      "label": "allOf",
+      "id": "docs_02_product_mvp_prd_f02_wallet_\u4e0e\u9650\u989d",
+      "label": "F02 Wallet \u4e0e\u9650\u989d",
       "_origin": "ast",
       "community": 112,
-      "community_name": "doctor-result.schema.json",
-      "file_type": "code",
-      "norm_label": "allof",
-      "source_file": "docs/03-technical/doctor-result.schema.json",
-      "source_location": "L85"
+      "community_name": "6. P0 \u529f\u80fd\u9700\u6c42",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "f02 wallet \u4e0e\u9650\u989d",
+      "source_file": "docs/02-product/MVP_PRD.md",
+      "source_location": "L84"
     },
     {
-      "id": "docs_03_technical_doctor_result_schema_id",
-      "label": "$id",
+      "id": "docs_02_product_mvp_prd_f03_payment_mandate",
+      "label": "F03 Payment Mandate",
       "_origin": "ast",
       "community": 112,
-      "community_name": "doctor-result.schema.json",
-      "file_type": "code",
-      "norm_label": "$id",
-      "source_file": "docs/03-technical/doctor-result.schema.json",
-      "source_location": "L3"
+      "community_name": "6. P0 \u529f\u80fd\u9700\u6c42",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "f03 payment mandate",
+      "source_file": "docs/02-product/MVP_PRD.md",
+      "source_location": "L90"
     },
     {
-      "id": "docs_03_technical_doctor_result_schema_schema",
-      "label": "$schema",
+      "id": "docs_02_product_mvp_prd_f04_quote_\u4e0e_payment_intent",
+      "label": "F04 Quote \u4e0e Payment Intent",
       "_origin": "ast",
       "community": 112,
-      "community_name": "doctor-result.schema.json",
-      "file_type": "code",
-      "norm_label": "$schema",
-      "source_file": "docs/03-technical/doctor-result.schema.json",
-      "source_location": "L2"
+      "community_name": "6. P0 \u529f\u80fd\u9700\u6c42",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "f04 quote \u4e0e payment intent",
+      "source_file": "docs/02-product/MVP_PRD.md",
+      "source_location": "L96"
     },
     {
-      "id": "docs_03_technical_doctor_result_schema_title",
-      "label": "title",
+      "id": "docs_02_product_mvp_prd_f05_authorization_\u4e0e\u8d44\u91d1\u9884\u7559",
+      "label": "F05 Authorization \u4e0e\u8d44\u91d1\u9884\u7559",
       "_origin": "ast",
       "community": 112,
-      "community_name": "doctor-result.schema.json",
-      "file_type": "code",
-      "norm_label": "title",
-      "source_file": "docs/03-technical/doctor-result.schema.json",
-      "source_location": "L4"
+      "community_name": "6. P0 \u529f\u80fd\u9700\u6c42",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "f05 authorization \u4e0e\u8d44\u91d1\u9884\u7559",
+      "source_file": "docs/02-product/MVP_PRD.md",
+      "source_location": "L102"
     },
     {
-      "id": "docs_03_technical_doctor_result_schema_type",
-      "label": "type",
+      "id": "docs_02_product_mvp_prd_f06_delivery_\u4e0e_settlement",
+      "label": "F06 Delivery \u4e0e Settlement",
       "_origin": "ast",
       "community": 112,
-      "community_name": "doctor-result.schema.json",
-      "file_type": "code",
-      "norm_label": "type",
-      "source_file": "docs/03-technical/doctor-result.schema.json",
-      "source_location": "L5"
+      "community_name": "6. P0 \u529f\u80fd\u9700\u6c42",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "f06 delivery \u4e0e settlement",
+      "source_file": "docs/02-product/MVP_PRD.md",
+      "source_location": "L109"
+    },
+    {
+      "id": "docs_02_product_mvp_prd_f07_receipt_\u4e0e\u8d26\u672c",
+      "label": "F07 Receipt \u4e0e\u8d26\u672c",
+      "_origin": "ast",
+      "community": 112,
+      "community_name": "6. P0 \u529f\u80fd\u9700\u6c42",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "f07 receipt \u4e0e\u8d26\u672c",
+      "source_file": "docs/02-product/MVP_PRD.md",
+      "source_location": "L115"
+    },
+    {
+      "id": "docs_02_product_mvp_prd_f08_\u5d4c\u5165\u5f0f\u63a5\u5165",
+      "label": "F08 \u5d4c\u5165\u5f0f\u63a5\u5165",
+      "_origin": "ast",
+      "community": 112,
+      "community_name": "6. P0 \u529f\u80fd\u9700\u6c42",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "f08 \u5d4c\u5165\u5f0f\u63a5\u5165",
+      "source_file": "docs/02-product/MVP_PRD.md",
+      "source_location": "L121"
     },
     {
       "id": "docs_03_technical_doctor_result_schema_definitions_failure",
@@ -10871,7 +11144,7 @@
       "file_type": "code",
       "norm_label": "dependencies",
       "source_file": "sandbox/package.json",
-      "source_location": "L28"
+      "source_location": "L30"
     },
     {
       "id": "sandbox_package_dependencies_ajv",
@@ -10882,7 +11155,7 @@
       "file_type": "code",
       "norm_label": "ajv",
       "source_file": "sandbox/package.json",
-      "source_location": "L35"
+      "source_location": "L37"
     },
     {
       "id": "sandbox_package_dependencies_ajv_formats",
@@ -10893,7 +11166,7 @@
       "file_type": "code",
       "norm_label": "ajv-formats",
       "source_file": "sandbox/package.json",
-      "source_location": "L36"
+      "source_location": "L38"
     },
     {
       "id": "sandbox_package_dependencies_canonicalize",
@@ -10904,7 +11177,7 @@
       "file_type": "code",
       "norm_label": "canonicalize",
       "source_file": "sandbox/package.json",
-      "source_location": "L37"
+      "source_location": "L39"
     },
     {
       "id": "sandbox_package_dependencies_express",
@@ -10915,7 +11188,7 @@
       "file_type": "code",
       "norm_label": "express",
       "source_file": "sandbox/package.json",
-      "source_location": "L38"
+      "source_location": "L40"
     },
     {
       "id": "sandbox_package_dependencies_modelcontextprotocol_client",
@@ -10926,7 +11199,7 @@
       "file_type": "code",
       "norm_label": "@modelcontextprotocol/client",
       "source_file": "sandbox/package.json",
-      "source_location": "L29"
+      "source_location": "L31"
     },
     {
       "id": "sandbox_package_dependencies_modelcontextprotocol_server",
@@ -10937,7 +11210,7 @@
       "file_type": "code",
       "norm_label": "@modelcontextprotocol/server",
       "source_file": "sandbox/package.json",
-      "source_location": "L30"
+      "source_location": "L32"
     },
     {
       "id": "sandbox_package_dependencies_viem",
@@ -10948,7 +11221,7 @@
       "file_type": "code",
       "norm_label": "viem",
       "source_file": "sandbox/package.json",
-      "source_location": "L39"
+      "source_location": "L41"
     },
     {
       "id": "sandbox_package_dependencies_x402_core",
@@ -10959,7 +11232,7 @@
       "file_type": "code",
       "norm_label": "@x402/core",
       "source_file": "sandbox/package.json",
-      "source_location": "L31"
+      "source_location": "L33"
     },
     {
       "id": "sandbox_package_dependencies_x402_evm",
@@ -10970,7 +11243,7 @@
       "file_type": "code",
       "norm_label": "@x402/evm",
       "source_file": "sandbox/package.json",
-      "source_location": "L32"
+      "source_location": "L34"
     },
     {
       "id": "sandbox_package_dependencies_x402_express",
@@ -10981,7 +11254,7 @@
       "file_type": "code",
       "norm_label": "@x402/express",
       "source_file": "sandbox/package.json",
-      "source_location": "L33"
+      "source_location": "L35"
     },
     {
       "id": "sandbox_package_dependencies_x402_fetch",
@@ -10992,7 +11265,7 @@
       "file_type": "code",
       "norm_label": "@x402/fetch",
       "source_file": "sandbox/package.json",
-      "source_location": "L34"
+      "source_location": "L36"
     },
     {
       "id": "sandbox_package_engines",
@@ -11058,7 +11331,18 @@
       "file_type": "code",
       "norm_label": "acceptance:clean-room",
       "source_file": "sandbox/package.json",
-      "source_location": "L19"
+      "source_location": "L21"
+    },
+    {
+      "id": "sandbox_package_scripts_acceptance_deployment",
+      "label": "acceptance:deployment",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "scripts",
+      "file_type": "code",
+      "norm_label": "acceptance:deployment",
+      "source_file": "sandbox/package.json",
+      "source_location": "L17"
     },
     {
       "id": "sandbox_package_scripts_demo",
@@ -11069,7 +11353,7 @@
       "file_type": "code",
       "norm_label": "demo",
       "source_file": "sandbox/package.json",
-      "source_location": "L16"
+      "source_location": "L18"
     },
     {
       "id": "sandbox_package_scripts_demo_external",
@@ -11080,7 +11364,7 @@
       "file_type": "code",
       "norm_label": "demo:external",
       "source_file": "sandbox/package.json",
-      "source_location": "L17"
+      "source_location": "L19"
     },
     {
       "id": "sandbox_package_scripts_demo_x402",
@@ -11091,7 +11375,7 @@
       "file_type": "code",
       "norm_label": "demo:x402",
       "source_file": "sandbox/package.json",
-      "source_location": "L18"
+      "source_location": "L20"
     },
     {
       "id": "sandbox_package_scripts_doctor",
@@ -11102,7 +11386,7 @@
       "file_type": "code",
       "norm_label": "doctor",
       "source_file": "sandbox/package.json",
-      "source_location": "L20"
+      "source_location": "L22"
     },
     {
       "id": "sandbox_package_scripts_mcp",
@@ -11113,7 +11397,7 @@
       "file_type": "code",
       "norm_label": "mcp",
       "source_file": "sandbox/package.json",
-      "source_location": "L21"
+      "source_location": "L23"
     },
     {
       "id": "sandbox_package_scripts_start",
@@ -11138,6 +11422,17 @@
       "source_location": "L15"
     },
     {
+      "id": "sandbox_package_scripts_test_deployment_contract",
+      "label": "test:deployment-contract",
+      "_origin": "ast",
+      "community": 12,
+      "community_name": "scripts",
+      "file_type": "code",
+      "norm_label": "test:deployment-contract",
+      "source_file": "sandbox/package.json",
+      "source_location": "L16"
+    },
+    {
       "id": "sandbox_package_scripts_x402_merchant",
       "label": "x402:merchant",
       "_origin": "ast",
@@ -11146,7 +11441,7 @@
       "file_type": "code",
       "norm_label": "x402:merchant",
       "source_file": "sandbox/package.json",
-      "source_location": "L22"
+      "source_location": "L24"
     },
     {
       "id": "sandbox_package_scripts_x402_probe",
@@ -11157,7 +11452,7 @@
       "file_type": "code",
       "norm_label": "x402:probe",
       "source_file": "sandbox/package.json",
-      "source_location": "L23"
+      "source_location": "L25"
     },
     {
       "id": "sandbox_package_scripts_x402_probe_funded",
@@ -11168,7 +11463,7 @@
       "file_type": "code",
       "norm_label": "x402:probe:funded",
       "source_file": "sandbox/package.json",
-      "source_location": "L25"
+      "source_location": "L27"
     },
     {
       "id": "sandbox_package_scripts_x402_server",
@@ -11179,7 +11474,7 @@
       "file_type": "code",
       "norm_label": "x402:server",
       "source_file": "sandbox/package.json",
-      "source_location": "L26"
+      "source_location": "L28"
     },
     {
       "id": "sandbox_package_scripts_x402_wallet",
@@ -11190,7 +11485,7 @@
       "file_type": "code",
       "norm_label": "x402:wallet",
       "source_file": "sandbox/package.json",
-      "source_location": "L24"
+      "source_location": "L26"
     },
     {
       "id": "sandbox_package_type",
@@ -11223,7 +11518,7 @@
       "file_type": "concept",
       "norm_label": "ajv",
       "source_file": "sandbox/package.json",
-      "source_location": "L35"
+      "source_location": "L37"
     },
     {
       "id": "ajv_formats",
@@ -11234,7 +11529,7 @@
       "file_type": "concept",
       "norm_label": "ajv-formats",
       "source_file": "sandbox/package.json",
-      "source_location": "L36"
+      "source_location": "L38"
     },
     {
       "id": "canonicalize",
@@ -11245,7 +11540,7 @@
       "file_type": "concept",
       "norm_label": "canonicalize",
       "source_file": "sandbox/package.json",
-      "source_location": "L37"
+      "source_location": "L39"
     },
     {
       "id": "express",
@@ -11256,7 +11551,7 @@
       "file_type": "concept",
       "norm_label": "express",
       "source_file": "sandbox/package.json",
-      "source_location": "L38"
+      "source_location": "L40"
     },
     {
       "id": "modelcontextprotocol_client",
@@ -11267,7 +11562,7 @@
       "file_type": "concept",
       "norm_label": "@modelcontextprotocol/client",
       "source_file": "sandbox/package.json",
-      "source_location": "L29"
+      "source_location": "L31"
     },
     {
       "id": "modelcontextprotocol_server",
@@ -11278,7 +11573,7 @@
       "file_type": "concept",
       "norm_label": "@modelcontextprotocol/server",
       "source_file": "sandbox/package.json",
-      "source_location": "L30"
+      "source_location": "L32"
     },
     {
       "id": "viem",
@@ -11289,7 +11584,7 @@
       "file_type": "concept",
       "norm_label": "viem",
       "source_file": "sandbox/package.json",
-      "source_location": "L39"
+      "source_location": "L41"
     },
     {
       "id": "x402_core",
@@ -11300,7 +11595,7 @@
       "file_type": "concept",
       "norm_label": "@x402/core",
       "source_file": "sandbox/package.json",
-      "source_location": "L31"
+      "source_location": "L33"
     },
     {
       "id": "x402_evm",
@@ -11311,7 +11606,7 @@
       "file_type": "concept",
       "norm_label": "@x402/evm",
       "source_file": "sandbox/package.json",
-      "source_location": "L32"
+      "source_location": "L34"
     },
     {
       "id": "x402_express",
@@ -11322,7 +11617,7 @@
       "file_type": "concept",
       "norm_label": "@x402/express",
       "source_file": "sandbox/package.json",
-      "source_location": "L33"
+      "source_location": "L35"
     },
     {
       "id": "x402_fetch",
@@ -11333,7 +11628,7 @@
       "file_type": "concept",
       "norm_label": "@x402/fetch",
       "source_file": "sandbox/package.json",
-      "source_location": "L34"
+      "source_location": "L36"
     },
     {
       "id": "prototype_components_ui_toast",
@@ -11345,6 +11640,17 @@
       "norm_label": "toast.tsx",
       "source_file": "prototype/components/ui/toast.tsx",
       "source_location": "L1"
+    },
+    {
+      "id": "docs_03_technical_doctor_result_schema_chain_id_enum",
+      "label": "enum",
+      "_origin": "ast",
+      "community": 121,
+      "community_name": "properties",
+      "file_type": "code",
+      "norm_label": "enum",
+      "source_file": "docs/03-technical/doctor-result.schema.json",
+      "source_location": "L31"
     },
     {
       "id": "docs_03_technical_doctor_result_schema_environment_contract_properties",
@@ -11380,15 +11686,15 @@
       "source_location": "L34"
     },
     {
-      "id": "docs_03_technical_doctor_result_schema_network_enum",
-      "label": "enum",
+      "id": "docs_03_technical_doctor_result_schema_properties_chain_id",
+      "label": "chain_id",
       "_origin": "ast",
       "community": 121,
       "community_name": "properties",
       "file_type": "code",
-      "norm_label": "enum",
+      "norm_label": "chain_id",
       "source_file": "docs/03-technical/doctor-result.schema.json",
-      "source_location": "L32"
+      "source_location": "L31"
     },
     {
       "id": "docs_03_technical_doctor_result_schema_properties_execution_backend",
@@ -11413,17 +11719,6 @@
       "source_location": "L34"
     },
     {
-      "id": "docs_03_technical_doctor_result_schema_properties_network",
-      "label": "network",
-      "_origin": "ast",
-      "community": 121,
-      "community_name": "properties",
-      "file_type": "code",
-      "norm_label": "network",
-      "source_file": "docs/03-technical/doctor-result.schema.json",
-      "source_location": "L32"
-    },
-    {
       "id": "docs_03_technical_doctor_result_schema_properties_version",
       "label": "version",
       "_origin": "ast",
@@ -11444,28 +11739,6 @@
       "norm_label": "const",
       "source_file": "docs/03-technical/doctor-result.schema.json",
       "source_location": "L30"
-    },
-    {
-      "id": "ref_eip155_8453",
-      "label": "eip155:8453",
-      "_origin": "ast",
-      "community": 121,
-      "community_name": "properties",
-      "file_type": "concept",
-      "norm_label": "eip155:8453",
-      "source_file": "docs/03-technical/doctor-result.schema.json",
-      "source_location": "L32"
-    },
-    {
-      "id": "ref_eip155_84532",
-      "label": "eip155:84532",
-      "_origin": "ast",
-      "community": 121,
-      "community_name": "properties",
-      "file_type": "concept",
-      "norm_label": "eip155:84532",
-      "source_file": "docs/03-technical/doctor-result.schema.json",
-      "source_location": "L32"
     },
     {
       "id": "ref_execution_disabled",
@@ -11994,64 +12267,37 @@
       "source_location": "L38"
     },
     {
-      "id": "docs_02_product_readme_bu2_\u4ea7\u54c1\u6587\u6863",
-      "label": "BU2 \u4ea7\u54c1\u6587\u6863",
+      "id": "sandbox_observability",
+      "label": "observability.mjs",
       "_origin": "ast",
       "community": 127,
-      "community_name": "BU2 \u4ea7\u54c1\u6587\u6863",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "bu2 \u4ea7\u54c1\u6587\u6863",
-      "source_file": "docs/02-product/README.md",
+      "community_name": "observability.mjs",
+      "file_type": "code",
+      "norm_label": "observability.mjs",
+      "source_file": "sandbox/observability.mjs",
       "source_location": "L1"
     },
     {
-      "id": "docs_02_product_readme_\u4ea7\u54c1\u5b9a\u4e49",
-      "label": "\u4ea7\u54c1\u5b9a\u4e49",
+      "id": "sandbox_observability_categories",
+      "label": "CATEGORIES",
       "_origin": "ast",
       "community": 127,
-      "community_name": "BU2 \u4ea7\u54c1\u6587\u6863",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "\u4ea7\u54c1\u5b9a\u4e49",
-      "source_file": "docs/02-product/README.md",
+      "community_name": "observability.mjs",
+      "file_type": "code",
+      "norm_label": "categories",
+      "source_file": "sandbox/observability.mjs",
       "source_location": "L5"
     },
     {
-      "id": "docs_02_product_readme_\u4ea7\u54c1\u9636\u6bb5",
-      "label": "\u4ea7\u54c1\u9636\u6bb5",
+      "id": "sandbox_observability_test",
+      "label": "observability.test.mjs",
       "_origin": "ast",
       "community": 127,
-      "community_name": "BU2 \u4ea7\u54c1\u6587\u6863",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "\u4ea7\u54c1\u9636\u6bb5",
-      "source_file": "docs/02-product/README.md",
-      "source_location": "L30"
-    },
-    {
-      "id": "docs_02_product_readme_\u5f53\u524d\u72b6\u6001",
-      "label": "\u5f53\u524d\u72b6\u6001",
-      "_origin": "ast",
-      "community": 127,
-      "community_name": "BU2 \u4ea7\u54c1\u6587\u6863",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "\u5f53\u524d\u72b6\u6001",
-      "source_file": "docs/02-product/README.md",
-      "source_location": "L44"
-    },
-    {
-      "id": "docs_02_product_readme_\u6587\u6863\u5bfc\u822a",
-      "label": "\u6587\u6863\u5bfc\u822a",
-      "_origin": "ast",
-      "community": 127,
-      "community_name": "BU2 \u4ea7\u54c1\u6587\u6863",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "\u6587\u6863\u5bfc\u822a",
-      "source_file": "docs/02-product/README.md",
-      "source_location": "L13"
+      "community_name": "observability.mjs",
+      "file_type": "code",
+      "norm_label": "observability.test.mjs",
+      "source_file": "sandbox/observability.test.mjs",
+      "source_location": "L1"
     },
     {
       "id": "docs_03_technical_environment_acceptance_matrix_v1",
@@ -12099,7 +12345,7 @@
       "node_kind": "heading",
       "norm_label": "\u901a\u7528\u505c\u6b62\u6761\u4ef6",
       "source_file": "docs/03-technical/ENVIRONMENT_ACCEPTANCE_MATRIX_V1.md",
-      "source_location": "L42"
+      "source_location": "L43"
     },
     {
       "id": "docs_03_technical_environment_client_and_receipt_contract_v1",
@@ -12210,6 +12456,18 @@
       "source_location": "L1"
     },
     {
+      "id": "docs_03_technical_environment_deployment_units_v1",
+      "label": "ENVIRONMENT_DEPLOYMENT_UNITS_V1.md",
+      "_origin": "ast",
+      "community": 129,
+      "community_name": "BU2 \u5ba2\u6237\u7aef\u4e0e Receipt \u73af\u5883\u5951\u7ea6 v1",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "environment_deployment_units_v1.md",
+      "source_file": "docs/03-technical/ENVIRONMENT_DEPLOYMENT_UNITS_V1.md",
+      "source_location": "L1"
+    },
+    {
       "id": "docs_03_technical_environment_registry_and_chain_isolation_v1",
       "label": "ENVIRONMENT_REGISTRY_AND_CHAIN_ISOLATION_V1.md",
       "_origin": "ast",
@@ -12306,6 +12564,18 @@
       "source_location": "L45"
     },
     {
+      "id": "docs_02_product_formal_user_test_plan_5_\u6b63\u5f0f\u6d4b\u8bd5\u4efb\u52a1",
+      "label": "5. \u6b63\u5f0f\u6d4b\u8bd5\u4efb\u52a1",
+      "_origin": "ast",
+      "community": 13,
+      "community_name": "BU2 Task-first P0 \u6b63\u5f0f\u7528\u6237\u6d4b\u8bd5\u65b9\u6848\uff08\u5df2\u5e9f\u6b62\uff09",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "5. \u6b63\u5f0f\u6d4b\u8bd5\u4efb\u52a1",
+      "source_file": "docs/02-product/FORMAL_USER_TEST_PLAN.md",
+      "source_location": "L53"
+    },
+    {
       "id": "docs_02_product_formal_user_test_plan_6_\u7ed3\u675f\u8bbf\u8c08\u95ee\u9898",
       "label": "6. \u7ed3\u675f\u8bbf\u8c08\u95ee\u9898",
       "_origin": "ast",
@@ -12400,6 +12670,90 @@
       "norm_label": "bu2 task-first p0 \u6b63\u5f0f\u7528\u6237\u6d4b\u8bd5\u65b9\u6848(\u5df2\u5e9f\u6b62)",
       "source_file": "docs/02-product/FORMAL_USER_TEST_PLAN.md",
       "source_location": "L1"
+    },
+    {
+      "id": "docs_02_product_formal_user_test_plan_ut_01_\u8bc6\u522b\u5de5\u4f5c\u91cd\u70b9",
+      "label": "UT-01 \u8bc6\u522b\u5de5\u4f5c\u91cd\u70b9",
+      "_origin": "ast",
+      "community": 13,
+      "community_name": "BU2 Task-first P0 \u6b63\u5f0f\u7528\u6237\u6d4b\u8bd5\u65b9\u6848\uff08\u5df2\u5e9f\u6b62\uff09",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "ut-01 \u8bc6\u522b\u5de5\u4f5c\u91cd\u70b9",
+      "source_file": "docs/02-product/FORMAL_USER_TEST_PLAN.md",
+      "source_location": "L55"
+    },
+    {
+      "id": "docs_02_product_formal_user_test_plan_ut_02_\u89e3\u91ca\u4efb\u52a1\u8d39\u7528",
+      "label": "UT-02 \u89e3\u91ca\u4efb\u52a1\u8d39\u7528",
+      "_origin": "ast",
+      "community": 13,
+      "community_name": "BU2 Task-first P0 \u6b63\u5f0f\u7528\u6237\u6d4b\u8bd5\u65b9\u6848\uff08\u5df2\u5e9f\u6b62\uff09",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "ut-02 \u89e3\u91ca\u4efb\u52a1\u8d39\u7528",
+      "source_file": "docs/02-product/FORMAL_USER_TEST_PLAN.md",
+      "source_location": "L70"
+    },
+    {
+      "id": "docs_02_product_formal_user_test_plan_ut_03_\u7406\u89e3\u6cbb\u7406\u6a21\u5f0f",
+      "label": "UT-03 \u7406\u89e3\u6cbb\u7406\u6a21\u5f0f",
+      "_origin": "ast",
+      "community": 13,
+      "community_name": "BU2 Task-first P0 \u6b63\u5f0f\u7528\u6237\u6d4b\u8bd5\u65b9\u6848\uff08\u5df2\u5e9f\u6b62\uff09",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "ut-03 \u7406\u89e3\u6cbb\u7406\u6a21\u5f0f",
+      "source_file": "docs/02-product/FORMAL_USER_TEST_PLAN.md",
+      "source_location": "L86"
+    },
+    {
+      "id": "docs_02_product_formal_user_test_plan_ut_04_\u5904\u7406\u5f02\u5e38",
+      "label": "UT-04 \u5904\u7406\u5f02\u5e38",
+      "_origin": "ast",
+      "community": 13,
+      "community_name": "BU2 Task-first P0 \u6b63\u5f0f\u7528\u6237\u6d4b\u8bd5\u65b9\u6848\uff08\u5df2\u5e9f\u6b62\uff09",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "ut-04 \u5904\u7406\u5f02\u5e38",
+      "source_file": "docs/02-product/FORMAL_USER_TEST_PLAN.md",
+      "source_location": "L96"
+    },
+    {
+      "id": "docs_02_product_formal_user_test_plan_ut_05_\u9a8c\u8bc1\u51b3\u7b56\u7ed3\u679c",
+      "label": "UT-05 \u9a8c\u8bc1\u51b3\u7b56\u7ed3\u679c",
+      "_origin": "ast",
+      "community": 13,
+      "community_name": "BU2 Task-first P0 \u6b63\u5f0f\u7528\u6237\u6d4b\u8bd5\u65b9\u6848\uff08\u5df2\u5e9f\u6b62\uff09",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "ut-05 \u9a8c\u8bc1\u51b3\u7b56\u7ed3\u679c",
+      "source_file": "docs/02-product/FORMAL_USER_TEST_PLAN.md",
+      "source_location": "L111"
+    },
+    {
+      "id": "docs_02_product_formal_user_test_plan_ut_06_\u68c0\u67e5\u53e6\u4e00\u9879\u5f02\u5e38",
+      "label": "UT-06 \u68c0\u67e5\u53e6\u4e00\u9879\u5f02\u5e38",
+      "_origin": "ast",
+      "community": 13,
+      "community_name": "BU2 Task-first P0 \u6b63\u5f0f\u7528\u6237\u6d4b\u8bd5\u65b9\u6848\uff08\u5df2\u5e9f\u6b62\uff09",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "ut-06 \u68c0\u67e5\u53e6\u4e00\u9879\u5f02\u5e38",
+      "source_file": "docs/02-product/FORMAL_USER_TEST_PLAN.md",
+      "source_location": "L128"
+    },
+    {
+      "id": "docs_02_product_formal_user_test_plan_ut_07_\u8bed\u8a00\u5207\u6362",
+      "label": "UT-07 \u8bed\u8a00\u5207\u6362",
+      "_origin": "ast",
+      "community": 13,
+      "community_name": "BU2 Task-first P0 \u6b63\u5f0f\u7528\u6237\u6d4b\u8bd5\u65b9\u6848\uff08\u5df2\u5e9f\u6b62\uff09",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "ut-07 \u8bed\u8a00\u5207\u6362",
+      "source_file": "docs/02-product/FORMAL_USER_TEST_PLAN.md",
+      "source_location": "L138"
     },
     {
       "id": "prototype_components_ui_toggle",
@@ -12785,100 +13139,88 @@
       "source_location": "L61"
     },
     {
-      "id": "docs_02_product_formal_user_test_plan_5_\u6b63\u5f0f\u6d4b\u8bd5\u4efb\u52a1",
-      "label": "5. \u6b63\u5f0f\u6d4b\u8bd5\u4efb\u52a1",
+      "id": "docs_03_technical_environment_deployment_units_v1_1_\u76ee\u6807\u4e0e\u7ed3\u8bba",
+      "label": "1. \u76ee\u6807\u4e0e\u7ed3\u8bba",
       "_origin": "ast",
       "community": 134,
-      "community_name": "5. \u6b63\u5f0f\u6d4b\u8bd5\u4efb\u52a1",
+      "community_name": "ENV-04\uff1a\u9694\u79bb Sandbox / Live \u90e8\u7f72\u5355\u5143 v1",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "5. \u6b63\u5f0f\u6d4b\u8bd5\u4efb\u52a1",
-      "source_file": "docs/02-product/FORMAL_USER_TEST_PLAN.md",
-      "source_location": "L53"
+      "norm_label": "1. \u76ee\u6807\u4e0e\u7ed3\u8bba",
+      "source_file": "docs/03-technical/ENVIRONMENT_DEPLOYMENT_UNITS_V1.md",
+      "source_location": "L7"
     },
     {
-      "id": "docs_02_product_formal_user_test_plan_ut_01_\u8bc6\u522b\u5de5\u4f5c\u91cd\u70b9",
-      "label": "UT-01 \u8bc6\u522b\u5de5\u4f5c\u91cd\u70b9",
+      "id": "docs_03_technical_environment_deployment_units_v1_2_\u5236\u54c1\u4e0e\u90e8\u7f72\u8fb9\u754c",
+      "label": "2. \u5236\u54c1\u4e0e\u90e8\u7f72\u8fb9\u754c",
       "_origin": "ast",
       "community": 134,
-      "community_name": "5. \u6b63\u5f0f\u6d4b\u8bd5\u4efb\u52a1",
+      "community_name": "ENV-04\uff1a\u9694\u79bb Sandbox / Live \u90e8\u7f72\u5355\u5143 v1",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "ut-01 \u8bc6\u522b\u5de5\u4f5c\u91cd\u70b9",
-      "source_file": "docs/02-product/FORMAL_USER_TEST_PLAN.md",
-      "source_location": "L55"
+      "norm_label": "2. \u5236\u54c1\u4e0e\u90e8\u7f72\u8fb9\u754c",
+      "source_file": "docs/03-technical/ENVIRONMENT_DEPLOYMENT_UNITS_V1.md",
+      "source_location": "L13"
     },
     {
-      "id": "docs_02_product_formal_user_test_plan_ut_02_\u89e3\u91ca\u4efb\u52a1\u8d39\u7528",
-      "label": "UT-02 \u89e3\u91ca\u4efb\u52a1\u8d39\u7528",
+      "id": "docs_03_technical_environment_deployment_units_v1_3_\u673a\u5668\u5951\u7ea6",
+      "label": "3. \u673a\u5668\u5951\u7ea6",
       "_origin": "ast",
       "community": 134,
-      "community_name": "5. \u6b63\u5f0f\u6d4b\u8bd5\u4efb\u52a1",
+      "community_name": "ENV-04\uff1a\u9694\u79bb Sandbox / Live \u90e8\u7f72\u5355\u5143 v1",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "ut-02 \u89e3\u91ca\u4efb\u52a1\u8d39\u7528",
-      "source_file": "docs/02-product/FORMAL_USER_TEST_PLAN.md",
-      "source_location": "L70"
+      "norm_label": "3. \u673a\u5668\u5951\u7ea6",
+      "source_file": "docs/03-technical/ENVIRONMENT_DEPLOYMENT_UNITS_V1.md",
+      "source_location": "L32"
     },
     {
-      "id": "docs_02_product_formal_user_test_plan_ut_03_\u7406\u89e3\u6cbb\u7406\u6a21\u5f0f",
-      "label": "UT-03 \u7406\u89e3\u6cbb\u7406\u6a21\u5f0f",
+      "id": "docs_03_technical_environment_deployment_units_v1_4_\u81ea\u52a8\u5316\u9a8c\u6536",
+      "label": "4. \u81ea\u52a8\u5316\u9a8c\u6536",
       "_origin": "ast",
       "community": 134,
-      "community_name": "5. \u6b63\u5f0f\u6d4b\u8bd5\u4efb\u52a1",
+      "community_name": "ENV-04\uff1a\u9694\u79bb Sandbox / Live \u90e8\u7f72\u5355\u5143 v1",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "ut-03 \u7406\u89e3\u6cbb\u7406\u6a21\u5f0f",
-      "source_file": "docs/02-product/FORMAL_USER_TEST_PLAN.md",
-      "source_location": "L86"
+      "norm_label": "4. \u81ea\u52a8\u5316\u9a8c\u6536",
+      "source_file": "docs/03-technical/ENVIRONMENT_DEPLOYMENT_UNITS_V1.md",
+      "source_location": "L45"
     },
     {
-      "id": "docs_02_product_formal_user_test_plan_ut_04_\u5904\u7406\u5f02\u5e38",
-      "label": "UT-04 \u5904\u7406\u5f02\u5e38",
+      "id": "docs_03_technical_environment_deployment_units_v1_5_\u53d1\u5e03_\u5931\u8d25\u4e0e\u6062\u590d",
+      "label": "5. \u53d1\u5e03\u3001\u5931\u8d25\u4e0e\u6062\u590d",
       "_origin": "ast",
       "community": 134,
-      "community_name": "5. \u6b63\u5f0f\u6d4b\u8bd5\u4efb\u52a1",
+      "community_name": "ENV-04\uff1a\u9694\u79bb Sandbox / Live \u90e8\u7f72\u5355\u5143 v1",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "ut-04 \u5904\u7406\u5f02\u5e38",
-      "source_file": "docs/02-product/FORMAL_USER_TEST_PLAN.md",
-      "source_location": "L96"
+      "norm_label": "5. \u53d1\u5e03\u3001\u5931\u8d25\u4e0e\u6062\u590d",
+      "source_file": "docs/03-technical/ENVIRONMENT_DEPLOYMENT_UNITS_V1.md",
+      "source_location": "L71"
     },
     {
-      "id": "docs_02_product_formal_user_test_plan_ut_05_\u9a8c\u8bc1\u51b3\u7b56\u7ed3\u679c",
-      "label": "UT-05 \u9a8c\u8bc1\u51b3\u7b56\u7ed3\u679c",
+      "id": "docs_03_technical_environment_deployment_units_v1_6_\u540e\u7eed\u5de5\u4f5c",
+      "label": "6. \u540e\u7eed\u5de5\u4f5c",
       "_origin": "ast",
       "community": 134,
-      "community_name": "5. \u6b63\u5f0f\u6d4b\u8bd5\u4efb\u52a1",
+      "community_name": "ENV-04\uff1a\u9694\u79bb Sandbox / Live \u90e8\u7f72\u5355\u5143 v1",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "ut-05 \u9a8c\u8bc1\u51b3\u7b56\u7ed3\u679c",
-      "source_file": "docs/02-product/FORMAL_USER_TEST_PLAN.md",
-      "source_location": "L111"
+      "norm_label": "6. \u540e\u7eed\u5de5\u4f5c",
+      "source_file": "docs/03-technical/ENVIRONMENT_DEPLOYMENT_UNITS_V1.md",
+      "source_location": "L77"
     },
     {
-      "id": "docs_02_product_formal_user_test_plan_ut_06_\u68c0\u67e5\u53e6\u4e00\u9879\u5f02\u5e38",
-      "label": "UT-06 \u68c0\u67e5\u53e6\u4e00\u9879\u5f02\u5e38",
+      "id": "docs_03_technical_environment_deployment_units_v1_env_04_\u9694\u79bb_sandbox_live_\u90e8\u7f72\u5355\u5143_v1",
+      "label": "ENV-04\uff1a\u9694\u79bb Sandbox / Live \u90e8\u7f72\u5355\u5143 v1",
       "_origin": "ast",
       "community": 134,
-      "community_name": "5. \u6b63\u5f0f\u6d4b\u8bd5\u4efb\u52a1",
+      "community_name": "ENV-04\uff1a\u9694\u79bb Sandbox / Live \u90e8\u7f72\u5355\u5143 v1",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "ut-06 \u68c0\u67e5\u53e6\u4e00\u9879\u5f02\u5e38",
-      "source_file": "docs/02-product/FORMAL_USER_TEST_PLAN.md",
-      "source_location": "L128"
-    },
-    {
-      "id": "docs_02_product_formal_user_test_plan_ut_07_\u8bed\u8a00\u5207\u6362",
-      "label": "UT-07 \u8bed\u8a00\u5207\u6362",
-      "_origin": "ast",
-      "community": 134,
-      "community_name": "5. \u6b63\u5f0f\u6d4b\u8bd5\u4efb\u52a1",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "ut-07 \u8bed\u8a00\u5207\u6362",
-      "source_file": "docs/02-product/FORMAL_USER_TEST_PLAN.md",
-      "source_location": "L138"
+      "norm_label": "env-04:\u9694\u79bb sandbox / live \u90e8\u7f72\u5355\u5143 v1",
+      "source_file": "docs/03-technical/ENVIRONMENT_DEPLOYMENT_UNITS_V1.md",
+      "source_location": "L1"
     },
     {
       "id": "prototype_components_ui_marker",
@@ -12980,22 +13322,66 @@
       "source_location": "L114"
     },
     {
+      "id": "docs_03_technical_doctor_result_schema",
+      "label": "doctor-result.schema.json",
+      "_origin": "ast",
+      "community": 138,
+      "community_name": "doctor-result.schema.json",
+      "file_type": "code",
+      "norm_label": "doctor-result.schema.json",
+      "source_file": "docs/03-technical/doctor-result.schema.json",
+      "source_location": "L1"
+    },
+    {
+      "id": "docs_03_technical_doctor_result_schema_additionalproperties",
+      "label": "additionalProperties",
+      "_origin": "ast",
+      "community": 138,
+      "community_name": "doctor-result.schema.json",
+      "file_type": "code",
+      "norm_label": "additionalproperties",
+      "source_file": "docs/03-technical/doctor-result.schema.json",
+      "source_location": "L6"
+    },
+    {
+      "id": "docs_03_technical_doctor_result_schema_allof",
+      "label": "allOf",
+      "_origin": "ast",
+      "community": 138,
+      "community_name": "doctor-result.schema.json",
+      "file_type": "code",
+      "norm_label": "allof",
+      "source_file": "docs/03-technical/doctor-result.schema.json",
+      "source_location": "L85"
+    },
+    {
       "id": "docs_03_technical_doctor_result_schema_analyticsrecord_additionalproperties",
       "label": "additionalProperties",
       "_origin": "ast",
       "community": 138,
-      "community_name": "definitions",
+      "community_name": "doctor-result.schema.json",
       "file_type": "code",
       "norm_label": "additionalproperties",
       "source_file": "docs/03-technical/doctor-result.schema.json",
       "source_location": "L117"
     },
     {
+      "id": "docs_03_technical_doctor_result_schema_analyticsrecord_required",
+      "label": "required",
+      "_origin": "ast",
+      "community": 138,
+      "community_name": "doctor-result.schema.json",
+      "file_type": "code",
+      "norm_label": "required",
+      "source_file": "docs/03-technical/doctor-result.schema.json",
+      "source_location": "L118"
+    },
+    {
       "id": "docs_03_technical_doctor_result_schema_analyticsrecord_type",
       "label": "type",
       "_origin": "ast",
       "community": 138,
-      "community_name": "definitions",
+      "community_name": "doctor-result.schema.json",
       "file_type": "code",
       "norm_label": "type",
       "source_file": "docs/03-technical/doctor-result.schema.json",
@@ -13006,18 +13392,29 @@
       "label": "additionalProperties",
       "_origin": "ast",
       "community": 138,
-      "community_name": "definitions",
+      "community_name": "doctor-result.schema.json",
       "file_type": "code",
       "norm_label": "additionalproperties",
       "source_file": "docs/03-technical/doctor-result.schema.json",
       "source_location": "L106"
     },
     {
+      "id": "docs_03_technical_doctor_result_schema_check_required",
+      "label": "required",
+      "_origin": "ast",
+      "community": 138,
+      "community_name": "doctor-result.schema.json",
+      "file_type": "code",
+      "norm_label": "required",
+      "source_file": "docs/03-technical/doctor-result.schema.json",
+      "source_location": "L107"
+    },
+    {
       "id": "docs_03_technical_doctor_result_schema_check_type",
       "label": "type",
       "_origin": "ast",
       "community": 138,
-      "community_name": "definitions",
+      "community_name": "doctor-result.schema.json",
       "file_type": "code",
       "norm_label": "type",
       "source_file": "docs/03-technical/doctor-result.schema.json",
@@ -13028,7 +13425,7 @@
       "label": "definitions",
       "_origin": "ast",
       "community": 138,
-      "community_name": "definitions",
+      "community_name": "doctor-result.schema.json",
       "file_type": "code",
       "norm_label": "definitions",
       "source_file": "docs/03-technical/doctor-result.schema.json",
@@ -13039,7 +13436,7 @@
       "label": "analyticsRecord",
       "_origin": "ast",
       "community": 138,
-      "community_name": "definitions",
+      "community_name": "doctor-result.schema.json",
       "file_type": "code",
       "norm_label": "analyticsrecord",
       "source_file": "docs/03-technical/doctor-result.schema.json",
@@ -13050,7 +13447,7 @@
       "label": "check",
       "_origin": "ast",
       "community": 138,
-      "community_name": "definitions",
+      "community_name": "doctor-result.schema.json",
       "file_type": "code",
       "norm_label": "check",
       "source_file": "docs/03-technical/doctor-result.schema.json",
@@ -13061,99 +13458,135 @@
       "label": "stage",
       "_origin": "ast",
       "community": 138,
-      "community_name": "definitions",
+      "community_name": "doctor-result.schema.json",
       "file_type": "code",
       "norm_label": "stage",
       "source_file": "docs/03-technical/doctor-result.schema.json",
       "source_location": "L93"
     },
     {
-      "id": "docs_03_technical_doctor_result_schema_failure_ref",
-      "label": "$ref",
+      "id": "docs_03_technical_doctor_result_schema_id",
+      "label": "$id",
       "_origin": "ast",
-      "community": 139,
-      "community_name": "properties",
+      "community": 138,
+      "community_name": "doctor-result.schema.json",
       "file_type": "code",
-      "norm_label": "$ref",
+      "norm_label": "$id",
       "source_file": "docs/03-technical/doctor-result.schema.json",
-      "source_location": "L83"
+      "source_location": "L3"
     },
     {
-      "id": "docs_03_technical_doctor_result_schema_properties",
-      "label": "properties",
+      "id": "docs_03_technical_doctor_result_schema_schema",
+      "label": "$schema",
       "_origin": "ast",
-      "community": 139,
-      "community_name": "properties",
+      "community": 138,
+      "community_name": "doctor-result.schema.json",
       "file_type": "code",
-      "norm_label": "properties",
+      "norm_label": "$schema",
       "source_file": "docs/03-technical/doctor-result.schema.json",
-      "source_location": "L19"
+      "source_location": "L2"
     },
     {
-      "id": "docs_03_technical_doctor_result_schema_properties_failure",
-      "label": "failure",
+      "id": "docs_03_technical_doctor_result_schema_title",
+      "label": "title",
       "_origin": "ast",
-      "community": 139,
-      "community_name": "properties",
+      "community": 138,
+      "community_name": "doctor-result.schema.json",
       "file_type": "code",
-      "norm_label": "failure",
+      "norm_label": "title",
       "source_file": "docs/03-technical/doctor-result.schema.json",
-      "source_location": "L83"
+      "source_location": "L4"
     },
     {
-      "id": "docs_03_technical_doctor_result_schema_properties_schema_version",
-      "label": "schema_version",
-      "_origin": "ast",
-      "community": 139,
-      "community_name": "properties",
-      "file_type": "code",
-      "norm_label": "schema_version",
-      "source_file": "docs/03-technical/doctor-result.schema.json",
-      "source_location": "L20"
-    },
-    {
-      "id": "docs_03_technical_doctor_result_schema_properties_started_at",
-      "label": "started_at",
-      "_origin": "ast",
-      "community": 139,
-      "community_name": "properties",
-      "file_type": "code",
-      "norm_label": "started_at",
-      "source_file": "docs/03-technical/doctor-result.schema.json",
-      "source_location": "L22"
-    },
-    {
-      "id": "docs_03_technical_doctor_result_schema_schema_version_const",
-      "label": "const",
-      "_origin": "ast",
-      "community": 139,
-      "community_name": "properties",
-      "file_type": "code",
-      "norm_label": "const",
-      "source_file": "docs/03-technical/doctor-result.schema.json",
-      "source_location": "L20"
-    },
-    {
-      "id": "docs_03_technical_doctor_result_schema_started_at_format",
-      "label": "format",
-      "_origin": "ast",
-      "community": 139,
-      "community_name": "properties",
-      "file_type": "code",
-      "norm_label": "format",
-      "source_file": "docs/03-technical/doctor-result.schema.json",
-      "source_location": "L22"
-    },
-    {
-      "id": "docs_03_technical_doctor_result_schema_started_at_type",
+      "id": "docs_03_technical_doctor_result_schema_type",
       "label": "type",
       "_origin": "ast",
-      "community": 139,
-      "community_name": "properties",
+      "community": 138,
+      "community_name": "doctor-result.schema.json",
       "file_type": "code",
       "norm_label": "type",
       "source_file": "docs/03-technical/doctor-result.schema.json",
-      "source_location": "L22"
+      "source_location": "L5"
+    },
+    {
+      "id": "docs_03_technical_doctor_result_schema_json_ref_duration_ms",
+      "label": "duration_ms",
+      "_origin": "ast",
+      "community": 138,
+      "community_name": "doctor-result.schema.json",
+      "file_type": "concept",
+      "norm_label": "duration_ms",
+      "source_file": "docs/03-technical/doctor-result.schema.json",
+      "source_location": "L7"
+    },
+    {
+      "id": "docs_03_technical_doctor_result_schema_json_ref_error_code",
+      "label": "error_code",
+      "_origin": "ast",
+      "community": 138,
+      "community_name": "doctor-result.schema.json",
+      "file_type": "concept",
+      "norm_label": "error_code",
+      "source_file": "docs/03-technical/doctor-result.schema.json",
+      "source_location": "L107"
+    },
+    {
+      "id": "docs_03_technical_doctor_result_schema_json_ref_stage",
+      "label": "stage",
+      "_origin": "ast",
+      "community": 138,
+      "community_name": "doctor-result.schema.json",
+      "file_type": "concept",
+      "norm_label": "stage",
+      "source_file": "docs/03-technical/doctor-result.schema.json",
+      "source_location": "L107"
+    },
+    {
+      "id": "ref_result_category",
+      "label": "result_category",
+      "_origin": "ast",
+      "community": 138,
+      "community_name": "doctor-result.schema.json",
+      "file_type": "concept",
+      "norm_label": "result_category",
+      "source_file": "docs/03-technical/doctor-result.schema.json",
+      "source_location": "L107"
+    },
+    {
+      "id": "deploy_readme_bu2_env_04_deployment_reference",
+      "label": "BU2 ENV-04 Deployment Reference",
+      "_origin": "ast",
+      "community": 139,
+      "community_name": "BU2 ENV-04 Deployment Reference",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "bu2 env-04 deployment reference",
+      "source_file": "deploy/README.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "deploy_readme_\u624b\u5de5\u67e5\u770b_disarmed_\u5355\u5143",
+      "label": "\u624b\u5de5\u67e5\u770b disarmed \u5355\u5143",
+      "_origin": "ast",
+      "community": 139,
+      "community_name": "BU2 ENV-04 Deployment Reference",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "\u624b\u5de5\u67e5\u770b disarmed \u5355\u5143",
+      "source_file": "deploy/README.md",
+      "source_location": "L17"
+    },
+    {
+      "id": "deploy_readme_\u9a8c\u8bc1",
+      "label": "\u9a8c\u8bc1",
+      "_origin": "ast",
+      "community": 139,
+      "community_name": "BU2 ENV-04 Deployment Reference",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "\u9a8c\u8bc1",
+      "source_file": "deploy/README.md",
+      "source_location": "L8"
     },
     {
       "id": "prototype_components",
@@ -13398,194 +13831,130 @@
       "source_location": "L5"
     },
     {
-      "id": "docs_02_product_product_strategy_3_1_\u5148\u6cbb\u7406_\u540e\u652f\u4ed8",
-      "label": "3.1 \u5148\u6cbb\u7406\uff0c\u540e\u652f\u4ed8",
+      "id": "sandbox_server_process_test",
+      "label": "server-process.test.mjs",
       "_origin": "ast",
       "community": 140,
-      "community_name": "3. \u4ea7\u54c1\u539f\u5219",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "3.1 \u5148\u6cbb\u7406,\u540e\u652f\u4ed8",
-      "source_file": "docs/02-product/PRODUCT_STRATEGY.md",
-      "source_location": "L28"
-    },
-    {
-      "id": "docs_02_product_product_strategy_3_2_\u6a21\u578b\u63d0\u51fa\u7406\u7531_\u89c4\u5219\u51b3\u5b9a\u6743\u9650",
-      "label": "3.2 \u6a21\u578b\u63d0\u51fa\u7406\u7531\uff0c\u89c4\u5219\u51b3\u5b9a\u6743\u9650",
-      "_origin": "ast",
-      "community": 140,
-      "community_name": "3. \u4ea7\u54c1\u539f\u5219",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "3.2 \u6a21\u578b\u63d0\u51fa\u7406\u7531,\u89c4\u5219\u51b3\u5b9a\u6743\u9650",
-      "source_file": "docs/02-product/PRODUCT_STRATEGY.md",
-      "source_location": "L32"
-    },
-    {
-      "id": "docs_02_product_product_strategy_3_3_\u9ed8\u8ba4\u6700\u5c0f\u6743\u9650",
-      "label": "3.3 \u9ed8\u8ba4\u6700\u5c0f\u6743\u9650",
-      "_origin": "ast",
-      "community": 140,
-      "community_name": "3. \u4ea7\u54c1\u539f\u5219",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "3.3 \u9ed8\u8ba4\u6700\u5c0f\u6743\u9650",
-      "source_file": "docs/02-product/PRODUCT_STRATEGY.md",
-      "source_location": "L36"
-    },
-    {
-      "id": "docs_02_product_product_strategy_3_4_\u4efb\u52a1\u662f\u6700\u5c0f\u5f52\u56e0\u5355\u5143",
-      "label": "3.4 \u4efb\u52a1\u662f\u6700\u5c0f\u5f52\u56e0\u5355\u5143",
-      "_origin": "ast",
-      "community": 140,
-      "community_name": "3. \u4ea7\u54c1\u539f\u5219",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "3.4 \u4efb\u52a1\u662f\u6700\u5c0f\u5f52\u56e0\u5355\u5143",
-      "source_file": "docs/02-product/PRODUCT_STRATEGY.md",
-      "source_location": "L40"
-    },
-    {
-      "id": "docs_02_product_product_strategy_3_5_\u534f\u8bae\u4e2d\u7acb",
-      "label": "3.5 \u534f\u8bae\u4e2d\u7acb",
-      "_origin": "ast",
-      "community": 140,
-      "community_name": "3. \u4ea7\u54c1\u539f\u5219",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "3.5 \u534f\u8bae\u4e2d\u7acb",
-      "source_file": "docs/02-product/PRODUCT_STRATEGY.md",
-      "source_location": "L44"
-    },
-    {
-      "id": "docs_02_product_product_strategy_3_6_\u8bc1\u636e\u4f18\u5148",
-      "label": "3.6 \u8bc1\u636e\u4f18\u5148",
-      "_origin": "ast",
-      "community": 140,
-      "community_name": "3. \u4ea7\u54c1\u539f\u5219",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "3.6 \u8bc1\u636e\u4f18\u5148",
-      "source_file": "docs/02-product/PRODUCT_STRATEGY.md",
-      "source_location": "L48"
-    },
-    {
-      "id": "docs_02_product_product_strategy_3_\u4ea7\u54c1\u539f\u5219",
-      "label": "3. \u4ea7\u54c1\u539f\u5219",
-      "_origin": "ast",
-      "community": 140,
-      "community_name": "3. \u4ea7\u54c1\u539f\u5219",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "3. \u4ea7\u54c1\u539f\u5219",
-      "source_file": "docs/02-product/PRODUCT_STRATEGY.md",
-      "source_location": "L26"
-    },
-    {
-      "id": "docs_03_technical_doctor_result_schema_properties_retry",
-      "label": "retry",
-      "_origin": "ast",
-      "community": 141,
-      "community_name": "enum",
+      "community_name": "server-process.test.mjs",
       "file_type": "code",
-      "norm_label": "retry",
-      "source_file": "docs/03-technical/doctor-result.schema.json",
-      "source_location": "L133"
+      "norm_label": "server-process.test.mjs",
+      "source_file": "sandbox/server-process.test.mjs",
+      "source_location": "L1"
     },
     {
-      "id": "docs_03_technical_doctor_result_schema_retry_enum",
-      "label": "enum",
+      "id": "docs_02_product_metrics_and_validation_7_\u539f\u578b\u5b9e\u9a8c",
+      "label": "7. \u539f\u578b\u5b9e\u9a8c",
       "_origin": "ast",
       "community": 141,
-      "community_name": "enum",
-      "file_type": "code",
-      "norm_label": "enum",
-      "source_file": "docs/03-technical/doctor-result.schema.json",
-      "source_location": "L133"
+      "community_name": "7. \u539f\u578b\u5b9e\u9a8c",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "7. \u539f\u578b\u5b9e\u9a8c",
+      "source_file": "docs/02-product/METRICS_AND_VALIDATION.md",
+      "source_location": "L88"
     },
     {
-      "id": "ref_query_before_retry",
-      "label": "query_before_retry",
+      "id": "docs_02_product_metrics_and_validation_\u5b9e\u9a8c\u4e00_\u8d39\u7528\u5f52\u56e0",
+      "label": "\u5b9e\u9a8c\u4e00\uff1a\u8d39\u7528\u5f52\u56e0",
       "_origin": "ast",
       "community": 141,
-      "community_name": "enum",
-      "file_type": "concept",
-      "norm_label": "query_before_retry",
-      "source_file": "docs/03-technical/doctor-result.schema.json",
-      "source_location": "L133"
+      "community_name": "7. \u539f\u578b\u5b9e\u9a8c",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "\u5b9e\u9a8c\u4e00:\u8d39\u7528\u5f52\u56e0",
+      "source_file": "docs/02-product/METRICS_AND_VALIDATION.md",
+      "source_location": "L90"
     },
     {
-      "id": "ref_retry_after_fix",
-      "label": "retry_after_fix",
+      "id": "docs_02_product_metrics_and_validation_\u5b9e\u9a8c\u4e09_\u5f00\u53d1\u8005\u63a5\u5165",
+      "label": "\u5b9e\u9a8c\u4e09\uff1a\u5f00\u53d1\u8005\u63a5\u5165",
       "_origin": "ast",
       "community": 141,
-      "community_name": "enum",
-      "file_type": "concept",
-      "norm_label": "retry_after_fix",
-      "source_file": "docs/03-technical/doctor-result.schema.json",
-      "source_location": "L133"
+      "community_name": "7. \u539f\u578b\u5b9e\u9a8c",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "\u5b9e\u9a8c\u4e09:\u5f00\u53d1\u8005\u63a5\u5165",
+      "source_file": "docs/02-product/METRICS_AND_VALIDATION.md",
+      "source_location": "L102"
     },
     {
-      "id": "ref_retry_safe",
-      "label": "retry_safe",
+      "id": "docs_02_product_metrics_and_validation_\u5b9e\u9a8c\u4e8c_\u7b56\u7565\u914d\u7f6e",
+      "label": "\u5b9e\u9a8c\u4e8c\uff1a\u7b56\u7565\u914d\u7f6e",
       "_origin": "ast",
       "community": 141,
-      "community_name": "enum",
-      "file_type": "concept",
-      "norm_label": "retry_safe",
-      "source_file": "docs/03-technical/doctor-result.schema.json",
-      "source_location": "L133"
+      "community_name": "7. \u539f\u578b\u5b9e\u9a8c",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "\u5b9e\u9a8c\u4e8c:\u7b56\u7565\u914d\u7f6e",
+      "source_file": "docs/02-product/METRICS_AND_VALIDATION.md",
+      "source_location": "L96"
     },
     {
-      "id": "docs_03_technical_doctor_result_schema_chain_id_enum",
-      "label": "enum",
+      "id": "docs_02_product_metrics_and_validation_\u5b9e\u9a8c\u56db_\u4ed8\u8d39\u610f\u613f",
+      "label": "\u5b9e\u9a8c\u56db\uff1a\u4ed8\u8d39\u610f\u613f",
+      "_origin": "ast",
+      "community": 141,
+      "community_name": "7. \u539f\u578b\u5b9e\u9a8c",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "\u5b9e\u9a8c\u56db:\u4ed8\u8d39\u610f\u613f",
+      "source_file": "docs/02-product/METRICS_AND_VALIDATION.md",
+      "source_location": "L108"
+    },
+    {
+      "id": "docs_02_product_transaction_p0_acceptance_bu2_transaction_first_p0_\u9a8c\u6536\u65b9\u6848",
+      "label": "BU2 Transaction-first P0 \u9a8c\u6536\u65b9\u6848",
       "_origin": "ast",
       "community": 142,
-      "community_name": "type",
-      "file_type": "code",
-      "norm_label": "enum",
-      "source_file": "docs/03-technical/doctor-result.schema.json",
-      "source_location": "L31"
+      "community_name": "BU2 Transaction-first P0 \u9a8c\u6536\u65b9\u6848",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "bu2 transaction-first p0 \u9a8c\u6536\u65b9\u6848",
+      "source_file": "docs/02-product/TRANSACTION_P0_ACCEPTANCE.md",
+      "source_location": "L1"
     },
     {
-      "id": "docs_03_technical_doctor_result_schema_chain_id_type",
-      "label": "type",
+      "id": "docs_02_product_transaction_p0_acceptance_\u4e3b\u8def\u5f84",
+      "label": "\u4e3b\u8def\u5f84",
       "_origin": "ast",
       "community": 142,
-      "community_name": "type",
-      "file_type": "code",
-      "norm_label": "type",
-      "source_file": "docs/03-technical/doctor-result.schema.json",
-      "source_location": "L31"
+      "community_name": "BU2 Transaction-first P0 \u9a8c\u6536\u65b9\u6848",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "\u4e3b\u8def\u5f84",
+      "source_file": "docs/02-product/TRANSACTION_P0_ACCEPTANCE.md",
+      "source_location": "L6"
     },
     {
-      "id": "docs_03_technical_doctor_result_schema_properties_chain_id",
-      "label": "chain_id",
+      "id": "docs_02_product_transaction_p0_acceptance_\u7ed3\u8bba\u89c4\u5219",
+      "label": "\u7ed3\u8bba\u89c4\u5219",
       "_origin": "ast",
       "community": 142,
-      "community_name": "type",
-      "file_type": "code",
-      "norm_label": "chain_id",
-      "source_file": "docs/03-technical/doctor-result.schema.json",
-      "source_location": "L31"
+      "community_name": "BU2 Transaction-first P0 \u9a8c\u6536\u65b9\u6848",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "\u7ed3\u8bba\u89c4\u5219",
+      "source_file": "docs/02-product/TRANSACTION_P0_ACCEPTANCE.md",
+      "source_location": "L24"
     },
     {
-      "id": "ref_integer",
-      "label": "integer",
+      "id": "docs_02_product_transaction_p0_acceptance_\u8f85\u52a9\u8def\u5f84",
+      "label": "\u8f85\u52a9\u8def\u5f84",
       "_origin": "ast",
       "community": 142,
-      "community_name": "type",
-      "file_type": "concept",
-      "norm_label": "integer",
-      "source_file": "docs/03-technical/doctor-result.schema.json",
-      "source_location": "L31"
+      "community_name": "BU2 Transaction-first P0 \u9a8c\u6536\u65b9\u6848",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "\u8f85\u52a9\u8def\u5f84",
+      "source_file": "docs/02-product/TRANSACTION_P0_ACCEPTANCE.md",
+      "source_location": "L17"
     },
     {
       "id": "sandbox_x402_funded_probe",
       "label": "x402-funded-probe.mjs",
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402.test.mjs",
+      "community_name": "x402-wallet.mjs",
       "file_type": "code",
       "norm_label": "x402-funded-probe.mjs",
       "source_file": "sandbox/x402-funded-probe.mjs",
@@ -13596,7 +13965,7 @@
       "label": "x402-merchant.mjs",
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402.test.mjs",
+      "community_name": "x402-wallet.mjs",
       "file_type": "code",
       "norm_label": "x402-merchant.mjs",
       "source_file": "sandbox/x402-merchant.mjs",
@@ -13607,7 +13976,7 @@
       "label": "X402_FACILITATOR",
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402.test.mjs",
+      "community_name": "x402-wallet.mjs",
       "file_type": "code",
       "norm_label": "x402_facilitator",
       "source_file": "sandbox/x402-merchant.mjs",
@@ -13618,7 +13987,7 @@
       "label": "X402_NETWORK",
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402.test.mjs",
+      "community_name": "x402-wallet.mjs",
       "file_type": "code",
       "norm_label": "x402_network",
       "source_file": "sandbox/x402-merchant.mjs",
@@ -13629,7 +13998,7 @@
       "label": "X402_PRICE",
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402.test.mjs",
+      "community_name": "x402-wallet.mjs",
       "file_type": "code",
       "norm_label": "x402_price",
       "source_file": "sandbox/x402-merchant.mjs",
@@ -13640,7 +14009,7 @@
       "label": "x402-probe.mjs",
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402.test.mjs",
+      "community_name": "x402-wallet.mjs",
       "file_type": "code",
       "norm_label": "x402-probe.mjs",
       "source_file": "sandbox/x402-probe.mjs",
@@ -13651,7 +14020,7 @@
       "label": "capability",
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402.test.mjs",
+      "community_name": "x402-wallet.mjs",
       "file_type": "code",
       "norm_label": "capability",
       "source_file": "sandbox/x402-probe.mjs",
@@ -13662,7 +14031,7 @@
       "label": "challenge",
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402.test.mjs",
+      "community_name": "x402-wallet.mjs",
       "file_type": "code",
       "norm_label": "challenge",
       "source_file": "sandbox/x402-probe.mjs",
@@ -13673,7 +14042,7 @@
       "label": "encoded",
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402.test.mjs",
+      "community_name": "x402-wallet.mjs",
       "file_type": "code",
       "norm_label": "encoded",
       "source_file": "sandbox/x402-probe.mjs",
@@ -13684,7 +14053,7 @@
       "label": "result",
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402.test.mjs",
+      "community_name": "x402-wallet.mjs",
       "file_type": "code",
       "norm_label": "result",
       "source_file": "sandbox/x402-probe.mjs",
@@ -13695,40 +14064,18 @@
       "label": "x402-server.mjs",
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402.test.mjs",
+      "community_name": "x402-wallet.mjs",
       "file_type": "code",
       "norm_label": "x402-server.mjs",
       "source_file": "sandbox/x402-server.mjs",
       "source_location": "L1"
     },
     {
-      "id": "sandbox_x402_test",
-      "label": "x402.test.mjs",
-      "_origin": "ast",
-      "community": 15,
-      "community_name": "x402.test.mjs",
-      "file_type": "code",
-      "norm_label": "x402.test.mjs",
-      "source_file": "sandbox/x402.test.mjs",
-      "source_location": "L1"
-    },
-    {
-      "id": "sandbox_x402_test_facilitatorclient",
-      "label": "facilitatorClient",
-      "_origin": "ast",
-      "community": 15,
-      "community_name": "x402.test.mjs",
-      "file_type": "code",
-      "norm_label": "facilitatorclient",
-      "source_file": "sandbox/x402.test.mjs",
-      "source_location": "L21"
-    },
-    {
       "id": "sandbox_x402_wallet",
       "label": "x402-wallet.mjs",
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402.test.mjs",
+      "community_name": "x402-wallet.mjs",
       "file_type": "code",
       "norm_label": "x402-wallet.mjs",
       "source_file": "sandbox/x402-wallet.mjs",
@@ -13739,7 +14086,7 @@
       "label": "BASE_SEPOLIA_USDC",
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402.test.mjs",
+      "community_name": "x402-wallet.mjs",
       "file_type": "code",
       "norm_label": "base_sepolia_usdc",
       "source_file": "sandbox/x402-wallet.mjs",
@@ -13750,7 +14097,7 @@
       "label": "KEYCHAIN_ACCOUNT",
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402.test.mjs",
+      "community_name": "x402-wallet.mjs",
       "file_type": "code",
       "norm_label": "keychain_account",
       "source_file": "sandbox/x402-wallet.mjs",
@@ -13761,7 +14108,7 @@
       "label": "KEYCHAIN_SERVICE",
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402.test.mjs",
+      "community_name": "x402-wallet.mjs",
       "file_type": "code",
       "norm_label": "keychain_service",
       "source_file": "sandbox/x402-wallet.mjs",
@@ -13772,7 +14119,7 @@
       "label": "MERCHANT_KEYCHAIN_ACCOUNT",
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402.test.mjs",
+      "community_name": "x402-wallet.mjs",
       "file_type": "code",
       "norm_label": "merchant_keychain_account",
       "source_file": "sandbox/x402-wallet.mjs",
@@ -13783,7 +14130,7 @@
       "label": "x402-wallet-status.mjs",
       "_origin": "ast",
       "community": 15,
-      "community_name": "x402.test.mjs",
+      "community_name": "x402-wallet.mjs",
       "file_type": "code",
       "norm_label": "x402-wallet-status.mjs",
       "source_file": "sandbox/x402-wallet-status.mjs",
@@ -13874,18 +14221,6 @@
       "source_location": "L45"
     },
     {
-      "id": "docs_02_product_mvp_prd_6_p0_\u529f\u80fd\u9700\u6c42",
-      "label": "6. P0 \u529f\u80fd\u9700\u6c42",
-      "_origin": "ast",
-      "community": 16,
-      "community_name": "BU2 MVP \u4ea7\u54c1\u9700\u6c42\u6587\u6863 v0.3\uff08Transaction-first\uff09",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "6. p0 \u529f\u80fd\u9700\u6c42",
-      "source_file": "docs/02-product/MVP_PRD.md",
-      "source_location": "L75"
-    },
-    {
       "id": "docs_02_product_mvp_prd_7_p0_\u9875\u9762",
       "label": "7. P0 \u9875\u9762",
       "_origin": "ast",
@@ -13932,102 +14267,6 @@
       "norm_label": "bu2 mvp \u4ea7\u54c1\u9700\u6c42\u6587\u6863 v0.3(transaction-first)",
       "source_file": "docs/02-product/MVP_PRD.md",
       "source_location": "L1"
-    },
-    {
-      "id": "docs_02_product_mvp_prd_f01_agent_identity",
-      "label": "F01 Agent Identity",
-      "_origin": "ast",
-      "community": 16,
-      "community_name": "BU2 MVP \u4ea7\u54c1\u9700\u6c42\u6587\u6863 v0.3\uff08Transaction-first\uff09",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "f01 agent identity",
-      "source_file": "docs/02-product/MVP_PRD.md",
-      "source_location": "L77"
-    },
-    {
-      "id": "docs_02_product_mvp_prd_f02_wallet_\u4e0e\u9650\u989d",
-      "label": "F02 Wallet \u4e0e\u9650\u989d",
-      "_origin": "ast",
-      "community": 16,
-      "community_name": "BU2 MVP \u4ea7\u54c1\u9700\u6c42\u6587\u6863 v0.3\uff08Transaction-first\uff09",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "f02 wallet \u4e0e\u9650\u989d",
-      "source_file": "docs/02-product/MVP_PRD.md",
-      "source_location": "L84"
-    },
-    {
-      "id": "docs_02_product_mvp_prd_f03_payment_mandate",
-      "label": "F03 Payment Mandate",
-      "_origin": "ast",
-      "community": 16,
-      "community_name": "BU2 MVP \u4ea7\u54c1\u9700\u6c42\u6587\u6863 v0.3\uff08Transaction-first\uff09",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "f03 payment mandate",
-      "source_file": "docs/02-product/MVP_PRD.md",
-      "source_location": "L90"
-    },
-    {
-      "id": "docs_02_product_mvp_prd_f04_quote_\u4e0e_payment_intent",
-      "label": "F04 Quote \u4e0e Payment Intent",
-      "_origin": "ast",
-      "community": 16,
-      "community_name": "BU2 MVP \u4ea7\u54c1\u9700\u6c42\u6587\u6863 v0.3\uff08Transaction-first\uff09",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "f04 quote \u4e0e payment intent",
-      "source_file": "docs/02-product/MVP_PRD.md",
-      "source_location": "L96"
-    },
-    {
-      "id": "docs_02_product_mvp_prd_f05_authorization_\u4e0e\u8d44\u91d1\u9884\u7559",
-      "label": "F05 Authorization \u4e0e\u8d44\u91d1\u9884\u7559",
-      "_origin": "ast",
-      "community": 16,
-      "community_name": "BU2 MVP \u4ea7\u54c1\u9700\u6c42\u6587\u6863 v0.3\uff08Transaction-first\uff09",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "f05 authorization \u4e0e\u8d44\u91d1\u9884\u7559",
-      "source_file": "docs/02-product/MVP_PRD.md",
-      "source_location": "L102"
-    },
-    {
-      "id": "docs_02_product_mvp_prd_f06_delivery_\u4e0e_settlement",
-      "label": "F06 Delivery \u4e0e Settlement",
-      "_origin": "ast",
-      "community": 16,
-      "community_name": "BU2 MVP \u4ea7\u54c1\u9700\u6c42\u6587\u6863 v0.3\uff08Transaction-first\uff09",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "f06 delivery \u4e0e settlement",
-      "source_file": "docs/02-product/MVP_PRD.md",
-      "source_location": "L109"
-    },
-    {
-      "id": "docs_02_product_mvp_prd_f07_receipt_\u4e0e\u8d26\u672c",
-      "label": "F07 Receipt \u4e0e\u8d26\u672c",
-      "_origin": "ast",
-      "community": 16,
-      "community_name": "BU2 MVP \u4ea7\u54c1\u9700\u6c42\u6587\u6863 v0.3\uff08Transaction-first\uff09",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "f07 receipt \u4e0e\u8d26\u672c",
-      "source_file": "docs/02-product/MVP_PRD.md",
-      "source_location": "L115"
-    },
-    {
-      "id": "docs_02_product_mvp_prd_f08_\u5d4c\u5165\u5f0f\u63a5\u5165",
-      "label": "F08 \u5d4c\u5165\u5f0f\u63a5\u5165",
-      "_origin": "ast",
-      "community": 16,
-      "community_name": "BU2 MVP \u4ea7\u54c1\u9700\u6c42\u6587\u6863 v0.3\uff08Transaction-first\uff09",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "f08 \u5d4c\u5165\u5f0f\u63a5\u5165",
-      "source_file": "docs/02-product/MVP_PRD.md",
-      "source_location": "L121"
     },
     {
       "id": "prototype_components_ui_aspect_ratio",
@@ -14437,18 +14676,6 @@
       "source_location": "L54"
     },
     {
-      "id": "docs_02_product_metrics_and_validation",
-      "label": "METRICS_AND_VALIDATION.md",
-      "_origin": "ast",
-      "community": 20,
-      "community_name": "BU2 \u6307\u6807\u4e0e\u9a8c\u8bc1\u8ba1\u5212 v0.1",
-      "file_type": "document",
-      "node_kind": "page",
-      "norm_label": "metrics_and_validation.md",
-      "source_file": "docs/02-product/METRICS_AND_VALIDATION.md",
-      "source_location": "L1"
-    },
-    {
       "id": "docs_02_product_metrics_and_validation_1_\u9a8c\u8bc1\u76ee\u6807",
       "label": "1. \u9a8c\u8bc1\u76ee\u6807",
       "_origin": "ast",
@@ -14519,18 +14746,6 @@
       "norm_label": "6. \u5ba2\u6237\u8bbf\u8c08\u8ba1\u5212",
       "source_file": "docs/02-product/METRICS_AND_VALIDATION.md",
       "source_location": "L67"
-    },
-    {
-      "id": "docs_02_product_metrics_and_validation_7_\u539f\u578b\u5b9e\u9a8c",
-      "label": "7. \u539f\u578b\u5b9e\u9a8c",
-      "_origin": "ast",
-      "community": 20,
-      "community_name": "BU2 \u6307\u6807\u4e0e\u9a8c\u8bc1\u8ba1\u5212 v0.1",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "7. \u539f\u578b\u5b9e\u9a8c",
-      "source_file": "docs/02-product/METRICS_AND_VALIDATION.md",
-      "source_location": "L88"
     },
     {
       "id": "docs_02_product_metrics_and_validation_8_go_iterate_stop_\u95e8\u69db",
@@ -14615,54 +14830,6 @@
       "norm_label": "\u5173\u952e\u95ee\u9898",
       "source_file": "docs/02-product/METRICS_AND_VALIDATION.md",
       "source_location": "L76"
-    },
-    {
-      "id": "docs_02_product_metrics_and_validation_\u5b9e\u9a8c\u4e00_\u8d39\u7528\u5f52\u56e0",
-      "label": "\u5b9e\u9a8c\u4e00\uff1a\u8d39\u7528\u5f52\u56e0",
-      "_origin": "ast",
-      "community": 20,
-      "community_name": "BU2 \u6307\u6807\u4e0e\u9a8c\u8bc1\u8ba1\u5212 v0.1",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "\u5b9e\u9a8c\u4e00:\u8d39\u7528\u5f52\u56e0",
-      "source_file": "docs/02-product/METRICS_AND_VALIDATION.md",
-      "source_location": "L90"
-    },
-    {
-      "id": "docs_02_product_metrics_and_validation_\u5b9e\u9a8c\u4e09_\u5f00\u53d1\u8005\u63a5\u5165",
-      "label": "\u5b9e\u9a8c\u4e09\uff1a\u5f00\u53d1\u8005\u63a5\u5165",
-      "_origin": "ast",
-      "community": 20,
-      "community_name": "BU2 \u6307\u6807\u4e0e\u9a8c\u8bc1\u8ba1\u5212 v0.1",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "\u5b9e\u9a8c\u4e09:\u5f00\u53d1\u8005\u63a5\u5165",
-      "source_file": "docs/02-product/METRICS_AND_VALIDATION.md",
-      "source_location": "L102"
-    },
-    {
-      "id": "docs_02_product_metrics_and_validation_\u5b9e\u9a8c\u4e8c_\u7b56\u7565\u914d\u7f6e",
-      "label": "\u5b9e\u9a8c\u4e8c\uff1a\u7b56\u7565\u914d\u7f6e",
-      "_origin": "ast",
-      "community": 20,
-      "community_name": "BU2 \u6307\u6807\u4e0e\u9a8c\u8bc1\u8ba1\u5212 v0.1",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "\u5b9e\u9a8c\u4e8c:\u7b56\u7565\u914d\u7f6e",
-      "source_file": "docs/02-product/METRICS_AND_VALIDATION.md",
-      "source_location": "L96"
-    },
-    {
-      "id": "docs_02_product_metrics_and_validation_\u5b9e\u9a8c\u56db_\u4ed8\u8d39\u610f\u613f",
-      "label": "\u5b9e\u9a8c\u56db\uff1a\u4ed8\u8d39\u610f\u613f",
-      "_origin": "ast",
-      "community": 20,
-      "community_name": "BU2 \u6307\u6807\u4e0e\u9a8c\u8bc1\u8ba1\u5212 v0.1",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "\u5b9e\u9a8c\u56db:\u4ed8\u8d39\u610f\u613f",
-      "source_file": "docs/02-product/METRICS_AND_VALIDATION.md",
-      "source_location": "L108"
     },
     {
       "id": "docs_02_product_metrics_and_validation_\u6837\u672c",
@@ -16768,6 +16935,18 @@
       "source_location": "L483"
     },
     {
+      "id": "verification_env_04_\u9694\u79bb_sandbox_live_\u90e8\u7f72\u5355\u5143\u9a8c\u8bc1",
+      "label": "ENV-04 \u9694\u79bb Sandbox / Live \u90e8\u7f72\u5355\u5143\u9a8c\u8bc1",
+      "_origin": "ast",
+      "community": 38,
+      "community_name": "README \u91cd\u6784\u4e0e\u5355\u4eba R3 \u6cbb\u7406\u9a8c\u8bc1",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "env-04 \u9694\u79bb sandbox / live \u90e8\u7f72\u5355\u5143\u9a8c\u8bc1",
+      "source_file": "verification.md",
+      "source_location": "L505"
+    },
+    {
       "id": "verification_f01_env_01_\u7cfb\u7edf\u73af\u5883\u51b3\u7b56\u51bb\u7ed3\u9a8c\u8bc1",
       "label": "F01 / ENV-01 \u7cfb\u7edf\u73af\u5883\u51b3\u7b56\u51bb\u7ed3\u9a8c\u8bc1",
       "_origin": "ast",
@@ -17404,6 +17583,18 @@
       "source_location": "L1"
     },
     {
+      "id": "docs_02_product_product_strategy",
+      "label": "PRODUCT_STRATEGY.md",
+      "_origin": "ast",
+      "community": 41,
+      "community_name": "BU2 \u4ea7\u54c1\u6218\u7565 v0.1",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "product_strategy.md",
+      "source_file": "docs/02-product/PRODUCT_STRATEGY.md",
+      "source_location": "L1"
+    },
+    {
       "id": "docs_02_product_product_strategy_1_\u4ea7\u54c1\u613f\u666f",
       "label": "1. \u4ea7\u54c1\u613f\u666f",
       "_origin": "ast",
@@ -17426,6 +17617,90 @@
       "norm_label": "2. \u5f53\u524d\u4ea7\u54c1\u5207\u53e3",
       "source_file": "docs/02-product/PRODUCT_STRATEGY.md",
       "source_location": "L16"
+    },
+    {
+      "id": "docs_02_product_product_strategy_3_1_\u5148\u6cbb\u7406_\u540e\u652f\u4ed8",
+      "label": "3.1 \u5148\u6cbb\u7406\uff0c\u540e\u652f\u4ed8",
+      "_origin": "ast",
+      "community": 41,
+      "community_name": "BU2 \u4ea7\u54c1\u6218\u7565 v0.1",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "3.1 \u5148\u6cbb\u7406,\u540e\u652f\u4ed8",
+      "source_file": "docs/02-product/PRODUCT_STRATEGY.md",
+      "source_location": "L28"
+    },
+    {
+      "id": "docs_02_product_product_strategy_3_2_\u6a21\u578b\u63d0\u51fa\u7406\u7531_\u89c4\u5219\u51b3\u5b9a\u6743\u9650",
+      "label": "3.2 \u6a21\u578b\u63d0\u51fa\u7406\u7531\uff0c\u89c4\u5219\u51b3\u5b9a\u6743\u9650",
+      "_origin": "ast",
+      "community": 41,
+      "community_name": "BU2 \u4ea7\u54c1\u6218\u7565 v0.1",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "3.2 \u6a21\u578b\u63d0\u51fa\u7406\u7531,\u89c4\u5219\u51b3\u5b9a\u6743\u9650",
+      "source_file": "docs/02-product/PRODUCT_STRATEGY.md",
+      "source_location": "L32"
+    },
+    {
+      "id": "docs_02_product_product_strategy_3_3_\u9ed8\u8ba4\u6700\u5c0f\u6743\u9650",
+      "label": "3.3 \u9ed8\u8ba4\u6700\u5c0f\u6743\u9650",
+      "_origin": "ast",
+      "community": 41,
+      "community_name": "BU2 \u4ea7\u54c1\u6218\u7565 v0.1",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "3.3 \u9ed8\u8ba4\u6700\u5c0f\u6743\u9650",
+      "source_file": "docs/02-product/PRODUCT_STRATEGY.md",
+      "source_location": "L36"
+    },
+    {
+      "id": "docs_02_product_product_strategy_3_4_\u4efb\u52a1\u662f\u6700\u5c0f\u5f52\u56e0\u5355\u5143",
+      "label": "3.4 \u4efb\u52a1\u662f\u6700\u5c0f\u5f52\u56e0\u5355\u5143",
+      "_origin": "ast",
+      "community": 41,
+      "community_name": "BU2 \u4ea7\u54c1\u6218\u7565 v0.1",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "3.4 \u4efb\u52a1\u662f\u6700\u5c0f\u5f52\u56e0\u5355\u5143",
+      "source_file": "docs/02-product/PRODUCT_STRATEGY.md",
+      "source_location": "L40"
+    },
+    {
+      "id": "docs_02_product_product_strategy_3_5_\u534f\u8bae\u4e2d\u7acb",
+      "label": "3.5 \u534f\u8bae\u4e2d\u7acb",
+      "_origin": "ast",
+      "community": 41,
+      "community_name": "BU2 \u4ea7\u54c1\u6218\u7565 v0.1",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "3.5 \u534f\u8bae\u4e2d\u7acb",
+      "source_file": "docs/02-product/PRODUCT_STRATEGY.md",
+      "source_location": "L44"
+    },
+    {
+      "id": "docs_02_product_product_strategy_3_6_\u8bc1\u636e\u4f18\u5148",
+      "label": "3.6 \u8bc1\u636e\u4f18\u5148",
+      "_origin": "ast",
+      "community": 41,
+      "community_name": "BU2 \u4ea7\u54c1\u6218\u7565 v0.1",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "3.6 \u8bc1\u636e\u4f18\u5148",
+      "source_file": "docs/02-product/PRODUCT_STRATEGY.md",
+      "source_location": "L48"
+    },
+    {
+      "id": "docs_02_product_product_strategy_3_\u4ea7\u54c1\u539f\u5219",
+      "label": "3. \u4ea7\u54c1\u539f\u5219",
+      "_origin": "ast",
+      "community": 41,
+      "community_name": "BU2 \u4ea7\u54c1\u6218\u7565 v0.1",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "3. \u4ea7\u54c1\u539f\u5219",
+      "source_file": "docs/02-product/PRODUCT_STRATEGY.md",
+      "source_location": "L26"
     },
     {
       "id": "docs_02_product_product_strategy_4_1_mvp_\u8303\u56f4",
@@ -17927,14 +18202,14 @@
       "source_location": "L1"
     },
     {
-      "id": "sandbox_readme_bu2_reference_server_v0_13_x402_sandbox_v0_5",
-      "label": "BU2 Reference Server v0.13 / x402 Sandbox v0.5",
+      "id": "sandbox_readme_bu2_reference_server_v0_14_x402_sandbox_v0_5",
+      "label": "BU2 Reference Server v0.14 / x402 Sandbox v0.5",
       "_origin": "ast",
       "community": 47,
-      "community_name": "BU2 Reference Server v0.13 / x402 Sandbox v0.5",
+      "community_name": "BU2 Reference Server v0.14 / x402 Sandbox v0.5",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "bu2 reference server v0.13 / x402 sandbox v0.5",
+      "norm_label": "bu2 reference server v0.14 / x402 sandbox v0.5",
       "source_file": "sandbox/README.md",
       "source_location": "L1"
     },
@@ -17943,31 +18218,31 @@
       "label": "x402 \u6c99\u76d2\u5546\u6237",
       "_origin": "ast",
       "community": 47,
-      "community_name": "BU2 Reference Server v0.13 / x402 Sandbox v0.5",
+      "community_name": "BU2 Reference Server v0.14 / x402 Sandbox v0.5",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "x402 \u6c99\u76d2\u5546\u6237",
       "source_file": "sandbox/README.md",
-      "source_location": "L80"
+      "source_location": "L82"
     },
     {
       "id": "sandbox_readme_\u4e09\u8def\u5f84_clean_room_\u9a8c\u6536",
       "label": "\u4e09\u8def\u5f84 clean-room \u9a8c\u6536",
       "_origin": "ast",
       "community": 47,
-      "community_name": "BU2 Reference Server v0.13 / x402 Sandbox v0.5",
+      "community_name": "BU2 Reference Server v0.14 / x402 Sandbox v0.5",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "\u4e09\u8def\u5f84 clean-room \u9a8c\u6536",
       "source_file": "sandbox/README.md",
-      "source_location": "L62"
+      "source_location": "L64"
     },
     {
       "id": "sandbox_readme_\u542f\u52a8",
       "label": "\u542f\u52a8",
       "_origin": "ast",
       "community": 47,
-      "community_name": "BU2 Reference Server v0.13 / x402 Sandbox v0.5",
+      "community_name": "BU2 Reference Server v0.14 / x402 Sandbox v0.5",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "\u542f\u52a8",
@@ -17979,96 +18254,96 @@
       "label": "\u542f\u52a8\u5b8c\u6574 x402 BU2 \u94fe\u8def",
       "_origin": "ast",
       "community": 47,
-      "community_name": "BU2 Reference Server v0.13 / x402 Sandbox v0.5",
+      "community_name": "BU2 Reference Server v0.14 / x402 Sandbox v0.5",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "\u542f\u52a8\u5b8c\u6574 x402 bu2 \u94fe\u8def",
       "source_file": "sandbox/README.md",
-      "source_location": "L102"
+      "source_location": "L104"
     },
     {
       "id": "sandbox_readme_\u5916\u90e8_buyer_seller_agent_\u4e0e_mcp",
       "label": "\u5916\u90e8 Buyer / Seller Agent \u4e0e MCP",
       "_origin": "ast",
       "community": 47,
-      "community_name": "BU2 Reference Server v0.13 / x402 Sandbox v0.5",
+      "community_name": "BU2 Reference Server v0.14 / x402 Sandbox v0.5",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "\u5916\u90e8 buyer / seller agent \u4e0e mcp",
       "source_file": "sandbox/README.md",
-      "source_location": "L28"
+      "source_location": "L30"
     },
     {
       "id": "sandbox_readme_\u5b8c\u6574_agent_\u4ea4\u6613\u6f14\u793a",
       "label": "\u5b8c\u6574 Agent \u4ea4\u6613\u6f14\u793a",
       "_origin": "ast",
       "community": 47,
-      "community_name": "BU2 Reference Server v0.13 / x402 Sandbox v0.5",
+      "community_name": "BU2 Reference Server v0.14 / x402 Sandbox v0.5",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "\u5b8c\u6574 agent \u4ea4\u6613\u6f14\u793a",
       "source_file": "sandbox/README.md",
-      "source_location": "L18"
+      "source_location": "L20"
     },
     {
       "id": "sandbox_readme_\u6062\u590d\u672a\u77e5_x402_\u7ed3\u7b97",
       "label": "\u6062\u590d\u672a\u77e5 x402 \u7ed3\u7b97",
       "_origin": "ast",
       "community": 47,
-      "community_name": "BU2 Reference Server v0.13 / x402 Sandbox v0.5",
+      "community_name": "BU2 Reference Server v0.14 / x402 Sandbox v0.5",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "\u6062\u590d\u672a\u77e5 x402 \u7ed3\u7b97",
       "source_file": "sandbox/README.md",
-      "source_location": "L125"
+      "source_location": "L127"
     },
     {
       "id": "sandbox_readme_\u63a5\u5165\u8bca\u65ad",
       "label": "\u63a5\u5165\u8bca\u65ad",
       "_origin": "ast",
       "community": 47,
-      "community_name": "BU2 Reference Server v0.13 / x402 Sandbox v0.5",
+      "community_name": "BU2 Reference Server v0.14 / x402 Sandbox v0.5",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "\u63a5\u5165\u8bca\u65ad",
       "source_file": "sandbox/README.md",
-      "source_location": "L47"
+      "source_location": "L49"
     },
     {
       "id": "sandbox_readme_\u672c\u673a\u6d4b\u8bd5\u94b1\u5305",
       "label": "\u672c\u673a\u6d4b\u8bd5\u94b1\u5305",
       "_origin": "ast",
       "community": 47,
-      "community_name": "BU2 Reference Server v0.13 / x402 Sandbox v0.5",
+      "community_name": "BU2 Reference Server v0.14 / x402 Sandbox v0.5",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "\u672c\u673a\u6d4b\u8bd5\u94b1\u5305",
       "source_file": "sandbox/README.md",
-      "source_location": "L136"
+      "source_location": "L138"
     },
     {
       "id": "sandbox_readme_\u6c99\u76d2\u8c03\u8bd5\u7aef\u70b9",
       "label": "\u6c99\u76d2\u8c03\u8bd5\u7aef\u70b9",
       "_origin": "ast",
       "community": 47,
-      "community_name": "BU2 Reference Server v0.13 / x402 Sandbox v0.5",
+      "community_name": "BU2 Reference Server v0.14 / x402 Sandbox v0.5",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "\u6c99\u76d2\u8c03\u8bd5\u7aef\u70b9",
       "source_file": "sandbox/README.md",
-      "source_location": "L148"
+      "source_location": "L150"
     },
     {
       "id": "sandbox_readme_\u6d4b\u8bd5",
       "label": "\u6d4b\u8bd5",
       "_origin": "ast",
       "community": 47,
-      "community_name": "BU2 Reference Server v0.13 / x402 Sandbox v0.5",
+      "community_name": "BU2 Reference Server v0.14 / x402 Sandbox v0.5",
       "file_type": "document",
       "node_kind": "heading",
       "norm_label": "\u6d4b\u8bd5",
       "source_file": "sandbox/README.md",
-      "source_location": "L72"
+      "source_location": "L74"
     },
     {
       "id": "docs_02_product_users_and_jobs",
@@ -18526,6 +18801,18 @@
       "source_location": "L1"
     },
     {
+      "id": "docs_02_product_metrics_and_validation",
+      "label": "METRICS_AND_VALIDATION.md",
+      "_origin": "ast",
+      "community": 53,
+      "community_name": "02-product/README.md",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "metrics_and_validation.md",
+      "source_file": "docs/02-product/METRICS_AND_VALIDATION.md",
+      "source_location": "L1"
+    },
+    {
       "id": "docs_02_product_mvp_prd",
       "label": "MVP_PRD.md",
       "_origin": "ast",
@@ -18574,18 +18861,6 @@
       "source_location": "L1"
     },
     {
-      "id": "docs_02_product_product_strategy",
-      "label": "PRODUCT_STRATEGY.md",
-      "_origin": "ast",
-      "community": 53,
-      "community_name": "02-product/README.md",
-      "file_type": "document",
-      "node_kind": "page",
-      "norm_label": "product_strategy.md",
-      "source_file": "docs/02-product/PRODUCT_STRATEGY.md",
-      "source_location": "L1"
-    },
-    {
       "id": "docs_02_product_protocol_adoption_plan",
       "label": "PROTOCOL_ADOPTION_PLAN.md",
       "_origin": "ast",
@@ -18610,6 +18885,66 @@
       "source_location": "L1"
     },
     {
+      "id": "docs_02_product_readme_bu2_\u4ea7\u54c1\u6587\u6863",
+      "label": "BU2 \u4ea7\u54c1\u6587\u6863",
+      "_origin": "ast",
+      "community": 53,
+      "community_name": "02-product/README.md",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "bu2 \u4ea7\u54c1\u6587\u6863",
+      "source_file": "docs/02-product/README.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "docs_02_product_readme_\u4ea7\u54c1\u5b9a\u4e49",
+      "label": "\u4ea7\u54c1\u5b9a\u4e49",
+      "_origin": "ast",
+      "community": 53,
+      "community_name": "02-product/README.md",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "\u4ea7\u54c1\u5b9a\u4e49",
+      "source_file": "docs/02-product/README.md",
+      "source_location": "L5"
+    },
+    {
+      "id": "docs_02_product_readme_\u4ea7\u54c1\u9636\u6bb5",
+      "label": "\u4ea7\u54c1\u9636\u6bb5",
+      "_origin": "ast",
+      "community": 53,
+      "community_name": "02-product/README.md",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "\u4ea7\u54c1\u9636\u6bb5",
+      "source_file": "docs/02-product/README.md",
+      "source_location": "L30"
+    },
+    {
+      "id": "docs_02_product_readme_\u5f53\u524d\u72b6\u6001",
+      "label": "\u5f53\u524d\u72b6\u6001",
+      "_origin": "ast",
+      "community": 53,
+      "community_name": "02-product/README.md",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "\u5f53\u524d\u72b6\u6001",
+      "source_file": "docs/02-product/README.md",
+      "source_location": "L44"
+    },
+    {
+      "id": "docs_02_product_readme_\u6587\u6863\u5bfc\u822a",
+      "label": "\u6587\u6863\u5bfc\u822a",
+      "_origin": "ast",
+      "community": 53,
+      "community_name": "02-product/README.md",
+      "file_type": "document",
+      "node_kind": "heading",
+      "norm_label": "\u6587\u6863\u5bfc\u822a",
+      "source_file": "docs/02-product/README.md",
+      "source_location": "L13"
+    },
+    {
       "id": "docs_02_product_transaction_p0_acceptance",
       "label": "TRANSACTION_P0_ACCEPTANCE.md",
       "_origin": "ast",
@@ -18620,54 +18955,6 @@
       "norm_label": "transaction_p0_acceptance.md",
       "source_file": "docs/02-product/TRANSACTION_P0_ACCEPTANCE.md",
       "source_location": "L1"
-    },
-    {
-      "id": "docs_02_product_transaction_p0_acceptance_bu2_transaction_first_p0_\u9a8c\u6536\u65b9\u6848",
-      "label": "BU2 Transaction-first P0 \u9a8c\u6536\u65b9\u6848",
-      "_origin": "ast",
-      "community": 53,
-      "community_name": "02-product/README.md",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "bu2 transaction-first p0 \u9a8c\u6536\u65b9\u6848",
-      "source_file": "docs/02-product/TRANSACTION_P0_ACCEPTANCE.md",
-      "source_location": "L1"
-    },
-    {
-      "id": "docs_02_product_transaction_p0_acceptance_\u4e3b\u8def\u5f84",
-      "label": "\u4e3b\u8def\u5f84",
-      "_origin": "ast",
-      "community": 53,
-      "community_name": "02-product/README.md",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "\u4e3b\u8def\u5f84",
-      "source_file": "docs/02-product/TRANSACTION_P0_ACCEPTANCE.md",
-      "source_location": "L6"
-    },
-    {
-      "id": "docs_02_product_transaction_p0_acceptance_\u7ed3\u8bba\u89c4\u5219",
-      "label": "\u7ed3\u8bba\u89c4\u5219",
-      "_origin": "ast",
-      "community": 53,
-      "community_name": "02-product/README.md",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "\u7ed3\u8bba\u89c4\u5219",
-      "source_file": "docs/02-product/TRANSACTION_P0_ACCEPTANCE.md",
-      "source_location": "L24"
-    },
-    {
-      "id": "docs_02_product_transaction_p0_acceptance_\u8f85\u52a9\u8def\u5f84",
-      "label": "\u8f85\u52a9\u8def\u5f84",
-      "_origin": "ast",
-      "community": 53,
-      "community_name": "02-product/README.md",
-      "file_type": "document",
-      "node_kind": "heading",
-      "norm_label": "\u8f85\u52a9\u8def\u5f84",
-      "source_file": "docs/02-product/TRANSACTION_P0_ACCEPTANCE.md",
-      "source_location": "L17"
     },
     {
       "id": "sandbox_api_contract",
@@ -18745,39 +19032,6 @@
       "norm_label": "quoteinput",
       "source_file": "sandbox/domain.test.mjs",
       "source_location": "L5"
-    },
-    {
-      "id": "sandbox_observability",
-      "label": "observability.mjs",
-      "_origin": "ast",
-      "community": 54,
-      "community_name": "ApiError",
-      "file_type": "code",
-      "norm_label": "observability.mjs",
-      "source_file": "sandbox/observability.mjs",
-      "source_location": "L1"
-    },
-    {
-      "id": "sandbox_observability_categories",
-      "label": "CATEGORIES",
-      "_origin": "ast",
-      "community": 54,
-      "community_name": "ApiError",
-      "file_type": "code",
-      "norm_label": "categories",
-      "source_file": "sandbox/observability.mjs",
-      "source_location": "L5"
-    },
-    {
-      "id": "sandbox_observability_test",
-      "label": "observability.test.mjs",
-      "_origin": "ast",
-      "community": 54,
-      "community_name": "ApiError",
-      "file_type": "code",
-      "norm_label": "observability.test.mjs",
-      "source_file": "sandbox/observability.test.mjs",
-      "source_location": "L1"
     },
     {
       "id": "sandbox_server",
@@ -20130,28 +20384,6 @@
       "source_location": "L55"
     },
     {
-      "id": "sandbox_x402_adapter",
-      "label": "x402-adapter.mjs",
-      "_origin": "ast",
-      "community": 60,
-      "community_name": "x402-adapter.mjs",
-      "file_type": "code",
-      "norm_label": "x402-adapter.mjs",
-      "source_file": "sandbox/x402-adapter.mjs",
-      "source_location": "L1"
-    },
-    {
-      "id": "sandbox_x402_adapter_x402_base_sepolia_usdc",
-      "label": "X402_BASE_SEPOLIA_USDC",
-      "_origin": "ast",
-      "community": 60,
-      "community_name": "x402-adapter.mjs",
-      "file_type": "code",
-      "norm_label": "x402_base_sepolia_usdc",
-      "source_file": "sandbox/x402-adapter.mjs",
-      "source_location": "L11"
-    },
-    {
       "id": "docs_03_technical_phase0_epic2_developer_integration_scale",
       "label": "PHASE0_EPIC2_DEVELOPER_INTEGRATION_SCALE.md",
       "_origin": "ast",
@@ -20678,6 +20910,18 @@
       "norm_label": "\u63a5\u5165\u6709\u6548\u6027",
       "source_file": "docs/03-technical/PHASE0_EPIC3_EXTERNAL_PILOT_EVIDENCE.md",
       "source_location": "L129"
+    },
+    {
+      "id": "deploy_readme",
+      "label": "deploy/README.md",
+      "_origin": "ast",
+      "community": 63,
+      "community_name": "03-technical/README.md",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "deploy/readme.md",
+      "source_file": "deploy/README.md",
+      "source_location": "L1"
     },
     {
       "id": "docs_03_technical_clean_room_acceptance_evidence",
@@ -22092,6 +22336,17 @@
       "source_location": "L135"
     },
     {
+      "id": "docs_03_technical_doctor_result_schema_properties_retry",
+      "label": "retry",
+      "_origin": "ast",
+      "community": 72,
+      "community_name": "properties",
+      "file_type": "code",
+      "norm_label": "retry",
+      "source_file": "docs/03-technical/doctor-result.schema.json",
+      "source_location": "L133"
+    },
+    {
       "id": "docs_03_technical_doctor_result_schema_properties_trace_id",
       "label": "trace_id",
       "_origin": "ast",
@@ -22136,6 +22391,17 @@
       "source_location": "L135"
     },
     {
+      "id": "docs_03_technical_doctor_result_schema_retry_enum",
+      "label": "enum",
+      "_origin": "ast",
+      "community": 72,
+      "community_name": "properties",
+      "file_type": "code",
+      "norm_label": "enum",
+      "source_file": "docs/03-technical/doctor-result.schema.json",
+      "source_location": "L133"
+    },
+    {
       "id": "docs_03_technical_doctor_result_schema_trace_id_pattern",
       "label": "pattern",
       "_origin": "ast",
@@ -22156,6 +22422,39 @@
       "norm_label": "type",
       "source_file": "docs/03-technical/doctor-result.schema.json",
       "source_location": "L136"
+    },
+    {
+      "id": "ref_query_before_retry",
+      "label": "query_before_retry",
+      "_origin": "ast",
+      "community": 72,
+      "community_name": "properties",
+      "file_type": "concept",
+      "norm_label": "query_before_retry",
+      "source_file": "docs/03-technical/doctor-result.schema.json",
+      "source_location": "L133"
+    },
+    {
+      "id": "ref_retry_after_fix",
+      "label": "retry_after_fix",
+      "_origin": "ast",
+      "community": 72,
+      "community_name": "properties",
+      "file_type": "concept",
+      "norm_label": "retry_after_fix",
+      "source_file": "docs/03-technical/doctor-result.schema.json",
+      "source_location": "L133"
+    },
+    {
+      "id": "ref_retry_safe",
+      "label": "retry_safe",
+      "_origin": "ast",
+      "community": 72,
+      "community_name": "properties",
+      "file_type": "concept",
+      "norm_label": "retry_safe",
+      "source_file": "docs/03-technical/doctor-result.schema.json",
+      "source_location": "L133"
     },
     {
       "id": "docs_03_technical_clean_room_evidence_schema_definitions",
@@ -22843,6 +23142,17 @@
       "source_location": "L16"
     },
     {
+      "id": "docs_03_technical_validate_contract_deploymentunits",
+      "label": "deploymentUnits",
+      "_origin": "ast",
+      "community": 77,
+      "community_name": "validate-contract.mjs",
+      "file_type": "code",
+      "norm_label": "deploymentunits",
+      "source_file": "docs/03-technical/validate-contract.mjs",
+      "source_location": "L22"
+    },
+    {
       "id": "docs_03_technical_validate_contract_doctor",
       "label": "doctor",
       "_origin": "ast",
@@ -22906,7 +23216,7 @@
       "file_type": "code",
       "norm_label": "openapi",
       "source_file": "docs/03-technical/validate-contract.mjs",
-      "source_location": "L22"
+      "source_location": "L25"
     },
     {
       "id": "docs_03_technical_validate_contract_versions",
@@ -23041,70 +23351,169 @@
       "source_location": "L36"
     },
     {
-      "id": "docs_03_technical_doctor_result_schema_analyticsrecord_required",
-      "label": "required",
+      "id": "deploy_acceptance",
+      "label": "acceptance.mjs",
       "_origin": "ast",
       "community": 79,
-      "community_name": "required",
+      "community_name": "acceptance.mjs",
       "file_type": "code",
-      "norm_label": "required",
-      "source_file": "docs/03-technical/doctor-result.schema.json",
-      "source_location": "L118"
+      "norm_label": "acceptance.mjs",
+      "source_file": "deploy/acceptance.mjs",
+      "source_location": "L1"
     },
     {
-      "id": "docs_03_technical_doctor_result_schema_check_required",
-      "label": "required",
+      "id": "deploy_acceptance_baselivevariables",
+      "label": "baseLiveVariables",
       "_origin": "ast",
       "community": 79,
-      "community_name": "required",
+      "community_name": "acceptance.mjs",
       "file_type": "code",
-      "norm_label": "required",
-      "source_file": "docs/03-technical/doctor-result.schema.json",
-      "source_location": "L107"
+      "norm_label": "baselivevariables",
+      "source_file": "deploy/acceptance.mjs",
+      "source_location": "L102"
     },
     {
-      "id": "docs_03_technical_doctor_result_schema_json_ref_duration_ms",
-      "label": "duration_ms",
+      "id": "deploy_acceptance_composefile",
+      "label": "composeFile",
       "_origin": "ast",
       "community": 79,
-      "community_name": "required",
-      "file_type": "concept",
-      "norm_label": "duration_ms",
-      "source_file": "docs/03-technical/doctor-result.schema.json",
+      "community_name": "acceptance.mjs",
+      "file_type": "code",
+      "norm_label": "composefile",
+      "source_file": "deploy/acceptance.mjs",
+      "source_location": "L13"
+    },
+    {
+      "id": "deploy_acceptance_createdcontainers",
+      "label": "createdContainers",
+      "_origin": "ast",
+      "community": 79,
+      "community_name": "acceptance.mjs",
+      "file_type": "code",
+      "norm_label": "createdcontainers",
+      "source_file": "deploy/acceptance.mjs",
+      "source_location": "L19"
+    },
+    {
+      "id": "deploy_acceptance_here",
+      "label": "here",
+      "_origin": "ast",
+      "community": 79,
+      "community_name": "acceptance.mjs",
+      "file_type": "code",
+      "norm_label": "here",
+      "source_file": "deploy/acceptance.mjs",
+      "source_location": "L11"
+    },
+    {
+      "id": "deploy_acceptance_iidfile",
+      "label": "iidFile",
+      "_origin": "ast",
+      "community": 79,
+      "community_name": "acceptance.mjs",
+      "file_type": "code",
+      "norm_label": "iidfile",
+      "source_file": "deploy/acceptance.mjs",
+      "source_location": "L18"
+    },
+    {
+      "id": "deploy_acceptance_root",
+      "label": "root",
+      "_origin": "ast",
+      "community": 79,
+      "community_name": "acceptance.mjs",
+      "file_type": "code",
+      "norm_label": "root",
+      "source_file": "deploy/acceptance.mjs",
+      "source_location": "L12"
+    },
+    {
+      "id": "deploy_acceptance_runid",
+      "label": "runId",
+      "_origin": "ast",
+      "community": 79,
+      "community_name": "acceptance.mjs",
+      "file_type": "code",
+      "norm_label": "runid",
+      "source_file": "deploy/acceptance.mjs",
+      "source_location": "L14"
+    },
+    {
+      "id": "deploy_acceptance_work",
+      "label": "work",
+      "_origin": "ast",
+      "community": 79,
+      "community_name": "acceptance.mjs",
+      "file_type": "code",
+      "norm_label": "work",
+      "source_file": "deploy/acceptance.mjs",
+      "source_location": "L17"
+    },
+    {
+      "id": "deploy_deployment_contract",
+      "label": "deployment-contract.mjs",
+      "_origin": "ast",
+      "community": 79,
+      "community_name": "acceptance.mjs",
+      "file_type": "code",
+      "norm_label": "deployment-contract.mjs",
+      "source_file": "deploy/deployment-contract.mjs",
+      "source_location": "L1"
+    },
+    {
+      "id": "deploy_deployment_contract_deployment_units",
+      "label": "DEPLOYMENT_UNITS",
+      "_origin": "ast",
+      "community": 79,
+      "community_name": "acceptance.mjs",
+      "file_type": "code",
+      "norm_label": "deployment_units",
+      "source_file": "deploy/deployment-contract.mjs",
       "source_location": "L7"
     },
     {
-      "id": "docs_03_technical_doctor_result_schema_json_ref_error_code",
-      "label": "error_code",
+      "id": "deploy_deployment_contract_here",
+      "label": "here",
       "_origin": "ast",
       "community": 79,
-      "community_name": "required",
-      "file_type": "concept",
-      "norm_label": "error_code",
-      "source_file": "docs/03-technical/doctor-result.schema.json",
-      "source_location": "L107"
+      "community_name": "acceptance.mjs",
+      "file_type": "code",
+      "norm_label": "here",
+      "source_file": "deploy/deployment-contract.mjs",
+      "source_location": "L5"
     },
     {
-      "id": "docs_03_technical_doctor_result_schema_json_ref_stage",
-      "label": "stage",
+      "id": "deploy_deployment_contract_test",
+      "label": "deployment-contract.test.mjs",
       "_origin": "ast",
       "community": 79,
-      "community_name": "required",
-      "file_type": "concept",
-      "norm_label": "stage",
-      "source_file": "docs/03-technical/doctor-result.schema.json",
-      "source_location": "L107"
+      "community_name": "acceptance.mjs",
+      "file_type": "code",
+      "norm_label": "deployment-contract.test.mjs",
+      "source_file": "deploy/deployment-contract.test.mjs",
+      "source_location": "L1"
     },
     {
-      "id": "ref_result_category",
-      "label": "result_category",
+      "id": "deploy_deployment_contract_test_composepath",
+      "label": "composePath",
       "_origin": "ast",
       "community": 79,
-      "community_name": "required",
-      "file_type": "concept",
-      "norm_label": "result_category",
-      "source_file": "docs/03-technical/doctor-result.schema.json",
-      "source_location": "L107"
+      "community_name": "acceptance.mjs",
+      "file_type": "code",
+      "norm_label": "composepath",
+      "source_file": "deploy/deployment-contract.test.mjs",
+      "source_location": "L9"
+    },
+    {
+      "id": "deploy_deployment_contract_test_here",
+      "label": "here",
+      "_origin": "ast",
+      "community": 79,
+      "community_name": "acceptance.mjs",
+      "file_type": "code",
+      "norm_label": "here",
+      "source_file": "deploy/deployment-contract.test.mjs",
+      "source_location": "L8"
     },
     {
       "id": "docs_02_product_protocol_adoption_plan_10_\u5f53\u524d\u51b3\u7b56",
@@ -24818,11 +25227,44 @@
       "source_location": "L1"
     },
     {
+      "id": "docs_03_technical_doctor_result_schema_failure_ref",
+      "label": "$ref",
+      "_origin": "ast",
+      "community": 90,
+      "community_name": "properties",
+      "file_type": "code",
+      "norm_label": "$ref",
+      "source_file": "docs/03-technical/doctor-result.schema.json",
+      "source_location": "L83"
+    },
+    {
+      "id": "docs_03_technical_doctor_result_schema_properties",
+      "label": "properties",
+      "_origin": "ast",
+      "community": 90,
+      "community_name": "properties",
+      "file_type": "code",
+      "norm_label": "properties",
+      "source_file": "docs/03-technical/doctor-result.schema.json",
+      "source_location": "L19"
+    },
+    {
+      "id": "docs_03_technical_doctor_result_schema_properties_failure",
+      "label": "failure",
+      "_origin": "ast",
+      "community": 90,
+      "community_name": "properties",
+      "file_type": "code",
+      "norm_label": "failure",
+      "source_file": "docs/03-technical/doctor-result.schema.json",
+      "source_location": "L83"
+    },
+    {
       "id": "docs_03_technical_doctor_result_schema_properties_receipt_verification",
       "label": "receipt_verification",
       "_origin": "ast",
       "community": 90,
-      "community_name": "enum",
+      "community_name": "properties",
       "file_type": "code",
       "norm_label": "receipt_verification",
       "source_file": "docs/03-technical/doctor-result.schema.json",
@@ -24833,18 +25275,40 @@
       "label": "result",
       "_origin": "ast",
       "community": 90,
-      "community_name": "enum",
+      "community_name": "properties",
       "file_type": "code",
       "norm_label": "result",
       "source_file": "docs/03-technical/doctor-result.schema.json",
       "source_location": "L21"
     },
     {
+      "id": "docs_03_technical_doctor_result_schema_properties_schema_version",
+      "label": "schema_version",
+      "_origin": "ast",
+      "community": 90,
+      "community_name": "properties",
+      "file_type": "code",
+      "norm_label": "schema_version",
+      "source_file": "docs/03-technical/doctor-result.schema.json",
+      "source_location": "L20"
+    },
+    {
+      "id": "docs_03_technical_doctor_result_schema_properties_started_at",
+      "label": "started_at",
+      "_origin": "ast",
+      "community": 90,
+      "community_name": "properties",
+      "file_type": "code",
+      "norm_label": "started_at",
+      "source_file": "docs/03-technical/doctor-result.schema.json",
+      "source_location": "L22"
+    },
+    {
       "id": "docs_03_technical_doctor_result_schema_receipt_verification_enum",
       "label": "enum",
       "_origin": "ast",
       "community": 90,
-      "community_name": "enum",
+      "community_name": "properties",
       "file_type": "code",
       "norm_label": "enum",
       "source_file": "docs/03-technical/doctor-result.schema.json",
@@ -24855,7 +25319,7 @@
       "label": "enum",
       "_origin": "ast",
       "community": 90,
-      "community_name": "enum",
+      "community_name": "properties",
       "file_type": "code",
       "norm_label": "enum",
       "source_file": "docs/03-technical/doctor-result.schema.json",
@@ -24866,18 +25330,51 @@
       "label": "enum",
       "_origin": "ast",
       "community": 90,
-      "community_name": "enum",
+      "community_name": "properties",
       "file_type": "code",
       "norm_label": "enum",
       "source_file": "docs/03-technical/doctor-result.schema.json",
       "source_location": "L21"
     },
     {
+      "id": "docs_03_technical_doctor_result_schema_schema_version_const",
+      "label": "const",
+      "_origin": "ast",
+      "community": 90,
+      "community_name": "properties",
+      "file_type": "code",
+      "norm_label": "const",
+      "source_file": "docs/03-technical/doctor-result.schema.json",
+      "source_location": "L20"
+    },
+    {
+      "id": "docs_03_technical_doctor_result_schema_started_at_format",
+      "label": "format",
+      "_origin": "ast",
+      "community": 90,
+      "community_name": "properties",
+      "file_type": "code",
+      "norm_label": "format",
+      "source_file": "docs/03-technical/doctor-result.schema.json",
+      "source_location": "L22"
+    },
+    {
+      "id": "docs_03_technical_doctor_result_schema_started_at_type",
+      "label": "type",
+      "_origin": "ast",
+      "community": 90,
+      "community_name": "properties",
+      "file_type": "code",
+      "norm_label": "type",
+      "source_file": "docs/03-technical/doctor-result.schema.json",
+      "source_location": "L22"
+    },
+    {
       "id": "docs_03_technical_doctor_result_schema_json_ref_failed",
       "label": "failed",
       "_origin": "ast",
       "community": 90,
-      "community_name": "enum",
+      "community_name": "properties",
       "file_type": "concept",
       "norm_label": "failed",
       "source_file": "docs/03-technical/doctor-result.schema.json",
@@ -24888,7 +25385,7 @@
       "label": "passed",
       "_origin": "ast",
       "community": 90,
-      "community_name": "enum",
+      "community_name": "properties",
       "file_type": "concept",
       "norm_label": "passed",
       "source_file": "docs/03-technical/doctor-result.schema.json",
@@ -24899,7 +25396,7 @@
       "label": "blocked",
       "_origin": "ast",
       "community": 90,
-      "community_name": "enum",
+      "community_name": "properties",
       "file_type": "concept",
       "norm_label": "blocked",
       "source_file": "docs/03-technical/doctor-result.schema.json",
@@ -24910,7 +25407,7 @@
       "label": "capability_available",
       "_origin": "ast",
       "community": 90,
-      "community_name": "enum",
+      "community_name": "properties",
       "file_type": "concept",
       "norm_label": "capability_available",
       "source_file": "docs/03-technical/doctor-result.schema.json",
@@ -24921,7 +25418,7 @@
       "label": "verified",
       "_origin": "ast",
       "community": 90,
-      "community_name": "enum",
+      "community_name": "properties",
       "file_type": "concept",
       "norm_label": "verified",
       "source_file": "docs/03-technical/doctor-result.schema.json",
@@ -26219,6 +26716,66 @@
     }
   ],
   "links": [
+    {
+      "source": "deploy_acceptance_runfaultcontainer",
+      "target": "deploy_acceptance_command",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "deploy/acceptance.mjs",
+      "source_location": "L88",
+      "weight": 1.0
+    },
+    {
+      "source": "deploy_deployment_contract_validateresolveddeployment",
+      "target": "deploy_deployment_contract_asenvironment",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "deploy/deployment-contract.mjs",
+      "source_location": "L38",
+      "weight": 1.0
+    },
+    {
+      "source": "deploy_deployment_contract_validateresolveddeployment",
+      "target": "deploy_deployment_contract_volumesources",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "deploy/deployment-contract.mjs",
+      "source_location": "L40",
+      "weight": 1.0
+    },
+    {
+      "source": "deploy_deployment_contract_validateresolveddeployment",
+      "target": "deploy_deployment_contract_networknames",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "deploy/deployment-contract.mjs",
+      "source_location": "L41",
+      "weight": 1.0
+    },
+    {
+      "source": "deploy_deployment_contract_validateresolveddeployment",
+      "target": "deploy_deployment_contract_immutableimage",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "deploy/deployment-contract.mjs",
+      "source_location": "L44",
+      "weight": 1.0
+    },
     {
       "source": "packages_typescript_sdk_src_client_apierror",
       "target": "packages_typescript_sdk_src_client_isrecord",
@@ -36734,6 +37291,42 @@
       "weight": 1.0
     },
     {
+      "source": "deploy_acceptance",
+      "target": "deploy_deployment_contract_validateresolveddeployment",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "deploy/acceptance.mjs",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "deploy_deployment_contract_test",
+      "target": "deploy_deployment_contract_deployment_units",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "deploy/deployment-contract.test.mjs",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
+      "source": "deploy_deployment_contract_test",
+      "target": "deploy_deployment_contract_validateresolveddeployment",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "deploy/deployment-contract.test.mjs",
+      "source_location": "L6",
+      "weight": 1.0
+    },
+    {
       "source": "packages_typescript_sdk_package_dependencies_openapi_fetch",
       "target": "openapi_fetch",
       "relation": "imports",
@@ -40042,7 +40635,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "sandbox/package.json",
-      "source_location": "L35",
+      "source_location": "L37",
       "weight": 1.0
     },
     {
@@ -40054,7 +40647,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "sandbox/package.json",
-      "source_location": "L36",
+      "source_location": "L38",
       "weight": 1.0
     },
     {
@@ -40066,7 +40659,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "sandbox/package.json",
-      "source_location": "L37",
+      "source_location": "L39",
       "weight": 1.0
     },
     {
@@ -40078,7 +40671,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "sandbox/package.json",
-      "source_location": "L38",
+      "source_location": "L40",
       "weight": 1.0
     },
     {
@@ -40090,7 +40683,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "sandbox/package.json",
-      "source_location": "L29",
+      "source_location": "L31",
       "weight": 1.0
     },
     {
@@ -40102,7 +40695,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "sandbox/package.json",
-      "source_location": "L30",
+      "source_location": "L32",
       "weight": 1.0
     },
     {
@@ -40114,7 +40707,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "sandbox/package.json",
-      "source_location": "L39",
+      "source_location": "L41",
       "weight": 1.0
     },
     {
@@ -40126,7 +40719,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "sandbox/package.json",
-      "source_location": "L31",
+      "source_location": "L33",
       "weight": 1.0
     },
     {
@@ -40138,7 +40731,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "sandbox/package.json",
-      "source_location": "L32",
+      "source_location": "L34",
       "weight": 1.0
     },
     {
@@ -40150,7 +40743,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "sandbox/package.json",
-      "source_location": "L33",
+      "source_location": "L35",
       "weight": 1.0
     },
     {
@@ -40162,7 +40755,7 @@
       "confidence_score": 1.0,
       "context": "import",
       "source_file": "sandbox/package.json",
-      "source_location": "L34",
+      "source_location": "L36",
       "weight": 1.0
     },
     {
@@ -40679,6 +41272,30 @@
       "context": "import",
       "source_file": "sandbox/x402-wallet-status.mjs",
       "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "deploy_acceptance",
+      "target": "deploy_deployment_contract",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "deploy/acceptance.mjs",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "deploy_deployment_contract_test",
+      "target": "deploy_deployment_contract",
+      "relation": "imports_from",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "source_file": "deploy/deployment-contract.test.mjs",
+      "source_location": "L6",
       "weight": 1.0
     },
     {
@@ -44351,6 +44968,292 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "AGENTS.md",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "deploy_acceptance",
+      "target": "deploy_acceptance_baselivevariables",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "deploy/acceptance.mjs",
+      "source_location": "L102",
+      "weight": 1.0
+    },
+    {
+      "source": "deploy_acceptance",
+      "target": "deploy_acceptance_here",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "deploy/acceptance.mjs",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "deploy_acceptance",
+      "target": "deploy_acceptance_root",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "deploy/acceptance.mjs",
+      "source_location": "L12",
+      "weight": 1.0
+    },
+    {
+      "source": "deploy_acceptance",
+      "target": "deploy_acceptance_composefile",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "deploy/acceptance.mjs",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "deploy_acceptance",
+      "target": "deploy_acceptance_runid",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "deploy/acceptance.mjs",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "deploy_acceptance",
+      "target": "deploy_acceptance_work",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "deploy/acceptance.mjs",
+      "source_location": "L17",
+      "weight": 1.0
+    },
+    {
+      "source": "deploy_acceptance",
+      "target": "deploy_acceptance_iidfile",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "deploy/acceptance.mjs",
+      "source_location": "L18",
+      "weight": 1.0
+    },
+    {
+      "source": "deploy_acceptance",
+      "target": "deploy_acceptance_createdcontainers",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "deploy/acceptance.mjs",
+      "source_location": "L19",
+      "weight": 1.0
+    },
+    {
+      "source": "deploy_acceptance",
+      "target": "deploy_acceptance_command",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "deploy/acceptance.mjs",
+      "source_location": "L21",
+      "weight": 1.0
+    },
+    {
+      "source": "deploy_acceptance",
+      "target": "deploy_acceptance_reserveport",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "deploy/acceptance.mjs",
+      "source_location": "L29",
+      "weight": 1.0
+    },
+    {
+      "source": "deploy_acceptance",
+      "target": "deploy_acceptance_waitforenvironment",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "deploy/acceptance.mjs",
+      "source_location": "L39",
+      "weight": 1.0
+    },
+    {
+      "source": "deploy_acceptance",
+      "target": "deploy_acceptance_assertpaymentmutationdisabled",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "deploy/acceptance.mjs",
+      "source_location": "L60",
+      "weight": 1.0
+    },
+    {
+      "source": "deploy_acceptance",
+      "target": "deploy_acceptance_runfaultcontainer",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "deploy/acceptance.mjs",
+      "source_location": "L74",
+      "weight": 1.0
+    },
+    {
+      "source": "deploy_deployment_contract",
+      "target": "deploy_deployment_contract_immutableimage",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "deploy/deployment-contract.mjs",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "deploy_deployment_contract",
+      "target": "deploy_deployment_contract_asenvironment",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "deploy/deployment-contract.mjs",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "deploy_deployment_contract",
+      "target": "deploy_deployment_contract_volumesources",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "deploy/deployment-contract.mjs",
+      "source_location": "L19",
+      "weight": 1.0
+    },
+    {
+      "source": "deploy_deployment_contract",
+      "target": "deploy_deployment_contract_networknames",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "deploy/deployment-contract.mjs",
+      "source_location": "L24",
+      "weight": 1.0
+    },
+    {
+      "source": "deploy_deployment_contract",
+      "target": "deploy_deployment_contract_validateresolveddeployment",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "deploy/deployment-contract.mjs",
+      "source_location": "L27",
+      "weight": 1.0
+    },
+    {
+      "source": "deploy_deployment_contract",
+      "target": "deploy_deployment_contract_here",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "deploy/deployment-contract.mjs",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "deploy_deployment_contract",
+      "target": "deploy_deployment_contract_deployment_units",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "deploy/deployment-contract.mjs",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "deploy_deployment_contract_test",
+      "target": "deploy_deployment_contract_test_resolvedcompose",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "deploy/deployment-contract.test.mjs",
+      "source_location": "L12",
+      "weight": 1.0
+    },
+    {
+      "source": "deploy_deployment_contract_test",
+      "target": "deploy_deployment_contract_test_here",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "deploy/deployment-contract.test.mjs",
+      "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "deploy_deployment_contract_test",
+      "target": "deploy_deployment_contract_test_composepath",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "deploy/deployment-contract.test.mjs",
+      "source_location": "L9",
+      "weight": 1.0
+    },
+    {
+      "source": "deploy_readme",
+      "target": "deploy_readme_bu2_env_04_deployment_reference",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "deploy/README.md",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "deploy_readme_bu2_env_04_deployment_reference",
+      "target": "deploy_readme_\u624b\u5de5\u67e5\u770b_disarmed_\u5355\u5143",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "deploy/README.md",
+      "source_location": "L17",
+      "weight": 1.0
+    },
+    {
+      "source": "deploy_readme_bu2_env_04_deployment_reference",
+      "target": "deploy_readme_\u9a8c\u8bc1",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "deploy/README.md",
       "source_location": "L8",
       "weight": 1.0
     },
@@ -49950,7 +50853,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/03-technical/ENVIRONMENT_ACCEPTANCE_MATRIX_V1.md",
-      "source_location": "L42",
+      "source_location": "L43",
       "weight": 1.0
     },
     {
@@ -50039,6 +50942,83 @@
       "confidence_score": 1.0,
       "source_file": "docs/03-technical/ENVIRONMENT_CLIENT_AND_RECEIPT_CONTRACT_V1.md",
       "source_location": "L8",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_03_technical_environment_deployment_units_v1",
+      "target": "docs_03_technical_environment_deployment_units_v1_env_04_\u9694\u79bb_sandbox_live_\u90e8\u7f72\u5355\u5143_v1",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/03-technical/ENVIRONMENT_DEPLOYMENT_UNITS_V1.md",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_03_technical_environment_deployment_units_v1_env_04_\u9694\u79bb_sandbox_live_\u90e8\u7f72\u5355\u5143_v1",
+      "target": "docs_03_technical_environment_deployment_units_v1_2_\u5236\u54c1\u4e0e\u90e8\u7f72\u8fb9\u754c",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/03-technical/ENVIRONMENT_DEPLOYMENT_UNITS_V1.md",
+      "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_03_technical_environment_deployment_units_v1_env_04_\u9694\u79bb_sandbox_live_\u90e8\u7f72\u5355\u5143_v1",
+      "target": "docs_03_technical_environment_deployment_units_v1_3_\u673a\u5668\u5951\u7ea6",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/03-technical/ENVIRONMENT_DEPLOYMENT_UNITS_V1.md",
+      "source_location": "L32",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_03_technical_environment_deployment_units_v1_env_04_\u9694\u79bb_sandbox_live_\u90e8\u7f72\u5355\u5143_v1",
+      "target": "docs_03_technical_environment_deployment_units_v1_4_\u81ea\u52a8\u5316\u9a8c\u6536",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/03-technical/ENVIRONMENT_DEPLOYMENT_UNITS_V1.md",
+      "source_location": "L45",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_03_technical_environment_deployment_units_v1_env_04_\u9694\u79bb_sandbox_live_\u90e8\u7f72\u5355\u5143_v1",
+      "target": "docs_03_technical_environment_deployment_units_v1_1_\u76ee\u6807\u4e0e\u7ed3\u8bba",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/03-technical/ENVIRONMENT_DEPLOYMENT_UNITS_V1.md",
+      "source_location": "L7",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_03_technical_environment_deployment_units_v1_env_04_\u9694\u79bb_sandbox_live_\u90e8\u7f72\u5355\u5143_v1",
+      "target": "docs_03_technical_environment_deployment_units_v1_5_\u53d1\u5e03_\u5931\u8d25\u4e0e\u6062\u590d",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/03-technical/ENVIRONMENT_DEPLOYMENT_UNITS_V1.md",
+      "source_location": "L71",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_03_technical_environment_deployment_units_v1_env_04_\u9694\u79bb_sandbox_live_\u90e8\u7f72\u5355\u5143_v1",
+      "target": "docs_03_technical_environment_deployment_units_v1_6_\u540e\u7eed\u5de5\u4f5c",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/03-technical/ENVIRONMENT_DEPLOYMENT_UNITS_V1.md",
+      "source_location": "L77",
       "weight": 1.0
     },
     {
@@ -51506,7 +52486,7 @@
     },
     {
       "source": "docs_03_technical_validate_contract",
-      "target": "docs_03_technical_validate_contract_openapi",
+      "target": "docs_03_technical_validate_contract_deploymentunits",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -51517,13 +52497,24 @@
     },
     {
       "source": "docs_03_technical_validate_contract",
-      "target": "docs_03_technical_validate_contract_assert",
+      "target": "docs_03_technical_validate_contract_openapi",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/03-technical/validate-contract.mjs",
       "source_location": "L25",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_03_technical_validate_contract",
+      "target": "docs_03_technical_validate_contract_assert",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/03-technical/validate-contract.mjs",
+      "source_location": "L28",
       "weight": 1.0
     },
     {
@@ -61439,17 +62430,6 @@
     },
     {
       "source": "sandbox_package",
-      "target": "sandbox_package_dependencies",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "sandbox/package.json",
-      "source_location": "L28",
-      "weight": 1.0
-    },
-    {
-      "source": "sandbox_package",
       "target": "sandbox_package_version",
       "relation": "contains",
       "_origin": "ast",
@@ -61457,6 +62437,17 @@
       "confidence_score": 1.0,
       "source_file": "sandbox/package.json",
       "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "sandbox_package",
+      "target": "sandbox_package_dependencies",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "sandbox/package.json",
+      "source_location": "L30",
       "weight": 1.0
     },
     {
@@ -61522,7 +62513,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "sandbox/package.json",
-      "source_location": "L29",
+      "source_location": "L31",
       "weight": 1.0
     },
     {
@@ -61533,7 +62524,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "sandbox/package.json",
-      "source_location": "L30",
+      "source_location": "L32",
       "weight": 1.0
     },
     {
@@ -61544,7 +62535,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "sandbox/package.json",
-      "source_location": "L31",
+      "source_location": "L33",
       "weight": 1.0
     },
     {
@@ -61555,7 +62546,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "sandbox/package.json",
-      "source_location": "L32",
+      "source_location": "L34",
       "weight": 1.0
     },
     {
@@ -61566,7 +62557,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "sandbox/package.json",
-      "source_location": "L33",
+      "source_location": "L35",
       "weight": 1.0
     },
     {
@@ -61577,7 +62568,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "sandbox/package.json",
-      "source_location": "L34",
+      "source_location": "L36",
       "weight": 1.0
     },
     {
@@ -61588,7 +62579,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "sandbox/package.json",
-      "source_location": "L35",
+      "source_location": "L37",
       "weight": 1.0
     },
     {
@@ -61599,7 +62590,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "sandbox/package.json",
-      "source_location": "L36",
+      "source_location": "L38",
       "weight": 1.0
     },
     {
@@ -61610,7 +62601,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "sandbox/package.json",
-      "source_location": "L37",
+      "source_location": "L39",
       "weight": 1.0
     },
     {
@@ -61621,7 +62612,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "sandbox/package.json",
-      "source_location": "L38",
+      "source_location": "L40",
       "weight": 1.0
     },
     {
@@ -61632,7 +62623,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "sandbox/package.json",
-      "source_location": "L39",
+      "source_location": "L41",
       "weight": 1.0
     },
     {
@@ -61670,7 +62661,7 @@
     },
     {
       "source": "sandbox_package_scripts",
-      "target": "sandbox_package_scripts_demo",
+      "target": "sandbox_package_scripts_test_deployment_contract",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -61681,7 +62672,7 @@
     },
     {
       "source": "sandbox_package_scripts",
-      "target": "sandbox_package_scripts_demo_external",
+      "target": "sandbox_package_scripts_acceptance_deployment",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -61692,7 +62683,7 @@
     },
     {
       "source": "sandbox_package_scripts",
-      "target": "sandbox_package_scripts_demo_x402",
+      "target": "sandbox_package_scripts_demo",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -61703,7 +62694,7 @@
     },
     {
       "source": "sandbox_package_scripts",
-      "target": "sandbox_package_scripts_acceptance_clean_room",
+      "target": "sandbox_package_scripts_demo_external",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -61714,7 +62705,7 @@
     },
     {
       "source": "sandbox_package_scripts",
-      "target": "sandbox_package_scripts_doctor",
+      "target": "sandbox_package_scripts_demo_x402",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -61725,7 +62716,7 @@
     },
     {
       "source": "sandbox_package_scripts",
-      "target": "sandbox_package_scripts_mcp",
+      "target": "sandbox_package_scripts_acceptance_clean_room",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -61736,7 +62727,7 @@
     },
     {
       "source": "sandbox_package_scripts",
-      "target": "sandbox_package_scripts_x402_merchant",
+      "target": "sandbox_package_scripts_doctor",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -61747,7 +62738,7 @@
     },
     {
       "source": "sandbox_package_scripts",
-      "target": "sandbox_package_scripts_x402_probe",
+      "target": "sandbox_package_scripts_mcp",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -61758,7 +62749,7 @@
     },
     {
       "source": "sandbox_package_scripts",
-      "target": "sandbox_package_scripts_x402_wallet",
+      "target": "sandbox_package_scripts_x402_merchant",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -61769,7 +62760,7 @@
     },
     {
       "source": "sandbox_package_scripts",
-      "target": "sandbox_package_scripts_x402_probe_funded",
+      "target": "sandbox_package_scripts_x402_probe",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -61780,13 +62771,35 @@
     },
     {
       "source": "sandbox_package_scripts",
-      "target": "sandbox_package_scripts_x402_server",
+      "target": "sandbox_package_scripts_x402_wallet",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "sandbox/package.json",
       "source_location": "L26",
+      "weight": 1.0
+    },
+    {
+      "source": "sandbox_package_scripts",
+      "target": "sandbox_package_scripts_x402_probe_funded",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "sandbox/package.json",
+      "source_location": "L27",
+      "weight": 1.0
+    },
+    {
+      "source": "sandbox_package_scripts",
+      "target": "sandbox_package_scripts_x402_server",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "sandbox/package.json",
+      "source_location": "L28",
       "weight": 1.0
     },
     {
@@ -61901,7 +62914,7 @@
     },
     {
       "source": "sandbox_readme",
-      "target": "sandbox_readme_bu2_reference_server_v0_13_x402_sandbox_v0_5",
+      "target": "sandbox_readme_bu2_reference_server_v0_14_x402_sandbox_v0_5",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -61911,73 +62924,73 @@
       "weight": 1.0
     },
     {
-      "source": "sandbox_readme_bu2_reference_server_v0_13_x402_sandbox_v0_5",
+      "source": "sandbox_readme_bu2_reference_server_v0_14_x402_sandbox_v0_5",
       "target": "sandbox_readme_\u6c99\u76d2\u8c03\u8bd5\u7aef\u70b9",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "sandbox/README.md",
-      "source_location": "L148",
+      "source_location": "L150",
       "weight": 1.0
     },
     {
-      "source": "sandbox_readme_bu2_reference_server_v0_13_x402_sandbox_v0_5",
+      "source": "sandbox_readme_bu2_reference_server_v0_14_x402_sandbox_v0_5",
       "target": "sandbox_readme_\u5b8c\u6574_agent_\u4ea4\u6613\u6f14\u793a",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "sandbox/README.md",
-      "source_location": "L18",
+      "source_location": "L20",
       "weight": 1.0
     },
     {
-      "source": "sandbox_readme_bu2_reference_server_v0_13_x402_sandbox_v0_5",
+      "source": "sandbox_readme_bu2_reference_server_v0_14_x402_sandbox_v0_5",
       "target": "sandbox_readme_\u5916\u90e8_buyer_seller_agent_\u4e0e_mcp",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "sandbox/README.md",
-      "source_location": "L28",
+      "source_location": "L30",
       "weight": 1.0
     },
     {
-      "source": "sandbox_readme_bu2_reference_server_v0_13_x402_sandbox_v0_5",
+      "source": "sandbox_readme_bu2_reference_server_v0_14_x402_sandbox_v0_5",
       "target": "sandbox_readme_\u63a5\u5165\u8bca\u65ad",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "sandbox/README.md",
-      "source_location": "L47",
+      "source_location": "L49",
       "weight": 1.0
     },
     {
-      "source": "sandbox_readme_bu2_reference_server_v0_13_x402_sandbox_v0_5",
+      "source": "sandbox_readme_bu2_reference_server_v0_14_x402_sandbox_v0_5",
       "target": "sandbox_readme_\u4e09\u8def\u5f84_clean_room_\u9a8c\u6536",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "sandbox/README.md",
-      "source_location": "L62",
+      "source_location": "L64",
       "weight": 1.0
     },
     {
-      "source": "sandbox_readme_bu2_reference_server_v0_13_x402_sandbox_v0_5",
+      "source": "sandbox_readme_bu2_reference_server_v0_14_x402_sandbox_v0_5",
       "target": "sandbox_readme_\u6d4b\u8bd5",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "sandbox/README.md",
-      "source_location": "L72",
+      "source_location": "L74",
       "weight": 1.0
     },
     {
-      "source": "sandbox_readme_bu2_reference_server_v0_13_x402_sandbox_v0_5",
+      "source": "sandbox_readme_bu2_reference_server_v0_14_x402_sandbox_v0_5",
       "target": "sandbox_readme_\u542f\u52a8",
       "relation": "contains",
       "_origin": "ast",
@@ -61988,14 +63001,14 @@
       "weight": 1.0
     },
     {
-      "source": "sandbox_readme_bu2_reference_server_v0_13_x402_sandbox_v0_5",
+      "source": "sandbox_readme_bu2_reference_server_v0_14_x402_sandbox_v0_5",
       "target": "sandbox_readme_x402_\u6c99\u76d2\u5546\u6237",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "sandbox/README.md",
-      "source_location": "L80",
+      "source_location": "L82",
       "weight": 1.0
     },
     {
@@ -62006,7 +63019,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "sandbox/README.md",
-      "source_location": "L102",
+      "source_location": "L104",
       "weight": 1.0
     },
     {
@@ -62017,7 +63030,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "sandbox/README.md",
-      "source_location": "L125",
+      "source_location": "L127",
       "weight": 1.0
     },
     {
@@ -62028,7 +63041,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "sandbox/README.md",
-      "source_location": "L136",
+      "source_location": "L138",
       "weight": 1.0
     },
     {
@@ -63019,6 +64032,17 @@
       "confidence_score": 1.0,
       "source_file": "verification.md",
       "source_location": "L483",
+      "weight": 1.0
+    },
+    {
+      "source": "verification_readme_\u91cd\u6784\u4e0e\u5355\u4eba_r3_\u6cbb\u7406\u9a8c\u8bc1",
+      "target": "verification_env_04_\u9694\u79bb_sandbox_live_\u90e8\u7f72\u5355\u5143\u9a8c\u8bc1",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "verification.md",
+      "source_location": "L505",
       "weight": 1.0
     },
     {
@@ -64426,6 +65450,17 @@
       "weight": 1.0
     },
     {
+      "source": "deploy_readme",
+      "target": "docs_03_technical_environment_deployment_units_v1",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "deploy/README.md",
+      "source_location": "L35",
+      "weight": 1.0
+    },
+    {
       "source": "docs_02_product_formal_user_test_plan",
       "target": "docs_02_product_transaction_p0_acceptance",
       "relation": "references",
@@ -64604,6 +65639,17 @@
     {
       "source": "docs_03_technical_environment_registry_and_chain_isolation_v1",
       "target": "docs_03_technical_environment_client_and_receipt_contract_v1",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/03-technical/ENVIRONMENT_REGISTRY_AND_CHAIN_ISOLATION_V1.md",
+      "source_location": "L86",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_03_technical_environment_registry_and_chain_isolation_v1",
+      "target": "docs_03_technical_environment_deployment_units_v1",
       "relation": "references",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -64845,7 +65891,7 @@
     },
     {
       "source": "docs_03_technical_readme",
-      "target": "docs_03_technical_x402_test_wallet",
+      "target": "docs_03_technical_environment_deployment_units_v1",
       "relation": "references",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -64856,7 +65902,7 @@
     },
     {
       "source": "docs_03_technical_readme",
-      "target": "docs_03_technical_x402_live_settlement_evidence",
+      "target": "deploy_readme",
       "relation": "references",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -64867,7 +65913,7 @@
     },
     {
       "source": "docs_03_technical_readme",
-      "target": "docs_03_technical_phase0_epic1_external_agent_integration",
+      "target": "docs_03_technical_x402_test_wallet",
       "relation": "references",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -64878,7 +65924,7 @@
     },
     {
       "source": "docs_03_technical_readme",
-      "target": "docs_03_technical_phase0_epic2_developer_integration_scale",
+      "target": "docs_03_technical_x402_live_settlement_evidence",
       "relation": "references",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -64889,7 +65935,7 @@
     },
     {
       "source": "docs_03_technical_readme",
-      "target": "docs_03_technical_phase0_epic3_external_pilot_evidence",
+      "target": "docs_03_technical_phase0_epic1_external_agent_integration",
       "relation": "references",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -64900,13 +65946,35 @@
     },
     {
       "source": "docs_03_technical_readme",
-      "target": "docs_03_technical_phase0_transaction_trust_gate",
+      "target": "docs_03_technical_phase0_epic2_developer_integration_scale",
       "relation": "references",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/03-technical/README.md",
       "source_location": "L35",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_03_technical_readme",
+      "target": "docs_03_technical_phase0_epic3_external_pilot_evidence",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/03-technical/README.md",
+      "source_location": "L36",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_03_technical_readme",
+      "target": "docs_03_technical_phase0_transaction_trust_gate",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/03-technical/README.md",
+      "source_location": "L37",
       "weight": 1.0
     },
     {
@@ -64923,6 +65991,17 @@
     {
       "source": "docs_03_technical_system_environments_v1",
       "target": "docs_03_technical_environment_client_and_receipt_contract_v1",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/03-technical/SYSTEM_ENVIRONMENTS_V1.md",
+      "source_location": "L166",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_03_technical_system_environments_v1",
+      "target": "docs_03_technical_environment_deployment_units_v1",
       "relation": "references",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -65016,7 +66095,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "sandbox/README.md",
-      "source_location": "L134",
+      "source_location": "L136",
+      "weight": 1.0
+    },
+    {
+      "source": "sandbox_readme",
+      "target": "deploy_readme",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "sandbox/README.md",
+      "source_location": "L16",
       "weight": 1.0
     },
     {
@@ -65027,7 +66117,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "sandbox/README.md",
-      "source_location": "L168",
+      "source_location": "L170",
       "weight": 1.0
     },
     {
@@ -65038,7 +66128,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "sandbox/README.md",
-      "source_location": "L45",
+      "source_location": "L47",
       "weight": 1.0
     },
     {
@@ -65049,7 +66139,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "sandbox/README.md",
-      "source_location": "L45",
+      "source_location": "L47",
       "weight": 1.0
     },
     {
@@ -65060,7 +66150,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "sandbox/README.md",
-      "source_location": "L60",
+      "source_location": "L62",
       "weight": 1.0
     },
     {
@@ -65071,7 +66161,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "sandbox/README.md",
-      "source_location": "L70",
+      "source_location": "L72",
       "weight": 1.0
     },
     {
@@ -65082,7 +66172,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "sandbox/README.md",
-      "source_location": "L70",
+      "source_location": "L72",
       "weight": 1.0
     },
     {
@@ -65299,6 +66389,18 @@
       "context": "call",
       "source_file": "sandbox/x402.test.mjs",
       "source_location": "L103",
+      "weight": 1.0
+    },
+    {
+      "source": "deploy_deployment_contract_test_resolvedcompose",
+      "target": "sandbox_x402_adapter_digest",
+      "relation": "indirect_call",
+      "_origin": "ast",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "context": "collection",
+      "source_file": "deploy/deployment-contract.test.mjs",
+      "source_location": "L19",
       "weight": 1.0
     },
     {
@@ -65701,5 +66803,5 @@
       "source_file": "README.md"
     }
   ],
-  "built_at_commit": "2353e9501a51ff94cf8b48313ef288a21df586a8"
+  "built_at_commit": "d9c65b843e7898dbad51e7d3ed812c6af2645ef4"
 }

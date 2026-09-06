@@ -2,7 +2,7 @@
 
 日期：2026-09-06
 执行者：Codex
-状态：F01 / ENV-01 已由 PR #18 批准；ENV-02 已由 PR #19 批准；ENV-03 已实现，等待 R2 独立人工审查
+状态：F01 / ENV-01、ENV-02、ENV-03 已由 PR #18/#19/#20 批准；ENV-04 已实现，等待 R2 独立人工审查
 适用范围：BU2 服务、API、SDK、MCP、Doctor、Receipt、部署与运营
 
 ## 1. 决策
@@ -83,7 +83,7 @@ ENV-02 必须在启动、RPC 切换和每次签名边界验证：配置环境、
 
 ## 7. 环境自描述与客户端预检
 
-ENV-03 应冻结版本化环境信息接口，建议为 `GET /v1/environment`，最小返回：
+ENV-03 已冻结版本化环境信息接口 `GET /v1/environment`，最小返回：
 
 ```json
 {
@@ -163,7 +163,7 @@ PR local simulation / contract verification
 
 F01/ENV-01 只冻结决策，不创建云资源、不配置 DNS、不部署服务、不修改历史数据、不启用 Live，也不执行测试网或主网支付。若决策未获批准，删除本次新增入口并恢复上层文档即可；交易、账本、数据库、Adapter 和 Receipt 均无需回滚。
 
-ENV-02 已由 PR #19 合并，实现环境注册表、配置装载、Schema v8 数据库绑定、RPC/Signer/Provider 断言和 Live execution disabled；说明见 [环境注册表与链隔离 v1](ENVIRONMENT_REGISTRY_AND_CHAIN_ISOLATION_V1.md)。ENV-03 已实现 API/SDK/MCP/Doctor/Evidence 预检和 Receipt v0.3，等待 R2 审查；说明见 [客户端与 Receipt 环境契约 v1](ENVIRONMENT_CLIENT_AND_RECEIPT_CONTRACT_V1.md)。旧 Receipt 仍保留原始 legacy 值、签名字节和解释规则。
+ENV-02/03 已由 PR #19/#20 合并，实现环境注册表、配置装载、Schema v8 数据库绑定、RPC/Signer/Provider 断言、API/SDK/MCP/Doctor/Evidence 预检和 Receipt v0.3；说明见[环境注册表与链隔离 v1](ENVIRONMENT_REGISTRY_AND_CHAIN_ISOLATION_V1.md)及[客户端与 Receipt 环境契约 v1](ENVIRONMENT_CLIENT_AND_RECEIPT_CONTRACT_V1.md)。ENV-04 已实现同一不可变镜像、两个隔离且 disarmed 的本地容器部署单元，等待 R2 审查；说明见 [ENV-04 隔离部署单元 v1](ENVIRONMENT_DEPLOYMENT_UNITS_V1.md)。旧 Receipt 仍保留原始 legacy 值、签名字节和解释规则。
 
 ## 参考来源
 
