@@ -60,6 +60,7 @@ test("full payment flow separates authorization, reservation, delivery, and sett
       signature_valid: verification.signature_valid,
       issuer_trusted: verification.issuer_trusted,
       settlement_confirmed: verification.settlement_confirmed,
+      environment_valid: verification.environment_valid,
       schema_version: verification.schema_version,
       canonicalization_version: verification.canonicalization_version,
     },
@@ -68,13 +69,14 @@ test("full payment flow separates authorization, reservation, delivery, and sett
       signature_valid: true,
       issuer_trusted: true,
       settlement_confirmed: true,
-      schema_version: "0.2",
+      environment_valid: true,
+      schema_version: "0.3",
       canonicalization_version: "RFC8785-JCS-1",
     },
   );
 });
 
-test("Receipt v0.2 rejects tampering of every signed payment and delivery binding", async () => {
+test("Receipt v0.3 rejects tampering of every signed payment, delivery, and environment binding", async () => {
   const sandbox = new Bu2Sandbox();
   const { intent } = await createReviewIntent(sandbox);
   const authorized = await sandbox.decideAuthorization(
@@ -100,6 +102,9 @@ test("Receipt v0.2 rejects tampering of every signed payment and delivery bindin
     ["payment_mandate_id", "mdt_attacker"],
     ["delivery_evidence_hash", "sha256:attacker"],
     ["environment", "mainnet"],
+    ["execution_backend", "x402"],
+    ["chain_id", 84532],
+    ["receipt_issuer_id", "bu2-reference-server:sandbox"],
     ["provider_reference", "provider_attacker"],
   ];
   for (const [field, value] of tamperedValues) {
@@ -136,6 +141,40 @@ test("Receipt verification fails closed when the issuer is unknown", async () =>
   assert.equal(verification.signature_valid, true);
   assert.equal(verification.issuer_trusted, false);
   assert.equal(verification.settlement_confirmed, true);
+  assert.equal(verification.valid, false);
+});
+
+test("E-T04 Receipt verification rejects a signed Receipt from another environment", async () => {
+  const sandbox = new Bu2Sandbox();
+  const { intent } = await createReviewIntent(sandbox);
+  const authorized = await sandbox.decideAuthorization(
+    intent.id,
+    { decision: "authorize" },
+    "wrong-environment-authorize",
+  );
+  await sandbox.submitDelivery(
+    authorized.transaction_id,
+    { type: "dataset_access", evidence_hash: "sha256:wrong-environment" },
+    "wrong-environment-delivery",
+  );
+  const { receipt } = await sandbox.settle(
+    authorized.transaction_id,
+    {},
+    "wrong-environment-settle",
+  );
+  sandbox.environmentConfig = {
+    environment_contract_version: "1.0",
+    environment: "sandbox",
+    payment_adapter: "x402",
+    chain_id: 84532,
+    network: "eip155:84532",
+    execution_status: "execution_enabled",
+  };
+  const verification = sandbox.verifyReceipt(receipt.id);
+  assert.equal(verification.signature_valid, true);
+  assert.equal(verification.issuer_trusted, true);
+  assert.equal(verification.settlement_confirmed, true);
+  assert.equal(verification.environment_valid, false);
   assert.equal(verification.valid, false);
 });
 

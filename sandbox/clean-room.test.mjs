@@ -9,7 +9,9 @@ function pathResult(path) {
   return {
     path,
     status: "passed",
-    environment: "simulation",
+    environment: "local",
+    environment_contract_version: "1.0",
+    execution_backend: "simulated",
     started_at: "2026-09-06T00:00:00.000Z",
     finished_at: "2026-09-06T00:00:01.000Z",
     elapsed_ms: 1000,
@@ -28,9 +30,11 @@ function pathResult(path) {
 
 function evidence() {
   return {
-    schema_version: "0.1.0",
+    schema_version: "0.2.0",
     generated_at: "2026-09-06T00:00:01.000Z",
-    environment: "simulation",
+    environment: "local",
+    environment_contract_version: "1.0",
+    execution_backend: "simulated",
     max_elapsed_ms: 900000,
     paths: [pathResult("http"), pathResult("sdk"), pathResult("mcp")],
     summary: { total: 3, passed: 3, failed: 0 },

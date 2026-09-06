@@ -1,8 +1,8 @@
-# BU2 开发者接入诊断 v0.1 / Developer Integration Doctor v0.1
+# BU2 开发者接入诊断 v0.2 / Developer Integration Doctor v0.2
 
 日期：2026-09-06
 执行者：Codex
-适用环境：Phase 0 Simulation / Base Sepolia Testnet
+适用环境：Phase 0 Local / Sandbox / Live（Live execution disabled）
 
 ## 中文
 
@@ -24,7 +24,8 @@ npm --prefix sandbox start
 
 ```bash
 BU2_ENDPOINT=http://127.0.0.1:3100 \
-BU2_ENVIRONMENT=simulation \
+BU2_ENVIRONMENT=local \
+BU2_LOCAL_DEVELOPMENT=true \
 npm --prefix sandbox run doctor
 ```
 
@@ -47,10 +48,10 @@ npm --prefix sandbox run doctor -- --receipt-id rcpt_...
 | 阶段 | 检查内容 | 是否产生资金动作 |
 | --- | --- | --- |
 | `node_runtime` | Node.js 满足 `>=22.13.0` | 否 |
-| `configuration` | endpoint 合法，环境为 `simulation` 或 `testnet` | 否 |
-| `endpoint` | `/health` 可达且属于 BU2 Reference Server | 否 |
-| `environment` | 配置与 Server 报告环境一致 | 否 |
-| `contract` | API v0.1.4、`/v1` 与 MCP v0.1.0 兼容 | 否 |
+| `configuration` | endpoint 合法，环境为 `local/sandbox/live`；Local 明确确认 | 否 |
+| `endpoint` | `/v1/environment` 可达且属于 BU2 Reference Server | 否 |
+| `environment` | 环境、链、执行后端、execution status 与 Receipt issuer 一致 | 否 |
+| `contract` | API v0.2.0、environment v1.0、Receipt v0.3 与 MCP v0.2.0 兼容 | 否 |
 | `mcp_startup` | 真实 stdio initialize、能力握手和 6 个冻结工具一致 | 否 |
 | `receipt_verification` | 验证工具可用，或对显式 Receipt ID 执行只读验证 | 否 |
 
@@ -97,7 +98,8 @@ Run the fully English human-readable doctor:
 
 ```bash
 BU2_ENDPOINT=http://127.0.0.1:3100 \
-BU2_ENVIRONMENT=simulation \
+BU2_ENVIRONMENT=local \
+BU2_LOCAL_DEVELOPMENT=true \
 npm --prefix sandbox run doctor -- --language en
 ```
 
@@ -120,10 +122,10 @@ Without `--receipt-id`, the doctor only confirms that MCP exposes and can call `
 | Stage | Check | Payment mutation |
 | --- | --- | --- |
 | `node_runtime` | Node.js satisfies `>=22.13.0` | No |
-| `configuration` | Endpoint is valid and environment is `simulation` or `testnet` | No |
-| `endpoint` | `/health` is reachable and identifies a BU2 Reference Server | No |
-| `environment` | Configured and server-reported environments match | No |
-| `contract` | API v0.1.4, `/v1`, and MCP v0.1.0 are compatible | No |
+| `configuration` | Endpoint is valid; environment is `local/sandbox/live`; Local is explicit | No |
+| `endpoint` | `/v1/environment` identifies a BU2 Reference Server | No |
+| `environment` | Environment, chain, backend, execution status, and Receipt issuer match | No |
+| `contract` | API v0.2.0, environment v1.0, Receipt v0.3, and MCP v0.2.0 are compatible | No |
 | `mcp_startup` | Real stdio initialize, capability handshake, and six frozen tools match | No |
 | `receipt_verification` | Verification tool is available, or a supplied Receipt ID is verified read-only | No |
 

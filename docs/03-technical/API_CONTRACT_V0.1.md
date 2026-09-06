@@ -1,6 +1,6 @@
-# BU2 Agent Payment API 契约 v0.1
+# BU2 Agent Payment API 契约 v0.2.0
 
-日期：2026-09-05
+日期：2026-09-06
 执行者：Codex  
 状态：Phase 0 Frozen（`/v1` 资源与行为契约）
 
@@ -16,6 +16,8 @@
 - 调用方可传入符合 `trc_` 规则的 `X-Trace-Id` 贯穿一次外部 Agent 执行；省略时由 BU2 生成，非法值失败关闭。
 - 所有外部请求体、路径参数和查询参数必须在 HTTP 边界运行时校验，未知字段失败关闭。
 - 资源 ID 由固定前缀和 ASCII 字母、数字、下划线或连字符组成，总长度不超过 255 字符。
+- `GET /v1/environment` 是客户端 mutation 前的版本化环境、链、执行后端、Receipt issuer 和 execution status 自描述入口。
+- 对外环境只允许 `sandbox/live`；本机模拟使用显式 `local` 开发模式。任何跨环境不匹配都必须在 mutation 前失败关闭。
 
 ## 2. 稳定资源
 
@@ -129,17 +131,20 @@ Receipt 至少覆盖：
 - Settlement ID、支付通道引用和时间；
 - Receipt 版本、签名算法、签名与验证键 ID。
 
-Phase 0 的新签发凭证固定为 Receipt v0.2，并使用 RFC 8785 JCS
+Phase 0 的新签发凭证固定为 Receipt v0.3，并使用 RFC 8785 JCS
 （`canonicalization_version=RFC8785-JCS-1`）递归规范化全部签名字段。签名范围必须包含金额与币种、环境、支付通道、Provider 引用、收付款双方、Mandate、交付证据和结算时间；任一字段改变都必须导致签名验证失败。
+
+v0.3 还必须签名绑定 `environment_contract_version`、`environment`、`execution_backend`、`chain_id`、`network` 与 `receipt_issuer_id`。
 
 验证结果不得只返回单一的密码学判断，而要区分：
 
 - `signature_valid`：签名与完整 payload 是否匹配；
 - `issuer_trusted`：`verification_key_id` 是否对应 BU2 持久化信任的公钥；
 - `settlement_confirmed`：Receipt 是否与当前已结算 Transaction、金额和 Provider 引用一致；
-- `valid`：仅当 v0.2 且以上三项都为 `true` 时为 `true`。
+- `environment_valid`：Receipt 的服务环境、链、执行后端和 issuer 是否与当前受信环境一致；
+- `valid`：仅当 schema 受支持且以上四项都为 `true` 时为 `true`。
 
-v0.1 仅保留读取与解释能力，使用 `BU2-LEGACY-0.1` 标记，不得作为新的可信支付凭证。历史 v0.2 公钥必须持久保存；服务重启或签发密钥轮换后，已签发 Receipt 仍应可验证。私钥不写入账本。
+v0.1/v0.2 只保留历史读取与 schema registry 验证，不得作为新的签发版本。旧 `simulation/testnet` 字段、原始签名字节和 canonicalization 算法不重写、不重签；服务重启或签发密钥轮换后，已签发 Receipt 仍应可验证。私钥不写入账本。
 
 ## 9. 错误模型
 
@@ -156,7 +161,7 @@ v0.1 仅保留读取与解释能力，使用 `BU2-LEGACY-0.1` 标记，不得作
 }
 ```
 
-P0 稳定错误类型：`validation_error`、`authentication_error`、`mandate_denied`、`insufficient_funds`、`idempotency_conflict`、`invalid_state_transition`、`resource_not_found`、`adapter_error`、`provider_unknown`。
+P0 稳定错误类型：`validation_error`、`authentication_error`、`configuration_error`、`policy_error`、`mandate_denied`、`insufficient_funds`、`idempotency_conflict`、`invalid_state_transition`、`resource_not_found`、`adapter_error`、`provider_unknown`。
 
 稳定校验错误码包括：`invalid_request_body`、`invalid_resource_id`、`invalid_query_parameters`、`invalid_limit`、`invalid_cursor`、`invalid_trace_id`、`missing_idempotency_key`、`invalid_json`、`unsupported_media_type` 和 `request_body_too_large`。
 
@@ -219,7 +224,7 @@ Webhook 使用事件 ID 去重；接收方应按至少一次投递处理，不�
 
 - `/v1` 冻结资源名称、金额模型、状态语义和错误外壳。
 - Phase 0 冻结同时覆盖 Transaction 列表分页、`X-Request-Id`、`X-Trace-Id`、运行时校验与 Receipt verify 响应。
-- 认证方案仍是生产准入的一部分；当前 Reference Server 只绑定本机 Sandbox/Testnet，不构成可公开部署的无认证支付服务。
+- 认证方案仍是生产准入的一部分；当前 Reference Server 只提供本地开发和受限测试网实现，不构成可公开部署的无认证支付服务。
 - x402、AP2、银行卡或稳定币只能作为 Adapter，不改变核心资源。
 - P0 不承诺真实托管、换汇、跨链、收益或开放市场。
 

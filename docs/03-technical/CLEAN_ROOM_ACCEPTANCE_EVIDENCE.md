@@ -3,13 +3,13 @@
 日期：2026-09-06<br>
 执行者：Codex<br>
 状态：本地自动化通过 · 待 R2 人工审查<br>
-适用环境：Phase 0 Simulation
+适用环境：Phase 0 Local simulated execution
 
 ## 1. 结论
 
-HTTP、TypeScript SDK 和 MCP 三条路径均从全新临时项目完成一笔独立 Simulation 交易，并获得可验证 Receipt。三条路径都低于 15 分钟门槛；执行前后相关 BU2 源码哈希一致，临时项目已自动删除。
+HTTP、TypeScript SDK 和 MCP 三条路径均从全新临时项目完成一笔独立 `local + simulated` 交易，并获得可验证 Receipt v0.3。三条路径都低于 15 分钟门槛；执行前后相关 BU2 源码哈希一致，临时项目已自动删除。
 
-The HTTP, TypeScript SDK, and MCP paths each completed an independent Simulation transaction from a fresh temporary project and produced a verifiable Receipt. All paths remained below the 15-minute threshold, the relevant BU2 source hashes were unchanged, and every temporary project was removed automatically.
+The HTTP, TypeScript SDK, and MCP paths each completed an independent `local + simulated` transaction from a fresh temporary project and produced a verifiable Receipt v0.3. All paths remained below the 15-minute threshold, the relevant BU2 source hashes were unchanged, and every temporary project was removed automatically.
 
 ## 2. 执行方式
 
@@ -29,15 +29,15 @@ npm --prefix sandbox run acceptance:clean-room
 
 ## 3. 实测结果
 
-执行时间：2026-09-06 02:41:02–02:41:04（Asia/Shanghai）<br>
-结果 Schema：`clean-room-evidence` v0.1.0<br>
+执行时间：2026-09-06 20:57:34–20:57:36（Asia/Shanghai）<br>
+结果 Schema：`clean-room-evidence` v0.2.0<br>
 总结果：3/3 通过
 
 | 路径 | 空项目 | 安装/连接方式 | 总耗时 | 交易状态 | Receipt | 验证 |
 | --- | --- | --- | ---: | --- | --- | --- |
-| HTTP | 是 | 原生 `fetch` | 101ms | `settled` | `rcpt_0b8c4ada737e4e2a` | `valid=true` |
-| SDK | 是 | 本地 `@bu2/sdk` tarball | 1472ms | `settled` | `rcpt_d5d04ae5e0d14ea6` | `valid=true` |
-| MCP | 是 | 官方 MCP Client + BU2 stdio | 609ms | `settled` | `rcpt_52eb5bd9cc4d4825` | `valid=true` |
+| HTTP | 是 | 原生 `fetch` | 103ms | `settled` | `rcpt_05ffed921ec140d6` | `valid=true` |
+| SDK | 是 | 本地 `@bu2/sdk` tarball | 1425ms | `settled` | `rcpt_3c6d717af330413a` | `valid=true` |
+| MCP | 是 | 官方 MCP Client + BU2 stdio | 610ms | `settled` | `rcpt_93ef495d145945ef` | `valid=true` |
 
 所有耗时都包含项目脚手架；SDK 路径还包含构建、打包和安装，MCP 路径包含官方 Client 安装和 initialize 握手。
 
@@ -56,7 +56,7 @@ There were no failed steps in the final run, so `failures` and `recovery_actions
 
 [`clean-room-evidence.schema.json`](clean-room-evidence.schema.json) 固定以下内容：
 
-- `simulation` 是唯一允许环境；
+- `local` 与 `simulated` 是唯一允许的服务环境和执行后端，并要求 environment contract v1.0；
 - 三条路径和 900000ms 上限；
 - 项目是否为空、源码是否变化、临时目录是否删除；
 - 最终交易状态、Receipt ID 与验证结果；
@@ -67,10 +67,10 @@ There were no failed steps in the final run, so `failures` and `recovery_actions
 
 ## 6. 金融与产品边界
 
-- Transaction Core、金额、状态机、PaymentMandate、Ledger、Webhook、Adapter 和 Receipt 签名契约均未修改。
-- HTTP、SDK 和 MCP 都调用同一 Agent Payment API v1；SDK/MCP 不拥有交易状态。
+- Transaction Core、金额、状态机、PaymentMandate、Ledger、Webhook 和 Adapter 资金语义均未修改；新 Receipt 使用 v0.3 环境签名绑定。
+- HTTP、SDK 和 MCP 都调用同一 Agent Payment API v0.2.0；SDK/MCP 不拥有交易状态。
 - 人工授权和 BU2 结算保持显式控制面操作，Agent MCP 工具不自批授权、不直接结算。
-- 结果只证明 Local Simulation 的重复接入能力，不构成公开分发、Production、Mainnet、真实资金、托管或法律合规证明。
+- 结果只证明 Local simulated execution 的重复接入能力，不构成公开分发、托管 Sandbox、Live/Mainnet、真实资金、托管或法律合规证明。
 
 ## 7. 恢复方式
 

@@ -39,11 +39,13 @@ const sourceFiles = [
   "packages/typescript-sdk/src/errors.ts",
   "packages/typescript-sdk/src/index.ts",
   "packages/typescript-sdk/src/types.ts",
+  "packages/typescript-sdk/src/generated/environment.ts",
   "sandbox/bin/bu2-mcp.mjs",
   "sandbox/external-agents/mcp-runtime.mjs",
   "sandbox/external-agents/mcp-server.mjs",
   "docs/03-technical/clean-room-evidence.schema.json",
   "docs/03-technical/contract-versions.json",
+  "docs/03-technical/environment-contract.json",
   "docs/03-technical/mcp-tools.json",
 ];
 
@@ -200,7 +202,8 @@ async function runCleanRoomPath(pathName) {
         cwd: projectDir,
         env: childEnvironment({
           BU2_ENDPOINT: running.url,
-          BU2_ENVIRONMENT: "simulation",
+          BU2_ENVIRONMENT: "local",
+          BU2_LOCAL_DEVELOPMENT: "true",
           BU2_RUN_ID: runId,
           ...(pathName === "mcp" ? { BU2_MCP_ENTRY: mcpEntry } : {}),
         }),
@@ -210,7 +213,7 @@ async function runCleanRoomPath(pathName) {
     steps.push(...clientResult.steps.map((item) => ({ ...item, name: `client.${item.name}` })));
     await step("verify_acceptance_result", async () => {
       assert.equal(clientResult.path, pathName);
-      assert.equal(clientResult.environment, "simulation");
+      assert.equal(clientResult.environment, "local");
       assert.equal(clientResult.transaction_status, "settled");
       assert.match(clientResult.receipt_id, /^rcpt_/);
       assert.equal(clientResult.receipt_valid, true);
@@ -242,7 +245,9 @@ async function runCleanRoomPath(pathName) {
   return {
     path: pathName,
     status: failures.length === 0 ? "passed" : "failed",
-    environment: "simulation",
+    environment: "local",
+    environment_contract_version: "1.0",
+    execution_backend: "simulated",
     started_at: startedAt.toISOString(),
     finished_at: finishedAt.toISOString(),
     elapsed_ms: elapsedMs,
@@ -262,8 +267,10 @@ async function runCleanRoomPath(pathName) {
 
 export function validateCleanRoomEvidence(evidence) {
   assert.equal(schemaValidator(evidence), true, JSON.stringify(schemaValidator.errors));
-  assert.equal(evidence.schema_version, "0.1.0");
-  assert.equal(evidence.environment, "simulation");
+  assert.equal(evidence.schema_version, "0.2.0");
+  assert.equal(evidence.environment, "local");
+  assert.equal(evidence.environment_contract_version, "1.0");
+  assert.equal(evidence.execution_backend, "simulated");
   assert.equal(evidence.max_elapsed_ms, MAX_ELAPSED_MS);
   assert.deepEqual(
     evidence.paths.map(({ path }) => path),
@@ -300,7 +307,9 @@ export async function runCleanRoomAcceptance() {
   const evidence = {
     schema_version: contractVersions.clean_room_evidence,
     generated_at: new Date().toISOString(),
-    environment: "simulation",
+    environment: "local",
+    environment_contract_version: "1.0",
+    execution_backend: "simulated",
     max_elapsed_ms: MAX_ELAPSED_MS,
     paths,
     summary: {

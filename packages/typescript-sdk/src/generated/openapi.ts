@@ -1,4 +1,24 @@
 export interface paths {
+    "/environment": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        /** Read the server-authored environment and execution contract before mutations */
+        get: operations["getEnvironment"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/quotes": {
         parameters: {
             query?: never;
@@ -323,6 +343,45 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        EnvironmentInfo: {
+            /** @constant */
+            service: "bu2-reference-server";
+            /** @enum {string} */
+            environment: "local" | "sandbox" | "live";
+            /** @constant */
+            environment_contract_version: "1.0";
+            /** @enum {integer|null} */
+            chain_id: null | 84532 | 8453;
+            /** @enum {string|null} */
+            network: null | "eip155:84532" | "eip155:8453";
+            /** @enum {string} */
+            execution_backend: "simulated" | "x402";
+            /** @constant */
+            api_contract_version: "0.2.0";
+            mcp_contract_versions: "0.2.0"[];
+            receipt_schema_versions: ("0.2" | "0.3")[];
+            /** @enum {string} */
+            execution_status: "execution_disabled" | "execution_enabled";
+            public_capabilities: string[];
+            receipt_issuer: components["schemas"]["ReceiptIssuer"];
+        };
+        ReceiptIssuer: {
+            issuer_id: string;
+            /** @enum {string} */
+            environment: "local" | "sandbox" | "live";
+            verification_key_id: string;
+            /** @enum {string} */
+            signature_algorithm: "Ed25519";
+            public_key: string;
+        };
+        ReceiptEnvironmentInterpretation: {
+            /** @enum {string} */
+            source: "native" | "legacy" | "unknown";
+            original: string | null;
+            /** @enum {string|null} */
+            derived: "local" | "sandbox" | "live" | null;
+            evidence: string;
+        };
         CreateWebhookSubscription: {
             id: string;
             /** Format: uri */
@@ -574,9 +633,9 @@ export interface components {
         Receipt: {
             id: string;
             /** @enum {string} */
-            version: "0.2";
+            version: "0.2" | "0.3";
             /** @enum {string} */
-            schema_version: "0.2";
+            schema_version: "0.2" | "0.3";
             /** @enum {string} */
             canonicalization_version: "RFC8785-JCS-1";
             transaction_id: string;
@@ -593,7 +652,16 @@ export interface components {
             delivery_id: string;
             delivery_evidence_hash: string;
             /** @enum {string} */
-            environment: "simulation" | "testnet";
+            environment: "simulation" | "testnet" | "local" | "sandbox" | "live";
+            /** @enum {string} */
+            environment_contract_version?: "1.0";
+            /** @enum {string} */
+            execution_backend?: "simulated" | "x402";
+            /** @enum {integer|null} */
+            chain_id?: null | 84532 | 8453;
+            /** @enum {string|null} */
+            network?: null | "eip155:84532" | "eip155:8453";
+            receipt_issuer_id?: string;
             payment_channel: string;
             provider_reference: string | null;
             /** Format: date-time */
@@ -609,7 +677,7 @@ export interface components {
             readonly signature_valid?: boolean;
             readonly issuer_trusted?: boolean;
             readonly settlement_confirmed?: boolean;
-        };
+        } & unknown;
         Error: {
             error: {
                 type: string;
@@ -704,6 +772,32 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    getEnvironment: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Versioned environment information and current Receipt issuer */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "X-Trace-Id": components["headers"]["TraceId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvironmentInfo"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+        };
+    };
     createQuote: {
         parameters: {
             query?: never;
@@ -1071,8 +1165,10 @@ export interface operations {
                         signature_valid: boolean;
                         issuer_trusted: boolean;
                         settlement_confirmed: boolean;
+                        environment_valid: boolean;
+                        environment_interpretation: components["schemas"]["ReceiptEnvironmentInterpretation"];
                         /** @enum {string} */
-                        schema_version: "0.1" | "0.2";
+                        schema_version: "0.1" | "0.2" | "0.3";
                         /** @enum {string} */
                         canonicalization_version: "BU2-LEGACY-0.1" | "RFC8785-JCS-1";
                     };

@@ -44,10 +44,49 @@ test("HTTP reference server completes one signed agent payment", async (context)
   const health = await request(running.url, "/health");
   assert.equal(health.status, 200);
   assert.match(health.requestId, /^req_/);
-  assert.equal(health.body.api_contract_version, "0.1.4");
+  assert.equal(health.body.api_contract_version, "0.2.0");
   assert.equal(health.body.api_base_path, "/v1");
-  assert.deepEqual(health.body.mcp_contract_versions, ["0.1.0"]);
-  assert.equal(health.body.environment, "simulation");
+  assert.deepEqual(health.body.mcp_contract_versions, ["0.2.0"]);
+  assert.equal(health.body.environment_contract_version, "1.0");
+  assert.equal(health.body.environment, "local");
+  assert.equal(health.body.execution_status, "execution_enabled");
+  assert.equal(health.body.payment_execution_readiness, "ready");
+  for (const privateField of [
+    "persistence",
+    "ledger_events",
+    "adapter",
+    "webhook_outbox",
+    "adapter_operations",
+  ]) {
+    assert.equal(Object.hasOwn(health.body, privateField), false);
+  }
+
+  const environment = await request(running.url, "/v1/environment");
+  assert.equal(environment.status, 200);
+  assert.deepEqual(
+    {
+      environment: environment.body.environment,
+      environment_contract_version: environment.body.environment_contract_version,
+      chain_id: environment.body.chain_id,
+      network: environment.body.network,
+      execution_backend: environment.body.execution_backend,
+      api_contract_version: environment.body.api_contract_version,
+      execution_status: environment.body.execution_status,
+      receipt_schema_versions: environment.body.receipt_schema_versions,
+      issuer_environment: environment.body.receipt_issuer.environment,
+    },
+    {
+      environment: "local",
+      environment_contract_version: "1.0",
+      chain_id: null,
+      network: null,
+      execution_backend: "simulated",
+      api_contract_version: "0.2.0",
+      execution_status: "execution_enabled",
+      receipt_schema_versions: ["0.2", "0.3"],
+      issuer_environment: "local",
+    },
+  );
 
   const quote = await request(running.url, "/v1/quotes", {
     method: "POST",
@@ -131,6 +170,7 @@ test("HTTP reference server completes one signed agent payment", async (context)
       signature_valid: verification.body.signature_valid,
       issuer_trusted: verification.body.issuer_trusted,
       settlement_confirmed: verification.body.settlement_confirmed,
+      environment_valid: verification.body.environment_valid,
       schema_version: verification.body.schema_version,
       canonicalization_version: verification.body.canonicalization_version,
     },
@@ -139,7 +179,8 @@ test("HTTP reference server completes one signed agent payment", async (context)
       signature_valid: true,
       issuer_trusted: true,
       settlement_confirmed: true,
-      schema_version: "0.2",
+      environment_valid: true,
+      schema_version: "0.3",
       canonicalization_version: "RFC8785-JCS-1",
     },
   );
@@ -307,9 +348,29 @@ test("HTTP server exposes an explicit x402 adapter mode without a signer", async
       ),
   );
   const health = await request(running.url, "/health");
-  assert.equal(health.body.version, "0.12.0");
-  assert.equal(health.body.adapter, "x402_exact_base_sepolia");
-  assert.equal(health.body.environment, "testnet");
+  assert.equal(health.body.version, "0.13.0");
+  assert.equal(health.body.environment, "sandbox");
+  assert.equal(health.body.execution_status, "execution_disabled");
+  assert.equal(health.body.payment_execution_readiness, "disabled");
+  const environment = await request(running.url, "/v1/environment");
+  assert.equal(environment.body.chain_id, 84532);
+  assert.equal(environment.body.network, "eip155:84532");
+  assert.equal(environment.body.execution_backend, "x402");
+  assert.equal(environment.body.receipt_issuer.environment, "sandbox");
+  const denied = await request(running.url, "/v1/quotes", {
+    method: "POST",
+    key: "sandbox-disabled-quote",
+    body: {
+      seller_agent_id: "agt_disabled_seller",
+      payee_account_id: "acct_disabled_seller",
+      item: { name: "Disabled", delivery_type: "dataset_access" },
+      amount: { value: 100, currency: "USD" },
+      expires_at: "2026-09-12T08:00:00Z",
+    },
+  });
+  assert.equal(denied.status, 503);
+  assert.equal(denied.body.error.code, "environment_execution_disabled");
+  assert.equal(running.sandbox.quotes.size, 0);
   assert.equal(running.environmentConfig.environment, "sandbox");
   assert.equal(running.environmentConfig.execution_status, "execution_disabled");
   assert.equal(running.ledger.environmentMetadata().environment, "sandbox");
@@ -427,10 +488,13 @@ test("HTTP observability correlates transaction, adapter, outbox, and webhook de
 
   const health = await request(running.url, "/health");
   assert.equal(health.body.operational_status, "healthy");
-  assert.equal(health.body.webhook_outbox.pending, 0);
-  assert.ok(health.body.webhook_outbox.delivered > 0);
-  assert.ok(health.body.webhook_outbox.last_successful_delivery_at);
-  assert.equal(health.body.adapter_operations.unknown_results, 0);
+  assert.equal(Object.hasOwn(health.body, "webhook_outbox"), false);
+  assert.equal(Object.hasOwn(health.body, "adapter_operations"), false);
+  const internalHealth = ledger.healthSnapshot();
+  assert.equal(internalHealth.webhook_outbox.pending, 0);
+  assert.ok(internalHealth.webhook_outbox.delivered > 0);
+  assert.ok(internalHealth.webhook_outbox.last_successful_delivery_at);
+  assert.equal(internalHealth.adapter_operations.unknown_results, 0);
 
   const invalidTrace = await request(running.url, "/health", {
     traceId: "invalid-trace",

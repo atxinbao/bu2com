@@ -55,11 +55,12 @@ const transport = new StdioClientTransport({
   env: {
     ...getDefaultEnvironment(),
     BU2_ENDPOINT: endpoint,
-    BU2_ENVIRONMENT: "simulation",
+    BU2_ENVIRONMENT: "local",
+    BU2_LOCAL_DEVELOPMENT: "true",
   },
   stderr: "pipe",
 });
-const client = new Client({ name: "bu2-clean-room-mcp", version: "0.1.0" });
+const client = new Client({ name: "bu2-clean-room-mcp", version: "0.2.0" });
 const startedAt = Date.now();
 
 async function callTool(name, args) {
@@ -76,8 +77,10 @@ try {
   await step("initialize", () => client.connect(transport));
   const capability = client.getServerCapabilities()?.experimental?.["com.bu2.agent-payments"];
   assert.equal(client.getServerVersion()?.name, "bu2-agent-payments");
-  assert.equal(client.getServerVersion()?.version, "0.1.0");
-  assert.equal(capability?.environment, "simulation");
+  assert.equal(client.getServerVersion()?.version, "0.2.0");
+  assert.equal(capability?.environment, "local");
+  assert.equal(capability?.environment_contract_version, "1.0");
+  assert.equal(capability?.local_development, true);
   assert.equal(capability?.automatic_mutation_retry, false);
   assert.equal(capability?.agent_authorization_tool, false);
   assert.equal(capability?.agent_settlement_tool, false);
@@ -115,7 +118,7 @@ try {
       request(`/v1/payment_intents/${intent.id}/authorization`, {
         method: "POST",
         idempotencyKey: `clean-mcp-authorize-${runId}`,
-        body: { decision: "authorize", reason: "Explicit local Simulation acceptance" },
+        body: { decision: "authorize", reason: "Explicit local simulated acceptance" },
       }),
     );
   }
@@ -148,7 +151,7 @@ try {
   console.log(
     JSON.stringify({
       path: "mcp",
-      environment: "simulation",
+      environment: "local",
       transaction_status: settlement.transaction.status,
       receipt_id: receipt.id,
       receipt_valid: verification.valid,

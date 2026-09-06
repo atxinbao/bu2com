@@ -13,7 +13,10 @@ import {
   runDoctor,
   runDoctorCli,
 } from "./doctor.mjs";
-import { Bu2McpCompatibilityError } from "./external-agents/mcp-runtime.mjs";
+import {
+  Bu2McpCompatibilityError,
+  expectedEnvironmentInfo,
+} from "./external-agents/mcp-runtime.mjs";
 import { listen } from "./server.mjs";
 
 const schema = JSON.parse(
@@ -21,6 +24,24 @@ const schema = JSON.parse(
 );
 const validate = addFormats(new Ajv({ allErrors: true })).compile(schema);
 const doctorPath = fileURLToPath(new URL("./bin/bu2-doctor.mjs", import.meta.url));
+
+const localEnvironment = Object.freeze({
+  BU2_ENVIRONMENT: "local",
+  BU2_LOCAL_DEVELOPMENT: "true",
+});
+
+function localEnvironmentInfo(overrides = {}) {
+  return {
+    service: "bu2-reference-server",
+    mcp_contract_versions: ["0.2.0"],
+    ...expectedEnvironmentInfo("local"),
+    receipt_issuer: {
+      ...expectedEnvironmentInfo("local").receipt_issuer,
+      verification_key_id: "key_doctor_local",
+    },
+    ...overrides,
+  };
+}
 
 function assertValid(result) {
   assert.equal(validate(result), true, JSON.stringify(validate.errors));
@@ -116,11 +137,13 @@ test("doctor checks a real endpoint and MCP session before reporting Receipt cap
   const running = await listen({ port: 0, dbPath: ":memory:" });
   context.after(() => closeRunning(running));
   const result = await runDoctor({
-    environment: { BU2_ENDPOINT: running.url, BU2_ENVIRONMENT: "simulation" },
+    environment: { BU2_ENDPOINT: running.url, ...localEnvironment },
   });
   assertValid(result);
   assert.equal(result.result, "passed");
-  assert.equal(result.environment, "simulation");
+  assert.equal(result.environment, "local");
+  assert.equal(result.environment_contract.version, "1.0");
+  assert.equal(result.environment_contract.execution_backend, "simulated");
   assert.equal(result.receipt_verification, "capability_available");
   assert.ok(result.checks.every(({ result_category }) => result_category === "passed"));
 });
@@ -130,7 +153,7 @@ test("doctor verifies an explicitly supplied real Receipt through MCP", async (c
   context.after(() => closeRunning(running));
   const receiptId = await createReceipt(running.sandbox);
   const result = await runDoctor({
-    environment: { BU2_ENDPOINT: running.url, BU2_ENVIRONMENT: "simulation" },
+    environment: { BU2_ENDPOINT: running.url, ...localEnvironment },
     receiptId,
   });
   assertValid(result);
@@ -156,7 +179,7 @@ test("doctor blocks all network checks when Node is unsupported", async () => {
   assert.equal(result.versions.minimum_node, MINIMUM_NODE_VERSION);
 });
 
-test("doctor rejects Mainnet configuration without leaking configured sensitive values", async () => {
+test("doctor rejects legacy network-name configuration without leaking sensitive values", async () => {
   const result = await runDoctor({
     environment: {
       BU2_ENDPOINT: "https://user:private-value@example.com",
@@ -175,7 +198,7 @@ test("doctor classifies endpoint failure and preserves only valid correlation id
   const result = await runDoctor({
     environment: {
       BU2_ENDPOINT: "http://127.0.0.1:3100",
-      BU2_ENVIRONMENT: "simulation",
+      ...localEnvironment,
     },
     preflight: async () => {
       throw new Bu2McpCompatibilityError(
@@ -204,7 +227,7 @@ test("doctor identifies contract mismatch before MCP startup", async () => {
   const result = await runDoctor({
     environment: {
       BU2_ENDPOINT: "http://127.0.0.1:3100",
-      BU2_ENVIRONMENT: "simulation",
+      ...localEnvironment,
     },
     preflight: async () => {
       throw new Bu2McpCompatibilityError("api_contract_version_mismatch", "Wrong API version.");
@@ -225,17 +248,17 @@ test("doctor distinguishes endpoint environment mismatch from contract failure",
   const result = await runDoctor({
     environment: {
       BU2_ENDPOINT: "http://127.0.0.1:3100",
-      BU2_ENVIRONMENT: "testnet",
+      BU2_ENVIRONMENT: "sandbox",
     },
     preflight: async () => {
       throw new Bu2McpCompatibilityError(
         "environment_mismatch",
-        "Configured testnet but endpoint reported simulation.",
+        "Configured sandbox but endpoint reported local.",
       );
     },
   });
   assertValid(result);
-  assert.equal(result.environment, "testnet");
+  assert.equal(result.environment, "sandbox");
   assert.equal(result.failure.stage, "environment");
   assert.equal(result.failure.recovery, "match_endpoint_environment");
   assert.equal(result.checks[2].result_category, "passed");
@@ -248,9 +271,9 @@ test("doctor rejects MCP tool drift and still closes the client", async () => {
   const result = await runDoctor({
     environment: {
       BU2_ENDPOINT: "http://127.0.0.1:3100",
-      BU2_ENVIRONMENT: "simulation",
+      ...localEnvironment,
     },
-    preflight: async () => ({}),
+    preflight: async () => localEnvironmentInfo(),
     connectMcp: async () => ({
       listTools: async () => [{ name: "unexpected_tool" }],
       close: async () => {
@@ -295,7 +318,7 @@ test("stable doctor executable emits schema-valid JSON without stderr diagnostic
   context.after(() => closeRunning(running));
   const execution = await runExecutable({
     BU2_ENDPOINT: running.url,
-    BU2_ENVIRONMENT: "simulation",
+    ...localEnvironment,
   });
   assert.equal(execution.status, 0);
   assert.equal(execution.stderr, "");

@@ -1,0 +1,31 @@
+{
+  "id": "rcpt_archived_v02",
+  "version": "0.2",
+  "schema_version": "0.2",
+  "canonicalization_version": "RFC8785-JCS-1",
+  "transaction_id": "txn_archived_v02",
+  "settlement_id": "stl_archived_v02",
+  "quote_id": "quo_archived_v02",
+  "payment_intent_id": "pi_archived_v02",
+  "payer_account_id": "acct_archived_buyer",
+  "payee_account_id": "acct_archived_seller",
+  "buyer_agent_id": "agt_archived_buyer",
+  "seller_agent_id": "agt_archived_seller",
+  "amount": {
+    "value": 100,
+    "currency": "USD"
+  },
+  "authorization_id": "auth_archived_v02",
+  "payment_mandate_id": "mdt_archived_v02",
+  "delivery_id": "dlv_archived_v02",
+  "delivery_evidence_hash": "sha256:archivedv02",
+  "environment": "simulation",
+  "payment_channel": "bu2_simulated_provider",
+  "provider_reference": "sim_archived_v02",
+  "signed_at": "2026-09-01T00:00:00.000Z",
+  "issued_at": "2026-09-01T00:00:00.000Z",
+  "signature_algorithm": "Ed25519",
+  "verification_key_id": "key_bu2_63b9ace5ce9d71de",
+  "signature": "sR0Qgb4ZnuhcA7L/3PuoY17xOdkwaMeKUWCot/T0fuKhpR5KUWcgVntD86tr6pfmmrA0MrWhSw6uicw3doxaBQ==",
+  "public_key": "MCowBQYDK2VwAyEAElA8as9h+w7dHg/Rkup7RkYkT8rXIcz6cTendrU+CQ4="
+}

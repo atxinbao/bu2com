@@ -1,0 +1,41 @@
+// Generated from docs/03-technical/environment-contract.json. Do not edit.
+export const ENVIRONMENT_CONTRACT = {
+  "schema_version": "1.0",
+  "public_environments": [
+    "sandbox",
+    "live"
+  ],
+  "receipt_schema_versions": [
+    "0.2",
+    "0.3"
+  ],
+  "environments": {
+    "local": {
+      "environment": "local",
+      "payment_adapter": "simulated",
+      "chain_id": null,
+      "network": null,
+      "asset": null,
+      "asset_decimals": null,
+      "default_execution_status": "execution_enabled"
+    },
+    "sandbox": {
+      "environment": "sandbox",
+      "payment_adapter": "x402",
+      "chain_id": 84532,
+      "network": "eip155:84532",
+      "asset": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+      "asset_decimals": 6,
+      "default_execution_status": "execution_disabled"
+    },
+    "live": {
+      "environment": "live",
+      "payment_adapter": "x402",
+      "chain_id": 8453,
+      "network": "eip155:8453",
+      "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "asset_decimals": 6,
+      "default_execution_status": "execution_disabled"
+    }
+  }
+} as const;

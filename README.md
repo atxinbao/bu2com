@@ -9,22 +9,22 @@ BU2.com 是 Agent 的 AI 收付平台。它嵌入 ChatGPT、Codex、Claude 和�
 | 项目 | 当前基线 |
 | --- | --- |
 | 项目阶段 | Phase 0 · local execution / Sandbox architecture |
-| 当前工程关卡 | ENV-02 · 环境注册表与链隔离（等待 R2 审查） |
+| 当前工程关卡 | ENV-03 · 客户端与 Receipt 环境契约（等待 R2 审查） |
 | 产品定义 | Product v0.3 · Transaction-first |
-| API 契约 | Agent Payment API v0.1 |
-| Reference Server | v0.12 · Node.js + SQLite WAL + MCP（legacy package 名称含 sandbox） |
-| TypeScript SDK | `@bu2/sdk` v0.1 · Monorepo private package |
-| MCP 分发 | stdio v0.1 · Codex / Claude Desktop / Generic Host |
-| 接入诊断 | `bu2-doctor` v0.1 · 本地执行 / 零远程遥测 |
-| Clean-room 验收 | HTTP / TypeScript SDK / MCP · 3/3 Simulation 通过 |
+| API 契约 | Agent Payment API v0.2.0 |
+| Reference Server | v0.13 · Node.js + SQLite WAL + MCP（legacy package 名称含 sandbox） |
+| TypeScript SDK | `@bu2/sdk` v0.2 · Monorepo private package |
+| MCP 分发 | stdio v0.2 · Codex / Claude Desktop / Generic Host |
+| 接入诊断 | `bu2-doctor` result v0.2 · 本地执行 / 零远程遥测 |
+| Clean-room 验收 | HTTP / TypeScript SDK / MCP · 3/3 Local 通过 |
 | 支付通道 | local Simulated Adapter + x402 Base Sepolia Adapter |
 | 产品界面 | React 19 + TypeScript 双语原型 |
-| 环境契约 | ENV-02 运行时配置与数据库绑定已实现；客户端契约待 ENV-03 |
+| 环境契约 | ENV-02 已批准；ENV-03 API/SDK/MCP/Doctor/Receipt 已实现，等待 R2 审查 |
 | 生产边界 | Live 初始 `execution_disabled`；客户资金托管和法币能力尚未开放 |
 
-当前代码已经形成可运行的 Agent 收付闭环，但仍是本地与 Base Sepolia 测试网证据，不是生产支付系统或法律合规结论。ENV-02 已在内部装配边界实施 `local/sandbox/live` 注册表、错链/错库拒绝和 Live 默认禁用；公开 API、SDK、MCP、Doctor 与 Receipt 仍输出 legacy `simulation/testnet`，等待 ENV-03 迁移。
+当前代码已经形成可运行的 Agent 收付闭环，但仍是本地与 Base Sepolia 测试网证据，不是生产支付系统或法律合规结论。ENV-02 已由 PR #19 合并；ENV-03 已在公开 API、SDK、MCP、Doctor、Evidence 和新 Receipt 中实施 `local/sandbox/live`，旧 Receipt 继续按原始 legacy 语义验证。
 
-[Phase 0 Epic 1：External Agent Transaction Integration & Reliability](docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md) 与 [Phase 0 Epic 2：Developer Integration Scale](docs/03-technical/PHASE0_EPIC2_DEVELOPER_INTEGRATION_SCALE.md) 已完成。Transaction Trust Gate 1–3 已经 PR #15–#17 合并，F01/ENV-01 已由 PR #18 批准。当前 ENV-02 已完成本地实现与自动化验证，等待 R2 审查；合并后进入 ENV-03 客户端和 Receipt 环境契约迁移。[Phase 0 Epic 3](docs/03-technical/PHASE0_EPIC3_EXTERNAL_PILOT_EVIDENCE.md) 保持 Ready，但正式外部证据要求托管 Sandbox 的真实 Base Sepolia 双向收付，不再以 Local Simulation 代替。
+[Phase 0 Epic 1：External Agent Transaction Integration & Reliability](docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md) 与 [Phase 0 Epic 2：Developer Integration Scale](docs/03-technical/PHASE0_EPIC2_DEVELOPER_INTEGRATION_SCALE.md) 已完成。Transaction Trust Gate 1–3 已经 PR #15–#17 合并，F01/ENV-01 与 ENV-02 分别由 PR #18/#19 批准。当前 ENV-03 已完成本地实现与自动化验证，等待 R2 审查；合并后进入 ENV-04 隔离部署单元。[Phase 0 Epic 3](docs/03-technical/PHASE0_EPIC3_EXTERNAL_PILOT_EVIDENCE.md) 保持 Ready，但正式外部证据要求托管 Sandbox 的真实 Base Sepolia 双向收付，不再以 Local Simulation 代替。
 
 ## 环境定义
 
@@ -68,11 +68,12 @@ BU2 将授权、资金预留、交付、结算和退款保存为不同事实。�
 - SimulatedPaymentAdapter 与官方 x402 v2 Base Sepolia Adapter。
 - x402 challenge 全字段校验、未知结算冻结、显式恢复查询与恢复审计。
 - 官方 MCP TypeScript SDK 2.0 stdio Server，以及独立 Buyer/Seller Agent Simulation 样例。
-- 稳定 MCP CLI、endpoint preflight、initialize 版本/能力握手，以及三类 Host 配置。
+- `GET /v1/environment` 自描述，以及 SDK/MCP/Doctor 的 endpoint、环境、链、执行后端、Receipt issuer 与 execution status 预检。
+- 稳定 MCP CLI、mutation 前二次 preflight、initialize 版本/能力握手，以及三类 Host 配置。
 - 本地 `bu2-doctor`：Node、endpoint、环境、契约、MCP 启动和 Receipt 验证诊断；支持 JSON 与中英文恢复提示。
-- OpenAPI 生成类型的 `@bu2/sdk` v0.1 薄客户端；显式幂等、无自动重试和错误恢复分类。
+- OpenAPI 生成类型的 `@bu2/sdk` v0.2 薄客户端；显式环境、本地开发确认、幂等、无自动重试和错误恢复分类。
 - HTTP、SDK tarball 和 MCP stdio 三条全新临时项目接入证据；均在 15 分钟内生成有效 Local Simulation Receipt。
-- Receipt v0.2：Ed25519、RFC 8785 JCS、持久化公开验证键，以及签名、签发方和结算绑定三项独立验证。
+- Receipt v0.3：Ed25519、RFC 8785 JCS、环境/链/后端/issuer 签名绑定，以及签名、签发方、结算和环境四项独立验证；v0.2 历史签名字节保持可验证。
 - 中英文 Transaction-first 产品界面，可展示真实 Reference API 数据并在离线时降级到演示数据。
 - OpenAPI 3.1、Agent 原生 MCP 工具和完整交易示例。
 
@@ -103,7 +104,7 @@ npm --prefix packages/typescript-sdk test
 npm --prefix sandbox run acceptance:clean-room
 ```
 
-当前基线应得到：Contract 42 项不变量通过、6 个 MCP 工具有效、Reference Server 88/88 通过、TypeScript SDK 8/8 通过、三条 clean-room 路径全部生成有效 Local Simulation Receipt、Prototype lint 与 build 通过。
+当前基线应得到：Contract 47 项不变量通过、6 个 MCP 工具有效、Reference Server 100/100 通过、TypeScript SDK 9/9 通过、三条 clean-room 路径全部生成有效 Local Receipt、Prototype lint 与 build 通过。
 
 ### 运行接入诊断
 
@@ -111,11 +112,12 @@ npm --prefix sandbox run acceptance:clean-room
 
 ```bash
 BU2_ENDPOINT=http://127.0.0.1:3100 \
-BU2_ENVIRONMENT=simulation \
+BU2_ENVIRONMENT=local \
+BU2_LOCAL_DEVELOPMENT=true \
 npm --prefix sandbox run doctor
 ```
 
-使用 `--format json` 获取机器可读结果，使用 `--language en` 获取全英文提示。若已有 Receipt，可追加 `--receipt-id rcpt_...` 执行实际只读验证；否则只确认验证能力可用。诊断分析只存在于当前进程，不写文件、不写数据库，也不远程上传。完整契约见 [`开发者接入诊断 v0.1`](docs/03-technical/DEVELOPER_DIAGNOSTICS_V0.1.md)。
+使用 `--format json` 获取机器可读结果，使用 `--language en` 获取全英文提示。若已有 Receipt，可追加 `--receipt-id rcpt_...` 执行实际只读验证；否则只确认验证能力可用。诊断分析只存在于当前进程，不写文件、不写数据库，也不远程上传。完整契约见 [`开发者接入诊断 v0.2`](docs/03-technical/DEVELOPER_DIAGNOSTICS_V0.1.md)。
 
 ### 一条命令运行外部 Agent 样例
 
@@ -170,7 +172,7 @@ bu2com/
 ├── prototype/        # Transaction-first 双语 React/TypeScript 产品界面
 ├── sandbox/          # Reference Server、SQLite、Webhook 与支付 Adapter
 ├── packages/
-│   └── typescript-sdk/ # OpenAPI 生成类型的内部 TypeScript SDK v0.1
+│   └── typescript-sdk/ # OpenAPI 生成类型的内部 TypeScript SDK v0.2
 ├── integrations/
 │   ├── mcp/           # Codex、Claude Desktop 与通用 stdio Host 配置
 │   └── clean-room/    # HTTP、SDK 与 MCP 独立接入样例
@@ -202,18 +204,19 @@ bu2com/
 - [Transaction-first 产品基线](docs/02-product/P0_TRANSACTION_FIRST_BASELINE.md)
 - [MVP PRD v0.3](docs/02-product/MVP_PRD.md)
 - [Transaction P0 验收方案](docs/02-product/TRANSACTION_P0_ACCEPTANCE.md)
-- [Agent Payment API 契约](docs/03-technical/API_CONTRACT_V0.1.md)
+- [Agent Payment API 契约 v0.2.0](docs/03-technical/API_CONTRACT_V0.1.md)
 - [OpenAPI 3.1](docs/03-technical/openapi.yaml)
 - [x402 Testnet 可信执行 v0.1](docs/03-technical/X402_TRUSTED_EXECUTION_V0.1.md)
 - [系统环境契约 v1](docs/03-technical/SYSTEM_ENVIRONMENTS_V1.md)
 - [ADR-0001：Sandbox 与 Live 环境隔离](docs/03-technical/ADR_0001_SANDBOX_LIVE_ENVIRONMENT_ISOLATION.md)
 - [环境验收矩阵 v1](docs/03-technical/ENVIRONMENT_ACCEPTANCE_MATRIX_V1.md)
+- [客户端与 Receipt 环境契约 v1](docs/03-technical/ENVIRONMENT_CLIENT_AND_RECEIPT_CONTRACT_V1.md)
 - [Base Sepolia 实结算证据](docs/03-technical/X402_LIVE_SETTLEMENT_EVIDENCE.md)
 - [Phase 0 Epic 2：开发者接入规模化](docs/03-technical/PHASE0_EPIC2_DEVELOPER_INTEGRATION_SCALE.md)
 - [Phase 0 Epic 3：外部试点准备与证据](docs/03-technical/PHASE0_EPIC3_EXTERNAL_PILOT_EVIDENCE.md)
-- [TypeScript SDK v0.1](packages/typescript-sdk/README.md)
+- [TypeScript SDK v0.2](packages/typescript-sdk/README.md)
 - [MCP Host 配置](integrations/mcp/README.md)
-- [开发者接入诊断 v0.1](docs/03-technical/DEVELOPER_DIAGNOSTICS_V0.1.md)
+- [开发者接入诊断 v0.2](docs/03-technical/DEVELOPER_DIAGNOSTICS_V0.1.md)
 - [E2.4 clean-room 接入证据](docs/03-technical/CLEAN_ROOM_ACCEPTANCE_EVIDENCE.md)
 
 ### 商业计划

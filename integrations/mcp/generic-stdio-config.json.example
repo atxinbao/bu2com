@@ -1,12 +1,13 @@
 {
   "mcpServers": {
-    "bu2-simulation": {
+    "bu2-local": {
       "type": "stdio",
       "command": "node",
       "args": ["/absolute/path/to/bu2com/sandbox/bin/bu2-mcp.mjs"],
       "env": {
         "BU2_ENDPOINT": "http://127.0.0.1:3100",
-        "BU2_ENVIRONMENT": "simulation"
+        "BU2_ENVIRONMENT": "local",
+        "BU2_LOCAL_DEVELOPMENT": "true"
       }
     }
   }

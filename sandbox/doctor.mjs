@@ -47,8 +47,20 @@ const GUIDANCE = {
   environment_invalid: {
     retry: "retry_after_fix",
     recovery: "select_phase0_environment",
-    zh: "将 BU2_ENVIRONMENT 设置为 simulation 或 testnet；Mainnet 在 Phase 0 被禁止。",
-    en: "Set BU2_ENVIRONMENT to simulation or testnet; Mainnet is prohibited in Phase 0.",
+    zh: "将 BU2_ENVIRONMENT 设置为 sandbox 或 live；本地模拟需使用 local 并显式启用 BU2_LOCAL_DEVELOPMENT。",
+    en: "Set BU2_ENVIRONMENT to sandbox or live; local simulation requires local and explicit BU2_LOCAL_DEVELOPMENT.",
+  },
+  local_development_confirmation_required: {
+    retry: "retry_after_fix",
+    recovery: "confirm_local_development",
+    zh: "仅在连接本机模拟服务时设置 BU2_LOCAL_DEVELOPMENT=true。",
+    en: "Set BU2_LOCAL_DEVELOPMENT=true only when connecting to a local simulated server.",
+  },
+  environment_contract_mismatch: {
+    retry: "retry_after_fix",
+    recovery: "match_environment_contract",
+    zh: "核对 endpoint、环境、链、执行后端和 Receipt issuer；不要自动改环境或换链。",
+    en: "Check the endpoint, environment, chain, execution backend, and Receipt issuer; do not switch environments or chains automatically.",
   },
   endpoint_unreachable: {
     retry: "retry_safe",
@@ -161,7 +173,12 @@ function correlation(error) {
 }
 
 function failedStage(code) {
-  if (code === "environment_mismatch") return "environment";
+  if (
+    code === "environment_mismatch" ||
+    code === "environment_contract_mismatch" ||
+    code === "environment_execution_disabled"
+  )
+    return "environment";
   if (code.includes("contract") || code.includes("version_mismatch")) return "contract";
   if (code.startsWith("endpoint_")) return "endpoint";
   return "mcp_startup";
@@ -206,6 +223,7 @@ function finalize({
   now,
   nodeVersion,
   environment,
+  environmentContract,
   receiptVerification,
   checks,
   failed,
@@ -216,11 +234,14 @@ function finalize({
     started_at: new Date(startedAtMs).toISOString(),
     duration_ms: Math.max(0, Math.round(now() - startedAtMs)),
     environment,
+    environment_contract: environmentContract,
     versions: {
       node: nodeVersion,
       minimum_node: MINIMUM_NODE_VERSION,
       api_contract: contractVersions.agent_payment_api,
       mcp_contract: mcpContract.version,
+      environment_contract: contractVersions.environment_contract,
+      receipt_current: contractVersions.receipt_current,
     },
     receipt_verification: receiptVerification,
     checks,
@@ -253,6 +274,7 @@ export async function runDoctor({
   const startedAtMs = now();
   const checks = [];
   let activeEnvironment = null;
+  let activeEnvironmentContract = null;
   let receiptVerification = "blocked";
   let started = now();
 
@@ -266,6 +288,7 @@ export async function runDoctor({
       now,
       nodeVersion,
       environment: null,
+      environmentContract: null,
       receiptVerification,
       checks,
       failed,
@@ -288,6 +311,7 @@ export async function runDoctor({
       now,
       nodeVersion,
       environment: null,
+      environmentContract: null,
       receiptVerification,
       checks,
       failed,
@@ -296,7 +320,15 @@ export async function runDoctor({
 
   started = now();
   try {
-    await preflight(configuration);
+    const environmentInfo = await preflight(configuration);
+    activeEnvironmentContract = {
+      version: environmentInfo.environment_contract_version,
+      chain_id: environmentInfo.chain_id,
+      network: environmentInfo.network,
+      execution_backend: environmentInfo.execution_backend,
+      execution_status: environmentInfo.execution_status,
+      receipt_issuer_id: environmentInfo.receipt_issuer?.issuer_id ?? null,
+    };
     checks.push(check("endpoint", "passed", now() - started));
     checks.push(check("environment", "passed"));
     checks.push(check("contract", "passed"));
@@ -338,6 +370,7 @@ export async function runDoctor({
       now,
       nodeVersion,
       environment: activeEnvironment,
+      environmentContract: activeEnvironmentContract,
       receiptVerification,
       checks,
       failed,
@@ -350,6 +383,7 @@ export async function runDoctor({
     mcp = await connectMcp({
       baseUrl: configuration.endpoint,
       environment: configuration.environment,
+      localDevelopment: configuration.localDevelopment,
     });
     const tools = await mcp.listTools();
     const actual = tools.map(({ name }) => name).sort();
@@ -385,6 +419,7 @@ export async function runDoctor({
       now,
       nodeVersion,
       environment: activeEnvironment,
+      environmentContract: activeEnvironmentContract,
       receiptVerification,
       checks,
       failed,
@@ -402,6 +437,7 @@ export async function runDoctor({
     now,
     nodeVersion,
     environment: activeEnvironment,
+    environmentContract: activeEnvironmentContract,
     receiptVerification,
     checks,
     failed: null,
@@ -506,13 +542,14 @@ export function renderDoctorHuman(result, language = "zh") {
 
 export function doctorHelp() {
   return [
-    "BU2 doctor v0.1 / BU2 接入诊断 v0.1",
+    "BU2 doctor v0.2 / BU2 接入诊断 v0.2",
     "",
     "Usage: node sandbox/bin/bu2-doctor.mjs [--format human|json] [--language zh|en] [--receipt-id rcpt_...]",
     "",
     "Environment:",
     "  BU2_ENDPOINT       BU2 Reference Server URL",
-    "  BU2_ENVIRONMENT    simulation or testnet",
+    "  BU2_ENVIRONMENT    sandbox or live; local for local simulation",
+    "  BU2_LOCAL_DEVELOPMENT  true when BU2_ENVIRONMENT=local",
     "",
     "No remote telemetry or local persistence is performed.",
   ].join("\n");

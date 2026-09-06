@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://bu2.com/schemas/doctor-result-v0.1.json",
-  "title": "BU2 Doctor Result v0.1",
+  "$id": "https://bu2.com/schemas/doctor-result-v0.2.json",
+  "title": "BU2 Doctor Result v0.2",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -10,26 +10,42 @@
     "started_at",
     "duration_ms",
     "environment",
+    "environment_contract",
     "versions",
     "receipt_verification",
     "checks",
     "analytics"
   ],
   "properties": {
-    "schema_version": { "const": "0.1.0" },
+    "schema_version": { "const": "0.2.0" },
     "result": { "enum": ["passed", "failed"] },
     "started_at": { "type": "string", "format": "date-time" },
     "duration_ms": { "type": "integer", "minimum": 0 },
-    "environment": { "type": ["string", "null"], "enum": ["simulation", "testnet", null] },
+    "environment": { "type": ["string", "null"], "enum": ["local", "sandbox", "live", null] },
+    "environment_contract": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["version", "chain_id", "network", "execution_backend", "execution_status", "receipt_issuer_id"],
+      "properties": {
+        "version": { "const": "1.0" },
+        "chain_id": { "type": ["integer", "null"], "enum": [null, 84532, 8453] },
+        "network": { "type": ["string", "null"], "enum": [null, "eip155:84532", "eip155:8453"] },
+        "execution_backend": { "enum": ["simulated", "x402"] },
+        "execution_status": { "enum": ["execution_disabled", "execution_enabled"] },
+        "receipt_issuer_id": { "type": ["string", "null"] }
+      }
+    },
     "versions": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["node", "minimum_node", "api_contract", "mcp_contract"],
+      "required": ["node", "minimum_node", "api_contract", "mcp_contract", "environment_contract", "receipt_current"],
       "properties": {
         "node": { "type": "string" },
         "minimum_node": { "type": "string" },
         "api_contract": { "type": "string" },
-        "mcp_contract": { "type": "string" }
+        "mcp_contract": { "type": "string" },
+        "environment_contract": { "const": "1.0" },
+        "receipt_current": { "const": "0.3" }
       }
     },
     "receipt_verification": { "enum": ["blocked", "capability_available", "verified", "failed"] },
