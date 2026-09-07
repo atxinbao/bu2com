@@ -1,6 +1,6 @@
 # BU2 MVP 产品需求文档 v0.3（Transaction-first）
 
-更新日期：2026-09-01  
+更新日期：2026-09-07
 维护者：Codex
 
 ## 1. 目标
@@ -112,17 +112,19 @@ Quote
 - 根据报价约定由买方、规则或外部证明完成验收。
 - 验收成功后结算；失败时释放预留或进入退款/争议分支。
 
-### F07 Receipt 与账本
+### F07 预算预留与财务记账
 
-- 完成交易后向双方返回机器可读 Receipt。
-- Receipt 包含身份、报价、授权、交付证据、结算和时间戳引用。
-- 账本采用追加记录，任何更正通过新事件完成。
+- 为 Workspace、Project、Account 或 Agent 维护可解释的预算边界。
+- 在授权与实际支付之间建立幂等的 Budget Hold，区分余额、授权、预留、结算和退款。
+- 将资金事件写入追加式 Ledger Entry / Financial Posting；更正只能通过新事件完成。
+- 预算预留、账本事件、业务状态和 Outbox 必须在同一事务边界内提交，并支持并发与重启恢复。
 
-### F08 嵌入式接入
+### F08 版本化 Payment Mandate
 
-- 提供 REST API、TypeScript/Python SDK 和 MCP 工具定义。
-- 调用方可从 ChatGPT、Codex、Claude 或自建 Agent 发起交易。
-- BU2 返回状态和凭证，不接管调用方的任务管理。
+- 用版本化 Mandate 明确 Agent 可使用的金额、币种、收款方、用途、环境、有效期和资源范围。
+- 支持自动允许、拒绝、暂停、撤销和人工审批，并返回可追踪的 Policy Decision。
+- Mandate 必须绑定 Account、Agent、Funding Source 与 Receiving Target；Agent 不得自行扩大授权。
+- Mandate 规则在 F09a/F09b 执行与恢复路径中作为唯一授权来源。
 
 ## 7. P0 页面
 

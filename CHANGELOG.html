@@ -152,6 +152,26 @@
       <h2 id="unreleased">Unreleased</h2>
       <article class="release">
         <div class="release-head">
+          <div><h3>D0 · Phase 0 业务路线与 PR 基线</h3><time datetime="2026-09-07">2026-09-07</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">统一 M1～M5 里程碑、F02-CI～F16b-ENV07B 依赖与文档提交规则，并修正 F07/F08 旧定义与已合并项状态漂移。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag changed">Changed</span>产品 PRD 将 F07 更新为预算预留与财务记账，将 F08 更新为版本化 Payment Mandate。</li>
+            <li><span class="tag changed">Changed</span>产品、技术和 Epic 3 入口统一指向当前 Phase 0 业务路线；F06a/F06b 与 ENV-06 标记为已完成或已合并。</li>
+            <li><span class="tag governance">Boundary</span>本变更仅修改文档，不改变 API、Schema、交易状态、支付通道、Sandbox/Testnet 或 Live/Mainnet 准入。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R0 · 文档与状态对齐</span></div>
+          <div><b>验证</b><span>文档链接、计划依赖和旧状态标记完成静态检查；未执行业务代码变更</span></div>
+          <div><b>恢复</b><span>回退本变更即可恢复此前文档入口，不影响数据库、账本、Adapter 或 Receipt 历史</span></div>
+        </div>
+      </article>
+      <article class="release">
+        <div class="release-head">
           <div><h3>F06b · 资金来源与收款目标绑定</h3><time datetime="2026-09-07">2026-09-07</time></div>
           <span class="status">Unreleased</span>
         </div>

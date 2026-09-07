@@ -2,7 +2,7 @@
 
 日期：2026-09-06
 执行者：Codex
-状态：Ready after Transaction Trust Gate · waiting for ENV-02/03 and hosted Sandbox prerequisites
+状态：Ready after Transaction Trust Gate · waiting for F07–F16a and hosted Sandbox prerequisites
 Epic 风险等级：R2（外部试点会执行现有交易路径，不包含生产资金）
 本次范围冻结风险等级：R0（仅文档与状态对齐）
 
@@ -21,7 +21,7 @@ Epic 风险等级：R2（外部试点会执行现有交易路径，不包含生�
 ## 2. 前置状态
 
 - Transaction Trust Gate 的 Receipt v0.2、数据库原子性与 x402 Testnet 可信执行已经 PR #15–#17 通过并合并。
-- F01/ENV-01 必须先冻结 `local/sandbox/live` 语义；ENV-02 环境注册表与链隔离、ENV-03 客户端和 Receipt 环境契约迁移必须在正式外部团队试点前完成。
+- F01/ENV-01 必须先冻结 `local/sandbox/live` 语义；ENV-02 环境注册表与链隔离、ENV-03 客户端和 Receipt 环境契约迁移已完成。F07–F16a 的内部业务闭环与 Beta 验收仍是正式外部团队试点前置。
 - 托管 Sandbox 的访问、租户、限额测试凭证、隔离数据、回调和运营门槛必须满足后，才能邀请外部团队；不能为了取证公开无认证 Reference Server。
 - Epic 1 已通过 PR #8 合并并标记 Done。
 - Epic 2 的 E2.1–E2.4 已通过 PR #10–#13 合并，TypeScript SDK、MCP Host、`doctor` 和三路径 clean-room 证据均已建立。
@@ -62,6 +62,8 @@ AI Agent 可以实现、验证和整理证据，但不得伪造外部团队、�
 BU2 不要求试点团队复制 Prompt、上传私人会话、迁移任务或把完整 Agent 工程托管到 BU2。
 
 ## 5. 工作包与顺序
+
+Epic 3 保持 Ready，但不是当前下一项实施工作。E3.1 的开发必须等到 F07–F16a 内部业务闭环和 Beta 验收完成；ENV-07B 的托管部署与外部证据仍是 E3.1–E3.4 的独立前置。
 
 ### E3.0 — 冻结外部试点契约（本文件）
 
@@ -205,4 +207,4 @@ E3.4 必须提供真实外部团队证据。自动化测试只能证明工具正
 5. Product Owner 和 Project Owner 对 Go / Iterate / Stop 结论完成人工审查。
 6. Live 保持 execution disabled，没有开放 Mainnet、真实资金、托管、生产 Secret、公开分发或远程 MCP。
 
-结论：Epic 3 的产品目标和证据要求达到 **Ready**，但实施顺序调整为先完成 F01/ENV-01、ENV-02/03 和托管 Sandbox 前置，再进入 E3.1。Local Simulation 继续作为自动化工具证据，不能计作正式 Sandbox 外部试点；本文件不构成 Phase 1、公开分发、Live/Mainnet、真实资金、托管或生产部署授权。
+结论：Epic 3 的产品目标和证据要求达到 **Ready**，但实施顺序调整为先完成 F07–F16a 的内部业务闭环，再进入 E3.1；Hosted Sandbox 的 ENV-07B 仍需独立部署与外部证据。Local Simulation 继续作为自动化工具证据，不能计作正式 Sandbox 外部试点；本文件不构成 Phase 1、公开分发、Live/Mainnet、真实资金、托管或生产部署授权。

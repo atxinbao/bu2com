@@ -212,6 +212,49 @@ F06a 把配置中的明确身份声明落成可持久查询和审计的一等对
 
 ---
 
+# D0 Phase 0 业务路线与文档基线审查报告
+
+日期：2026-09-07
+审查者：Codex
+分支：`docs/d0-roadmap-baseline`
+基线：`main` / `82cdb7b`
+
+## 审查范围
+
+- M1～M5 里程碑与 F02-CI～F16b-ENV07B 依赖。
+- F07/F08 产品定义与后续实现顺序。
+- 已合并项状态、Epic 3 前置条件和文档入口。
+- `CHANGELOG.html` 对本次文档变更的记录。
+
+## 结果
+
+| 维度 | 评分 | 结论 |
+|---|---:|---|
+| 需求覆盖 | 95 | 用户提供的里程碑、PR 依赖和文档策略已进入单一基线 |
+| 一致性 | 94 | 产品、技术、根 README 与 Epic 3 已统一当前顺序和状态 |
+| 可验证性 | 93 | 链接、格式、契约静态验证通过 |
+| 风险边界 | 97 | 未修改 API、Schema、交易状态、支付通道或环境准入 |
+| 综合 | 95 | 通过 |
+
+## 验证证据
+
+- `git diff --check` 通过。
+- Markdown 相对链接扫描通过。
+- `rg` 旧状态与旧 F07/F08 定义扫描无残留。
+- `node docs/03-technical/validate-contract.mjs` 通过：63 项不变量、6 个 MCP 工具。
+
+## 遗留风险
+
+- D0 只完成文档基线；F07 财务契约仍未冻结，不能据此开始资金相关实现。
+- Hosted Sandbox、真实 Base Sepolia 双向收付和 Live/Mainnet 仍未开放。
+- 本次未运行 Sandbox、SDK、Prototype 或 Hosted 测试，因为没有可执行代码变更。
+
+## 结论
+
+D0 文档基线达到 R0 交付标准。下一项应创建 D1：F07 Budget Hold、Ledger Entry 与 Financial Posting 契约文档；D1 通过 R2 审查后再开发 F07。
+
+---
+
 # F06b 资金来源与收款目标绑定自主审查报告
 
 日期：2026-09-07  
