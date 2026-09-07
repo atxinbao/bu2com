@@ -1,6 +1,6 @@
-# BU2 Phase 0 业务路线与 PR 基线 v1
+# BU2 Phase 0 业务路线与 PR 基线 v2
 
-更新日期：2026-09-07  
+更新日期：2026-09-08
 维护者：Codex  
 风险等级：R0（文档与状态对齐，不改变运行时、Schema 或交易行为）
 
@@ -13,7 +13,7 @@ BU2 继续定位为嵌入式 Agent AI 收付平台。外部 Agent 在自己的�
 ## 2. 当前状态
 
 - 已完成：Epic 1、Epic 2、Transaction Trust Gate 1–3、F06a、F06b、ENV-01～ENV-06。
-- 当前可用：Local Simulation；内部 Sandbox/Testnet 调试能力。
+- 当前可用：Local Simulation；内部 Sandbox/Testnet 调试能力；F07 Budget Hold / Financial Posting 已合并。
 - 尚未验收：Hosted Sandbox 的 ENV-07B、真实 Base Sepolia 双向收付、外部团队证据。
 - 明确关闭：Live/Mainnet、真实生产资金、托管钱包、生产凭证和无人值守生产执行。
 
@@ -36,8 +36,9 @@ BU2 继续定位为嵌入式 Agent AI 收付平台。外部 Agent 在自己的�
 | F02-CI | `ci: enforce reproducible foundation checks` | 当前 `main` | R1；涉及部署/签名权限时重新定级 |
 | F06a | `feat(accounts): persist account-agent ownership and sandbox onboarding` | 当前 `main` | 已完成 |
 | F06b | `feat(wallets): bind funding sources and verified receiving targets` | F06a | 已完成 |
-| F07 | `feat(ledger): add scoped budget holds and financial postings` | F06b | R2 |
-| F08 | `feat(mandates): enforce versioned autonomous payment grants` | F07 | R2 |
+| F07 | `feat(ledger): add scoped budget holds and financial postings` | F06b | 已合并 |
+| D2 | `docs(f08): freeze payment mandate contract` | F07 | R0 文档基线 |
+| F08 | `feat(mandates): enforce versioned autonomous payment grants` | D2 | R2 |
 | F09a | `feat(execution): run authorized payment commands without operator approval` | F08 | R2 |
 | F09b | `feat(recovery): schedule evidence-based recovery for existing attempts` | F09a | R2 |
 | F10 | `feat(collections): create account-owned receivables` | F07 | R2 |
@@ -59,4 +60,6 @@ BU2 继续定位为嵌入式 Agent AI 收付平台。外部 Agent 在自己的�
 
 ## 6. 当前下一步
 
-D0/D1 文档基线已合并。当前进入 F07 代码实现：Schema v12 已追加 Budget、Budget Hold 与 Financial Posting，并接入既有原子提交边界；代码 PR 仍需独立 R2 审查。D1 文档见 [F07 财务边界契约](F07_FINANCIAL_BOUNDARY_CONTRACT.md)。F08 同理，先完成 D2 Mandate 契约文档，再开始 F08。
+D0/D1 文档基线与 F07 代码实现已合并。D2 先冻结 [F08 Payment Mandate 契约](F08_PAYMENT_MANDATE_CONTRACT.md)，明确版本化授权、确定性 Policy Decision、Account/Agent/Funding Source/Receiving Target 绑定、幂等重放，以及与 F07 Budget Hold 和 F09 自主执行的边界；D2 合并后再开始 F08 R2 代码实现。
+
+D2 只改文档，不启用真实 Testnet 双向收付、Hosted Sandbox、Live/Mainnet、托管或生产凭证。F08 代码 PR 必须独立完成 Domain 与 Architecture R2 审查。

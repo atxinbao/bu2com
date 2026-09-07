@@ -184,6 +184,15 @@
 - `node docs/03-technical/validate-contract.mjs`: passed; 63 invariants and 6 MCP tools remain valid.
 - Boundary: Schema v12 adds `budgets`, `budget_holds` and `financial_postings`; F07 mutations reuse existing Transaction Core atomic commit, idempotency claim, wallet CAS and Webhook Outbox. No F08 Mandate, Live/Mainnet or custody capability was enabled.
 
+## 2026-09-08 · D2 F08 Payment Mandate 契约
+
+- `git diff --check`: passed。
+- `node docs/03-technical/validate-contract.mjs`: passed；63 invariants and 6 MCP tools remain valid。
+- Markdown relative-link scan: passed for the new F08 contract and synchronized indexes。
+- Stale-state scan: passed；D2 is documented as a prerequisite and F08 runtime remains not implemented。
+- Not run: Sandbox unit/integration, SDK, Prototype, browser, Testnet payment and Hosted E2E；D2 changes documentation only。
+- Boundary: no API, Schema, transaction state, budget hold, ledger, adapter, signer, environment or payment behavior changed。
+
 ## 2026-09-06 · Internal Sandbox Product Baseline
 
 - `node --test deploy/local-sandbox.test.mjs`: 3/3 passed.

@@ -212,6 +212,47 @@ F06a 把配置中的明确身份声明落成可持久查询和审计的一等对
 
 ---
 
+# D2 F08 Payment Mandate 契约自主审查报告
+
+日期：2026-09-08
+审查者：Codex（Contributor / Verifier，非 R2 Approver）
+分支：`docs/d2-f08-mandate-contract`
+基线：`main` / `b982c87`
+
+## 审查范围
+
+- PaymentMandate 核心字段、绑定主体、状态机和版本替换。
+- PolicyDecision 的确定性输出、快照、原因码、有效期与审计引用。
+- F07 Budget Hold 与 F09 自主执行的边界。
+- 幂等、并发、重放、暂停/撤销和环境隔离约束。
+- 产品、技术、路线、根 README、CHANGELOG 与验证记录的同步。
+
+## 评分
+
+| 维度 | 得分 | 依据 |
+| --- | ---: | --- |
+| 需求完整性 | 20/20 | 覆盖金额、币种、收款方、用途、环境、有效期、资源范围和四类主体绑定 |
+| 契约清晰度 | 19/20 | 字段、状态、决策顺序、稳定原因码和 F07/F09 依赖均可执行；具体 API 仍留给 F08 代码 PR |
+| 金融边界 | 20/20 | 明确 Mandate 不是预算、Hold 不是授权，未授权不得预留，未调用 Provider 或 Signer |
+| 可验证性 | 19/20 | 链接、格式、契约静态检查通过；运行时测试留给 F08 R2 代码 PR |
+| 文档一致性 | 20/20 | 产品、技术、路线、根 README、CHANGELOG、testing、verification 和 operations 已同步 |
+
+综合评分：98/100
+
+## 结论
+
+建议：**通过 D2 文档基线，进入独立 R2 Domain 与 Architecture 审查；合并后才开始 F08 代码 PR。**
+
+D2 只冻结授权事实和运行时边界，不声称 F08 已实现，也不授权 Sandbox/Testnet 双向收付、Hosted、Live/Mainnet、托管或生产凭证。
+
+## 遗留风险
+
+1. F08 代码需要把契约落到 Schema、OpenAPI、MCP、SDK 和确定性运行时测试，并验证并发、重启和幂等冲突。
+2. F07 当前实现与未来 Mandate 决策的集成必须证明 `approved` 之后才创建 Budget Hold，不能以预算充足覆盖授权拒绝。
+3. 独立人类 R2 审查尚未完成；Codex 不能作为批准者。
+
+---
+
 # D1 F07 财务边界契约自主审查报告
 
 日期：2026-09-08
