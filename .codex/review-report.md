@@ -261,6 +261,46 @@ D1 将预算 Scope、Hold 和不可变财务事件定义为单一边界，并要
 
 ---
 
+# F07 Budget Hold / Financial Posting 自主审查报告
+
+日期：2026-09-08
+审查者：Codex（Contributor / Verifier，非 R2 Approver）
+分支：`feat/f07-budget-financial-posting`
+基线：`main` / `9c05889`
+
+## 审查范围
+
+- Schema v12 的 `budgets`、`budget_holds`、`financial_postings` 和迁移恢复。
+- PaymentIntent `budget_id`、授权前 Budget Hold、结算时 Consume 与 Transaction Detail 财务证据。
+- HTTP/OpenAPI/TypeScript SDK 资源接口、幂等、原子提交和旧支付流兼容。
+
+## 评分
+
+| 维度 | 得分 | 依据 |
+| --- | ---: | --- |
+| 需求完整性 | 18/20 | 覆盖预算、预留、Posting、超预算、结算和重启；释放/过期端点与层级 Scope 解析留给后续增量 |
+| 技术实现 | 18/20 | 复用现有 SQLite WAL、CAS、Claim、LedgerEvent、Outbox 和 `commitDomainMutation`；Posting 追加写入且不覆盖历史 |
+| 金融边界 | 19/20 | Hold 与 Provider 付款、Mandate、Settlement 分离；未配置预算的旧流程兼容，Live/Mainnet 继续关闭 |
+| 自动化验证 | 20/20 | F07 4/4、Sandbox 118/118、SDK 10/10、契约 63 项不变量与 Prototype lint/build 通过 |
+| 文档与契约 | 19/20 | OpenAPI、SDK、产品、技术、Changelog、testing、verification 已同步；独立 R2 审查尚未完成 |
+
+综合评分：94/100
+
+## 结论
+
+建议：**通过本地实现，进入 R2 独立人工审查**。
+
+F07 已把预算约束接入 Transaction Core 的同一原子提交：授权时先校验并创建 active Hold，结算时将 Hold 转为 consumed 并追加两条 Posting；预算、Hold、Posting、LedgerEvent、Webhook Outbox、钱包和幂等终态一起提交。F08 Mandate 仍是授权来源，F07 不新增审批或支付执行。
+
+## 残余风险与后续门槛
+
+1. 当前实现优先覆盖单一有效 Scope；多级 Scope 链、释放/过期操作和预算调整需后续 F07 增量 PR。
+2. `financial_postings` 目前通过追加表与资源快照同步，后续需增加独立对账重建命令和并发故障注入覆盖。
+3. 本轮未执行真实 Testnet 支付、Hosted E2E、Live/Mainnet 或托管；这些能力仍保持关闭。
+4. F07 PR 合并前需要独立人类 Domain 与 Architecture R2 批准；Codex 不能作为批准者。
+
+---
+
 # D0 Phase 0 业务路线与文档基线审查报告
 
 日期：2026-09-07

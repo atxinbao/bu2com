@@ -152,6 +152,26 @@
       <h2 id="unreleased">Unreleased</h2>
       <article class="release">
         <div class="release-head">
+          <div><h3>F07 · Budget Hold 与 Financial Posting</h3><time datetime="2026-09-08">2026-09-08</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">Reference Sandbox Schema v12 增加预算 Scope、Budget Hold 与不可变 Financial Posting，并接入授权、结算和现有原子事务边界。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag added">Added</span>新增 Budget、Budget Hold、Financial Posting API、SDK 类型与 Sandbox 验收测试。</li>
+            <li><span class="tag changed">Changed</span>带 <code>budget_id</code> 的支付在授权时预留预算，结算时消费 Hold 并追加 Posting。</li>
+            <li><span class="tag governance">Boundary</span>未改变 F08 Mandate、支付适配器、Live/Mainnet、Hosted 或托管边界。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R2 · 预算、持久化与财务事件</span></div>
+          <div><b>验证</b><span>Sandbox 118/118；SDK 10/10；契约 63 项不变量、6 个 MCP 工具通过</span></div>
+          <div><b>恢复</b><span>预算、Hold、Posting 与既有钱包/账本在同一 SQLite 原子事务中恢复</span></div>
+        </div>
+      </article>
+      <article class="release">
+        <div class="release-head">
           <div><h3>D1 · F07 财务边界契约</h3><time datetime="2026-09-08">2026-09-08</time></div>
           <span class="status">Unreleased</span>
         </div>

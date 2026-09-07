@@ -176,6 +176,14 @@
 - Not run: F07 runtime, migration, browser, Sandbox/Testnet payment and hosted E2E; D1 intentionally changes documentation only.
 - Boundary: no API, Schema, transaction state, balance, Ledger, Adapter, signer or environment behavior changed.
 
+## 2026-09-08 · F07 Budget Hold / Financial Posting implementation
+
+- `node --test sandbox/f07.test.mjs`: passed; 3/3 targeted tests for budget creation, hold consumption, over-budget rejection and restart recovery.
+- `npm --prefix sandbox test`: passed; 118/118 tests, including existing F06a/F06b, atomicity, webhook, x402 and environment suites.
+- `npm --prefix packages/typescript-sdk test`: passed; generated contract, format, lint, typecheck, build and 10/10 unit tests.
+- `node docs/03-technical/validate-contract.mjs`: passed; 63 invariants and 6 MCP tools remain valid.
+- Boundary: Schema v12 adds `budgets`, `budget_holds` and `financial_postings`; F07 mutations reuse existing Transaction Core atomic commit, idempotency claim, wallet CAS and Webhook Outbox. No F08 Mandate, Live/Mainnet or custody capability was enabled.
+
 ## 2026-09-06 · Internal Sandbox Product Baseline
 
 - `node --test deploy/local-sandbox.test.mjs`: 3/3 passed.

@@ -305,6 +305,23 @@ export function createBu2Server({
       if (request.method === "GET" && url.pathname === "/v1/ledger") {
         return send(response, 200, { data: activeLedger.listLedgerEvents() });
       }
+      if (request.method === "GET" && url.pathname === "/v1/budgets") {
+        return send(response, 200, { data: activeSandbox.listBudgets() });
+      }
+      if (request.method === "POST" && url.pathname === "/v1/budgets") {
+        const body = validateBody("createBudget", await readJson(request));
+        return send(
+          response,
+          201,
+          await activeSandbox.createBudget(body, validateIdempotencyKey(key)),
+        );
+      }
+      if (request.method === "GET" && url.pathname === "/v1/budget_holds") {
+        return send(response, 200, { data: activeSandbox.listBudgetHolds() });
+      }
+      if (request.method === "GET" && url.pathname === "/v1/financial_postings") {
+        return send(response, 200, { data: activeSandbox.listFinancialPostings() });
+      }
       if (request.method === "GET" && url.pathname === "/v1/transactions") {
         const visible = activeAccess.filterTransactionViews(
           actor,
@@ -548,6 +565,27 @@ export function createBu2Server({
               validateIdempotencyKey(key),
             ),
           );
+        }
+      }
+      if (segments[0] === "v1" && segments[1] === "budgets" && segments[2]) {
+        if (request.method === "GET" && segments.length === 3) {
+          const budgetId = validateResourceId(segments[2], "bud", "budget_id");
+          return send(response, 200, activeSandbox.budgetView(activeSandbox.getBudget(budgetId)));
+        }
+        if (
+          request.method === "GET" &&
+          segments.length === 4 &&
+          segments[3] === "holds"
+        ) {
+          const budgetId = validateResourceId(segments[2], "bud", "budget_id");
+          activeSandbox.getBudget(budgetId);
+          return send(response, 200, { data: activeSandbox.listBudgetHolds(budgetId) });
+        }
+      }
+      if (segments[0] === "v1" && segments[1] === "budget_holds" && segments[2]) {
+        if (request.method === "GET" && segments.length === 3) {
+          const holdId = validateResourceId(segments[2], "hold", "budget_hold_id");
+          return send(response, 200, activeSandbox.getBudgetHold(holdId));
         }
       }
       if (segments[0] === "v1" && segments[1] === "transactions" && segments[2]) {

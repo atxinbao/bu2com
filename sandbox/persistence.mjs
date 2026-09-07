@@ -189,6 +189,11 @@ export class SqliteLedger {
         name: "funding_source_receiving_target_bindings",
         apply: () => this.migrateFundingTargetBindings(),
       },
+      {
+        version: 12,
+        name: "budget_holds_financial_postings",
+        apply: () => this.migrateBudgetFinancialPosting(),
+      },
     ];
     for (const migration of migrations) {
       if (applied.has(migration.version)) continue;
@@ -655,6 +660,62 @@ export class SqliteLedger {
     `);
   }
 
+  migrateBudgetFinancialPosting() {
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS budgets (
+        id TEXT PRIMARY KEY,
+        scope_type TEXT NOT NULL CHECK (scope_type IN ('workspace', 'project', 'account', 'agent')),
+        scope_id TEXT NOT NULL,
+        currency TEXT NOT NULL CHECK (currency GLOB '[A-Z][A-Z][A-Z]'),
+        period TEXT NOT NULL CHECK (period IN ('lifetime', 'calendar_month', 'rolling_24h')),
+        limit_minor INTEGER NOT NULL CHECK (limit_minor >= 0),
+        status TEXT NOT NULL CHECK (status IN ('active', 'paused', 'exhausted', 'expired')),
+        version INTEGER NOT NULL CHECK (version >= 1),
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        UNIQUE(scope_type, scope_id, period, currency, version)
+      );
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_budgets_active_scope
+        ON budgets(scope_type, scope_id, period, currency) WHERE status='active';
+      CREATE TABLE IF NOT EXISTS budget_holds (
+        id TEXT PRIMARY KEY,
+        transaction_id TEXT NOT NULL,
+        payment_intent_id TEXT NOT NULL,
+        budget_id TEXT NOT NULL,
+        amount_value INTEGER NOT NULL CHECK (amount_value >= 0),
+        currency TEXT NOT NULL CHECK (currency GLOB '[A-Z][A-Z][A-Z]'),
+        status TEXT NOT NULL CHECK (status IN ('active', 'consumed', 'released', 'expired')),
+        authorization_id TEXT NOT NULL,
+        idempotency_key TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        released_at TEXT,
+        consumed_at TEXT,
+        UNIQUE(transaction_id, budget_id),
+        FOREIGN KEY (budget_id) REFERENCES budgets(id)
+      );
+      CREATE INDEX IF NOT EXISTS idx_budget_holds_budget_status
+        ON budget_holds(budget_id, status, created_at);
+      CREATE TABLE IF NOT EXISTS financial_postings (
+        id TEXT PRIMARY KEY,
+        event_id TEXT NOT NULL,
+        event_type TEXT NOT NULL,
+        transaction_id TEXT,
+        budget_id TEXT,
+        source_id TEXT NOT NULL,
+        direction TEXT NOT NULL CHECK (direction IN ('debit', 'credit')),
+        account TEXT NOT NULL,
+        amount_value INTEGER NOT NULL CHECK (amount_value >= 0),
+        currency TEXT NOT NULL CHECK (currency GLOB '[A-Z][A-Z][A-Z]'),
+        created_at TEXT NOT NULL,
+        UNIQUE(event_id, direction, account)
+      );
+      CREATE INDEX IF NOT EXISTS idx_financial_postings_transaction
+        ON financial_postings(transaction_id, created_at);
+      CREATE INDEX IF NOT EXISTS idx_financial_postings_budget
+        ON financial_postings(budget_id, created_at);
+    `);
+  }
+
   environmentMetadata() {
     return this.db
       .prepare(`
@@ -813,7 +874,21 @@ export class SqliteLedger {
       .prepare("SELECT payload FROM ledger_events ORDER BY sequence")
       .all()
       .map((row) => JSON.parse(row.payload));
-    return { resources, state: stateRows, idempotency, events };
+    const financial = {
+      budgets: this.db
+        .prepare("SELECT * FROM budgets ORDER BY created_at, id")
+        .all()
+        .map((row) => [row.id, { ...row, limit_minor: Number(row.limit_minor) }]),
+      budget_holds: this.db
+        .prepare("SELECT * FROM budget_holds ORDER BY created_at, id")
+        .all()
+        .map((row) => [row.id, { ...row, amount_value: Number(row.amount_value) }]),
+      financial_postings: this.db
+        .prepare("SELECT * FROM financial_postings ORDER BY created_at, id")
+        .all()
+        .map((row) => [row.id, { ...row, amount_value: Number(row.amount_value) }]),
+    };
+    return { resources, state: stateRows, idempotency, events, financial };
   }
 
   claimIdempotency({ scopeKey, fingerprint, ownerToken, createdAt }) {
@@ -988,6 +1063,79 @@ export class SqliteLedger {
       `);
       state.run("wallet", JSON.stringify(snapshot.wallet));
       state.run("known_payees", JSON.stringify(snapshot.knownPayees));
+      const financial = snapshot.financial ?? {};
+      const budgetUpsert = this.db.prepare(`
+        INSERT INTO budgets(
+          id, scope_type, scope_id, currency, period, limit_minor, status,
+          version, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET
+          scope_type=excluded.scope_type, scope_id=excluded.scope_id,
+          currency=excluded.currency, period=excluded.period,
+          limit_minor=excluded.limit_minor, status=excluded.status,
+          version=excluded.version, updated_at=excluded.updated_at
+      `);
+      for (const [, budget] of financial.budgets ?? []) {
+        budgetUpsert.run(
+          budget.id,
+          budget.scope_type,
+          budget.scope_id,
+          budget.currency,
+          budget.period,
+          budget.limit_minor,
+          budget.status,
+          budget.version,
+          budget.created_at,
+          budget.updated_at,
+        );
+      }
+      const holdUpsert = this.db.prepare(`
+        INSERT INTO budget_holds(
+          id, transaction_id, payment_intent_id, budget_id, amount_value, currency,
+          status, authorization_id, idempotency_key, created_at, released_at, consumed_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET
+          status=excluded.status, released_at=excluded.released_at,
+          consumed_at=excluded.consumed_at
+      `);
+      for (const [, hold] of financial.budget_holds ?? []) {
+        holdUpsert.run(
+          hold.id,
+          hold.transaction_id,
+          hold.payment_intent_id,
+          hold.budget_id,
+          hold.amount_value,
+          hold.currency,
+          hold.status,
+          hold.authorization_id,
+          hold.idempotency_key,
+          hold.created_at,
+          hold.released_at ?? null,
+          hold.consumed_at ?? null,
+        );
+      }
+      const postingInsert = this.db.prepare(`
+        INSERT INTO financial_postings(
+          id, event_id, event_type, transaction_id, budget_id, source_id,
+          direction, account, amount_value, currency, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(id) DO NOTHING
+      `);
+      for (const [, posting] of financial.financial_postings ?? []) {
+        postingInsert.run(
+          posting.id,
+          posting.event_id,
+          posting.event_type,
+          posting.transaction_id ?? null,
+          posting.budget_id ?? null,
+          posting.source_id,
+          posting.direction,
+          posting.account,
+          posting.amount_value,
+          posting.currency,
+          posting.created_at,
+        );
+      }
       this.failureInjector?.("after_state_write");
       for (const event of events) this.insertEventAndOutbox(event);
       this.failureInjector?.("after_outbox_write");
@@ -1564,6 +1712,9 @@ export class SqliteLedger {
       "adapter_operations",
       "webhook_outbox",
       "access_decisions",
+      "budgets",
+      "budget_holds",
+      "financial_postings",
     ];
     return Object.fromEntries(
       tables.map((table) => [

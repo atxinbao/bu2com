@@ -705,3 +705,21 @@ npm --prefix sandbox run test:hosted-deployment
 - 变更文档相对链接扫描：通过。
 
 未执行：F07 运行时、数据库迁移、浏览器、Sandbox/Testnet 支付和 Hosted E2E；D1 明确不改变可执行行为。风险等级为 R0 文档契约冻结，需独立 R2 审查后才允许进入 F07 代码 PR。
+
+## F07 Budget Hold / Financial Posting 实现验证
+
+日期：2026-09-08
+执行者：Codex
+
+本轮在 Reference Sandbox Schema v12 增加 `budgets`、`budget_holds` 与 `financial_postings`，并将授权时的 Budget Hold、结算时的 Consume 与四条 Financial Posting 接入既有 `commitDomainMutation` 原子事务。OpenAPI 与 TypeScript SDK 同步新增 Budget、Hold、Posting 读写类型与接口。
+
+验证结果：
+
+- `node --test sandbox/f07.test.mjs`：3/3 通过。
+- `npm --prefix sandbox test`：118/118 通过。
+- `npm --prefix packages/typescript-sdk test`：生成检查、格式、Lint、类型检查、构建和 10/10 单测通过。
+- `node docs/03-technical/validate-contract.mjs`：63 项不变量、6 个 MCP 工具通过。
+
+验收边界：预算不足、错误币种、非 active Scope 在 Hold 前失败关闭；同一事务的钱包、资源、Budget、Hold、Posting、LedgerEvent、Webhook Outbox 与幂等终态由现有 SQLite `BEGIN IMMEDIATE` 一次提交。未配置 `budget_id` 的既有演示支付保持兼容。
+
+未执行：F08 Payment Mandate、收款 F10/F11、退款 F13、Hosted E2E、真实 Testnet 双向支付、Live/Mainnet 或托管；F07 代码 PR 仍需独立 Domain 与 Architecture R2 审查。

@@ -18,6 +18,19 @@ const amount = {
 };
 
 const schemas = {
+  createBudget: {
+    type: "object",
+    additionalProperties: false,
+    required: ["scope_type", "scope_id", "currency", "period", "limit_minor"],
+    properties: {
+      id: identifier("bud"),
+      scope_type: { type: "string", enum: ["workspace", "project", "account", "agent"] },
+      scope_id: { type: "string", minLength: 1, maxLength: 255 },
+      currency: { type: "string", pattern: "^[A-Z]{3}$" },
+      period: { type: "string", enum: ["lifetime", "calendar_month", "rolling_24h"] },
+      limit_minor: { type: "integer", minimum: 0 },
+    },
+  },
   createQuote: {
     type: "object",
     additionalProperties: false,
@@ -63,6 +76,7 @@ const schemas = {
       network: { type: "string", minLength: 1, maxLength: 120 },
       funding_source_id: identifier("fund"),
       receiving_target_id: identifier("tgt"),
+      budget_id: identifier("bud"),
       external_context: {
         type: "object",
         additionalProperties: false,

@@ -19,6 +19,111 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/budgets": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        /** List configured budget scopes and current availability */
+        get: operations["listBudgets"];
+        put?: never;
+        /** Create an active budget scope */
+        post: operations["createBudget"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/budgets/{budget_id}": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path: {
+                budget_id: string;
+            };
+            cookie?: never;
+        };
+        /** Read one budget scope */
+        get: operations["getBudget"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/budget_holds": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        /** List budget holds */
+        get: operations["listBudgetHolds"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/budget_holds/{budget_hold_id}": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path: {
+                budget_hold_id: string;
+            };
+            cookie?: never;
+        };
+        /** Read one budget hold */
+        get: operations["getBudgetHold"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial_postings": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        /** List immutable financial postings */
+        get: operations["listFinancialPostings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/quotes": {
         parameters: {
             query?: never;
@@ -403,6 +508,63 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        CreateBudget: {
+            id?: string;
+            /** @enum {string} */
+            scope_type: "workspace" | "project" | "account" | "agent";
+            scope_id: string;
+            currency: string;
+            /** @enum {string} */
+            period: "lifetime" | "calendar_month" | "rolling_24h";
+            limit_minor: number;
+        };
+        Budget: components["schemas"]["CreateBudget"] & {
+            id: string;
+            /** @enum {string} */
+            status: "active" | "paused" | "exhausted" | "expired";
+            version: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+            active_hold_total: number;
+            consumed_total: number;
+            available_minor: number;
+            hold_count: number;
+        };
+        BudgetHold: {
+            id: string;
+            transaction_id: string;
+            payment_intent_id: string;
+            budget_id: string;
+            amount_value: number;
+            currency: string;
+            /** @enum {string} */
+            status: "active" | "consumed" | "released" | "expired";
+            authorization_id: string;
+            idempotency_key: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            released_at?: string | null;
+            /** Format: date-time */
+            consumed_at?: string | null;
+        };
+        FinancialPosting: {
+            id: string;
+            event_id: string;
+            event_type: string;
+            transaction_id?: string | null;
+            budget_id?: string | null;
+            source_id: string;
+            /** @enum {string} */
+            direction: "debit" | "credit";
+            account: string;
+            amount_value: number;
+            currency: string;
+            /** Format: date-time */
+            created_at: string;
+        };
         EnvironmentInfo: {
             /** @constant */
             service: "bu2-reference-server";
@@ -777,6 +939,7 @@ export interface components {
             network?: string;
             funding_source_id?: string;
             receiving_target_id?: string;
+            budget_id?: string;
             external_context?: components["schemas"]["ExternalContext"];
             metadata?: {
                 [key: string]: string;
@@ -809,6 +972,7 @@ export interface components {
             authorization: components["schemas"]["Authorization"];
             funding_source_binding_id?: string | null;
             receiving_target_binding_id?: string | null;
+            budget_id?: string | null;
             /** Format: date-time */
             created_at: string;
         };
@@ -1066,6 +1230,163 @@ export interface operations {
                 };
             };
             400: components["responses"]["BadRequest"];
+        };
+    };
+    listBudgets: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Budget scopes */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Budget"][];
+                    };
+                };
+            };
+        };
+    };
+    createBudget: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateBudget"];
+            };
+        };
+        responses: {
+            /** @description Budget created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Budget"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    getBudget: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path: {
+                budget_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Budget scope */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Budget"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    listBudgetHolds: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Budget holds */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BudgetHold"][];
+                    };
+                };
+            };
+        };
+    };
+    getBudgetHold: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path: {
+                budget_hold_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Budget hold */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BudgetHold"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    listFinancialPostings: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Financial postings */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FinancialPosting"][];
+                    };
+                };
+            };
         };
     };
     createQuote: {
