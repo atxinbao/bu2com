@@ -360,9 +360,18 @@ export class Bu2Sandbox {
       requireFields(input, ["seller_agent_id", "payee_account_id", "item", "amount", "expires_at"]);
       requireFields(input.item, ["name", "delivery_type"]);
       validateAmount(input.amount);
+      const targetBinding = this.ledger?.assertWalletBinding(this.environmentConfig.environment, {
+        kind: "receiving_target",
+        accountId: input.payee_account_id,
+        agentId: input.seller_agent_id,
+        asset: input.asset ?? this.environmentConfig.asset ?? input.amount.currency,
+        network: input.network ?? this.environmentConfig.network ?? null,
+        reference: input.receiving_target_id ?? null,
+      });
       const quote = {
         id: prefix("quo"),
         ...clone(input),
+        receiving_target_binding_id: targetBinding?.binding?.id ?? null,
         status: "active",
         created_at: new Date().toISOString(),
       };
@@ -404,6 +413,22 @@ export class Bu2Sandbox {
           "Payment amount must exactly match the quote.",
         );
       }
+      const fundingBinding = this.ledger?.assertWalletBinding(this.environmentConfig.environment, {
+        kind: "funding_source",
+        accountId: input.payer_account_id,
+        agentId: input.buyer_agent_id,
+        asset: input.asset ?? this.environmentConfig.asset ?? input.amount.currency,
+        network: input.network ?? this.environmentConfig.network ?? null,
+        reference: input.funding_source_id ?? null,
+      });
+      const targetBinding = this.ledger?.assertWalletBinding(this.environmentConfig.environment, {
+        kind: "receiving_target",
+        accountId: quote.payee_account_id,
+        agentId: quote.seller_agent_id,
+        asset: quote.asset ?? this.environmentConfig.asset ?? quote.amount.currency,
+        network: quote.network ?? this.environmentConfig.network ?? null,
+        reference: quote.receiving_target_id ?? null,
+      });
       let decision = "allowed";
       let reason_code = "mandate_match";
       if (input.amount.value > 5000) {
@@ -424,6 +449,8 @@ export class Bu2Sandbox {
         ...clone(input),
         payee_account_id: quote.payee_account_id,
         seller_agent_id: quote.seller_agent_id,
+        funding_source_binding_id: fundingBinding?.binding?.id ?? null,
+        receiving_target_binding_id: targetBinding?.binding?.id ?? null,
         status,
         transaction_id: null,
         authorization: {

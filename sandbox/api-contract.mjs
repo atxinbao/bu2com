@@ -36,6 +36,9 @@ const schemas = {
       },
       amount,
       expires_at: { type: "string", format: "date-time" },
+      asset: { type: "string", minLength: 1, maxLength: 120 },
+      network: { type: "string", minLength: 1, maxLength: 120 },
+      receiving_target_id: identifier("tgt"),
     },
   },
   createPaymentIntent: {
@@ -56,6 +59,10 @@ const schemas = {
       payment_mandate_id: identifier("mdt"),
       amount,
       purpose: { type: "string", minLength: 1, maxLength: 500 },
+      asset: { type: "string", minLength: 1, maxLength: 120 },
+      network: { type: "string", minLength: 1, maxLength: 120 },
+      funding_source_id: identifier("fund"),
+      receiving_target_id: identifier("tgt"),
       external_context: {
         type: "object",
         additionalProperties: false,

@@ -32,6 +32,7 @@
 - [ENV-05 受控开发者与运维入口 v1](ENVIRONMENT_CONTROLLED_ACCESS_V1.md)
 - [Access Contract v1](access-contract.json)
 - [F06a 持久身份与内部 Sandbox onboarding](../../sandbox/onboarding.mjs)
+- [F06b 资金来源与收款目标绑定](F06B_FUNDING_TARGET_BINDINGS_V1.md)
 - [ENV-06 制品提升、监控、备份与恢复演练 v1](ENVIRONMENT_OPERATIONS_V1.md)
 - [ENV-07 Hosted Sandbox 双向 Base Sepolia 验收 v1](ENVIRONMENT_HOSTED_SANDBOX_V1.md)
 - [ENV-07B Hosted Sandbox 部署准备契约](../../deploy/hosted-sandbox-deployment.json)

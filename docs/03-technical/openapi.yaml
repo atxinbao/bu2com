@@ -600,6 +600,8 @@ components:
             - { $ref: '#/components/schemas/IdentitySummary' }
             - { type: 'null' }
           description: Persisted Principal, Account and Agent ownership visible to the authenticated caller.
+        wallet_bindings:
+          $ref: '#/components/schemas/WalletBindings'
     IdentityPrincipal:
       type: object
       additionalProperties: false
@@ -656,6 +658,61 @@ components:
         agents:
           type: array
           items: { $ref: '#/components/schemas/IdentityAgent' }
+        funding_sources:
+          type: array
+          items: { $ref: '#/components/schemas/FundingSourceBinding' }
+        receiving_targets:
+          type: array
+          items: { $ref: '#/components/schemas/ReceivingTargetBinding' }
+    FundingSourceBinding:
+      type: object
+      additionalProperties: false
+      required: [environment, id, tenant_id, account_id, agent_id, asset, network, provider, source_reference, status, verification_status, generation, created_at, updated_at]
+      properties:
+        environment: { type: string, enum: [local, sandbox, live] }
+        id: { type: string, pattern: '^fund_[A-Za-z0-9_-]+$' }
+        tenant_id: { type: string, pattern: '^ten_[A-Za-z0-9_-]+$' }
+        account_id: { type: string, pattern: '^acct_[A-Za-z0-9_-]+$' }
+        agent_id: { type: [string, 'null'], pattern: '^agt_[A-Za-z0-9_-]+$' }
+        asset: { type: string, minLength: 1, maxLength: 120 }
+        network: { type: [string, 'null'], maxLength: 120 }
+        provider: { type: string, minLength: 1, maxLength: 120 }
+        source_reference: { type: string, minLength: 1, maxLength: 512 }
+        status: { type: string, enum: [active, disabled, revoked] }
+        verification_status: { type: string, enum: [pending, verified, failed, revoked] }
+        generation: { type: integer, minimum: 1 }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    ReceivingTargetBinding:
+      type: object
+      additionalProperties: false
+      required: [environment, id, tenant_id, account_id, agent_id, asset, network, provider, target_reference, status, verification_status, generation, created_at, updated_at]
+      properties:
+        environment: { type: string, enum: [local, sandbox, live] }
+        id: { type: string, pattern: '^tgt_[A-Za-z0-9_-]+$' }
+        tenant_id: { type: string, pattern: '^ten_[A-Za-z0-9_-]+$' }
+        account_id: { type: string, pattern: '^acct_[A-Za-z0-9_-]+$' }
+        agent_id: { type: [string, 'null'], pattern: '^agt_[A-Za-z0-9_-]+$' }
+        asset: { type: string, minLength: 1, maxLength: 120 }
+        network: { type: [string, 'null'], maxLength: 120 }
+        provider: { type: string, minLength: 1, maxLength: 120 }
+        target_reference: { type: string, minLength: 1, maxLength: 512 }
+        status: { type: string, enum: [active, disabled, revoked] }
+        verification_status: { type: string, enum: [pending, verified, failed, revoked] }
+        generation: { type: integer, minimum: 1 }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    WalletBindings:
+      type: object
+      additionalProperties: false
+      required: [funding_sources, receiving_targets]
+      properties:
+        funding_sources:
+          type: array
+          items: { $ref: '#/components/schemas/FundingSourceBinding' }
+        receiving_targets:
+          type: array
+          items: { $ref: '#/components/schemas/ReceivingTargetBinding' }
     CreateSupportBundle:
       type: object
       additionalProperties: false
@@ -871,6 +928,9 @@ components:
             delivery_type: { type: string, minLength: 1, maxLength: 100 }
         amount: { $ref: '#/components/schemas/Amount' }
         expires_at: { type: string, format: date-time }
+        asset: { type: string, minLength: 1, maxLength: 120 }
+        network: { type: string, minLength: 1, maxLength: 120 }
+        receiving_target_id: { type: string, pattern: '^tgt_[A-Za-z0-9_-]+$', maxLength: 255 }
     Quote:
       type: object
       additionalProperties: false
@@ -889,6 +949,7 @@ components:
         amount: { $ref: '#/components/schemas/Amount' }
         expires_at: { type: string, format: date-time }
         status: { type: string, enum: [active, accepted, expired, canceled] }
+        receiving_target_binding_id: { type: [string, 'null'], pattern: '^tgt_[A-Za-z0-9_-]+$' }
         created_at: { type: string, format: date-time }
     ExternalContext:
       type: object
@@ -908,6 +969,10 @@ components:
         payment_mandate_id: { type: string, pattern: '^mdt_[A-Za-z0-9_-]+$', maxLength: 255 }
         amount: { $ref: '#/components/schemas/Amount' }
         purpose: { type: string, minLength: 1, maxLength: 500 }
+        asset: { type: string, minLength: 1, maxLength: 120 }
+        network: { type: string, minLength: 1, maxLength: 120 }
+        funding_source_id: { type: string, pattern: '^fund_[A-Za-z0-9_-]+$', maxLength: 255 }
+        receiving_target_id: { type: string, pattern: '^tgt_[A-Za-z0-9_-]+$', maxLength: 255 }
         external_context: { $ref: '#/components/schemas/ExternalContext' }
         metadata:
           type: object
@@ -944,6 +1009,8 @@ components:
         status: { type: string, enum: [requires_authorization, authorized, funds_reserved, delivery_submitted, settled, declined, expired, canceled, refunded, disputed] }
         transaction_id: { type: [string, 'null'], pattern: '^txn_[A-Za-z0-9_-]+$' }
         authorization: { $ref: '#/components/schemas/Authorization' }
+        funding_source_binding_id: { type: [string, 'null'], pattern: '^fund_[A-Za-z0-9_-]+$' }
+        receiving_target_binding_id: { type: [string, 'null'], pattern: '^tgt_[A-Za-z0-9_-]+$' }
         created_at: { type: string, format: date-time }
     DeliveryEvidence:
       type: object

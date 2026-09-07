@@ -443,6 +443,7 @@ export class AccessController {
       agent_ids: [...actor.agent_ids],
       credential_generation: actor.generation,
       identity: this.ledger?.identityBundleForActor(this.environment, actor) ?? null,
+      wallet_bindings: this.ledger?.walletBindingsForActor(this.environment, actor) ?? null,
     };
   }
 

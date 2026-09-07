@@ -184,6 +184,11 @@ export class SqliteLedger {
         name: "persistent_identity_onboarding",
         apply: () => this.migratePersistentIdentityOnboarding(),
       },
+      {
+        version: 11,
+        name: "funding_source_receiving_target_bindings",
+        apply: () => this.migrateFundingTargetBindings(),
+      },
     ];
     for (const migration of migrations) {
       if (applied.has(migration.version)) continue;
@@ -601,6 +606,52 @@ export class SqliteLedger {
         created_at TEXT NOT NULL,
         UNIQUE (environment, idempotency_key)
       );
+    `);
+  }
+
+  migrateFundingTargetBindings() {
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS funding_sources (
+        environment TEXT NOT NULL CHECK (environment IN ('local', 'sandbox', 'live')),
+        id TEXT NOT NULL,
+        tenant_id TEXT NOT NULL,
+        account_id TEXT NOT NULL,
+        agent_id TEXT,
+        asset TEXT NOT NULL,
+        network TEXT,
+        provider TEXT NOT NULL,
+        source_reference TEXT NOT NULL,
+        status TEXT NOT NULL CHECK (status IN ('active', 'disabled', 'revoked')),
+        verification_status TEXT NOT NULL CHECK (verification_status IN ('pending', 'verified', 'failed', 'revoked')),
+        generation INTEGER NOT NULL CHECK (generation >= 1),
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        PRIMARY KEY (environment, id),
+        UNIQUE (environment, tenant_id, source_reference, generation)
+      );
+      CREATE INDEX IF NOT EXISTS idx_funding_sources_owner
+        ON funding_sources(environment, tenant_id, account_id, agent_id, status);
+
+      CREATE TABLE IF NOT EXISTS receiving_targets (
+        environment TEXT NOT NULL CHECK (environment IN ('local', 'sandbox', 'live')),
+        id TEXT NOT NULL,
+        tenant_id TEXT NOT NULL,
+        account_id TEXT NOT NULL,
+        agent_id TEXT,
+        asset TEXT NOT NULL,
+        network TEXT,
+        provider TEXT NOT NULL,
+        target_reference TEXT NOT NULL,
+        status TEXT NOT NULL CHECK (status IN ('active', 'disabled', 'revoked')),
+        verification_status TEXT NOT NULL CHECK (verification_status IN ('pending', 'verified', 'failed', 'revoked')),
+        generation INTEGER NOT NULL CHECK (generation >= 1),
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        PRIMARY KEY (environment, id),
+        UNIQUE (environment, tenant_id, target_reference, generation)
+      );
+      CREATE INDEX IF NOT EXISTS idx_receiving_targets_owner
+        ON receiving_targets(environment, tenant_id, account_id, agent_id, status);
     `);
   }
 
@@ -1814,8 +1865,179 @@ export class SqliteLedger {
         }
       }
     }
+    this._applyBindingRows(
+      "funding_sources",
+      environment,
+      tenant,
+      tenant.funding_sources ?? [],
+      "source_reference",
+    );
+    this._applyBindingRows(
+      "receiving_targets",
+      environment,
+      tenant,
+      tenant.receiving_targets ?? [],
+      "target_reference",
+    );
     this.tenantAccessState(environment, tenant.tenant_id);
     return this.identityBundle(environment, tenant.tenant_id);
+  }
+
+  _applyBindingRows(table, environment, tenant, bindings, referenceField) {
+    const createdAt = new Date().toISOString();
+    const environmentMetadata = this.environmentMetadata();
+    for (const binding of bindings) {
+      if (
+        environmentMetadata &&
+        ((environmentMetadata.asset && binding.asset !== environmentMetadata.asset) ||
+          (environmentMetadata.network && binding.network !== environmentMetadata.network))
+      ) {
+        throw new ApiError(
+          409,
+          "configuration_error",
+          "wallet_binding_environment_mismatch",
+          "Wallet binding asset or network does not match the persisted service environment.",
+          {
+            environment,
+            binding_id: binding.id,
+            expected_asset: environmentMetadata.asset,
+            expected_network: environmentMetadata.network,
+          },
+        );
+      }
+      const record = {
+        ...binding,
+        tenant_id: tenant.tenant_id,
+        created_at: binding.created_at ?? createdAt,
+        updated_at: createdAt,
+      };
+      const current = this.db
+        .prepare(`SELECT * FROM ${table} WHERE environment=? AND id=?`)
+        .get(environment, binding.id);
+      if (!current) {
+        this.db
+          .prepare(`
+            INSERT INTO ${table}(
+              environment, id, tenant_id, account_id, agent_id, asset, network,
+              provider, ${referenceField}, status, verification_status, generation,
+              created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `)
+          .run(
+            environment,
+            record.id,
+            record.tenant_id,
+            record.account_id,
+            record.agent_id,
+            record.asset,
+            record.network,
+            record.provider,
+            record[referenceField],
+            record.status,
+            record.verification_status,
+            record.generation,
+            record.created_at,
+            record.updated_at,
+          );
+        continue;
+      }
+      const conflicts = [
+        "tenant_id",
+        "account_id",
+        "agent_id",
+        "asset",
+        "network",
+        "provider",
+        referenceField,
+        "status",
+        "verification_status",
+        "generation",
+      ].filter((field) => current[field] !== record[field]);
+      if (conflicts.length > 0) {
+        throw new ApiError(
+          409,
+          "authorization_error",
+          "identity_binding_conflict",
+          "A wallet binding ID is already bound to different funding or receiving metadata.",
+          { environment, id: binding.id, conflicts: conflicts.sort() },
+        );
+      }
+    }
+  }
+
+  _bindingRows(table, environment, tenantId, accountIds = null, agentIds = null) {
+    const rows = this.db
+      .prepare(`SELECT * FROM ${table} WHERE environment=? AND tenant_id=? ORDER BY id`)
+      .all(environment, tenantId);
+    return rows
+      .filter((row) => !accountIds || accountIds.includes(row.account_id))
+      .filter((row) => !agentIds || row.agent_id === null || agentIds.includes(row.agent_id))
+      .map((row) => {
+        const {
+          source_reference,
+          target_reference,
+          ...rest
+        } = row;
+        return {
+          ...rest,
+          ...(source_reference !== undefined ? { source_reference } : {}),
+          ...(target_reference !== undefined ? { target_reference } : {}),
+        };
+      });
+  }
+
+  walletBindingsForActor(environment, actor) {
+    if (!actor || actor.development_open || actor.platform_access) return null;
+    return {
+      funding_sources: this._bindingRows(
+        "funding_sources",
+        environment,
+        actor.tenant_id,
+        actor.account_ids,
+        actor.agent_ids,
+      ),
+      receiving_targets: this._bindingRows(
+        "receiving_targets",
+        environment,
+        actor.tenant_id,
+        actor.account_ids,
+        actor.agent_ids,
+      ),
+    };
+  }
+
+  assertWalletBinding(
+    environment,
+    { kind, accountId, agentId = null, asset, network = null, reference = null },
+  ) {
+    const table = kind === "funding_source" ? "funding_sources" : "receiving_targets";
+    const referenceField = kind === "funding_source" ? "source_reference" : "target_reference";
+    const rows = this.db
+      .prepare(`
+        SELECT * FROM ${table}
+        WHERE environment=? AND account_id=? AND (agent_id IS NULL OR agent_id=?)
+          AND status='active' AND verification_status='verified'
+      `)
+      .all(environment, accountId, agentId);
+    if (rows.length === 0) return { bound: false };
+    const matching = rows.filter(
+      (row) =>
+        row.asset === asset &&
+        row.network === network &&
+        (reference === null || row[referenceField] === reference),
+    );
+    if (matching.length === 0) {
+      throw new ApiError(
+        409,
+        "authorization_error",
+        kind === "funding_source"
+          ? "funding_source_binding_mismatch"
+          : "receiving_target_binding_mismatch",
+        `The ${kind.replace("_", " ")} does not match an active verified wallet binding.`,
+        { account_id: accountId, agent_id: agentId, asset, network, reference },
+      );
+    }
+    return { bound: true, binding: matching[0] };
   }
 
   bootstrapIdentityTenants(document) {
@@ -2020,6 +2242,8 @@ export class SqliteLedger {
       accounts,
       agents,
       credentials,
+      funding_sources: this._bindingRows("funding_sources", environment, tenantId),
+      receiving_targets: this._bindingRows("receiving_targets", environment, tenantId),
     };
   }
 
@@ -2052,6 +2276,20 @@ export class SqliteLedger {
       principal: principal ? { ...principal } : null,
       accounts: bundle.accounts.filter((account) => actor.account_ids.includes(account.id)),
       agents: bundle.agents.filter((agent) => actor.agent_ids.includes(agent.id)),
+      funding_sources: this._bindingRows(
+        "funding_sources",
+        environment,
+        actor.tenant_id,
+        actor.account_ids,
+        actor.agent_ids,
+      ),
+      receiving_targets: this._bindingRows(
+        "receiving_targets",
+        environment,
+        actor.tenant_id,
+        actor.account_ids,
+        actor.agent_ids,
+      ),
     };
   }
 
