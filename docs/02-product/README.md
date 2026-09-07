@@ -45,7 +45,7 @@ Agent 商业账户、信誉与服务网络
 
 ## 当前状态
 
-- 产品阶段：Phase 0 开发（Simulation / Testnet）；D1 F07 财务边界契约待 R2 审查
+- 产品阶段：Phase 0 开发（Simulation / Testnet）；F07 Budget Hold / Financial Posting 已进入 R2 代码审查
 - 产品版本：Product v0.3 Transaction-first
 - 对应商业计划：BP v0.1
 - 更新日期：2026-09-07

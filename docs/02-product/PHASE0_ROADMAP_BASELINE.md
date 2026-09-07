@@ -59,4 +59,4 @@ BU2 继续定位为嵌入式 Agent AI 收付平台。外部 Agent 在自己的�
 
 ## 6. 当前下一步
 
-D0 文档基线已合并。当前进入 D1：冻结 F07 的 Budget Scope、Budget Hold、Ledger Entry 和 Financial Posting 契约；D1 通过独立 R2 审查后，才开始 F07 代码实现。D1 文档见 [F07 财务边界契约](F07_FINANCIAL_BOUNDARY_CONTRACT.md)。F08 同理，先完成 D2 Mandate 契约文档，再开始 F08。
+D0/D1 文档基线已合并。当前进入 F07 代码实现：Schema v12 已追加 Budget、Budget Hold 与 Financial Posting，并接入既有原子提交边界；代码 PR 仍需独立 R2 审查。D1 文档见 [F07 财务边界契约](F07_FINANCIAL_BOUNDARY_CONTRACT.md)。F08 同理，先完成 D2 Mandate 契约文档，再开始 F08。

@@ -30,6 +30,9 @@ const prefix = (value) => `${value}_${randomUUID().replaceAll("-", "").slice(0, 
 const clone = (value) => structuredClone(value);
 const hash = (value) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
 
+const budgetScopeTypes = new Set(["workspace", "project", "account", "agent"]);
+const budgetPeriods = new Set(["lifetime", "calendar_month", "rolling_24h"]);
+
 function requireFields(value, fields) {
   for (const field of fields) {
     if (value[field] === undefined || value[field] === null || value[field] === "") {
@@ -96,6 +99,10 @@ export class Bu2Sandbox {
     this.receipts = new Map(restored.resources.receipts ?? []);
     this.idempotency = new Map(restored.idempotency ?? []);
     this.events = restored.events ?? [];
+    const financial = restored.financial ?? {};
+    this.budgets = new Map(financial.budgets ?? []);
+    this.budgetHolds = new Map(financial.budget_holds ?? []);
+    this.financialPostings = new Map(financial.financial_postings ?? []);
     this.stateRevision = Number(restored.state.state_revision ?? 0);
     this.wallet =
       restored.state.wallet ??
@@ -181,10 +188,15 @@ export class Bu2Sandbox {
         intents: [...this.intents.entries()].map(([id, value]) => [id, clone(value)]),
         transactions: [...this.transactions.entries()].map(([id, value]) => [id, clone(value)]),
         deliveries: [...this.deliveries.entries()].map(([id, value]) => [id, clone(value)]),
-        receipts: [...this.receipts.entries()].map(([id, value]) => [id, clone(value)]),
+      receipts: [...this.receipts.entries()].map(([id, value]) => [id, clone(value)]),
       },
       wallet: clone(this.wallet),
       knownPayees: [...this.knownPayees],
+      financial: {
+        budgets: [...this.budgets.entries()].map(([id, value]) => [id, clone(value)]),
+        budget_holds: [...this.budgetHolds.entries()].map(([id, value]) => [id, clone(value)]),
+        financial_postings: [...this.financialPostings.entries()].map(([id, value]) => [id, clone(value)]),
+      },
     };
   }
 
@@ -196,6 +208,10 @@ export class Bu2Sandbox {
     this.receipts = new Map(snapshot.resources.receipts ?? []);
     this.wallet = clone(snapshot.wallet);
     this.knownPayees = new Set(snapshot.knownPayees ?? []);
+    const financial = snapshot.financial ?? {};
+    this.budgets = new Map(financial.budgets ?? []);
+    this.budgetHolds = new Map(financial.budget_holds ?? []);
+    this.financialPostings = new Map(financial.financial_postings ?? []);
   }
 
   reloadCommittedState() {
@@ -205,6 +221,7 @@ export class Bu2Sandbox {
       resources: restored.resources,
       wallet: restored.state.wallet ?? this.wallet,
       knownPayees: restored.state.known_payees ?? [],
+      financial: restored.financial,
     });
     this.idempotency = new Map(restored.idempotency ?? []);
     this.events = restored.events ?? [];
@@ -381,6 +398,186 @@ export class Bu2Sandbox {
     });
   }
 
+  async createBudget(input, key) {
+    return this.runIdempotentAsync("budgets", key, input, async () => {
+      requireFields(input, ["scope_type", "scope_id", "currency", "period", "limit_minor"]);
+      if (!budgetScopeTypes.has(input.scope_type)) {
+        throw new ApiError(400, "validation_error", "invalid_budget_scope", "Budget scope type is invalid.");
+      }
+      if (!budgetPeriods.has(input.period)) {
+        throw new ApiError(400, "validation_error", "invalid_budget_period", "Budget period is invalid.");
+      }
+      if (!/^[A-Z]{3}$/.test(input.currency)) {
+        throw new ApiError(400, "validation_error", "invalid_currency", "Currency must be an ISO 4217 uppercase code.");
+      }
+      if (!Number.isInteger(input.limit_minor) || input.limit_minor < 0) {
+        throw new ApiError(400, "validation_error", "invalid_budget_limit", "Budget limit must be a non-negative integer in minor units.");
+      }
+      const existing = [...this.budgets.values()].find(
+        (budget) =>
+          budget.scope_type === input.scope_type &&
+          budget.scope_id === input.scope_id &&
+          budget.currency === input.currency &&
+          budget.period === input.period &&
+          budget.status === "active",
+      );
+      if (existing) {
+        throw new ApiError(
+          409,
+          "conflict",
+          "active_budget_exists",
+          "An active budget already exists for this scope, period, and currency.",
+          { budget_id: existing.id },
+        );
+      }
+      const now = new Date().toISOString();
+      const budget = {
+        id: input.id ?? prefix("bud"),
+        scope_type: input.scope_type,
+        scope_id: input.scope_id,
+        currency: input.currency,
+        period: input.period,
+        limit_minor: input.limit_minor,
+        status: "active",
+        version: 1,
+        created_at: now,
+        updated_at: now,
+      };
+      this.budgets.set(budget.id, budget);
+      this.event("budget.created", budget);
+      return clone(budget);
+    });
+  }
+
+  getBudget(id) {
+    const budget = this.budgets.get(id);
+    if (!budget) {
+      throw new ApiError(404, "resource_not_found", "budget_not_found", "Budget was not found.");
+    }
+    return clone(budget);
+  }
+
+  listBudgets() {
+    return [...this.budgets.values()]
+      .sort((left, right) => right.created_at.localeCompare(left.created_at) || right.id.localeCompare(left.id))
+      .map((budget) => this.budgetView(budget));
+  }
+
+  budgetView(budget) {
+    const holds = [...this.budgetHolds.values()].filter((hold) => hold.budget_id === budget.id);
+    const activeHoldTotal = holds
+      .filter((hold) => hold.status === "active")
+      .reduce((total, hold) => total + hold.amount_value, 0);
+    const consumedTotal = holds
+      .filter((hold) => hold.status === "consumed")
+      .reduce((total, hold) => total + hold.amount_value, 0);
+    return {
+      ...clone(budget),
+      active_hold_total: activeHoldTotal,
+      consumed_total: consumedTotal,
+      available_minor: Math.max(0, budget.limit_minor - activeHoldTotal - consumedTotal),
+      hold_count: holds.length,
+    };
+  }
+
+  listBudgetHolds(budgetId = null) {
+    return [...this.budgetHolds.values()]
+      .filter((hold) => budgetId === null || hold.budget_id === budgetId)
+      .sort((left, right) => right.created_at.localeCompare(left.created_at) || right.id.localeCompare(left.id))
+      .map((hold) => clone(hold));
+  }
+
+  listFinancialPostings(transactionId = null) {
+    return [...this.financialPostings.values()]
+      .filter((posting) => transactionId === null || posting.transaction_id === transactionId)
+      .sort((left, right) => right.created_at.localeCompare(left.created_at) || right.id.localeCompare(left.id))
+      .map((posting) => clone(posting));
+  }
+
+  getBudgetHold(id) {
+    const hold = this.budgetHolds.get(id);
+    if (!hold) {
+      throw new ApiError(404, "resource_not_found", "budget_hold_not_found", "Budget hold was not found.");
+    }
+    return clone(hold);
+  }
+
+  addBudgetPosting(event, hold, direction, account) {
+    const posting = {
+      id: prefix("pst"),
+      event_id: event.id,
+      event_type: event.type,
+      transaction_id: hold.transaction_id,
+      budget_id: hold.budget_id,
+      source_id: hold.id,
+      direction,
+      account,
+      amount_value: hold.amount_value,
+      currency: hold.currency,
+      created_at: event.created_at,
+    };
+    this.financialPostings.set(posting.id, posting);
+    return posting;
+  }
+
+  createBudgetHold(transaction, intent) {
+    if (!intent.budget_id) return null;
+    const budget = this.budgets.get(intent.budget_id);
+    if (!budget) {
+      throw new ApiError(409, "financial_constraint", "budget_not_found", "Payment intent references an unknown budget.");
+    }
+    if (budget.status !== "active") {
+      throw new ApiError(409, "financial_constraint", "budget_not_active", "Budget is not active.", { status: budget.status });
+    }
+    if (budget.currency !== intent.amount.currency) {
+      throw new ApiError(409, "financial_constraint", "budget_currency_mismatch", "Budget currency must match the payment intent currency.");
+    }
+    const view = this.budgetView(budget);
+    if (view.available_minor < intent.amount.value) {
+      throw new ApiError(409, "insufficient_funds", "budget_limit_exceeded", "Budget has insufficient available funds.", {
+        budget_id: budget.id,
+        available_minor: view.available_minor,
+        requested_minor: intent.amount.value,
+      });
+    }
+    const hold = {
+      id: prefix("hold"),
+      transaction_id: transaction.id,
+      payment_intent_id: intent.id,
+      budget_id: budget.id,
+      amount_value: intent.amount.value,
+      currency: intent.amount.currency,
+      status: "active",
+      authorization_id: intent.authorization.id,
+      idempotency_key: `budget-holds:${transaction.id}:${budget.id}`,
+      created_at: new Date().toISOString(),
+      released_at: null,
+      consumed_at: null,
+    };
+    this.budgetHolds.set(hold.id, hold);
+    const event = this.event("budget_hold_created", hold);
+    this.addBudgetPosting(event, hold, "debit", "budget.available");
+    this.addBudgetPosting(event, hold, "credit", "budget.reserved");
+    return hold;
+  }
+
+  consumeBudgetHold(transaction) {
+    if (!transaction.budget_hold_id) return;
+    const hold = this.budgetHolds.get(transaction.budget_hold_id);
+    if (!hold) {
+      throw new ApiError(409, "financial_constraint", "budget_hold_not_found", "Transaction budget hold was not found.");
+    }
+    if (hold.status === "consumed") return;
+    if (hold.status !== "active") {
+      throw new ApiError(409, "invalid_state_transition", "budget_hold_not_active", "Only an active budget hold can be consumed.", { current_state: hold.status });
+    }
+    hold.status = "consumed";
+    hold.consumed_at = new Date().toISOString();
+    const event = this.event("budget_hold_consumed", hold);
+    this.addBudgetPosting(event, hold, "debit", "budget.reserved");
+    this.addBudgetPosting(event, hold, "credit", "budget.spent");
+  }
+
   async createPaymentIntent(input, key) {
     return this.runIdempotentAsync("payment_intents", key, input, async () => {
       requireFields(input, [
@@ -528,6 +725,17 @@ export class Bu2Sandbox {
               this.ledger?.adapterRecoveryAttempts(transaction.id).length ?? 0,
           }
         : null,
+      budget: transaction.budget_hold_id
+        ? this.budgetView(this.budgets.get(this.budgetHolds.get(transaction.budget_hold_id)?.budget_id))
+        : null,
+      budget_hold: transaction.budget_hold_id
+        ? clone(this.budgetHolds.get(transaction.budget_hold_id) ?? null)
+        : null,
+      financial_postings: transaction.budget_hold_id
+        ? [...this.financialPostings.values()]
+            .filter((posting) => posting.transaction_id === transaction.id)
+            .map((posting) => clone(posting))
+        : [],
     };
   }
 
@@ -633,6 +841,8 @@ export class Bu2Sandbox {
       refunded_amount: clone(zero),
       created_at: new Date().toISOString(),
     };
+    const budgetHold = this.createBudgetHold(transaction, intent);
+    if (budgetHold) transaction.budget_hold_id = budgetHold.id;
     const provider = await this.executeAdapter(
       "reserve",
       transaction.id,
@@ -808,6 +1018,7 @@ export class Bu2Sandbox {
     if (provider) {
       transaction.settlement_provider_reference = provider.provider_reference;
     }
+    this.consumeBudgetHold(transaction);
     this.wallet.reserved -= transaction.settled_amount.value;
     const intent = this.intents.get(transaction.payment_intent_id);
     intent.status = "settled";

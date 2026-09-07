@@ -11,14 +11,18 @@ import {
 import type {
   AccessIdentity,
   AuthorizationDecision,
+  Budget,
+  BudgetHold,
   Bu2ClientOptions,
   Bu2MutationOptions,
   Bu2RequestOptions,
   CreatePaymentIntent,
+  CreateBudget,
   CreateQuote,
   DeliveryEvidence,
   DeliveryResult,
   EnvironmentInfo,
+  FinancialPosting,
   PaymentIntent,
   Quote,
   Receipt,
@@ -329,6 +333,52 @@ export class Bu2Client {
         params: { header: traceHeaders(options) },
         signal,
       }),
+    );
+  }
+
+  listBudgets(options: Bu2RequestOptions = {}): Promise<{ data: Budget[] }> {
+    return this.execute({ name: "listBudgets", mutation: false }, options, (signal) =>
+      this.api.GET("/budgets", { params: { header: traceHeaders(options) }, signal }),
+    );
+  }
+
+  createBudget(body: CreateBudget, options: Bu2MutationOptions): Promise<Budget> {
+    return this.execute({ name: "createBudget", mutation: true }, options, (signal) =>
+      this.api.POST("/budgets", {
+        params: { header: mutationHeaders(options) },
+        body,
+        signal,
+      }),
+    );
+  }
+
+  getBudget(budgetId: string, options: Bu2RequestOptions = {}): Promise<Budget> {
+    return this.execute({ name: "getBudget", mutation: false }, options, (signal) =>
+      this.api.GET("/budgets/{budget_id}", {
+        params: { path: { budget_id: budgetId }, header: traceHeaders(options) },
+        signal,
+      }),
+    );
+  }
+
+  listBudgetHolds(options: Bu2RequestOptions = {}): Promise<{ data: BudgetHold[] }> {
+    return this.execute({ name: "listBudgetHolds", mutation: false }, options, (signal) =>
+      this.api.GET("/budget_holds", { params: { header: traceHeaders(options) }, signal }),
+    );
+  }
+
+  getBudgetHold(budgetHoldId: string, options: Bu2RequestOptions = {}): Promise<BudgetHold> {
+    return this.execute({ name: "getBudgetHold", mutation: false }, options, (signal) =>
+      this.api.GET("/budget_holds/{budget_hold_id}", {
+        params: { path: { budget_hold_id: budgetHoldId }, header: traceHeaders(options) },
+        signal,
+      }),
+    );
+  }
+
+  listFinancialPostings(options: Bu2RequestOptions = {}): Promise<{ data: FinancialPosting[] }> {
+    return this.execute({ name: "listFinancialPostings", mutation: false }, options, (signal) =>
+      this.api.GET("/financial_postings", { params: { header: traceHeaders(options) }, signal }),
     );
   }
 

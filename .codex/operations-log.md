@@ -1,5 +1,15 @@
 # ENV-03 操作日志
 
+## 2026-09-08 · F07 Budget Hold / Financial Posting implementation
+
+- Tool: `git switch -c`; result: created `feat/f07-budget-financial-posting` from merged D1 `main` baseline `9c05889`.
+- Tool: `rg`, `sed`; result: confirmed existing `wallet_accounts`, append-only `ledger_events`, `commitDomainMutation`, idempotency claims, WAL and Webhook Outbox are the only financial persistence path.
+- Tool: `apply_patch`; result: added Schema v12 `budgets`, `budget_holds`, `financial_postings`, domain hold/consume behavior, HTTP resources, OpenAPI and TypeScript SDK support.
+- Tool: `apply_patch`; result: added F07 targeted unit/HTTP/restart tests and updated migration assertions from Schema v11 to v12.
+- Tool: `npm --prefix sandbox test`, `npm --prefix packages/typescript-sdk test`, `node docs/03-technical/validate-contract.mjs`, `npm --prefix prototype run lint && npm --prefix prototype run build`; result: all local verification passed.
+- Boundary: F07 remains Local / Sandbox / Testnet only; no F08 Mandate, Live/Mainnet, custody, hosted or production credential capability was enabled.
+- Tool: `git commit`, `git push`, `gh pr create`, `gh pr edit`; result: committed `41fb338` (`feat(ledger): add scoped budget holds and financial postings`), pushed `feat/f07-budget-financial-posting`, and opened Draft PR #32 at `https://github.com/atxinbao/bu2com/pull/32` using `.github/pull_request_template.md`.
+
 ## 2026-09-08 · D1 F07 财务边界契约
 
 - Tool: `git fetch`, `git switch`, `git pull`, `git branch -d`; result: verified D0 PR #30 merged at `9a6bdaf`, synchronized `main`, deleted local `docs/d0-roadmap-baseline`, created `docs/d1-f07-financial-boundary`.
