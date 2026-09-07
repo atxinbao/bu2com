@@ -22,6 +22,7 @@
 | [指标与验证计划](METRICS_AND_VALIDATION.md) | 如何判断需求、产品和付费是否成立 |
 | [协议引入计划](PROTOCOL_ADOPTION_PLAN.md) | AP2、x402 在什么阶段进入，以及如何控制范围 |
 | [Phase 0 路线与 PR 基线](PHASE0_ROADMAP_BASELINE.md) | M1～M5 里程碑、F02-CI～F16b 依赖与文档提交规则 |
+| [F07 财务边界契约](F07_FINANCIAL_BOUNDARY_CONTRACT.md) | D1 冻结 Budget Scope、Budget Hold、Financial Posting、并发、幂等与对账边界 |
 | [页面与交互规格](INTERACTION_SPEC.md) | Transaction-first P0 的页面、状态、操作和验收标准 |
 | [Transaction-first P0 产品基线](P0_TRANSACTION_FIRST_BASELINE.md) | 当前正式定位、交易契约和原型验收路径 |
 | [Transaction-first P0 验收方案](TRANSACTION_P0_ACCEPTANCE.md) | 当前主路径、辅助路径和 GO/ITERATE/STOP 门槛 |
@@ -44,7 +45,7 @@ Agent 商业账户、信誉与服务网络
 
 ## 当前状态
 
-- 产品阶段：Phase 0 开发（Simulation / Testnet）
+- 产品阶段：Phase 0 开发（Simulation / Testnet）；D1 F07 财务边界契约待 R2 审查
 - 产品版本：Product v0.3 Transaction-first
 - 对应商业计划：BP v0.1
 - 更新日期：2026-09-07

@@ -1,5 +1,14 @@
 # ENV-03 操作日志
 
+## 2026-09-08 · D1 F07 财务边界契约
+
+- Tool: `git fetch`, `git switch`, `git pull`, `git branch -d`; result: verified D0 PR #30 merged at `9a6bdaf`, synchronized `main`, deleted local `docs/d0-roadmap-baseline`, created `docs/d1-f07-financial-boundary`.
+- Tool: `graphify query`; result: connected F07 PRD requirements with `wallet_accounts`, append-only `ledger_events`, `commitDomainMutation`, idempotency claims, CAS and adapter unknown-result recovery.
+- Tool: `rg`, `sed`; result: confirmed existing runtime has wallet/ledger atomic primitives but no standalone Budget, BudgetHold or FinancialPosting resource.
+- Decision: freeze D1 as documentation only; F07 must extend the existing Transaction Core and atomic commit boundary without creating a second balance or ledger source.
+- Tool: `apply_patch`; result: added F07 financial boundary contract and context evidence, aligned product/technical roadmap and Changelog. No runtime or Schema changes.
+- Tool: `apply_patch`; result: appended D1 autonomous review report with R0 conclusion, R2 approval gate and residual implementation risks.
+
 日期：2026-09-06
 执行者：Codex
 
