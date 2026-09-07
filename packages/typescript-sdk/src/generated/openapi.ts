@@ -445,6 +445,7 @@ export interface components {
             credential_generation: number | null;
             /** @description Persisted Principal, Account and Agent ownership visible to the authenticated caller. */
             identity?: components["schemas"]["IdentitySummary"] | null;
+            wallet_bindings?: components["schemas"]["WalletBindings"];
         };
         IdentityPrincipal: {
             /** @enum {string} */
@@ -499,6 +500,54 @@ export interface components {
             principal: components["schemas"]["IdentityPrincipal"];
             accounts: components["schemas"]["IdentityAccount"][];
             agents: components["schemas"]["IdentityAgent"][];
+            funding_sources?: components["schemas"]["FundingSourceBinding"][];
+            receiving_targets?: components["schemas"]["ReceivingTargetBinding"][];
+        };
+        FundingSourceBinding: {
+            /** @enum {string} */
+            environment: "local" | "sandbox" | "live";
+            id: string;
+            tenant_id: string;
+            account_id: string;
+            agent_id: string | null;
+            asset: string;
+            network: string | null;
+            provider: string;
+            source_reference: string;
+            /** @enum {string} */
+            status: "active" | "disabled" | "revoked";
+            /** @enum {string} */
+            verification_status: "pending" | "verified" | "failed" | "revoked";
+            generation: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        ReceivingTargetBinding: {
+            /** @enum {string} */
+            environment: "local" | "sandbox" | "live";
+            id: string;
+            tenant_id: string;
+            account_id: string;
+            agent_id: string | null;
+            asset: string;
+            network: string | null;
+            provider: string;
+            target_reference: string;
+            /** @enum {string} */
+            status: "active" | "disabled" | "revoked";
+            /** @enum {string} */
+            verification_status: "pending" | "verified" | "failed" | "revoked";
+            generation: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        WalletBindings: {
+            funding_sources: components["schemas"]["FundingSourceBinding"][];
+            receiving_targets: components["schemas"]["ReceivingTargetBinding"][];
         };
         CreateSupportBundle: {
             reason: string;
@@ -691,6 +740,9 @@ export interface components {
             amount: components["schemas"]["Amount"];
             /** Format: date-time */
             expires_at: string;
+            asset?: string;
+            network?: string;
+            receiving_target_id?: string;
         };
         Quote: {
             id: string;
@@ -705,6 +757,7 @@ export interface components {
             expires_at: string;
             /** @enum {string} */
             status: "active" | "accepted" | "expired" | "canceled";
+            receiving_target_binding_id?: string | null;
             /** Format: date-time */
             created_at: string;
         };
@@ -720,6 +773,10 @@ export interface components {
             payment_mandate_id: string;
             amount: components["schemas"]["Amount"];
             purpose: string;
+            asset?: string;
+            network?: string;
+            funding_source_id?: string;
+            receiving_target_id?: string;
             external_context?: components["schemas"]["ExternalContext"];
             metadata?: {
                 [key: string]: string;
@@ -750,6 +807,8 @@ export interface components {
             status: "requires_authorization" | "authorized" | "funds_reserved" | "delivery_submitted" | "settled" | "declined" | "expired" | "canceled" | "refunded" | "disputed";
             transaction_id: string | null;
             authorization: components["schemas"]["Authorization"];
+            funding_source_binding_id?: string | null;
+            receiving_target_binding_id?: string | null;
             /** Format: date-time */
             created_at: string;
         };

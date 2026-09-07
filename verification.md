@@ -657,3 +657,33 @@ npm --prefix sandbox run test:hosted-deployment
 | 默认 Sandbox 执行边界 | 保持 `execution_disabled` |
 
 结论：F06a 达到 **GO for R2 independent human review**。本轮没有启用 Signer、真实付款、Live/Mainnet、Hosted 公网或托管能力；这些能力仍由后续 PR 和独立门禁控制。
+
+## F06b 资金来源与收款目标绑定验证
+
+日期：2026-09-07
+执行者：Codex
+
+### 变更范围
+
+本轮在 F06a 持久身份基础上新增 SQLite Schema v11 的 `funding_sources` 与 `receiving_targets`，并将绑定校验接入 onboarding、`/v1/access`、Quote 与 PaymentIntent。绑定记录保存环境、租户、Account/Agent、资产、网络、Provider、脱敏引用、状态、验证状态和 generation；不保存私钥、原始 token 或支付秘密。
+
+### 验证结果
+
+- Reference Sandbox：115/115。
+- TypeScript SDK：generated check、format、lint、typecheck、build 与 10/10 单元测试全部通过。
+- API 契约：63 invariants、6 MCP tools。
+- `git diff --check`：通过。
+- 文档：技术索引、F06b 技术契约、Sandbox README、根 README、ENV-05/06 说明和 CHANGELOG 已同步。
+
+### F06b 验收判断
+
+| 场景 | 结果 |
+| --- | --- |
+| 绑定归一化、持久化与重启恢复 | 通过 |
+| 跨租户、错环境、错资产/网络、引用漂移 | 拒绝并保持一致性 |
+| 同一绑定 ID 静默覆盖 | 拒绝 |
+| 已配置绑定的 Quote / PaymentIntent 归属 | 绑定 ID 写入并校验 |
+| 未配置绑定的旧演示账户 | 保持兼容 |
+| 默认 Sandbox 执行边界 | 保持 `execution_disabled` |
+
+结论：F06b 达到 **GO for R2 independent human review**。本轮未启用 Signer、真实付款、Live/Mainnet、Hosted 公网或托管能力；这些仍由独立门禁控制。

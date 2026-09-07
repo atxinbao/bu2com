@@ -7,11 +7,15 @@ const ID = {
   agent: /^agt_[A-Za-z0-9_-]+$/,
   credential: /^key_[A-Za-z0-9_-]+$/,
   digest: /^[a-f0-9]{64}$/,
+  funding: /^fund_[A-Za-z0-9_-]+$/,
+  target: /^tgt_[A-Za-z0-9_-]+$/,
 };
 
 const ROLES = new Set(["agent", "developer", "operator"]);
 const STATUSES = new Set(["active", "disabled", "revoked"]);
 const PRINCIPAL_KINDS = new Set(["human", "service"]);
+const BINDING_STATUSES = new Set(["active", "disabled", "revoked"]);
+const VERIFICATION_STATUSES = new Set(["pending", "verified", "failed", "revoked"]);
 
 const invalid = (code, message, details = {}) =>
   new ApiError(400, "validation_error", code, message, details);
@@ -182,6 +186,64 @@ const normalizeCredential = (value, tenantId, ownerPrincipalId, accountIds, agen
   };
 };
 
+const normalizeBinding = (
+  value,
+  tenantId,
+  accountIds,
+  agentIds,
+  { kind, idPattern, referenceField },
+) => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw invalid("identity_binding_invalid", `${kind} entries must be objects.`);
+  }
+  const id = identifier(value.id, `${kind}.id`, idPattern);
+  const accountId = identifier(value.account_id, `${kind}.account_id`, ID.account);
+  if (!accountIds.has(accountId)) {
+    throw invalid("identity_binding_claim_unknown", `${kind} account must belong to the same tenant.`, {
+      id,
+      account_id: accountId,
+    });
+  }
+  const agentId =
+    value.agent_id === undefined || value.agent_id === null
+      ? null
+      : identifier(value.agent_id, `${kind}.agent_id`, ID.agent);
+  if (agentId && !agentIds.has(agentId)) {
+    throw invalid("identity_binding_claim_unknown", `${kind} Agent must belong to the same tenant.`, {
+      id,
+      agent_id: agentId,
+    });
+  }
+  const asset = requiredString(value.asset, `${kind}.asset`, 120);
+  const network =
+    value.network === null || value.network === undefined
+      ? null
+      : requiredString(value.network, `${kind}.network`, 120);
+  const provider = requiredString(value.provider, `${kind}.provider`, 120);
+  const reference = requiredString(value[referenceField], `${kind}.${referenceField}`, 512);
+  const status = normalizeStatus(value.status, `${kind}.status`, BINDING_STATUSES);
+  const verificationStatus = value.verification_status ?? "verified";
+  if (!VERIFICATION_STATUSES.has(verificationStatus)) {
+    throw invalid("identity_binding_verification_invalid", `${kind}.verification_status is invalid.`, {
+      id,
+    });
+  }
+  return {
+    id,
+    tenant_id: tenantId,
+    account_id: accountId,
+    agent_id: agentId,
+    asset,
+    network,
+    provider,
+    [referenceField]: reference,
+    status,
+    verification_status: verificationStatus,
+    generation:
+      Number.isInteger(value.generation) && value.generation >= 1 ? value.generation : 1,
+  };
+};
+
 export function normalizeOnboardingDocument(input, expectedEnvironment = null) {
   if (!input || typeof input !== "object" || Array.isArray(input)) {
     throw invalid("onboarding_document_invalid", "Onboarding document must be an object.");
@@ -221,6 +283,20 @@ export function normalizeOnboardingDocument(input, expectedEnvironment = null) {
     const credentials = (tenant.credentials ?? []).map((credential) =>
       normalizeCredential(credential, tenantId, principal.id, accountIds, agentIds),
     );
+    const fundingSources = (tenant.funding_sources ?? []).map((source) =>
+      normalizeBinding(source, tenantId, accountIds, agentIds, {
+        kind: "funding_source",
+        idPattern: ID.funding,
+        referenceField: "source_reference",
+      }),
+    );
+    const receivingTargets = (tenant.receiving_targets ?? []).map((target) =>
+      normalizeBinding(target, tenantId, accountIds, agentIds, {
+        kind: "receiving_target",
+        idPattern: ID.target,
+        referenceField: "target_reference",
+      }),
+    );
     if (new Set(accounts.map((account) => account.id)).size !== accounts.length) {
       throw invalid("onboarding_duplicate_account", "Account IDs must be unique in one tenant.");
     }
@@ -230,7 +306,21 @@ export function normalizeOnboardingDocument(input, expectedEnvironment = null) {
     if (new Set(credentials.map((credential) => credential.id)).size !== credentials.length) {
       throw invalid("onboarding_duplicate_credential", "Credential IDs must be unique in one tenant.");
     }
-    return { tenant_id: tenantId, principal, accounts, agents, credentials };
+    if (new Set(fundingSources.map((source) => source.id)).size !== fundingSources.length) {
+      throw invalid("onboarding_duplicate_funding_source", "Funding source IDs must be unique in one tenant.");
+    }
+    if (new Set(receivingTargets.map((target) => target.id)).size !== receivingTargets.length) {
+      throw invalid("onboarding_duplicate_receiving_target", "Receiving target IDs must be unique in one tenant.");
+    }
+    return {
+      tenant_id: tenantId,
+      principal,
+      accounts,
+      agents,
+      credentials,
+      funding_sources: fundingSources,
+      receiving_targets: receivingTargets,
+    };
   });
   if (new Set(tenants.map((tenant) => tenant.tenant_id)).size !== tenants.length) {
     throw invalid("onboarding_duplicate_tenant", "Tenant IDs must be unique in one document.");
@@ -283,6 +373,8 @@ export function credentialOnboardingBundle(credential, environment) {
         status: credential.status ?? "active",
       },
     ],
+    funding_sources: [],
+    receiving_targets: [],
     environment,
   };
 }

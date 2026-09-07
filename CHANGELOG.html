@@ -152,6 +152,29 @@
       <h2 id="unreleased">Unreleased</h2>
       <article class="release">
         <div class="release-head">
+          <div><h3>F06b · 资金来源与收款目标绑定</h3><time datetime="2026-09-07">2026-09-07</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">在 F06a 持久身份基础上，把 Agent 交易的资金来源和收款目标纳入环境、租户、Account 与 Agent 约束，使 Quote 和 PaymentIntent 能够保留可验证的绑定事实。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag added">Added</span>新增 SQLite Schema v11：<code>funding_sources</code> 与 <code>receiving_targets</code>，记录资产、网络、Provider、脱敏引用、状态、验证状态和 generation。</li>
+            <li><span class="tag changed">Changed</span>onboarding、<code>/v1/access</code>、Quote 与 PaymentIntent 增加绑定归属和绑定 ID；已配置绑定的账户必须命中 active + verified 记录。</li>
+            <li><span class="tag risk">Boundary</span>跨租户、错环境、错资产/网络、未验证、停用、引用漂移和绑定 ID 冲突均失败关闭；不保存私钥或支付秘密。</li>
+            <li><span class="tag governance">Boundary</span>不启用 Signer、真实付款、Live/Mainnet、托管或 Hosted Sandbox；未配置绑定的旧演示账户保持兼容。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R2 · 涉及身份归属、持久化、支付输入校验和 Quote/PaymentIntent 绑定</span></div>
+          <div><b>金融行为影响</b><span>只收紧资金来源与收款目标的配置边界，不改变授权、预留、交付、结算或 Receipt 状态机</span></div>
+          <div><b>兼容性</b><span>追加 Schema v11 与可选绑定字段；旧 onboarding 文档和未配置绑定的演示账户继续可用</span></div>
+          <div><b>验证</b><span>Sandbox 115/115、Contract 63 invariants + 6 MCP tools、SDK 10/10 及生成/格式/lint/类型/build 全部通过</span></div>
+          <div><b>恢复</b><span>迁移追加且可审计；绑定 ID 冲突失败关闭，引用变化使用新 ID 或 generation，不静默覆盖历史指向</span></div>
+        </div>
+      </article>
+      <article class="release">
+        <div class="release-head">
           <div><h3>F06a · 持久 Account / Agent 归属与内部 Sandbox onboarding</h3><time datetime="2026-09-06">2026-09-06</time></div>
           <span class="status">Unreleased</span>
         </div>
