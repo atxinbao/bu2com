@@ -152,6 +152,26 @@
       <h2 id="unreleased">Unreleased</h2>
       <article class="release">
         <div class="release-head">
+          <div><h3>D1 · F07 财务边界契约</h3><time datetime="2026-09-08">2026-09-08</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">冻结 Budget Scope、Budget Hold、Ledger Entry 与 Financial Posting 的对象字段、状态机、并发幂等、原子事务、对账恢复和非目标，作为 F07 代码实现前的唯一财务边界。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag added">Added</span>新增 <code>docs/02-product/F07_FINANCIAL_BOUNDARY_CONTRACT.md</code>，明确预算预留不是结算，F08 Payment Mandate 仍是唯一授权来源。</li>
+            <li><span class="tag changed">Changed</span>产品与技术文档入口标记 D1 状态，并将 F07 代码实现置于独立 R2 审查之后。</li>
+            <li><span class="tag governance">Boundary</span>本变更仅修改文档与审计记录，不新增 Schema、API、Ledger、余额、Adapter、支付或环境能力。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R0 · 文档契约冻结</span></div>
+          <div><b>验证</b><span>文档链接、契约回归和状态扫描完成后进入 R2 独立人工审查</span></div>
+          <div><b>恢复</b><span>回退文档提交即可恢复既有入口，不改变任何数据库、账本或支付历史</span></div>
+        </div>
+      </article>
+      <article class="release">
+        <div class="release-head">
           <div><h3>D0 · Phase 0 业务路线与 PR 基线</h3><time datetime="2026-09-07">2026-09-07</time></div>
           <span class="status">Unreleased</span>
         </div>

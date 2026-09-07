@@ -46,7 +46,8 @@
 - [Phase 0 Epic 3：外部试点准备与证据](PHASE0_EPIC3_EXTERNAL_PILOT_EVIDENCE.md)
 - [Phase 0 Transaction Trust Gate](PHASE0_TRANSACTION_TRUST_GATE.md)
 - [Phase 0 业务路线与 PR 基线](../02-product/PHASE0_ROADMAP_BASELINE.md)
+- [D1 F07 财务边界契约](../02-product/F07_FINANCIAL_BOUNDARY_CONTRACT.md)
 
 Contract v0.3.0 已具备本地 SQLite Reference Server、数据库 processing 幂等 Claim、状态版本 CAS、原子化 Ledger/Outbox、有限重试与死信、审计重放、Secret 版本轮换、端到端交易关联、结构化观测、环境自描述、签名 Receipt、环境绑定的 Agent/Developer/Operator 访问控制、租户隔离与受控运维入口，以及基于官方 MCP/x402 SDK 的 Agent 支付接入。Epic 1 与 Epic 2 已完成；Transaction Trust Gate 1–3 已经 PR #15–#17 合并。F06a/F06b 已完成，F07/F08 尚未开始。
 
-F01/ENV-01 至 ENV-06 已分别由 PR #18–#23 批准。ENV-07A 与 ENV-07B 本地部署准备、外部验收 Schema 和 Runbook 已实现；真实托管 Sandbox、Base Sepolia 双向收付与边缘 E2E 仍为 Not yet accepted。SDK/MCP 未公开发布，Live/Mainnet、真实资金托管与生产凭证仍未经独立准入。
+F01/ENV-01 至 ENV-06 已分别由 PR #18–#23 批准。ENV-07A 与 ENV-07B 本地部署准备、外部验收 Schema 和 Runbook 已实现；真实托管 Sandbox、Base Sepolia 双向收付与边缘 E2E 仍为 Not yet accepted。D0 已合并，D1 已冻结 F07 财务边界契约，等待 R2 独立人工审查；F07 代码尚未开始。SDK/MCP 未公开发布，Live/Mainnet、真实资金托管与生产凭证仍未经独立准入。

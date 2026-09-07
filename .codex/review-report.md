@@ -212,6 +212,55 @@ F06a 把配置中的明确身份声明落成可持久查询和审计的一等对
 
 ---
 
+# D1 F07 财务边界契约自主审查报告
+
+日期：2026-09-08
+审查者：Codex（Contributor / Verifier，非 R2 Approver）
+分支：`docs/d1-f07-financial-boundary`
+基线：`main` / `9a6bdaf`
+
+## 审查范围
+
+- `docs/02-product/F07_FINANCIAL_BOUNDARY_CONTRACT.md` 的 Budget Scope、Budget Hold、Ledger Entry、Financial Posting、状态机、事务、并发幂等、对账恢复和非目标。
+- 产品、技术、Phase 0 路线入口及 `CHANGELOG.html` 的状态同步。
+- D1 是否保持文档-only 边界，不提前改变 API、Schema、Transaction Core、余额、支付或环境准入。
+
+## 评分
+
+| 维度 | 得分 | 依据 |
+| --- | ---: | --- |
+| 需求完整性 | 20/20 | 覆盖 F07 对象、金额约束、状态流转、并发、幂等、恢复、对账和 F08/F09/F10 边界 |
+| 契约一致性 | 19/20 | 复用现有 Transaction Core、SQLite WAL、CAS、Claim、LedgerEvent 与 Outbox；实现阶段仍需用代码固定具体 API/Schema |
+| 风险边界 | 20/20 | 明确预算预留不等于授权或 Provider 付款，未开放 Live/Mainnet、托管和生产凭证 |
+| 可验证性 | 19/20 | 已完成契约回归、现有 Sandbox/SDK/Prototype 回归与链接扫描；F07 运行时测试留待代码 PR |
+| 文档同步 | 20/20 | 产品、技术、路线、Changelog、testing、verification 与审计上下文已同步 |
+
+综合评分：98/100
+
+## 结论
+
+建议：**通过本地文档审查，进入 R2 独立人工审查**。
+
+D1 将预算 Scope、Hold 和不可变财务事件定义为单一边界，并要求 F07 复用既有原子事务和追加账本能力。它没有把预算余额变成第二账本，也没有把预算检查误认为 Payment Mandate 或支付结算授权。D1 PR 合并不代表 F07 代码获准实施；必须先获得独立 Domain 与 Architecture R2 批准。
+
+## 验证证据
+
+- `git diff --check`：通过。
+- `node docs/03-technical/validate-contract.mjs`：63 项不变量、6 个 MCP 工具通过。
+- `npm --prefix sandbox test`：115/115 通过。
+- `npm --prefix packages/typescript-sdk test`：生成检查、格式、Lint、类型检查、构建和 10/10 单测通过。
+- `npm --prefix prototype run lint && npm --prefix prototype run build`：通过。
+- 变更文档相对链接扫描：通过。
+
+## 残余风险与后续门槛
+
+1. F07 代码实现仍需追加 Schema、API、SDK、MCP、迁移、并发和故障注入测试，并按 R2 模板提交。
+2. Budget Hold 与 Transaction reserved/settled 之间的映射必须在实现 PR 中提供可重建证据，不能依赖 UI 快照。
+3. 本轮未执行 F07 运行时、数据库迁移、浏览器、Sandbox/Testnet 支付或 Hosted E2E；这些不是文档 PR 的验收范围。
+4. Live/Mainnet、真实资金托管、生产凭证和公网 Hosted Sandbox 继续关闭。
+
+---
+
 # D0 Phase 0 业务路线与文档基线审查报告
 
 日期：2026-09-07

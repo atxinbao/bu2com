@@ -165,6 +165,17 @@
 - Not run: sandbox unit/integration, SDK, prototype lint/build or hosted acceptance suites; D0 changed documentation only.
 - Risk assessment: R0; executable behavior and financial state are unchanged.
 
+## 2026-09-08 · D1 F07 财务边界契约
+
+- `git diff --check`: passed.
+- `node docs/03-technical/validate-contract.mjs`: passed; 63 invariants and 6 MCP tools remain valid.
+- `npm --prefix sandbox test`: passed; 115/115 tests.
+- `npm --prefix packages/typescript-sdk test`: passed; generated/format/lint/typecheck/build and 10/10 unit tests.
+- `npm --prefix prototype run lint && npm --prefix prototype run build`: passed.
+- Markdown relative-link scan: passed for changed documentation links.
+- Not run: F07 runtime, migration, browser, Sandbox/Testnet payment and hosted E2E; D1 intentionally changes documentation only.
+- Boundary: no API, Schema, transaction state, balance, Ledger, Adapter, signer or environment behavior changed.
+
 ## 2026-09-06 · Internal Sandbox Product Baseline
 
 - `node --test deploy/local-sandbox.test.mjs`: 3/3 passed.

@@ -687,3 +687,21 @@ npm --prefix sandbox run test:hosted-deployment
 | 默认 Sandbox 执行边界 | 保持 `execution_disabled` |
 
 结论：F06b 达到 **GO for R2 independent human review**。本轮未启用 Signer、真实付款、Live/Mainnet、Hosted 公网或托管能力；这些仍由独立门禁控制。
+
+## D1 F07 财务边界契约验证
+
+日期：2026-09-08
+执行者：Codex
+
+本轮新增 `docs/02-product/F07_FINANCIAL_BOUNDARY_CONTRACT.md`，并同步产品/技术入口、Phase 0 路线、CHANGELOG 与审计上下文。契约冻结 Budget Scope、Budget Hold、Financial Posting、状态机、金额不变量、原子事务、并发幂等、对账恢复和明确非目标，作为 F07 代码实现前的 D1 基线。
+
+验证结果：
+
+- `git diff --check`：通过。
+- `node docs/03-technical/validate-contract.mjs`：63 项不变量、6 个 MCP 工具通过。
+- `npm --prefix sandbox test`：115/115 通过。
+- `npm --prefix packages/typescript-sdk test`：生成检查、格式、Lint、类型检查、构建和 10/10 单测通过。
+- `npm --prefix prototype run lint && npm --prefix prototype run build`：通过。
+- 变更文档相对链接扫描：通过。
+
+未执行：F07 运行时、数据库迁移、浏览器、Sandbox/Testnet 支付和 Hosted E2E；D1 明确不改变可执行行为。风险等级为 R0 文档契约冻结，需独立 R2 审查后才允许进入 F07 代码 PR。
