@@ -49,6 +49,6 @@
 - [D1 F07 财务边界契约](../02-product/F07_FINANCIAL_BOUNDARY_CONTRACT.md)
 - [D2 F08 Payment Mandate 契约](../02-product/F08_PAYMENT_MANDATE_CONTRACT.md)
 
-Contract v0.3.0 已具备本地 SQLite Reference Server、数据库 processing 幂等 Claim、状态版本 CAS、原子化 Ledger/Outbox、预算 Scope/Hold/Financial Posting、有限重试与死信、审计重放、Secret 版本轮换、端到端交易关联、结构化观测、环境自描述、签名 Receipt、环境绑定的 Agent/Developer/Operator 访问控制、租户隔离与受控运维入口，以及基于官方 MCP/x402 SDK 的 Agent 支付接入。Epic 1 与 Epic 2 已完成；Transaction Trust Gate 1–3 已经 PR #15–#17 合并。F06a/F06b/F07 已完成，F08 处于 D2 契约冻结阶段，尚未修改运行时。
+Contract v0.3.0 已具备本地 SQLite Reference Server、数据库 processing 幂等 Claim、状态版本 CAS、原子化 Ledger/Outbox、预算 Scope/Hold/Financial Posting、版本化 PaymentMandate/PolicyDecision、有限重试与死信、审计重放、Secret 版本轮换、端到端交易关联、结构化观测、环境自描述、签名 Receipt、环境绑定的 Agent/Developer/Operator 访问控制、租户隔离与受控运维入口，以及基于官方 MCP/x402 SDK 的 Agent 支付接入。Epic 1 与 Epic 2 已完成；Transaction Trust Gate 1–3 已经 PR #15–#17 合并。F06a/F06b/F07 已完成，F08 运行时已实现，待独立 R2 Domain 与 Architecture 审查。
 
-F01/ENV-01 至 ENV-06 已分别由 PR #18–#23 批准。ENV-07A 与 ENV-07B 本地部署准备、外部验收 Schema 和 Runbook 已实现；真实托管 Sandbox、Base Sepolia 双向收付与边缘 E2E 仍为 Not yet accepted。D0/D1 与 F07 代码实现已合并，D2 正冻结 F08 Mandate 契约；F08 运行时仍需独立 R2 审查。SDK/MCP 未公开发布，Live/Mainnet、真实资金托管与生产凭证仍未经独立准入。
+F01/ENV-01 至 ENV-06 已分别由 PR #18–#23 批准。ENV-07A 与 ENV-07B 本地部署准备、外部验收 Schema 和 Runbook 已实现；真实托管 Sandbox、Base Sepolia 双向收付与边缘 E2E 仍为 Not yet accepted。D0/D1/D2 与 F07 已合并，F08 代码实现已完成并等待独立 R2 审查。SDK/MCP 未公开发布，Live/Mainnet、真实资金托管与生产凭证仍未经独立准入。

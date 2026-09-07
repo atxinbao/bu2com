@@ -235,3 +235,15 @@
 - Tool: `git add -A`, `git commit`; result: created `cb5067a` (`docs(f08): freeze payment mandate contract`) with the D2 contract, synchronized documentation and audit evidence.
 - Tool: `gh auth status`, `git push -u origin docs/d2-f08-mandate-contract`; result: authenticated push completed.
 - Tool: `gh pr create` / `gh pr edit`; result: opened Draft PR #33, titled `docs(f08): freeze payment mandate contract`, using `.github/pull_request_template.md` sections and the verified D2 body.
+## 2026-09-08 · F08 Payment Mandate 运行时实现
+
+- Tool: `rg` / `sed`; result: reviewed D2 contract, F07 persistence pattern, API/SDK generation path and existing binding assertions before implementation.
+- Tool: `apply_patch`; result: implemented versioned PaymentMandate and PolicyDecision persistence/API/SDK, added SQLite Schema v13 indexes, and added deterministic PaymentIntent mandate evaluation.
+- Tool: `apply_patch`; result: tightened persistent Mandate activation to require active/verified Funding Source and Receiving Target bindings; binding lookup accepts the canonical binding ID or existing redacted reference.
+- Tool: `node --test sandbox/f08.test.mjs`; result: 4/4 passed, including persistent binding gate.
+- Tool: `npm --prefix sandbox test`; result: 122/122 passed.
+- Tool: `node docs/03-technical/validate-contract.mjs`; result: 63 invariants and 6 MCP tools passed.
+- Tool: `npm --prefix packages/typescript-sdk test`; result: generated contract, format, lint, typecheck, build and 10/10 tests passed.
+- Tool: `npm --prefix prototype run lint && npm --prefix prototype run build`; result: passed.
+- Tool: `git diff --check`; result: passed.
+- Boundary: F08 remains Local/ Sandbox/Testnet contract and authorization logic only; no Provider, Signer, x402/AP2 execution, Hosted deployment, Live/Mainnet, custody or production credentials were enabled.

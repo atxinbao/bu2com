@@ -414,3 +414,35 @@ F06b 让 Quote 和 PaymentIntent 能够保留可验证的资金来源与收款�
 1. 真实钱包地址/Provider 引用的外部验证仍需在批准的 Sandbox 流程中完成；本轮只验证配置契约和持久化边界。
 2. F06b 不等于资金来源已经可用或已完成 Testnet 双向付款；付款执行仍受环境和独立授权门禁控制。
 3. R2 合并仍需要独立人类 Domain 与 Architecture 审查；Codex 不能作为批准者。
+# F08 Payment Mandate 运行时实现自主审查报告
+
+日期：2026-09-08
+审查者：Codex（Contributor / Verifier，非 R2 Approver）
+分支：`feat/mandates-versioned-policy`
+
+## 审查范围
+
+- PaymentMandate 与 PolicyDecision 领域对象、状态机、版本冲突和幂等。
+- PaymentIntent 授权引用、F07 Budget Hold 边界与持久化 Schema v13。
+- HTTP/OpenAPI/TypeScript SDK 契约、绑定门槛、测试和文档同步。
+
+## 结果
+
+| 维度 | 评分 | 结论 |
+|---|---:|---|
+| 需求覆盖 | 19/20 | 覆盖版本化授权、确定性决策、限额、范围、状态和审计引用 |
+| 技术实现 | 19/20 | 复用现有 resources、Claim、CAS、环境和钱包绑定路径；未引入第二账本 |
+| 金融边界 | 20/20 | 只有 approved 可进入 F07 Hold；不调用 Provider 或执行支付 |
+| 自动化验证 | 20/20 | F08 4/4、Sandbox 123/123、SDK 10/10、契约 63/6、Prototype lint/build 通过 |
+| 文档与恢复 | 19/20 | Schema/API/SDK/README/CHANGELOG/verification/testing 已同步；R2 尚待独立人工审查 |
+| 综合 | **97/100** | 通过本地实现审查，进入 R2 |
+
+## 遗留风险与门槛
+
+1. R2 Domain 与 Architecture 审查必须由独立人类完成，Codex 不作为批准者。
+2. F09a 自主执行、F10/F11 收款、退款、对账和内部 Beta 仍不得与本 PR 合并放行。
+3. Live/Mainnet、Hosted、托管和生产凭证继续关闭；真实 Testnet 双向收付需后续证据门禁。
+
+## 结论
+
+建议：**通过本地实现，提交 R2 审查**。F08 已完成版本化 PaymentMandate、PolicyDecision 和持久钱包绑定门槛；未扩大 Agent 权限，也未改变环境执行状态。

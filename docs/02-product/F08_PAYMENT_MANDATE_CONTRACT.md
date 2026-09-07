@@ -171,18 +171,20 @@ policy-decisions:{account_id}:{idempotency_key}
 
 未知或崩溃结果只能查询已写入的决策事实；F08 不自动调用 Provider、不重新付款、不自动创建第二个 Mandate 版本。
 
-## 8. API、事件和持久化边界
+## 8. API、事件和持久化映射
 
-D2 只冻结对象和行为，不引入 Schema、API 或运行时迁移。F08 代码 PR 必须在同一变更中更新 OpenAPI、MCP、TypeScript SDK、持久化 Schema、错误码和测试。
+F08 运行时按本契约落地，OpenAPI、TypeScript SDK、持久化迁移、错误码和测试在同一变更中同步更新。Mandate 与 PolicyDecision 继续复用通用 `resources` 表，新增 SQLite Schema v13 索引，不改写既有交易历史。
+
+HTTP API 为 `GET/POST /v1/payment_mandates`、`GET /v1/payment_mandates/{mandate_id}`，以及 `POST /v1/payment_mandates/{mandate_id}/{activate|suspend|revoke|expire}`。所有写操作要求 `Idempotency-Key` 与 `version`（状态转换），SDK 提供对应的列表、创建、查询和转换方法。
 
 预计资源与事件：
 
 - `PaymentMandate`：创建草稿、激活、暂停、撤销和版本查询；
 - `PolicyDecision`：确定性决策及其输入快照；
 - `mandate.activated`、`mandate.suspended`、`mandate.revoked`、`mandate.expired`；
-- `payment_intent.policy_decided` 或等价审计事件。
+- `payment_intent.policy_decided` 或等价审计事件；PaymentIntent 保存 `policy_decision_id`、`mandate_version` 和完整决策快照。
 
-所有资金相关写操作仍需环境契约校验、`Idempotency-Key`、`X-Trace-Id` 和 Account/Agent 权限校验。决策、状态变更与审计 Outbox 必须遵循既有 SQLite 原子提交边界；外部 Adapter 调用不得持有写锁。
+所有资金相关写操作仍需环境契约校验、`Idempotency-Key`、`X-Trace-Id` 和 Account/Agent 权限校验。决策、状态变更与审计 Outbox 必须遵循既有 SQLite 原子提交边界；外部 Adapter 调用不得持有写锁。持久化运行时激活 Mandate 时会强制验证 active/verified Funding Source 与 Receiving Target；无持久绑定的纯内存单元测试仅用于策略逻辑验证。
 
 ## 9. F09 边界
 

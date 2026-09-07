@@ -152,6 +152,27 @@
       <h2 id="unreleased">Unreleased</h2>
       <article class="release">
         <div class="release-head">
+          <div><h3>F08 · 版本化 Payment Mandate 运行时</h3><time datetime="2026-09-08">2026-09-08</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">在 D2 契约基础上实现版本化 PaymentMandate、确定性 PolicyDecision、状态转换、版本冲突和 PaymentIntent 授权引用，并将持久化环境的 Funding Source 与 Receiving Target 绑定校验设为激活门槛。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag added">Added</span>新增 <code>GET/POST /v1/payment_mandates</code>、Mandate 查询与 activate/suspend/revoke/expire 状态接口，以及 TypeScript SDK 对应方法。</li>
+            <li><span class="tag added">Added</span>SQLite Schema v13 追加 Mandate/PolicyDecision 资源索引；PaymentIntent 保存决策 ID、Mandate 版本、输入快照、规则和稳定原因码。</li>
+            <li><span class="tag changed">Changed</span>支付授权先经过确定性 Mandate 判断，再进入 F07 Budget Hold；未激活、超限、绑定漂移或版本冲突均失败关闭。</li>
+            <li><span class="tag governance">Boundary</span>不调用 Provider、Signer、x402、AP2 或链上 RPC；不启用 Sandbox Testnet 双向收付、Hosted、Live/Mainnet、托管或生产凭证。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R2 · 授权域、持久化与 API/SDK 契约</span></div>
+          <div><b>验证</b><span>F08 定向测试、Sandbox 全量、SDK 生成/格式/lint/类型/build、契约校验与 Prototype lint/build 均需在 PR 中记录</span></div>
+          <div><b>恢复</b><span>Schema v13 仅追加资源索引；回退代码后保留 Mandate/PolicyDecision 记录，不删除或重写支付历史</span></div>
+        </div>
+      </article>
+      <article class="release">
+        <div class="release-head">
           <div><h3>D2 · F08 版本化 Payment Mandate 契约</h3><time datetime="2026-09-08">2026-09-08</time></div>
           <span class="status baseline">Baseline</span>
         </div>

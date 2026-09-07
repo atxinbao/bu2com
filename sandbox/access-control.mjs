@@ -180,6 +180,10 @@ export function permissionForRequest(method, pathname) {
   }
   if (method === "GET" && /^\/v1\/receipts\/[^/]+\/verify$/.test(pathname)) return null;
   if (method === "GET" && pathname === "/v1/access") return "identity:read";
+  if (method === "GET" && pathname === "/v1/payment_mandates") return "mandates:read";
+  if (method === "POST" && pathname === "/v1/payment_mandates") return "mandates:manage";
+  if (method === "GET" && /^\/v1\/payment_mandates\/[^/]+$/.test(pathname)) return "mandates:read";
+  if (method === "POST" && /^\/v1\/payment_mandates\/[^/]+\/(activate|suspend|revoke|expire)$/.test(pathname)) return "mandates:manage";
   if (method === "POST" && pathname === "/v1/quotes") return "quotes:create";
   if (method === "POST" && pathname === "/v1/payment_intents") {
     return "payment_intents:create";
@@ -512,6 +516,13 @@ export class AccessController {
 
   filterTransactionViews(actor, views) {
     return actor?.platform_access ? views : views.filter((view) => this.canAccessView(actor, view));
+  }
+
+  filterMandates(actor, mandates) {
+    if (actor?.platform_access) return mandates;
+    return mandates.filter((mandate) =>
+      actor.account_ids.includes(mandate.account_id) || actor.agent_ids.includes(mandate.agent_id),
+    );
   }
 }
 
