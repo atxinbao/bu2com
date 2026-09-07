@@ -136,7 +136,7 @@
         <p class="eyebrow">BU2.COM · AUDITABLE CHANGE HISTORY</p>
         <h1>系统变更日志</h1>
         <p class="lead">记录 BU2 从代码到金融业务行为的每一次可观察变化，使人类与 Agent 都能回答：改了什么、为什么改、影响什么、如何验证、如何恢复。</p>
-        <div class="meta"><span>格式版本 1.0</span><span>最新更新 2026-09-07</span><span>维护者 BU2 Engineering / Codex</span></div>
+        <div class="meta"><span>格式版本 1.0</span><span>最新更新 2026-09-08</span><span>维护者 BU2 Engineering / Codex</span></div>
       </header>
 
       <section class="contract" id="contract">
@@ -150,6 +150,26 @@
       </section>
 
       <h2 id="unreleased">Unreleased</h2>
+      <article class="release">
+        <div class="release-head">
+          <div><h3>D2 · F08 版本化 Payment Mandate 契约</h3><time datetime="2026-09-08">2026-09-08</time></div>
+          <span class="status baseline">Baseline</span>
+        </div>
+        <p class="summary">冻结 F08 的版本化授权对象、确定性 Policy Decision、Account/Agent/Funding Source/Receiving Target 绑定、状态机、幂等重放以及与 F07 Budget Hold 和 F09 自主执行的边界。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag added">Added</span>新增 <code>docs/02-product/F08_PAYMENT_MANDATE_CONTRACT.md</code>，定义 Mandate 字段、状态、决策快照、稳定原因码和审计引用。</li>
+            <li><span class="tag changed">Changed</span>产品、技术和路线入口更新为 D2；F08 代码实现依赖 D2 合并，并必须单独完成 R2 Domain 与 Architecture 审查。</li>
+            <li><span class="tag governance">Boundary</span>本变更仅修改文档与审计记录，不新增 Schema、API、Provider、Signer、x402、AP2、Testnet 双向收付、Hosted、Live/Mainnet 或托管能力。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R0 · Payment Mandate 文档契约冻结</span></div>
+          <div><b>验证</b><span>链接扫描、格式检查与现有契约验证通过；无运行时代码变更</span></div>
+          <div><b>恢复</b><span>回退文档提交即可恢复 D1/F07 入口，不改变数据库、账本或支付历史</span></div>
+        </div>
+      </article>
       <article class="release">
         <div class="release-head">
           <div><h3>F07 · Budget Hold 与 Financial Posting</h3><time datetime="2026-09-08">2026-09-08</time></div>

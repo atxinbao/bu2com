@@ -224,3 +224,11 @@
 - Tool: `apply_patch`; result: added `docs/02-product/PHASE0_ROADMAP_BASELINE.md` and synchronized product, technical, Epic 3, root README and `CHANGELOG.html`.
 - Decision: D0 is R0 documentation-only; D1 (F07 financial contract) is the next work item, followed by F07 implementation and D2/F08.
 - Boundary: no API, Schema, transaction state, payment adapter, Sandbox/Testnet or Live/Mainnet capability changed.
+
+## 2026-09-08 · D2 F08 Payment Mandate 契约
+
+- Tool: `graphify query`; result: confirmed the F08 dependency path across PaymentMandate, PolicyDecision, F07 Budget Hold, API contract and Phase 0 roadmap.
+- Tool: `git switch -c docs/d2-f08-mandate-contract`; result: created an isolated documentation branch from merged `main` baseline `b982c87`.
+- Tool: `apply_patch`; result: added the F08 versioned Mandate contract and synchronized product/technical/root indexes, roadmap, changelog and verification records.
+- Decision: D2 is R0 documentation-only; F08 runtime remains blocked until this contract is merged and an independent R2 Domain/Architecture review is complete.
+- Boundary: no API, Schema, transaction state, budget hold, ledger, adapter, signer, environment or payment behavior changed; Live/Mainnet, custody and Hosted remain closed.

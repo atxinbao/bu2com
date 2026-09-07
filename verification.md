@@ -722,4 +722,22 @@ npm --prefix sandbox run test:hosted-deployment
 
 验收边界：预算不足、错误币种、非 active Scope 在 Hold 前失败关闭；同一事务的钱包、资源、Budget、Hold、Posting、LedgerEvent、Webhook Outbox 与幂等终态由现有 SQLite `BEGIN IMMEDIATE` 一次提交。未配置 `budget_id` 的既有演示支付保持兼容。
 
-未执行：F08 Payment Mandate、收款 F10/F11、退款 F13、Hosted E2E、真实 Testnet 双向支付、Live/Mainnet 或托管；F07 代码 PR 仍需独立 Domain 与 Architecture R2 审查。
+未执行：F08 Payment Mandate、收款 F10/F11、退款 F13、Hosted E2E、真实 Testnet 双向支付、Live/Mainnet 或托管；后续 F08 代码 PR 仍需独立 Domain 与 Architecture R2 审查。
+
+## D2 F08 Payment Mandate 契约验证
+
+日期：2026-09-08
+执行者：Codex
+
+本轮新增 `docs/02-product/F08_PAYMENT_MANDATE_CONTRACT.md`，并同步产品、技术、根 README、Phase 0 路线、CHANGELOG 与审计上下文。契约冻结版本化 Payment Mandate、Policy Decision、Account/Agent/Funding Source/Receiving Target 绑定、状态机、确定性规则、幂等重放，以及与 F07 Budget Hold 和 F09 自主执行的边界。
+
+验证结果：
+
+- `git diff --check`：通过。
+- `node docs/03-technical/validate-contract.mjs`：63 项不变量、6 个 MCP 工具通过。
+- Markdown 相对链接扫描：通过。
+- F08 旧状态扫描：通过；活动文档均将 D2 标记为 F08 运行时前置条件。
+
+未执行：Sandbox 单元/集成、SDK、Prototype、浏览器、Testnet 支付和 Hosted E2E；D2 只修改文档。风险等级为 R0，需独立 R2 Domain 与 Architecture 审查后才允许进入 F08 代码 PR。
+
+边界确认：未改变 API、Schema、交易状态、预算预留、账本、Adapter、Signer、环境或支付行为；Live/Mainnet、托管、生产凭证和 Hosted Sandbox 继续关闭。
