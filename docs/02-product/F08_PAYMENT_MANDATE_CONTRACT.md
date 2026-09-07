@@ -1,8 +1,8 @@
 # F08 版本化 Payment Mandate 契约 v1
 
-日期：2026-09-08  
-执行者：Codex  
-状态：D2 文档基线，待 R2 独立人工审查  
+日期：2026-09-08
+执行者：Codex
+状态：D2 文档基线，待 R2 独立人工审查
 适用范围：Phase 0 Reference Sandbox · Local / Sandbox / Base Sepolia Testnet
 
 ## 1. 目的与非目标
@@ -216,4 +216,3 @@ F08 代码 PR 必须标记 R2，并由独立 Domain 与 Architecture 审查者�
 - 外部 Agent 继续在自己的工作流中发起交易，BU2 不要求用户在平台创建 Task；
 - Sandbox 继续使用 Base Sepolia 和 x402 测试语义；
 - Live/Mainnet、真实生产资金、托管钱包、法币清算和无人值守生产执行继续关闭。
-
