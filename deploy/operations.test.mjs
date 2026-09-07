@@ -103,7 +103,7 @@ test("promotion manifest binds one immutable artifact and detects configuration 
     sourceCommit,
     artifactReference: artifact,
     resolvedCompose: compose,
-    databaseSchemaVersion: 9,
+    databaseSchemaVersion: 10,
     gateEvidence: gates,
     createdAt: 1_000,
   });
@@ -127,7 +127,7 @@ test("promotion manifest binds one immutable artifact and detects configuration 
         sourceCommit,
         artifactReference: "bu2/reference:latest",
         resolvedCompose: compose,
-        databaseSchemaVersion: 9,
+        databaseSchemaVersion: 10,
         gateEvidence: gates,
       }),
     (error) => error.code === "artifact_reference_not_immutable",

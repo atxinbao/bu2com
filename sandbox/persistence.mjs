@@ -3,6 +3,10 @@ import { existsSync, mkdirSync, statSync } from "node:fs";
 import { dirname } from "node:path";
 import { backup, DatabaseSync } from "node:sqlite";
 import { ApiError } from "./domain.mjs";
+import {
+  credentialOnboardingBundle,
+  normalizeOnboardingDocument,
+} from "./identity.mjs";
 
 const parse = (value, fallback) => (value ? JSON.parse(value) : fallback);
 const nowIso = (now) => new Date(now).toISOString();
@@ -174,6 +178,11 @@ export class SqliteLedger {
         version: 9,
         name: "controlled_access",
         apply: () => this.migrateControlledAccess(),
+      },
+      {
+        version: 10,
+        name: "persistent_identity_onboarding",
+        apply: () => this.migratePersistentIdentityOnboarding(),
       },
     ];
     for (const migration of migrations) {
@@ -505,6 +514,92 @@ export class SqliteLedger {
         trace_id TEXT NOT NULL,
         created_at TEXT NOT NULL,
         UNIQUE (environment, target_tenant_id, idempotency_key)
+      );
+    `);
+  }
+
+  migratePersistentIdentityOnboarding() {
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS identity_principals (
+        environment TEXT NOT NULL CHECK (environment IN ('local', 'sandbox', 'live')),
+        id TEXT NOT NULL,
+        tenant_id TEXT NOT NULL,
+        kind TEXT NOT NULL CHECK (kind IN ('human', 'service')),
+        display_name TEXT NOT NULL,
+        status TEXT NOT NULL CHECK (status IN ('active', 'disabled')),
+        generation INTEGER NOT NULL CHECK (generation >= 1),
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        PRIMARY KEY (environment, id),
+        UNIQUE (environment, tenant_id, id)
+      );
+      CREATE INDEX IF NOT EXISTS idx_identity_principals_tenant
+        ON identity_principals(environment, tenant_id, status);
+
+      CREATE TABLE IF NOT EXISTS identity_accounts (
+        environment TEXT NOT NULL CHECK (environment IN ('local', 'sandbox', 'live')),
+        id TEXT NOT NULL,
+        tenant_id TEXT NOT NULL,
+        owner_principal_id TEXT NOT NULL,
+        display_name TEXT NOT NULL,
+        status TEXT NOT NULL CHECK (status IN ('active', 'disabled')),
+        generation INTEGER NOT NULL CHECK (generation >= 1),
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        PRIMARY KEY (environment, id),
+        UNIQUE (environment, tenant_id, id)
+      );
+      CREATE INDEX IF NOT EXISTS idx_identity_accounts_owner
+        ON identity_accounts(environment, tenant_id, owner_principal_id, status);
+
+      CREATE TABLE IF NOT EXISTS identity_agents (
+        environment TEXT NOT NULL CHECK (environment IN ('local', 'sandbox', 'live')),
+        id TEXT NOT NULL,
+        tenant_id TEXT NOT NULL,
+        owner_principal_id TEXT NOT NULL,
+        display_name TEXT NOT NULL,
+        status TEXT NOT NULL CHECK (status IN ('active', 'disabled')),
+        generation INTEGER NOT NULL CHECK (generation >= 1),
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        PRIMARY KEY (environment, id),
+        UNIQUE (environment, tenant_id, id)
+      );
+      CREATE INDEX IF NOT EXISTS idx_identity_agents_owner
+        ON identity_agents(environment, tenant_id, owner_principal_id, status);
+
+      CREATE TABLE IF NOT EXISTS identity_credential_bindings (
+        environment TEXT NOT NULL CHECK (environment IN ('local', 'sandbox', 'live')),
+        credential_id TEXT NOT NULL,
+        tenant_id TEXT NOT NULL,
+        principal_id TEXT NOT NULL,
+        role TEXT NOT NULL CHECK (role IN ('agent', 'developer', 'operator')),
+        token_sha256 TEXT NOT NULL CHECK (length(token_sha256) = 64),
+        account_ids_json TEXT NOT NULL,
+        agent_ids_json TEXT NOT NULL,
+        generation INTEGER NOT NULL CHECK (generation >= 1),
+        expires_at TEXT,
+        status TEXT NOT NULL CHECK (status IN ('active', 'disabled', 'revoked')),
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        PRIMARY KEY (environment, credential_id),
+        UNIQUE (environment, token_sha256)
+      );
+      CREATE INDEX IF NOT EXISTS idx_identity_credentials_tenant
+        ON identity_credential_bindings(environment, tenant_id, status);
+
+      CREATE TABLE IF NOT EXISTS identity_onboarding_events (
+        sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+        id TEXT UNIQUE NOT NULL,
+        environment TEXT NOT NULL CHECK (environment IN ('local', 'sandbox', 'live')),
+        idempotency_key TEXT NOT NULL,
+        request_fingerprint TEXT NOT NULL,
+        requested_by TEXT NOT NULL,
+        operation TEXT NOT NULL,
+        tenant_ids_json TEXT NOT NULL,
+        result_json TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        UNIQUE (environment, idempotency_key)
       );
     `);
   }
@@ -1528,6 +1623,470 @@ export class SqliteLedger {
          FROM access_decisions WHERE environment=? ORDER BY sequence`,
       )
       .all(environment);
+  }
+
+  _assertIdentityRow(table, environment, id, expected, fields) {
+    const current = this.db
+      .prepare(`SELECT * FROM ${table} WHERE environment=? AND id=?`)
+      .get(environment, id);
+    if (!current) {
+      const columns = ["environment", "id", ...fields];
+      const placeholders = columns.map(() => "?").join(", ");
+      this.db
+        .prepare(
+          `INSERT INTO ${table}(${columns.join(", ")}) VALUES (${placeholders})`,
+        )
+        .run(environment, id, ...fields.map((field) => expected[field]));
+      return;
+    }
+    const conflicts = fields.filter(
+      (field) =>
+        !["created_at", "updated_at"].includes(field) &&
+        current[field] !== expected[field],
+    );
+    if (conflicts.length > 0) {
+      throw new ApiError(
+        409,
+        "authorization_error",
+        "identity_binding_conflict",
+        "An identity already exists with a different tenant, owner, status, or generation.",
+        { environment, id, conflicts: conflicts.sort() },
+      );
+    }
+  }
+
+  _applyIdentityBundle(environment, tenant) {
+    const createdAt = new Date().toISOString();
+    const principal = {
+      ...tenant.principal,
+      tenant_id: tenant.tenant_id,
+      created_at: tenant.principal.created_at ?? createdAt,
+      updated_at: createdAt,
+    };
+    this._assertIdentityRow(
+      "identity_principals",
+      environment,
+      principal.id,
+      principal,
+      [
+        "tenant_id",
+        "kind",
+        "display_name",
+        "status",
+        "generation",
+        "created_at",
+        "updated_at",
+      ],
+    );
+    for (const account of tenant.accounts) {
+      const record = {
+        ...account,
+        tenant_id: tenant.tenant_id,
+        owner_principal_id: principal.id,
+        created_at: account.created_at ?? createdAt,
+        updated_at: createdAt,
+      };
+      this._assertIdentityRow(
+        "identity_accounts",
+        environment,
+        account.id,
+        record,
+        [
+          "tenant_id",
+          "owner_principal_id",
+          "display_name",
+          "status",
+          "generation",
+          "created_at",
+          "updated_at",
+        ],
+      );
+    }
+    for (const agent of tenant.agents) {
+      const record = {
+        ...agent,
+        tenant_id: tenant.tenant_id,
+        owner_principal_id: principal.id,
+        created_at: agent.created_at ?? createdAt,
+        updated_at: createdAt,
+      };
+      this._assertIdentityRow(
+        "identity_agents",
+        environment,
+        agent.id,
+        record,
+        [
+          "tenant_id",
+          "owner_principal_id",
+          "display_name",
+          "status",
+          "generation",
+          "created_at",
+          "updated_at",
+        ],
+      );
+      const agentPrincipal = {
+        id: agent.id,
+        tenant_id: tenant.tenant_id,
+        kind: "service",
+        display_name: agent.display_name,
+        status: agent.status,
+        generation: agent.generation,
+        created_at: agent.created_at ?? createdAt,
+        updated_at: createdAt,
+      };
+      this._assertIdentityRow(
+        "identity_principals",
+        environment,
+        agent.id,
+        agentPrincipal,
+        [
+          "tenant_id",
+          "kind",
+          "display_name",
+          "status",
+          "generation",
+          "created_at",
+          "updated_at",
+        ],
+      );
+    }
+    for (const credential of tenant.credentials) {
+      const record = {
+        ...credential,
+        tenant_id: tenant.tenant_id,
+        principal_id: credential.principal_id,
+        account_ids_json: JSON.stringify([...credential.account_ids].sort()),
+        agent_ids_json: JSON.stringify([...credential.agent_ids].sort()),
+        created_at: credential.created_at ?? createdAt,
+        updated_at: createdAt,
+      };
+      const current = this.db
+        .prepare(
+          `SELECT * FROM identity_credential_bindings
+           WHERE environment=? AND credential_id=?`,
+        )
+        .get(environment, credential.id);
+      if (!current) {
+        this.db
+          .prepare(`
+            INSERT INTO identity_credential_bindings(
+              environment, credential_id, tenant_id, principal_id, role,
+              token_sha256, account_ids_json, agent_ids_json, generation,
+              expires_at, status, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `)
+          .run(
+            environment,
+            credential.id,
+            record.tenant_id,
+            record.principal_id,
+            record.role,
+            record.token_sha256,
+            record.account_ids_json,
+            record.agent_ids_json,
+            record.generation,
+            record.expires_at,
+            record.status,
+            record.created_at,
+            record.updated_at,
+          );
+      } else {
+        const conflicts = [
+          "tenant_id",
+          "principal_id",
+          "role",
+          "token_sha256",
+          "account_ids_json",
+          "agent_ids_json",
+          "generation",
+          "expires_at",
+          "status",
+        ].filter((field) => current[field] !== record[field]);
+        if (conflicts.length > 0) {
+          throw new ApiError(
+            409,
+            "authorization_error",
+            "credential_binding_conflict",
+            "A credential ID is already bound to different identity metadata.",
+            { environment, credential_id: credential.id, conflicts: conflicts.sort() },
+          );
+        }
+      }
+    }
+    this.tenantAccessState(environment, tenant.tenant_id);
+    return this.identityBundle(environment, tenant.tenant_id);
+  }
+
+  bootstrapIdentityTenants(document) {
+    const normalized = normalizeOnboardingDocument(document, document.environment);
+    const fingerprint = requestFingerprint(normalized);
+    return immediateTransaction(this.db, () => {
+      const existing = this.db
+        .prepare(
+          `SELECT request_fingerprint, result_json
+           FROM identity_onboarding_events
+           WHERE environment=? AND idempotency_key=?`,
+        )
+        .get(normalized.environment, normalized.idempotency_key);
+      if (existing) {
+        if (existing.request_fingerprint !== fingerprint) {
+          throw new ApiError(
+            409,
+            "idempotency_conflict",
+            "idempotency_key_reused",
+            "The same onboarding idempotency key was used with different identity metadata.",
+          );
+        }
+        return JSON.parse(existing.result_json);
+      }
+      const identities = normalized.tenants.map((tenant) =>
+        this._applyIdentityBundle(normalized.environment, tenant),
+      );
+      const result = {
+        schema_version: "1.0",
+        environment: normalized.environment,
+        tenant_ids: identities.map((identity) => identity.tenant_id),
+        identities,
+      };
+      this.db
+        .prepare(`
+          INSERT INTO identity_onboarding_events(
+            id, environment, idempotency_key, request_fingerprint,
+            requested_by, operation, tenant_ids_json, result_json, created_at
+          ) VALUES (?, ?, ?, ?, ?, 'bootstrap', ?, ?, ?)
+        `)
+        .run(
+          `ion_${randomUUID().replaceAll("-", "").slice(0, 16)}`,
+          normalized.environment,
+          normalized.idempotency_key,
+          fingerprint,
+          normalized.requested_by,
+          JSON.stringify(result.tenant_ids),
+          JSON.stringify(result),
+          new Date().toISOString(),
+        );
+      return result;
+    });
+  }
+
+  reconcileAccessCredential(credential, environment) {
+    const bundle = credentialOnboardingBundle(credential, environment);
+    const document = {
+      environment,
+      requested_by: "usr_runtime_configuration",
+      idempotency_key: `runtime_${credential.id}_${credential.token_sha256}`,
+      tenants: [bundle],
+    };
+    const normalized = normalizeOnboardingDocument(document, environment);
+    const fingerprint = requestFingerprint(normalized);
+    return immediateTransaction(this.db, () => {
+      const existing = this.db
+        .prepare(
+          `SELECT request_fingerprint, result_json
+           FROM identity_onboarding_events
+           WHERE environment=? AND idempotency_key=?`,
+        )
+        .get(environment, document.idempotency_key);
+      if (existing) {
+        if (existing.request_fingerprint !== fingerprint) {
+          throw new ApiError(
+            503,
+            "configuration_error",
+            "credential_identity_conflict",
+            "Configured credential metadata conflicts with the persisted identity binding.",
+          );
+        }
+        return JSON.parse(existing.result_json);
+      }
+      const identity = this._applyIdentityBundle(environment, normalized.tenants[0]);
+      const result = {
+        schema_version: "1.0",
+        environment,
+        tenant_ids: [identity.tenant_id],
+        identities: [identity],
+      };
+      this.db
+        .prepare(`
+          INSERT INTO identity_onboarding_events(
+            id, environment, idempotency_key, request_fingerprint,
+            requested_by, operation, tenant_ids_json, result_json, created_at
+          ) VALUES (?, ?, ?, ?, ?, 'configuration_reconcile', ?, ?, ?)
+        `)
+        .run(
+          `ion_${randomUUID().replaceAll("-", "").slice(0, 16)}`,
+          environment,
+          document.idempotency_key,
+          fingerprint,
+          document.requested_by,
+          JSON.stringify(result.tenant_ids),
+          JSON.stringify(result),
+          new Date().toISOString(),
+        );
+      return result;
+    });
+  }
+
+  identityCredentialBinding(environment, credentialId) {
+    const row = this.db
+      .prepare(
+        `SELECT environment, credential_id, tenant_id, principal_id, role,
+                token_sha256, account_ids_json, agent_ids_json, generation,
+                expires_at, status, created_at, updated_at
+         FROM identity_credential_bindings
+         WHERE environment=? AND credential_id=?`,
+      )
+      .get(environment, credentialId);
+    if (!row) return null;
+    return {
+      ...row,
+      account_ids: JSON.parse(row.account_ids_json),
+      agent_ids: JSON.parse(row.agent_ids_json),
+    };
+  }
+
+  identityBundle(environment, tenantId, principalId = null) {
+    const principal = principalId
+      ? this.db
+          .prepare(
+            `SELECT environment, id, tenant_id, kind, display_name, status, generation,
+                    created_at, updated_at
+             FROM identity_principals
+             WHERE environment=? AND tenant_id=? AND id=?`,
+          )
+          .get(environment, tenantId, principalId)
+      : this.db
+          .prepare(
+            `SELECT environment, id, tenant_id, kind, display_name, status, generation,
+                    created_at, updated_at
+             FROM identity_principals
+             WHERE environment=? AND tenant_id=?
+             ORDER BY CASE kind WHEN 'human' THEN 0 ELSE 1 END, id LIMIT 1`,
+          )
+          .get(environment, tenantId);
+    const normalizedPrincipal = principal ? { ...principal } : null;
+    const ownershipClause = principalId ? " AND owner_principal_id=?" : "";
+    const ownerParameters = principalId
+      ? [environment, tenantId, principalId]
+      : [environment, tenantId];
+    const accounts = this.db
+      .prepare(
+        `SELECT environment, id, tenant_id, owner_principal_id, display_name,
+                status, generation, created_at, updated_at
+         FROM identity_accounts
+         WHERE environment=? AND tenant_id=?${ownershipClause}
+         ORDER BY id`,
+      )
+      .all(...ownerParameters)
+      .map((row) => ({ ...row }));
+    const agents = this.db
+      .prepare(
+        `SELECT environment, id, tenant_id, owner_principal_id, display_name,
+                status, generation, created_at, updated_at
+         FROM identity_agents
+         WHERE environment=? AND tenant_id=?${ownershipClause}
+         ORDER BY id`,
+      )
+      .all(...ownerParameters)
+      .map((row) => ({ ...row }));
+    const credentials = this.db
+      .prepare(
+        `SELECT environment, credential_id, tenant_id, principal_id, role,
+                generation, expires_at, status, created_at, updated_at,
+                account_ids_json, agent_ids_json
+         FROM identity_credential_bindings
+         WHERE environment=? AND tenant_id=?${principalId ? " AND principal_id=?" : ""}
+         ORDER BY credential_id`,
+      )
+      .all(...ownerParameters)
+      .map((row) => ({
+        environment: row.environment,
+        credential_id: row.credential_id,
+        tenant_id: row.tenant_id,
+        principal_id: row.principal_id,
+        role: row.role,
+        generation: row.generation,
+        expires_at: row.expires_at,
+        status: row.status,
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+        account_ids: JSON.parse(row.account_ids_json),
+        agent_ids: JSON.parse(row.agent_ids_json),
+      }));
+    return {
+      environment,
+      tenant_id: tenantId,
+      principal: normalizedPrincipal,
+      accounts,
+      agents,
+      credentials,
+    };
+  }
+
+  identityTenants(environment) {
+    return this.db
+      .prepare(
+        `SELECT DISTINCT tenant_id
+         FROM identity_principals
+         WHERE environment=?
+         ORDER BY tenant_id`,
+      )
+      .all(environment)
+      .map(({ tenant_id }) => this.identityBundle(environment, tenant_id));
+  }
+
+  identityBundleForActor(environment, actor) {
+    if (!actor || actor.development_open) return null;
+    const bundle = this.identityBundle(environment, actor.tenant_id);
+    const principal = this.db
+      .prepare(
+        `SELECT environment, id, tenant_id, kind, display_name, status, generation,
+                created_at, updated_at
+         FROM identity_principals
+         WHERE environment=? AND tenant_id=? AND id=?`,
+      )
+      .get(environment, actor.tenant_id, actor.principal_id);
+    return {
+      environment: bundle.environment,
+      tenant_id: bundle.tenant_id,
+      principal: principal ? { ...principal } : null,
+      accounts: bundle.accounts.filter((account) => actor.account_ids.includes(account.id)),
+      agents: bundle.agents.filter((agent) => actor.agent_ids.includes(agent.id)),
+    };
+  }
+
+  assertIdentityClaims(environment, actor, { accountIds = [], agentIds = [] } = {}) {
+    if (!actor || actor.platform_access) return;
+    const missingAccounts = accountIds.filter((accountId) => {
+      const row = this.db
+        .prepare(
+          `SELECT id FROM identity_accounts
+           WHERE environment=? AND tenant_id=? AND id=? AND status='active'`,
+        )
+        .get(environment, actor.tenant_id, accountId);
+      return !row;
+    });
+    const missingAgents = agentIds.filter((agentId) => {
+      const row = this.db
+        .prepare(
+          `SELECT id FROM identity_agents
+           WHERE environment=? AND tenant_id=? AND id=? AND status='active'`,
+        )
+        .get(environment, actor.tenant_id, agentId);
+      return !row;
+    });
+    if (missingAccounts.length > 0 || missingAgents.length > 0) {
+      throw new ApiError(
+        403,
+        "authorization_error",
+        "resource_scope_denied",
+        "The requested account or Agent identity is not active in the caller tenant.",
+        {
+          account_ids: missingAccounts.sort(),
+          agent_ids: missingAgents.sort(),
+        },
+      );
+    }
   }
 
   resetTenantAccess({

@@ -443,6 +443,62 @@ export interface components {
             account_ids: string[];
             agent_ids: string[];
             credential_generation: number | null;
+            /** @description Persisted Principal, Account and Agent ownership visible to the authenticated caller. */
+            identity?: components["schemas"]["IdentitySummary"] | null;
+        };
+        IdentityPrincipal: {
+            /** @enum {string} */
+            environment: "local" | "sandbox" | "live";
+            id: string;
+            tenant_id: string;
+            /** @enum {string} */
+            kind: "human" | "service";
+            display_name: string;
+            /** @enum {string} */
+            status: "active" | "disabled";
+            generation: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        IdentityAccount: {
+            /** @enum {string} */
+            environment: "local" | "sandbox" | "live";
+            id: string;
+            tenant_id: string;
+            owner_principal_id: string;
+            display_name: string;
+            /** @enum {string} */
+            status: "active" | "disabled";
+            generation: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        IdentityAgent: {
+            /** @enum {string} */
+            environment: "local" | "sandbox" | "live";
+            id: string;
+            tenant_id: string;
+            owner_principal_id: string;
+            display_name: string;
+            /** @enum {string} */
+            status: "active" | "disabled";
+            generation: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        IdentitySummary: {
+            /** @enum {string} */
+            environment: "local" | "sandbox" | "live";
+            tenant_id: string;
+            principal: components["schemas"]["IdentityPrincipal"];
+            accounts: components["schemas"]["IdentityAccount"][];
+            agents: components["schemas"]["IdentityAgent"][];
         };
         CreateSupportBundle: {
             reason: string;

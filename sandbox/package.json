@@ -1,6 +1,6 @@
 {
   "name": "@bu2/reference-sandbox",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "private": true,
   "type": "module",
   "bin": {
@@ -32,6 +32,9 @@
     "sandbox:doctor": "node ../deploy/local-sandbox.mjs doctor",
     "sandbox:status": "node ../deploy/local-sandbox.mjs status",
     "sandbox:down": "node ../deploy/local-sandbox.mjs down",
+    "onboarding": "node onboarding.mjs",
+    "onboarding:bootstrap": "node onboarding.mjs bootstrap",
+    "onboarding:inspect": "node onboarding.mjs inspect",
     "doctor": "node bin/bu2-doctor.mjs",
     "mcp": "node bin/bu2-mcp.mjs",
     "x402:merchant": "node x402-merchant.mjs",

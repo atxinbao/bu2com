@@ -306,6 +306,27 @@ export class AccessController {
       ids.add(credential.id);
       digests.add(credential.token_sha256);
     }
+    try {
+      for (const credential of this.credentials) {
+        this.ledger?.reconcileAccessCredential(
+          {
+            ...credential,
+            account_ids: [...credential.account_ids],
+            agent_ids: [...credential.agent_ids],
+          },
+          this.environment,
+        );
+      }
+    } catch (error) {
+      if (error instanceof ApiError && error.status >= 400 && error.status < 500) {
+        throw configurationError(
+          "access_identity_binding_conflict",
+          "Configured credentials conflict with persisted identity ownership.",
+          { code: error.code, details: error.details ?? {} },
+        );
+      }
+      throw error;
+    }
   }
 
   record({ context, permission, actor = null, outcome, reasonCode }) {
@@ -370,6 +391,24 @@ export class AccessController {
       reasonCode = "credential_expired";
     } else if (tenantState.status !== "active") reasonCode = "tenant_access_disabled";
     else if (tenantState.generation !== credential.generation) reasonCode = "credential_reset";
+    const binding = this.ledger?.identityCredentialBinding(this.environment, credential.id);
+    if (!reasonCode && (!binding || binding.token_sha256 !== credential.token_sha256)) {
+      reasonCode = "credential_unbound";
+    } else if (!reasonCode && binding.status !== credential.status) {
+      reasonCode = "credential_binding_status_mismatch";
+    } else if (!reasonCode && binding.generation !== credential.generation) {
+      reasonCode = "credential_binding_generation_mismatch";
+    }
+    const identity = this.ledger?.identityBundleForActor(this.environment, {
+      ...actor,
+      development_open: false,
+    });
+    if (!reasonCode && !identity?.principal) reasonCode = "credential_unbound";
+    else if (!reasonCode && identity.principal.status !== "active") {
+      reasonCode = "identity_disabled";
+    } else if (!reasonCode && identity.principal.generation !== credential.generation) {
+      reasonCode = "identity_generation_mismatch";
+    }
     if (reasonCode) {
       this.record({ context, permission, actor, outcome: "denied", reasonCode });
       throw authError(401, reasonCode, "The BU2 API key is no longer active.");
@@ -403,6 +442,7 @@ export class AccessController {
       account_ids: [...actor.account_ids],
       agent_ids: [...actor.agent_ids],
       credential_generation: actor.generation,
+      identity: this.ledger?.identityBundleForActor(this.environment, actor) ?? null,
     };
   }
 
@@ -430,6 +470,7 @@ export class AccessController {
         },
       );
     }
+    this.ledger?.assertIdentityClaims(this.environment, actor, { accountIds, agentIds });
   }
 
   canAccessView(actor, view) {

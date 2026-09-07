@@ -26,7 +26,7 @@ ENV-06 把 ENV-04 的隔离部署单元与 ENV-05 的受控运维入口连接成
 `SqliteLedger.backupTo()` 直接复用 Node `node:sqlite` 的 SQLite Online Backup API，不复制正在运行的 WAL、SHM 或主数据库文件。备份完成后必须依次验证：
 
 1. `PRAGMA integrity_check` 唯一结果为 `ok`；
-2. schema version 不低于 v9；
+2. schema version 不低于 v10；F06a 的身份归属与凭证绑定必须随环境数据库一起备份；
 3. 数据库不可变 environment metadata 与调用环境一致；
 4. 关键事实计数与 manifest 一致；
 5. 数据库文件 SHA-256 与 manifest 一致；
@@ -83,7 +83,7 @@ ENV-07 的托管部署、真实 Base Sepolia 双向收付、边缘访问和外�
 
 ## 8. 兼容、恢复与后续
 
-本变更不修改 API、事件、Receipt、金额、Transaction Core 状态机或 Provider 语义；SQLite schema 仍为 v9，仅新增只读证据与官方在线备份包装。Node 最低版本从 22.13 提升到 22.16，因为 `node:sqlite backup()` 从 22.16 提供。
+ENV-06 原始 PR #23 不修改 API、事件、Receipt、金额、Transaction Core 状态机或 Provider 语义；本次 F06a 追加 Schema v10 的 Principal、Account、Agent、credential binding 与 onboarding 审计事实，运维备份最低版本同步提升为 v10。Node 最低版本仍为 22.16，因为 `node:sqlite backup()` 从 22.16 提供。
 
 回退代码时保留已生成备份和 manifest；旧版本不得把恢复副本直接投入执行。若运维模块失败，停止制品提升，保留只读查询、观察和对账，由人工检查备份与配置证据。ENV-06 已由 PR #23 合并；后续 ENV-07 的本地准入基线不能替代托管 Sandbox 双向 Base Sepolia 验收。
 

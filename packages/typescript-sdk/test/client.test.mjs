@@ -198,6 +198,7 @@ test("typed SDK completes one local simulated transaction and verifies Receipt v
 
   const receipt = await client.getReceipt(settlement.receipt.id);
   const verification = await client.verifyReceipt(receipt.id);
+  const access = await client.getAccessIdentity();
   const detail = await client.getTransaction(authorized.transaction_id);
   const transactions = await client.listTransactions({ limit: 1 });
 
@@ -207,6 +208,8 @@ test("typed SDK completes one local simulated transaction and verifies Receipt v
   assert.equal(receipt.schema_version, "0.3");
   assert.equal(receipt.environment, "local");
   assert.equal(verification.environment_valid, true);
+  assert.equal(access.environment, "local");
+  assert.equal(access.identity, null);
   assert.equal(client.environment, "local");
 });
 

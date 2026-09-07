@@ -12,7 +12,7 @@ BU2.com 是 Agent 的 AI 收付平台。它嵌入 ChatGPT、Codex、Claude 和�
 | 当前工程关卡 | ENV-07A · Hosted Sandbox 准入与证据基线（本地实现） |
 | 产品定义 | Product v0.3 · Transaction-first |
 | API 契约 | Agent Payment API v0.3.0 |
-| Reference Server | v0.16 · Node.js + SQLite WAL + MCP + Hosted Sandbox 准入 |
+| Reference Server | v0.17 · Node.js + SQLite WAL + 持久身份接入 + Hosted Sandbox 准入 |
 | TypeScript SDK | `@bu2/sdk` v0.3 · Monorepo private package |
 | MCP 分发 | stdio v0.3 · Codex / Claude Desktop / Generic Host |
 | 接入诊断 | `bu2-doctor` result v0.2 · 本地执行 / 零远程遥测 |
@@ -23,6 +23,8 @@ BU2.com 是 Agent 的 AI 收付平台。它嵌入 ChatGPT、Codex、Claude 和�
 | 生产边界 | Live 初始 `execution_disabled`；客户资金托管和法币能力尚未开放 |
 
 当前代码已经形成可运行的 Agent 收付闭环，但仍是本地与 Base Sepolia 测试网证据，不是生产支付系统或法律合规结论。ENV-02–06 已由 PR #19–#23 合并；ENV-07A 为 Hosted Sandbox 增加专用启动门槛、文件型 Secret、不可变候选、独立激活与证据验证器，但尚未创建托管 Sandbox 或 Live。
+
+F06a 正在把受控访问中的 Principal、Account 和 Agent 声明落到 SQLite Schema v10 的持久业务主体记录，并提供内部 Sandbox onboarding 配置入口。该能力只建立归属、生命周期和凭证摘要映射，不启用 Signer、不改变 `execution_disabled`，也不把未映射历史交易自动归属到新客户。
 
 [Phase 0 Epic 1：External Agent Transaction Integration & Reliability](docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md) 与 [Phase 0 Epic 2：Developer Integration Scale](docs/03-technical/PHASE0_EPIC2_DEVELOPER_INTEGRATION_SCALE.md) 已完成。Transaction Trust Gate 1–3 已经 PR #15–#17 合并，F01/ENV-01 至 ENV-06 分别由 PR #18–#23 批准。当前进入 ENV-07：ENV-07A 本地准入与证据契约已实现，ENV-07B 的部署单元、外部验收 Schema 与 Runbook 已准备，但公网部署、真实 Base Sepolia 双向收付和边缘 E2E 仍未执行。[Phase 0 Epic 3](docs/03-technical/PHASE0_EPIC3_EXTERNAL_PILOT_EVIDENCE.md) 保持 Ready，不能以 Local Simulation 代替正式外部证据。
 

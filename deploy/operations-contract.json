@@ -19,7 +19,7 @@
     "manifest_suffix": ".manifest.json",
     "integrity_check": "PRAGMA integrity_check",
     "overwrite": "forbidden",
-    "minimum_schema_version": 9,
+    "minimum_schema_version": 10,
     "scopes": {
       "sandbox": "bu2-sandbox",
       "live": "bu2-live"

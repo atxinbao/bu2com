@@ -595,6 +595,67 @@ components:
         account_ids: { type: array, items: { type: string } }
         agent_ids: { type: array, items: { type: string } }
         credential_generation: { type: [integer, 'null'] }
+        identity:
+          oneOf:
+            - { $ref: '#/components/schemas/IdentitySummary' }
+            - { type: 'null' }
+          description: Persisted Principal, Account and Agent ownership visible to the authenticated caller.
+    IdentityPrincipal:
+      type: object
+      additionalProperties: false
+      required: [environment, id, tenant_id, kind, display_name, status, generation, created_at, updated_at]
+      properties:
+        environment: { type: string, enum: [local, sandbox, live] }
+        id: { type: string, pattern: '^(usr|agt)_[A-Za-z0-9_-]+$' }
+        tenant_id: { type: string, pattern: '^ten_[A-Za-z0-9_-]+$' }
+        kind: { type: string, enum: [human, service] }
+        display_name: { type: string, minLength: 1, maxLength: 200 }
+        status: { type: string, enum: [active, disabled] }
+        generation: { type: integer, minimum: 1 }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    IdentityAccount:
+      type: object
+      additionalProperties: false
+      required: [environment, id, tenant_id, owner_principal_id, display_name, status, generation, created_at, updated_at]
+      properties:
+        environment: { type: string, enum: [local, sandbox, live] }
+        id: { type: string, pattern: '^acct_[A-Za-z0-9_-]+$' }
+        tenant_id: { type: string, pattern: '^ten_[A-Za-z0-9_-]+$' }
+        owner_principal_id: { type: string, pattern: '^(usr|agt)_[A-Za-z0-9_-]+$' }
+        display_name: { type: string, minLength: 1, maxLength: 200 }
+        status: { type: string, enum: [active, disabled] }
+        generation: { type: integer, minimum: 1 }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    IdentityAgent:
+      type: object
+      additionalProperties: false
+      required: [environment, id, tenant_id, owner_principal_id, display_name, status, generation, created_at, updated_at]
+      properties:
+        environment: { type: string, enum: [local, sandbox, live] }
+        id: { type: string, pattern: '^agt_[A-Za-z0-9_-]+$' }
+        tenant_id: { type: string, pattern: '^ten_[A-Za-z0-9_-]+$' }
+        owner_principal_id: { type: string, pattern: '^(usr|agt)_[A-Za-z0-9_-]+$' }
+        display_name: { type: string, minLength: 1, maxLength: 200 }
+        status: { type: string, enum: [active, disabled] }
+        generation: { type: integer, minimum: 1 }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    IdentitySummary:
+      type: object
+      additionalProperties: false
+      required: [environment, tenant_id, principal, accounts, agents]
+      properties:
+        environment: { type: string, enum: [local, sandbox, live] }
+        tenant_id: { type: string, pattern: '^ten_[A-Za-z0-9_-]+$' }
+        principal: { $ref: '#/components/schemas/IdentityPrincipal' }
+        accounts:
+          type: array
+          items: { $ref: '#/components/schemas/IdentityAccount' }
+        agents:
+          type: array
+          items: { $ref: '#/components/schemas/IdentityAgent' }
     CreateSupportBundle:
       type: object
       additionalProperties: false
