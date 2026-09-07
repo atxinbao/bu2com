@@ -232,3 +232,6 @@
 - Tool: `apply_patch`; result: added the F08 versioned Mandate contract and synchronized product/technical/root indexes, roadmap, changelog and verification records.
 - Decision: D2 is R0 documentation-only; F08 runtime remains blocked until this contract is merged and an independent R2 Domain/Architecture review is complete.
 - Boundary: no API, Schema, transaction state, budget hold, ledger, adapter, signer, environment or payment behavior changed; Live/Mainnet, custody and Hosted remain closed.
+- Tool: `git add -A`, `git commit`; result: created `cb5067a` (`docs(f08): freeze payment mandate contract`) with the D2 contract, synchronized documentation and audit evidence.
+- Tool: `gh auth status`, `git push -u origin docs/d2-f08-mandate-contract`; result: authenticated push completed.
+- Tool: `gh pr create` / `gh pr edit`; result: opened Draft PR #33, titled `docs(f08): freeze payment mandate contract`, using `.github/pull_request_template.md` sections and the verified D2 body.
