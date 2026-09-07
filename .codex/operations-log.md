@@ -183,3 +183,25 @@
 - Tool: `gh auth status`, `git push -u origin`; result: authenticated GitHub session confirmed and branch `feat/wallet-funding-target-bindings` pushed to `origin`.
 - Tool: `gh pr create`; result: opened draft PR #29 against `main`; no existing PR was found for the branch.
 - Boundary: PR is for R2 independent human review; no Live/Mainnet, custody, hosted deployment or new payment execution was enabled.
+
+## 2026-09-07 · 后续 PR 路线图梳理
+
+- Tool: `graphify query`; result: confirmed the current dependency graph centers on ENV-07 Hosted Sandbox, Epic 3, the existing Agent Payment API v1, Doctor, clean-room evidence and Transaction Trust Gate.
+- Tool: `rg` / `sed`; result: verified `main` is clean at F06b merge `82cdb7b`; Epic 1, Epic 2, Transaction Trust Gate and ENV-01–ENV-06 are complete; ENV-07B remains unaccepted.
+- Decision: classify ENV-07B as a deployment/acceptance gate rather than a code PR; sequence implementation PRs as E3.1 → E3.2 → E3.3, then conduct E3.4 as an external pilot stage.
+- Boundary: no code, payment path, Live/Mainnet capability, production credential or hosted resource was enabled by this planning task.
+
+## 2026-09-07 · 文档 PR 交付策略确认
+
+- Tool: `graphify query`; result: identified product, technical contract, acceptance and operations documents as separate documentation communities connected to F02–F16 and Epic 3.
+- Tool: `rg` / `sed`; result: confirmed `docs/README.md` requires product baseline, technical contracts, examples, validation scripts and `CHANGELOG.html` to stay synchronized when behavior or contracts change.
+- Decision: documentation is required for every implementation PR; only roadmap/governance/status alignment and standalone contract changes should use separate documentation PRs.
+- Boundary: no business code, schema, transaction state or environment capability was changed.
+
+## 2026-09-07 · D0 Phase 0 业务路线与文档基线
+
+- Tool: `git switch -c docs/d0-roadmap-baseline`; result: created isolated documentation branch from merged F06b baseline `82cdb7b`.
+- Tool: `rg` / `sed`; result: found stale F07/F08 product definitions, merged-item `R2 review pending` markers, and Epic 3 sequencing drift.
+- Tool: `apply_patch`; result: added `docs/02-product/PHASE0_ROADMAP_BASELINE.md` and synchronized product, technical, Epic 3, root README and `CHANGELOG.html`.
+- Decision: D0 is R0 documentation-only; D1 (F07 financial contract) is the next work item, followed by F07 implementation and D2/F08.
+- Boundary: no API, Schema, transaction state, payment adapter, Sandbox/Testnet or Live/Mainnet capability changed.

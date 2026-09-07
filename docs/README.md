@@ -41,6 +41,7 @@
 | --- | --- |
 | [`P0_TRANSACTION_FIRST_BASELINE.md`](02-product/P0_TRANSACTION_FIRST_BASELINE.md) | 当前正式产品定位、交易对象、范围和演示闭环 |
 | [`MVP_PRD.md`](02-product/MVP_PRD.md) | Transaction-first MVP 功能、流程、优先级和验收标准 |
+| [`PHASE0_ROADMAP_BASELINE.md`](02-product/PHASE0_ROADMAP_BASELINE.md) | M1～M5 里程碑、F02-CI～F16b 依赖与文档提交规则 |
 | [`INFORMATION_ARCHITECTURE.md`](02-product/INFORMATION_ARCHITECTURE.md) | Transaction-first 页面、对象和状态关系 |
 | [`TRANSACTION_P0_ACCEPTANCE.md`](02-product/TRANSACTION_P0_ACCEPTANCE.md) | 当前 P0 交易闭环的验收路径与门槛 |
 

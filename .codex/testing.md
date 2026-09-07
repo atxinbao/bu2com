@@ -149,6 +149,22 @@
 - `git diff --check`: passed after updating the F06b technical, operations, root, Sandbox and changelog documentation.
 - Not run: public Hosted Sandbox, DNS/TLS, managed Secrets, Live/Mainnet, custody or new external payment execution; these remain outside F06b.
 
+## 2026-09-07 · 后续 PR 路线图梳理
+
+- Read-only planning task; no production or transaction code was changed.
+- Executed `graphify query "基于当前已合并基线，后续还需要开发哪些 PR？请区分代码开发、部署验收、外部试点和暂不开发事项，并说明依赖关系。"`; graph traversal completed against `graphify-out/graph.json` (2472 nodes).
+- Executed `rg`/`sed` against Epic, environment and F06b documents; confirmed current PR sequence and acceptance commands from source documents.
+- Not run: unit/integration/build suites, because this task only produced a roadmap and did not modify executable code.
+
+## 2026-09-07 · D0 Phase 0 业务路线与文档基线
+
+- `git diff --check`: passed.
+- `rg` stale-marker scan: passed; no remaining `R2 review pending`, legacy F07/F08 headings, or obsolete Epic 3 prerequisite wording in active docs.
+- Markdown/link consistency scan: passed for the new roadmap references in root, product and technical indexes.
+- `node docs/03-technical/validate-contract.mjs`: passed; 63 invariants and 6 MCP tools remain valid after documentation updates.
+- Not run: sandbox unit/integration, SDK, prototype lint/build or hosted acceptance suites; D0 changed documentation only.
+- Risk assessment: R0; executable behavior and financial state are unchanged.
+
 ## 2026-09-06 · Internal Sandbox Product Baseline
 
 - `node --test deploy/local-sandbox.test.mjs`: 3/3 passed.
