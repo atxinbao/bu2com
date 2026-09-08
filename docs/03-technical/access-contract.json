@@ -45,6 +45,7 @@
       "refunds:read",
       "refunds:create",
       "refunds:recover",
+      "reconciliation:manage",
       "webhooks:manage"
     ],
     "operator": [
@@ -64,6 +65,7 @@
       "refunds:read",
       "refunds:create",
       "refunds:recover",
+      "reconciliation:manage",
       "ledger:read",
       "webhooks:manage",
       "webhooks:operate",

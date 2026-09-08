@@ -303,3 +303,10 @@
 - Tool: `apply_patch`; result: added immediate/deferred execution mode, idempotent execution endpoint, `payment_intents:execute` permission, OpenAPI/SDK bindings and F09a tests.
 - Tool: `node --test sandbox/f09a.test.mjs`; result: 3/3 passed.
 - Boundary: F09a does not change Provider unknown recovery, does not call Live/Mainnet or Hosted resources, and does not load production credentials.
+## 2026-09-09 · F14 Payment / Collection / Refund / Fee Reconciliation implementation
+
+- Tool: `git switch`, `git pull`, `git branch -d`; result: verified PR #39 merged, fast-forwarded `main` to `528e4fd`, deleted `feat/bounded-refunds-recovery`, and created `feat/reconciliation-payment-facts`.
+- Tool: `graphify query`; result: traced F14 to existing Transaction, Collection, Refund, FinancialPosting, Adapter Operation and generic SQLite resources; no second ledger or Transaction Core required.
+- Tool: `apply_patch`; result: added immutable ProviderFee facts, deterministic ReconciliationRun snapshots, HTTP/OpenAPI/Access Contract/TypeScript SDK surfaces and F14 tests/docs.
+- Tool: `node`, `npm`; result: F14 domain 2/2, HTTP 1/1, Sandbox 147/147 regression, SDK generated/typecheck/lint and contract checks passed.
+- Boundary: F14 only reads and records Local/Simulation evidence; it does not query or mutate real Providers, does not replay unknown results, and does not enable Hosted, Live/Mainnet, custody or production credentials.

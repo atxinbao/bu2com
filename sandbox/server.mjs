@@ -348,6 +348,23 @@ export function createBu2Server({
       if (request.method === "GET" && url.pathname === "/v1/financial_postings") {
         return send(response, 200, { data: activeSandbox.listFinancialPostings() });
       }
+      if (request.method === "GET" && url.pathname === "/v1/provider_fees") {
+        const visible = activeSandbox.listProviderFees().filter((fee) =>
+          actor?.platform_access || actor?.account_ids?.includes(fee.account_id) || actor?.agent_ids?.includes(fee.agent_id),
+        );
+        return send(response, 200, { data: visible });
+      }
+      if (request.method === "POST" && url.pathname === "/v1/provider_fees") {
+        const body = validateBody("providerFee", await readJson(request));
+        return send(response, 201, await activeSandbox.recordProviderFee(body, validateIdempotencyKey(key)));
+      }
+      if (request.method === "GET" && url.pathname === "/v1/reconciliations") {
+        return send(response, 200, { data: activeSandbox.listReconciliationRuns() });
+      }
+      if (request.method === "POST" && url.pathname === "/v1/reconciliations") {
+        const body = validateBody("reconciliation", await readJson(request));
+        return send(response, 201, await activeSandbox.createReconciliation(body, validateIdempotencyKey(key)));
+      }
       if (request.method === "GET" && url.pathname === "/v1/transactions") {
         const visible = activeAccess.filterTransactionViews(
           actor,
@@ -844,6 +861,18 @@ export function createBu2Server({
           const body = validateBody("refundRecovery", await readJson(request));
           return send(response, 200, await activeSandbox.recoverRefund(refundId, body, validateIdempotencyKey(key)));
         }
+      }
+      if (segments[0] === "v1" && segments[1] === "provider_fees" && segments[2]) {
+        const feeId = validateResourceId(segments[2], "fee", "provider_fee_id");
+        const fee = activeSandbox.getProviderFee(feeId);
+        if (!actor?.platform_access && !actor?.account_ids?.includes(fee.account_id) && !actor?.agent_ids?.includes(fee.agent_id)) {
+          throw new ApiError(404, "resource_not_found", "provider_fee_not_found", "Provider fee was not found.");
+        }
+        if (request.method === "GET" && segments.length === 3) return send(response, 200, fee);
+      }
+      if (segments[0] === "v1" && segments[1] === "reconciliations" && segments[2]) {
+        const runId = validateResourceId(segments[2], "rec", "reconciliation_run_id");
+        if (request.method === "GET" && segments.length === 3) return send(response, 200, activeSandbox.getReconciliationRun(runId));
       }
       if (
         request.method === "GET" &&

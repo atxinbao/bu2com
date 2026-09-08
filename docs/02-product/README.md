@@ -29,6 +29,7 @@
 | [F11 Inbound Collection 契约](F11_INBOUND_COLLECTION_CONTRACT.md) | 验证入站付款、一次性标记 Receivable 并追加 FinancialPosting |
 | [F12 Paid Access 与 Delivery Fact 契约](F12_FULFILLMENT_ACCESS_CONTRACT.md) | 从已入账 Collection 授予可恢复访问权益，并保持交付事实独立 |
 | [F13 有界取消与退款恢复契约](F13_REFUND_RECOVERY_CONTRACT.md) | 预留态取消、结算后部分/全额退款与 provider-unknown 显式恢复 |
+| [F14 支付、收款、退款与手续费对账契约](F14_RECONCILIATION_CONTRACT.md) | 记录 ProviderFee 并生成可重建、可解释的 ReconciliationRun |
 | [页面与交互规格](INTERACTION_SPEC.md) | Transaction-first P0 的页面、状态、操作和验收标准 |
 | [Transaction-first P0 产品基线](P0_TRANSACTION_FIRST_BASELINE.md) | 当前正式定位、交易契约和原型验收路径 |
 | [Transaction-first P0 验收方案](TRANSACTION_P0_ACCEPTANCE.md) | 当前主路径、辅助路径和 GO/ITERATE/STOP 门槛 |
@@ -51,7 +52,7 @@ Agent 商业账户、信誉与服务网络
 
 ## 当前状态
 
-- 产品阶段：Phase 0 开发（Simulation / Testnet）；F07 已合并，F08～F13 运行时已实现，待各自 R2 Domain 与 Architecture 审查
+- 产品阶段：Phase 0 开发（Simulation / Testnet）；F07 已合并，F08～F14 运行时已实现，待各自 R2 Domain 与 Architecture 审查
 - 产品版本：Product v0.3 Transaction-first
 - 对应商业计划：BP v0.1
 - 更新日期：2026-09-09

@@ -191,6 +191,12 @@ export function permissionForRequest(method, pathname) {
   if (method === "GET" && /^\/v1\/access_grants\/[^/]+$/.test(pathname)) return "access_grants:read";
   if (method === "POST" && /^\/v1\/collections\/[^/]+\/access_grants$/.test(pathname)) return "access_grants:create";
   if (method === "POST" && /^\/v1\/access_grants\/[^/]+\/recover$/.test(pathname)) return "access_grants:create";
+  if (method === "GET" && pathname === "/v1/provider_fees") return "ledger:read";
+  if (method === "GET" && /^\/v1\/provider_fees\/[^/]+$/.test(pathname)) return "ledger:read";
+  if (method === "POST" && pathname === "/v1/provider_fees") return "reconciliation:manage";
+  if (method === "GET" && pathname === "/v1/reconciliations") return "ledger:read";
+  if (method === "GET" && /^\/v1\/reconciliations\/[^/]+$/.test(pathname)) return "ledger:read";
+  if (method === "POST" && pathname === "/v1/reconciliations") return "reconciliation:manage";
   if (method === "POST" && pathname === "/v1/payment_mandates") return "mandates:manage";
   if (method === "GET" && /^\/v1\/payment_mandates\/[^/]+$/.test(pathname)) return "mandates:read";
   if (method === "POST" && /^\/v1\/payment_mandates\/[^/]+\/(activate|suspend|revoke|expire)$/.test(pathname)) return "mandates:manage";

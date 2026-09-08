@@ -245,6 +245,29 @@ const schemas = {
     },
   },
   refundRecovery: { type: "object", additionalProperties: false },
+  providerFee: {
+    type: "object",
+    additionalProperties: false,
+    required: ["source_type", "source_id", "provider", "provider_reference", "amount"],
+    properties: {
+      id: identifier("fee"),
+      source_type: { type: "string", enum: ["payment", "collection", "refund"] },
+      source_id: { type: "string", minLength: 1, maxLength: 255 },
+      provider: { type: "string", minLength: 1, maxLength: 120 },
+      provider_reference: { type: "string", minLength: 1, maxLength: 255 },
+      amount: { ...amount, properties: { ...amount.properties, value: { type: "integer", minimum: 1 } } },
+      observed_at: { type: "string", format: "date-time" },
+      metadata: { type: "object", maxProperties: 20, additionalProperties: { type: "string", maxLength: 500 } },
+    },
+  },
+  reconciliation: {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      id: identifier("rec"),
+      as_of: { type: "string", format: "date-time" },
+    },
+  },
   webhookSubscription: {
     type: "object",
     additionalProperties: false,

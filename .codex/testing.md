@@ -289,3 +289,13 @@
 
 - `node --test sandbox/f09a.test.mjs`：3/3 通过，覆盖 approved deferred 执行、幂等重放、review_required 绕过阻断和 Mandate 暂停失败关闭。
 - 全量 Sandbox、SDK、契约、Prototype 与 diff 验证待本轮文档同步后执行。
+## 2026-09-09 · F14 reconciliation implementation
+
+- `node --test sandbox/f14.test.mjs sandbox/f14-http.test.mjs`: currently 3/3 passed; covers fee source binding, matched totals, pending unknown state, idempotency boundary and HTTP resources.
+- `npm --prefix packages/typescript-sdk run generate && npm --prefix packages/typescript-sdk run format`: passed; generated OpenAPI types include ProviderFee and ReconciliationRun.
+- `npm --prefix packages/typescript-sdk run check:generated && npm --prefix packages/typescript-sdk run typecheck && npm --prefix packages/typescript-sdk run lint`: passed.
+- `npm --prefix sandbox test`: 147/147 passed, including F14 domain and HTTP tests.
+- `node docs/03-technical/validate-contract.mjs`: 63 invariants and 6 MCP tools passed after F14 implementation.
+- `npm --prefix prototype run lint && npm --prefix prototype run build`: passed.
+- `git diff --check`: passed.
+- Not run: external Hosted/Testnet reconciliation or Live/Mainnet execution. These remain closed by contract.

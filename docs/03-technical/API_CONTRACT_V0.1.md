@@ -248,3 +248,12 @@ Webhook 使用事件 ID 去重；接收方应按至少一次投递处理，不�
 - `GET /v1/refunds` 与 `GET /v1/refunds/{refund_id}` 返回独立退款事实；退款事实不替代 Transaction、Receipt 或 F14 对账记录。
 - `POST /v1/refunds/{refund_id}/recoveries` 只处理 `provider_unknown`，不得自动重新调用退款提交入口。
 - x402 没有标准退款原语时返回稳定的 `refund_unsupported`，不将本地 Simulation 结果解释为 Testnet 或生产退款。
+
+## 16. F14 对账与手续费事实
+
+- `POST /v1/provider_fees` 只接受绑定已确认 Payment、Collection 或 Refund 的 ProviderFee；source、币种、金额和 Provider Reference 漂移失败关闭。
+- `GET /v1/provider_fees` 与详情接口只返回持久化费用事实；费用不覆盖历史 LedgerEvent，也不从余额差额推断。
+- `POST /v1/reconciliations` 生成追加的 ReconciliationRun，按币种汇总 Payment、Collection、Refund 和 Fee，并为每个事实返回 `matched`、`exception` 或 `unknown`。
+- pending、processing 或 provider-unknown 结果必须保持 `unknown`；金额、币种或 Provider Reference 不一致必须为 `exception`，不得自动修正原始事实。
+- ReconciliationRun 与 ProviderFee 复用通用 SQLite resources 和幂等 Claim；重启后可重取，不能自动重新调用 Provider。
+- F14 只在 Local / Simulation 验收；真实 Provider、Base Sepolia、Hosted、Live/Mainnet、托管和生产结算仍保持关闭。

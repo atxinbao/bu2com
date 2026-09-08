@@ -29,6 +29,10 @@ import type {
   DeliveryResult,
   EnvironmentInfo,
   FinancialPosting,
+  ProviderFee,
+  ProviderFeeInput,
+  ReconciliationInput,
+  ReconciliationRun,
   PaymentMandate,
   CreatePaymentMandate,
   MandateTransition,
@@ -395,6 +399,71 @@ export class Bu2Client {
   listFinancialPostings(options: Bu2RequestOptions = {}): Promise<{ data: FinancialPosting[] }> {
     return this.execute({ name: "listFinancialPostings", mutation: false }, options, (signal) =>
       this.api.GET("/financial_postings", { params: { header: traceHeaders(options) }, signal }),
+    );
+  }
+
+  listProviderFees(options: Bu2RequestOptions = {}): Promise<{ data: ProviderFee[] }> {
+    return this.execute({ name: "listProviderFees", mutation: false }, options, (signal) =>
+      this.api.GET("/provider_fees", { params: { header: traceHeaders(options) }, signal }),
+    );
+  }
+
+  recordProviderFee(body: ProviderFeeInput, options: Bu2MutationOptions): Promise<ProviderFee> {
+    return this.execute(
+      { name: "recordProviderFee", mutation: true, requiresExecution: false },
+      options,
+      (signal) =>
+        this.api.POST("/provider_fees", {
+          params: { header: mutationHeaders(options) },
+          body,
+          signal,
+        }),
+    );
+  }
+
+  getProviderFee(providerFeeId: string, options: Bu2RequestOptions = {}): Promise<ProviderFee> {
+    return this.execute({ name: "getProviderFee", mutation: false }, options, (signal) =>
+      this.api.GET("/provider_fees/{provider_fee_id}", {
+        params: { path: { provider_fee_id: providerFeeId }, header: traceHeaders(options) },
+        signal,
+      }),
+    );
+  }
+
+  listReconciliationRuns(options: Bu2RequestOptions = {}): Promise<{ data: ReconciliationRun[] }> {
+    return this.execute({ name: "listReconciliationRuns", mutation: false }, options, (signal) =>
+      this.api.GET("/reconciliations", { params: { header: traceHeaders(options) }, signal }),
+    );
+  }
+
+  createReconciliation(
+    body: ReconciliationInput = {},
+    options: Bu2MutationOptions,
+  ): Promise<ReconciliationRun> {
+    return this.execute(
+      { name: "createReconciliation", mutation: true, requiresExecution: false },
+      options,
+      (signal) =>
+        this.api.POST("/reconciliations", {
+          params: { header: mutationHeaders(options) },
+          body,
+          signal,
+        }),
+    );
+  }
+
+  getReconciliationRun(
+    reconciliationRunId: string,
+    options: Bu2RequestOptions = {},
+  ): Promise<ReconciliationRun> {
+    return this.execute({ name: "getReconciliationRun", mutation: false }, options, (signal) =>
+      this.api.GET("/reconciliations/{reconciliation_run_id}", {
+        params: {
+          path: { reconciliation_run_id: reconciliationRunId },
+          header: traceHeaders(options),
+        },
+        signal,
+      }),
     );
   }
 
