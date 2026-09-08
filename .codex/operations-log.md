@@ -470,3 +470,10 @@
 - Tool: `apply_patch`; result: added `reconcileConfirmedRefundAttempts`, invoked before a new refund Provider call, and added a regression using a new idempotency key.
 - Tool: `node --test sandbox/f13.test.mjs`; result: regression currently passes 8/8, including the new-key recovery case.
 - Boundary: Local/Simulation only; no real Provider, Hosted, Base Sepolia, Live/Mainnet, custody or E3.1 activation. Release remains blocked until this PR is reviewed and merged.
+
+## 2026-09-09 · LA-01c 已确认但未入账退款继续占用剩余容量
+
+- Scope: 复核外部修复包后发现 LA-01b 的“立即恢复并返回”语义不足以覆盖剩余容量先用、原键后补记的交错顺序；按审计矩阵改为在 `refundReservation` 中统计未被 Refund 资源覆盖的 `refunded` Attempt。
+- Tool: `apply_patch`; result: removed immediate new-request reconciliation, added `refunded` reservation with `excludeRefundId`/`knownRefundIds` safeguards, and added `sandbox/la01-confirmed-unposted-refunds.test.mjs`.
+- Tool: `node --test sandbox/f13.test.mjs sandbox/la01-confirmed-unposted-refunds.test.mjs`; result: 11/11 passed, covering same-process, SQLite restart, new-key over-capacity rejection, remainder-first, original-key posting and interleaved order.
+- Boundary: Local/Simulation only; no Schema change, LA-03d change, real Provider, Hosted, Base Sepolia, Live/Mainnet, custody or E3.1 activation.

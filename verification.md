@@ -121,6 +121,18 @@
 
 结论：LA-01b 本地修复达到 **GO for R2 review**；该修复完成前的 Release 仍保持阻塞，不构成完整 Ledger Assurance Gate 或真实资金准入。
 
+## 2026-09-09 · LA-01c 已确认但未入账退款继续占用剩余容量
+
+执行者：Codex
+分支：`fix/refund-confirmed-reservation`
+
+- 审计补充指出：仅在新请求前立即恢复孤立 RefundAttempt，会阻止合法的剩余容量请求，无法证明“新键先使用剩余 220、原键随后补记 80”的顺序一致性。
+- 修复：`refundReservation()` 将尚未被业务 Refund 资源覆盖的 `refunded` Attempt 计入占用；原请求使用 `excludeRefundId`，已入账退款使用 `knownRefundIds`，避免同一金额重复扣占。
+- `node --test sandbox/f13.test.mjs sandbox/la01-confirmed-unposted-refunds.test.mjs`：11/11 通过，覆盖同进程、SQLite 重启、换新键 221 拒绝、剩余容量 220、原键补记和交错顺序。
+- 未执行：真实 Provider、Hosted、Base Sepolia、Live/Mainnet、托管钱包和 E3.1。
+
+结论：LA-01c 达到 **GO for R2 review**；合并前 Release 仍保持阻塞，不构成完整 Ledger Assurance Gate 或真实资金准入。
+
 ## 2026-09-09 · F16b Hosted Sandbox 外部集成基础准入
 
 执行者：Codex

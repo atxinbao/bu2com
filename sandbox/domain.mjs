@@ -3064,31 +3064,14 @@ export class Bu2Sandbox {
         attempt.transaction_id === transactionId &&
         attempt.refund_id !== excludeRefundId &&
         !knownRefundIds.has(attempt.refund_id) &&
-        ["prepared", "submitting", "provider_unknown"].includes(attempt.status)
+        // Provider 已确认但业务事实尚未提交时，仍占用可退额度；
+        // 原请求补记时通过 excludeRefundId 避免对同一 Attempt 重复计数。
+        ["prepared", "submitting", "provider_unknown", "refunded"].includes(attempt.status)
       ) {
         reserved += attempt.amount_value;
       }
     }
     return reserved;
-  }
-
-  reconcileConfirmedRefundAttempts(transaction) {
-    const attempts = this.ledger?.refundAttempts(transaction.id) ?? [...this.refundAttempts.values()];
-    const reconciled = [];
-    for (const attempt of attempts) {
-      if (attempt.transaction_id !== transaction.id || attempt.status !== "refunded") continue;
-      const existing = this.refunds.get(attempt.refund_id);
-      if (existing?.status === "refunded") continue;
-      const refund = this.refundFromAttempt(attempt);
-      this.applyRefund(transaction, refund, {
-        status: "refunded",
-        provider_reference: attempt.provider_reference,
-        amount_value: attempt.amount_value,
-        currency: attempt.currency,
-      });
-      reconciled.push(refund);
-    }
-    return reconciled;
   }
 
   refundFromAttempt(attempt, reason = null) {
@@ -3180,14 +3163,6 @@ export class Bu2Sandbox {
         }
         if (typeof this.adapter?.refund !== "function") {
           throw new ApiError(409, "invalid_state_transition", "refund_unsupported", "The active payment adapter does not support refunds.");
-        }
-        const reconciledRefunds = this.reconcileConfirmedRefundAttempts(transaction);
-        if (reconciledRefunds.length > 0) {
-          return {
-            transaction: clone(transaction),
-            refund: clone(reconciledRefunds[0]),
-            recovery: { status: "refunded", reason_code: "refund_attempt_reconciled" },
-          };
         }
         const operationKey = `refund:${transaction.id}:${hash(key)}`;
         const existingAttempt = this.refundAttemptFor(operationKey);
