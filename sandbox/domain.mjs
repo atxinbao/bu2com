@@ -55,7 +55,7 @@ function validateDate(value, field, { allowNull = false } = {}) {
 }
 
 function validateNonNegativeInteger(value, field) {
-  if (!Number.isInteger(value) || value < 0) {
+  if (!Number.isSafeInteger(value) || value < 0) {
     throw new ApiError(400, "validation_error", "invalid_amount", `${field} must be a non-negative integer.`, { field });
   }
 }
@@ -76,7 +76,7 @@ function requireFields(value, fields) {
 
 function validateAmount(amount) {
   requireFields(amount ?? {}, ["value", "currency"]);
-  if (!Number.isInteger(amount.value) || amount.value < 0) {
+  if (!Number.isSafeInteger(amount.value) || amount.value < 0) {
     throw new ApiError(
       400,
       "validation_error",
@@ -939,7 +939,7 @@ export class Bu2Sandbox {
       if (!/^[A-Z]{3}$/.test(input.currency)) {
         throw new ApiError(400, "validation_error", "invalid_currency", "Currency must be an ISO 4217 uppercase code.");
       }
-      if (!Number.isInteger(input.limit_minor) || input.limit_minor < 0) {
+      if (!Number.isSafeInteger(input.limit_minor) || input.limit_minor < 0) {
         throw new ApiError(400, "validation_error", "invalid_budget_limit", "Budget limit must be a non-negative integer in minor units.");
       }
       const existing = [...this.budgets.values()].find(

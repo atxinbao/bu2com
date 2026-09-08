@@ -1,5 +1,25 @@
 # ENV-02 测试记录
 
+## 2026-09-09 · LA-02 成组 Journal / Posting 保护
+
+执行者：Codex
+
+| 范围 | 命令 | 结果 |
+| --- | --- | --- |
+| LA-02 定向 | `npm --prefix sandbox run test:la02` | 3/3 通过 |
+| 回归 | `node --test sandbox/f07.test.mjs sandbox/f11.test.mjs sandbox/f12.test.mjs sandbox/f13.test.mjs sandbox/f14.test.mjs` | 19/19 通过 |
+| Sandbox 全量 | `npm --prefix sandbox test` | 164/164 通过 |
+| API/MCP 契约 | `node docs/03-technical/validate-contract.mjs` | 63 invariants、6 MCP tools 通过 |
+| TypeScript SDK | `npm --prefix packages/typescript-sdk test` | 生成、格式、Lint、类型检查、构建与 10/10 单测通过 |
+| Prototype build | `npm --prefix prototype run build` | 通过 |
+| Hosted 合约回归 | `npm --prefix sandbox run test:hosted-sandbox && npm --prefix sandbox run test:hosted-deployment && npm --prefix sandbox run test:hosted-evidence-schema` | 8/8、2/2、2/2 通过 |
+| Prototype lint | `npm --prefix prototype run lint` | 通过 |
+| 差异检查 | `git diff --check` | 通过 |
+
+覆盖平衡 Journal、同 ID 内容漂移、借贷不平衡、浮点金额、孤立来源、已过账 UPDATE/DELETE 和超出安全整数的业务输入。完整 Sandbox、SDK、契约、Hosted 合约和 Prototype 门禁均已执行。
+
+本轮未执行真实 Provider、Base Sepolia、Hosted、Live/Mainnet、托管钱包或生产凭证；E3.1 Pilot Manifest 保持暂停。
+
 ## 2026-09-09 · LA-01 持久化退款尝试与未决额度占用
 
 执行者：Codex

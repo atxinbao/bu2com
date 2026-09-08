@@ -204,6 +204,11 @@ export class SqliteLedger {
         name: "durable_refund_attempts",
         apply: () => this.migrateDurableRefundAttempts(),
       },
+      {
+        version: 15,
+        name: "journal_posting_guards",
+        apply: () => this.migrateJournalPostingGuards(),
+      },
     ];
     for (const migration of migrations) {
       if (applied.has(migration.version)) continue;
@@ -759,6 +764,145 @@ export class SqliteLedger {
     `);
   }
 
+  migrateJournalPostingGuards() {
+    const columns = this.db.prepare("PRAGMA table_info(financial_postings)").all();
+    if (!columns.some((column) => column.name === "journal_id")) {
+      this.db.exec("ALTER TABLE financial_postings ADD COLUMN journal_id TEXT");
+    }
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS journal_headers (
+        id TEXT PRIMARY KEY,
+        event_id TEXT NOT NULL UNIQUE,
+        event_type TEXT NOT NULL,
+        source_id TEXT NOT NULL,
+        currency TEXT NOT NULL CHECK (currency GLOB '[A-Z][A-Z][A-Z]'),
+        status TEXT NOT NULL CHECK (status IN ('draft', 'posted', 'reversed')),
+        content_hash TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        posted_at TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_journal_headers_source
+        ON journal_headers(source_id, posted_at);
+    `);
+    const existingRows = this.db.prepare("SELECT * FROM financial_postings ORDER BY event_id, id").all();
+    const existingGroups = new Map();
+    for (const row of existingRows) {
+      const group = existingGroups.get(row.event_id) ?? [];
+      group.push(row);
+      existingGroups.set(row.event_id, group);
+    }
+    const existingEvents = [];
+    for (const [eventId, group] of existingGroups) {
+      const currencies = new Set(group.map((row) => row.currency));
+      const debit = group.filter((row) => row.direction === "debit").reduce((sum, row) => sum + Number(row.amount_value), 0);
+      const credit = group.filter((row) => row.direction === "credit").reduce((sum, row) => sum + Number(row.amount_value), 0);
+      if (
+        group.some((row) => !Number.isSafeInteger(Number(row.amount_value)) || Number(row.amount_value) < 0) ||
+        !group.some((row) => row.direction === "debit") ||
+        !group.some((row) => row.direction === "credit") ||
+        currencies.size !== 1 ||
+        !Number.isSafeInteger(debit) ||
+        !Number.isSafeInteger(credit) ||
+        debit !== credit
+      ) {
+        throw new Error(`Cannot migrate unbalanced financial postings for event ${eventId}.`);
+      }
+      existingEvents.push({
+        event_id: eventId,
+        event_type: group[0].event_type,
+        source_id: group[0].source_id,
+        currency: group[0].currency,
+        created_at: group.map((row) => row.created_at).sort()[0],
+      });
+    }
+    const insertHeader = this.db.prepare(`
+      INSERT INTO journal_headers(
+        id, event_id, event_type, source_id, currency, status,
+        content_hash, created_at, posted_at
+      ) VALUES (?, ?, ?, ?, ?, 'posted', ?, ?, ?)
+      ON CONFLICT(event_id) DO NOTHING
+    `);
+    for (const row of existingEvents) {
+      insertHeader.run(
+        `jrn_${row.event_id}`,
+        row.event_id,
+        row.event_type,
+        row.source_id,
+        row.currency,
+        row.event_id,
+        row.created_at,
+        row.created_at,
+      );
+    }
+    this.db.exec(`
+      UPDATE financial_postings
+      SET journal_id = 'jrn_' || event_id
+      WHERE journal_id IS NULL;
+      CREATE TRIGGER IF NOT EXISTS financial_postings_insert_guard
+      BEFORE INSERT ON financial_postings
+      WHEN typeof(NEW.amount_value) <> 'integer'
+        OR NEW.amount_value < 0
+        OR NEW.journal_id IS NULL
+        OR NOT EXISTS (
+          SELECT 1 FROM journal_headers
+          WHERE id = NEW.journal_id
+            AND event_id = NEW.event_id
+            AND status = 'draft'
+            AND currency = NEW.currency
+        )
+        OR NOT EXISTS (
+          SELECT 1 FROM journal_headers
+          WHERE id = NEW.journal_id
+            AND source_id = NEW.source_id
+        )
+      BEGIN
+        SELECT RAISE(ABORT, 'financial_posting_requires_valid_posted_journal');
+      END;
+      CREATE TRIGGER IF NOT EXISTS financial_postings_update_guard
+      BEFORE UPDATE ON financial_postings
+      BEGIN
+        SELECT RAISE(ABORT, 'financial_posting_is_immutable');
+      END;
+      CREATE TRIGGER IF NOT EXISTS financial_postings_delete_guard
+      BEFORE DELETE ON financial_postings
+      BEGIN
+        SELECT RAISE(ABORT, 'financial_posting_is_immutable');
+      END;
+      CREATE TRIGGER IF NOT EXISTS journal_headers_update_guard
+      BEFORE UPDATE ON journal_headers
+      WHEN NEW.event_id <> OLD.event_id
+        OR NEW.event_type <> OLD.event_type
+        OR NEW.source_id <> OLD.source_id
+        OR NEW.currency <> OLD.currency
+        OR NEW.content_hash <> OLD.content_hash
+        OR NEW.created_at <> OLD.created_at
+        OR (OLD.status <> 'draft' AND NEW.posted_at <> OLD.posted_at)
+      BEGIN
+        SELECT RAISE(ABORT, 'posted_journal_is_immutable');
+      END;
+      CREATE TRIGGER IF NOT EXISTS journal_headers_status_guard
+      BEFORE UPDATE OF status ON journal_headers
+      WHEN NOT (OLD.status = 'draft' AND NEW.status = 'posted')
+        OR NOT EXISTS (
+          SELECT 1 FROM financial_postings
+          WHERE journal_id = OLD.id
+          GROUP BY journal_id
+          HAVING COUNT(*) >= 2
+            AND SUM(CASE WHEN direction = 'debit' THEN amount_value ELSE 0 END) =
+                SUM(CASE WHEN direction = 'credit' THEN amount_value ELSE 0 END)
+            AND COUNT(DISTINCT currency) = 1
+        )
+      BEGIN
+        SELECT RAISE(ABORT, 'journal_status_transition_invalid');
+      END;
+      CREATE TRIGGER IF NOT EXISTS journal_headers_delete_guard
+      BEFORE DELETE ON journal_headers
+      BEGIN
+        SELECT RAISE(ABORT, 'posted_journal_is_immutable');
+      END;
+    `);
+  }
+
   environmentMetadata() {
     return this.db
       .prepare(`
@@ -929,7 +1073,7 @@ export class SqliteLedger {
       financial_postings: this.db
         .prepare("SELECT * FROM financial_postings ORDER BY created_at, id")
         .all()
-        .map((row) => [row.id, { ...row, amount_value: Number(row.amount_value) }]),
+        .map((row) => [row.id, { ...row, amount_value: Number(row.amount_value), journal_id: row.journal_id }]),
       refund_attempts: this.db
         .prepare("SELECT * FROM refund_attempts ORDER BY created_at, id")
         .all()
@@ -1028,6 +1172,137 @@ export class SqliteLedger {
         correlation.trace_id ?? null,
         correlation.transaction_id ?? null,
       );
+    }
+  }
+
+  writeBalancedJournals(postings, events = []) {
+    const groups = new Map();
+    for (const posting of postings ?? []) {
+      if (!posting.event_id || !posting.source_id || !posting.event_type) {
+        throw new ApiError(422, "financial_constraint", "journal_reference_missing", "Every financial posting must reference an event, source, and event type.");
+      }
+      if (!Number.isSafeInteger(posting.amount_value) || posting.amount_value < 0) {
+        throw new ApiError(422, "financial_constraint", "journal_amount_invalid", "Financial posting amounts must be safe non-negative integers.");
+      }
+      if (typeof posting.currency !== "string" || !/^[A-Z]{3}$/.test(posting.currency)) {
+        throw new ApiError(422, "financial_constraint", "journal_currency_invalid", "Financial postings must use an uppercase three-letter currency.");
+      }
+      if (!/^[a-z][a-z0-9_.:-]{1,255}$/.test(posting.account ?? "")) {
+        throw new ApiError(422, "financial_constraint", "journal_account_invalid", "Financial posting account names must use a stable namespaced format.");
+      }
+      const group = groups.get(posting.event_id) ?? [];
+      group.push(posting);
+      groups.set(posting.event_id, group);
+    }
+    const insertHeader = this.db.prepare(`
+      INSERT INTO journal_headers(
+        id, event_id, event_type, source_id, currency, status,
+        content_hash, created_at, posted_at
+      ) VALUES (?, ?, ?, ?, ?, 'draft', ?, ?, ?)
+      ON CONFLICT(event_id) DO NOTHING
+    `);
+    const findHeader = this.db.prepare("SELECT * FROM journal_headers WHERE event_id=?");
+    const findPosting = this.db.prepare("SELECT * FROM financial_postings WHERE id=?");
+    const sourceExists = this.db.prepare(`
+      SELECT 1 WHERE EXISTS (SELECT 1 FROM resources WHERE id=? LIMIT 1)
+        OR EXISTS (SELECT 1 FROM budget_holds WHERE id=? LIMIT 1)
+        OR EXISTS (SELECT 1 FROM refund_attempts WHERE id=? LIMIT 1)
+    `);
+    const insertPosting = this.db.prepare(`
+      INSERT INTO financial_postings(
+        id, event_id, event_type, transaction_id, budget_id, source_id,
+        direction, account, amount_value, currency, created_at, journal_id
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    const postHeader = this.db.prepare("UPDATE journal_headers SET status='posted', posted_at=? WHERE id=? AND status='draft'");
+    for (const [eventId, group] of groups) {
+      const debit = group.filter((posting) => posting.direction === "debit");
+      const credit = group.filter((posting) => posting.direction === "credit");
+      if (debit.length === 0 || credit.length === 0) {
+        throw new ApiError(422, "financial_constraint", "journal_unbalanced", "A posted journal must contain both debit and credit postings.", { event_id: eventId });
+      }
+      const currencies = new Set(group.map((posting) => posting.currency));
+      const eventTypes = new Set(group.map((posting) => posting.event_type));
+      const sourceIds = new Set(group.map((posting) => posting.source_id));
+      if (currencies.size !== 1 || eventTypes.size !== 1 || sourceIds.size !== 1) {
+        throw new ApiError(422, "financial_constraint", "journal_group_mismatch", "A journal must use one currency, event type, and source.", { event_id: eventId });
+      }
+      const sum = (entries) => entries.reduce((total, entry) => {
+        const next = total + entry.amount_value;
+        if (!Number.isSafeInteger(next)) {
+          throw new ApiError(422, "financial_constraint", "journal_amount_overflow", "A journal amount exceeds the safe integer boundary.", { event_id: eventId });
+        }
+        return next;
+      }, 0);
+      if (sum(debit) !== sum(credit)) {
+        throw new ApiError(422, "financial_constraint", "journal_unbalanced", "Debit and credit postings must balance for every currency.", { event_id: eventId, debit_minor: sum(debit), credit_minor: sum(credit) });
+      }
+      if (sourceExists.get(group[0].source_id, group[0].source_id, group[0].source_id) === undefined) {
+        throw new ApiError(422, "financial_constraint", "journal_source_not_found", "A journal source must reference a persisted BU2 resource or hold.", { event_id: eventId, source_id: group[0].source_id });
+      }
+      const fingerprint = requestFingerprint(group.map((posting) => ({
+        id: posting.id,
+        event_id: posting.event_id,
+        event_type: posting.event_type,
+        transaction_id: posting.transaction_id ?? null,
+        budget_id: posting.budget_id ?? null,
+        source_id: posting.source_id,
+        direction: posting.direction,
+        account: posting.account,
+        amount_value: posting.amount_value,
+        currency: posting.currency,
+        created_at: posting.created_at,
+      })).sort((left, right) => left.id.localeCompare(right.id)));
+      const createdAt = group.map((posting) => posting.created_at).sort()[0];
+      const existingHeader = findHeader.get(eventId);
+      const headerId = existingHeader?.id ?? `jrn_${eventId}`;
+      if (!existingHeader) {
+        const event = events.find((candidate) => candidate.id === eventId);
+        if (!event) {
+          throw new ApiError(422, "financial_constraint", "journal_event_not_found", "A new journal must be committed with its ledger event.", { event_id: eventId });
+        }
+        insertHeader.run(headerId, eventId, group[0].event_type, group[0].source_id, group[0].currency, fingerprint, createdAt, createdAt);
+      } else if (existingHeader.status !== "posted" || (existingHeader.content_hash && existingHeader.content_hash !== eventId && existingHeader.content_hash !== fingerprint)) {
+        throw new ApiError(409, "conflict", "journal_content_conflict", "A journal event already exists with different immutable content.", { event_id: eventId });
+      }
+      for (const posting of group) {
+        const existingPosting = findPosting.get(posting.id);
+        if (existingPosting) {
+          const same = [
+            [existingPosting.event_id, posting.event_id],
+            [existingPosting.event_type, posting.event_type],
+            [existingPosting.transaction_id ?? null, posting.transaction_id ?? null],
+            [existingPosting.budget_id ?? null, posting.budget_id ?? null],
+            [existingPosting.source_id, posting.source_id],
+            [existingPosting.direction, posting.direction],
+            [existingPosting.account, posting.account],
+            [Number(existingPosting.amount_value), posting.amount_value],
+            [existingPosting.currency, posting.currency],
+            [existingPosting.created_at, posting.created_at],
+          ].every(([left, right]) => left === right);
+          if (!same || existingPosting.journal_id !== headerId) {
+            throw new ApiError(409, "conflict", "financial_posting_content_conflict", "A financial posting ID cannot be reused with different content.", { posting_id: posting.id });
+          }
+          continue;
+        }
+        insertPosting.run(
+          posting.id,
+          posting.event_id,
+          posting.event_type,
+          posting.transaction_id ?? null,
+          posting.budget_id ?? null,
+          posting.source_id,
+          posting.direction,
+          posting.account,
+          posting.amount_value,
+          posting.currency,
+          posting.created_at,
+          headerId,
+        );
+      }
+      if (!existingHeader) {
+        postHeader.run(createdAt, headerId);
+      }
     }
   }
 
@@ -1161,28 +1436,10 @@ export class SqliteLedger {
           hold.consumed_at ?? null,
         );
       }
-      const postingInsert = this.db.prepare(`
-        INSERT INTO financial_postings(
-          id, event_id, event_type, transaction_id, budget_id, source_id,
-          direction, account, amount_value, currency, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ON CONFLICT(id) DO NOTHING
-      `);
-      for (const [, posting] of financial.financial_postings ?? []) {
-        postingInsert.run(
-          posting.id,
-          posting.event_id,
-          posting.event_type,
-          posting.transaction_id ?? null,
-          posting.budget_id ?? null,
-          posting.source_id,
-          posting.direction,
-          posting.account,
-          posting.amount_value,
-          posting.currency,
-          posting.created_at,
-        );
-      }
+      this.writeBalancedJournals(
+        (financial.financial_postings ?? []).map(([, posting]) => posting),
+        events,
+      );
       const refundAttemptUpsert = this.db.prepare(`
         INSERT INTO refund_attempts(
           id, operation_key, refund_id, transaction_id, amount_value, currency,
