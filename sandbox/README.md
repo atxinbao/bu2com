@@ -21,7 +21,7 @@ node sandbox/server.mjs
 
 该入口可启动不代表已获部署或支付授权。完整 Candidate、独立 Activation、双向结算与边缘机器鉴权门槛见 [ENV-07 Hosted Sandbox v1](../docs/03-technical/ENVIRONMENT_HOSTED_SANDBOX_V1.md)。
 
-默认数据库：`sandbox/data/bu2-sandbox.sqlite`。SQLite Schema v13 会为新库写入不可变环境 metadata、持久 Principal/Account/Agent 归属、资金来源、收款目标、版本化 PaymentMandate、PolicyDecision、ExecutionSession、只追加访问决策、租户 credential generation 与 reset 审计；错环境数据库拒绝启动。没有 metadata 的旧库必须先鉴别，再用一次性 `BU2_CLAIM_LEGACY_DB_ENVIRONMENT=true` 明确认领，不能默认解释为 Sandbox 或 Live。重启服务后资源、钱包、幂等结果、账本、Receipt、身份归属、钱包绑定、Mandate 决策和 ExecutionSession 支出均会恢复。领域写入先登记数据库 `processing` Claim，再以状态版本 CAS 把资源、余额、LedgerEvent、Webhook Outbox 和幂等终态一次提交；遗留 `processing` 会返回结果未知，禁止自动重放。
+默认数据库：`sandbox/data/bu2-sandbox.sqlite`。SQLite Schema v14 会为新库写入不可变环境 metadata、持久 Principal/Account/Agent 归属、资金来源、收款目标、版本化 PaymentMandate、PolicyDecision、ExecutionSession、只追加访问决策、租户 credential generation 与 reset 审计，以及持久化退款尝试；错环境数据库拒绝启动。没有 metadata 的旧库必须先鉴别，再用一次性 `BU2_CLAIM_LEGACY_DB_ENVIRONMENT=true` 明确认领，不能默认解释为 Sandbox 或 Live。重启服务后资源、钱包、幂等结果、账本、Receipt、身份归属、钱包绑定、Mandate 决策、ExecutionSession 支出和退款尝试均会恢复。领域写入先登记数据库 `processing` Claim，再以状态版本 CAS 把资源、余额、LedgerEvent、Webhook Outbox 和幂等终态一次提交；退款外部调用前另行持久化 Refund Attempt，未知结果保留可退额度占用，禁止自动重放。
 
 F13 增加 `funds_reserved` 交易的有界取消，以及 `settled` 交易的部分/全额退款事实。取消会原子释放 Wallet reserved 和 active Budget Hold；退款持久化为 `Refund` 资源并维持 `refunded ≤ settled ≤ reserved ≤ authorized`。Provider unknown 只能通过显式 recovery 查询推进；当前 x402 Adapter 没有标准退款原语，因此不会伪造退款成功或自动重付。
 

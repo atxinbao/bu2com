@@ -1,5 +1,12 @@
 # ENV-03 操作日志
 
+## 2026-09-09 · LA-01 Ledger Assurance Gate：持久化退款尝试
+
+- Tool: `gh pr view`, `git switch`, `git pull --ff-only`, `git branch -d`; result: verified PR #44 merged at `e0d8c47`, synchronized `main`, deleted local `feat/pilot-manifest-preflight` after E3.1 was paused, and created `feat/ledger-assurance-refund-attempts`.
+- Tool: audit report review plus `graphify query`; result: selected LA-01 as the smallest first Ledger Assurance Gate package; E3.1 remains paused and no Hosted/Live scope was expanded.
+- Tool: `apply_patch`; result: added Schema v14 durable `refund_attempts`, pre-provider reservation, unknown-result amount reservation, exact Provider result validation, same-key recovery after local commit failure, F13 regression cases and synchronized contracts/docs.
+- Boundary: Local/Simulation refund control only; no real Provider refund, Base Sepolia, Hosted, Live/Mainnet, custody or production credential capability was enabled.
+
 ## 2026-09-09 · F16b Hosted Sandbox 外部集成基础准入
 
 - Tool: `gh pr view`, `git switch`, `git pull --ff-only`, `git branch -d`; result: verified PR #43 merged at `259b3b74b8e439e776c0e37e8ed3a5e231c1b22c`, synchronized `main`, deleted local `test/internal-sandbox-pay-collect-beta`, and created `test/hosted-sandbox-foundation-gate`.

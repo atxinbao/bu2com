@@ -139,6 +139,7 @@ export class Bu2Sandbox {
     this.budgets = new Map(financial.budgets ?? []);
     this.budgetHolds = new Map(financial.budget_holds ?? []);
     this.financialPostings = new Map(financial.financial_postings ?? []);
+    this.refundAttempts = new Map(financial.refund_attempts ?? []);
     this.stateRevision = Number(restored.state.state_revision ?? 0);
     this.wallet =
       restored.state.wallet ??
@@ -241,6 +242,7 @@ export class Bu2Sandbox {
         budgets: [...this.budgets.entries()].map(([id, value]) => [id, clone(value)]),
         budget_holds: [...this.budgetHolds.entries()].map(([id, value]) => [id, clone(value)]),
         financial_postings: [...this.financialPostings.entries()].map(([id, value]) => [id, clone(value)]),
+        refund_attempts: [...this.refundAttempts.entries()].map(([id, value]) => [id, clone(value)]),
       },
     };
   }
@@ -266,6 +268,7 @@ export class Bu2Sandbox {
     this.budgets = new Map(financial.budgets ?? []);
     this.budgetHolds = new Map(financial.budget_holds ?? []);
     this.financialPostings = new Map(financial.financial_postings ?? []);
+    this.refundAttempts = new Map(financial.refund_attempts ?? []);
   }
 
   reloadCommittedState() {
@@ -2384,8 +2387,127 @@ export class Bu2Sandbox {
     return this.refundView(refund);
   }
 
+  refundAttemptFor(operationKey) {
+    const persisted = this.ledger?.getRefundAttempt(operationKey);
+    return persisted ?? this.refundAttempts.get(operationKey) ?? null;
+  }
+
+  refundAttemptById(refundId) {
+    const persisted = this.ledger?.getRefundAttemptByRefundId(refundId);
+    if (persisted) return persisted;
+    return [...this.refundAttempts.values()].find((attempt) => attempt.refund_id === refundId) ?? null;
+  }
+
+  syncRefundAttempt(attempt) {
+    this.refundAttempts.set(attempt.operation_key, clone(attempt));
+    return attempt;
+  }
+
+  transitionRefundAttempt(operationKey, transition) {
+    const current = this.refundAttemptFor(operationKey);
+    if (!current) {
+      throw new ApiError(404, "resource_not_found", "refund_attempt_not_found", "Refund attempt was not found.");
+    }
+    const allowedFrom = Array.isArray(transition.from) ? transition.from : [transition.from];
+    if (!allowedFrom.includes(current.status)) {
+      throw new ApiError(
+        409,
+        "invalid_state_transition",
+        "refund_attempt_transition_conflict",
+        "Refund attempt is no longer in the expected state.",
+        { expected: allowedFrom, current: current.status },
+      );
+    }
+    const next = {
+      ...current,
+      status: transition.status,
+      provider_reference: transition.provider_reference ?? current.provider_reference ?? null,
+      reason_code: transition.reason_code ?? null,
+      updated_at: transition.updated_at ?? new Date().toISOString(),
+      resolved_at: ["refunded", "provider_unknown", "failed"].includes(transition.status)
+        ? transition.updated_at ?? new Date().toISOString()
+        : null,
+    };
+    const persisted = this.ledger?.transitionRefundAttempt(operationKey, transition);
+    return this.syncRefundAttempt(persisted ?? next);
+  }
+
+  refundReservation(transactionId, excludeRefundId = null) {
+    const knownRefundIds = new Set();
+    let reserved = 0;
+    for (const refund of this.refunds.values()) {
+      if (refund.transaction_id !== transactionId) continue;
+      knownRefundIds.add(refund.id);
+      if (refund.id === excludeRefundId) continue;
+      if (["processing", "provider_unknown"].includes(refund.status)) {
+        reserved += refund.amount.value;
+      }
+    }
+    const attempts = this.ledger?.refundAttempts(transactionId) ?? [...this.refundAttempts.values()];
+    for (const attempt of attempts) {
+      if (
+        attempt.transaction_id === transactionId &&
+        attempt.refund_id !== excludeRefundId &&
+        !knownRefundIds.has(attempt.refund_id) &&
+        ["prepared", "submitting", "provider_unknown"].includes(attempt.status)
+      ) {
+        reserved += attempt.amount_value;
+      }
+    }
+    return reserved;
+  }
+
+  refundFromAttempt(attempt, reason = null) {
+    const existing = this.refunds.get(attempt.refund_id);
+    if (existing) return existing;
+    const refund = {
+      id: attempt.refund_id,
+      transaction_id: attempt.transaction_id,
+      payment_intent_id: this.transactions.get(attempt.transaction_id)?.payment_intent_id ?? null,
+      amount: { value: attempt.amount_value, currency: attempt.currency },
+      status: attempt.status === "provider_unknown" ? "provider_unknown" : "processing",
+      reason: reason ?? attempt.reason ?? null,
+      provider_reference: attempt.provider_reference ?? null,
+      created_at: attempt.created_at,
+      refunded_at: attempt.status === "refunded" ? attempt.resolved_at : null,
+      recovery_required: attempt.status === "provider_unknown",
+      ...(attempt.reason_code ? { failure_reason: attempt.reason_code } : {}),
+    };
+    this.refunds.set(refund.id, refund);
+    return refund;
+  }
+
+  validateRefundProvider(provider, refund) {
+    if (provider?.status === "provider_unknown") {
+      throw new ApiError(
+        503,
+        "provider_unknown",
+        provider.reason_code ?? "refund_result_unknown",
+        "Refund result is unknown and must be recovered before another refund.",
+        { recovery_required: true, refund_id: refund.id },
+      );
+    }
+    if (
+      provider?.status !== "refunded" ||
+      typeof provider.provider_reference !== "string" ||
+      provider.provider_reference.length === 0 ||
+      (provider.amount_value !== undefined && provider.amount_value !== refund.amount.value) ||
+      (provider.currency !== undefined && provider.currency !== refund.amount.currency)
+    ) {
+      throw new ApiError(
+        502,
+        "provider_error",
+        "refund_result_invalid",
+        "Provider refund result must confirm the exact amount, currency, and reference.",
+        { refund_id: refund.id },
+      );
+    }
+    return provider;
+  }
+
   applyRefund(transaction, refund, provider) {
     if (refund.status === "refunded") return;
+    this.validateRefundProvider(provider, refund);
     const remaining = transaction.settled_amount.value - transaction.refunded_amount.value;
     if (refund.amount.value > remaining) {
       throw new ApiError(409, "financial_constraint", "refund_amount_exceeded", "Refund amount exceeds the remaining refundable amount.", { remaining_amount: { value: remaining, currency: transaction.settled_amount.currency } });
@@ -2421,32 +2543,88 @@ export class Bu2Sandbox {
         if (input.amount.currency !== transaction.settled_amount.currency || input.amount.value <= 0) {
           throw new ApiError(400, "validation_error", "invalid_refund_amount", "Refund amount must be positive and use the settlement currency.");
         }
-        const remaining = transaction.settled_amount.value - transaction.refunded_amount.value;
-        if (input.amount.value > remaining) {
-          throw new ApiError(409, "financial_constraint", "refund_amount_exceeded", "Refund amount exceeds the remaining refundable amount.", { remaining_amount: { value: remaining, currency: transaction.settled_amount.currency } });
-        }
         if (typeof this.adapter?.refund !== "function") {
           throw new ApiError(409, "invalid_state_transition", "refund_unsupported", "The active payment adapter does not support refunds.");
         }
-        const refund = {
-          id: prefix("ref"),
-          transaction_id: transaction.id,
-          payment_intent_id: transaction.payment_intent_id,
-          amount: clone(input.amount),
-          status: "processing",
-          reason: input.reason ?? null,
-          provider_reference: null,
-          created_at: new Date().toISOString(),
-          refunded_at: null,
-          recovery_required: false,
-        };
-        this.refunds.set(refund.id, refund);
+        const operationKey = `refund:${transaction.id}:${hash(key)}`;
+        const existingAttempt = this.refundAttemptFor(operationKey);
+        const remaining =
+          transaction.settled_amount.value -
+          transaction.refunded_amount.value -
+          this.refundReservation(transaction.id, existingAttempt?.refund_id ?? null);
+        if (input.amount.value > remaining) {
+          throw new ApiError(409, "financial_constraint", "refund_amount_exceeded", "Refund amount exceeds the remaining refundable amount.", { remaining_amount: { value: remaining, currency: transaction.settled_amount.currency } });
+        }
+        const refundId = existingAttempt?.refund_id ?? prefix("ref");
+        const prepared = existingAttempt ?? (this.ledger
+          ? this.ledger.prepareRefundAttempt({
+              operation_key: operationKey,
+              refund_id: refundId,
+              transaction_id: transaction.id,
+              amount: input.amount,
+              reason: input.reason ?? null,
+            })
+          : {
+              id: prefix("rat"),
+              operation_key: operationKey,
+              refund_id: refundId,
+              transaction_id: transaction.id,
+              amount_value: input.amount.value,
+              currency: input.amount.currency,
+              status: "prepared",
+              provider_reference: null,
+              reason: input.reason ?? null,
+              reason_code: null,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+              resolved_at: null,
+            });
+        this.syncRefundAttempt(prepared);
+        const refund = this.refundFromAttempt(prepared, input.reason ?? null);
+        if (prepared.status === "refunded") {
+          if (refund.status !== "refunded") {
+            this.applyRefund(transaction, refund, {
+              status: "refunded",
+              provider_reference: prepared.provider_reference,
+            });
+          }
+          return { transaction: clone(transaction), refund: clone(refund) };
+        }
+        if (prepared.status === "provider_unknown") {
+          refund.status = "provider_unknown";
+          refund.recovery_required = true;
+          refund.failure_reason = prepared.reason_code ?? "refund_result_unknown";
+          return { transaction: clone(transaction), refund: clone(refund) };
+        }
+        this.transitionRefundAttempt(operationKey, {
+          from: ["prepared", "failed"],
+          status: "submitting",
+        });
+        refund.status = "processing";
         try {
           const provider = await this.executeAdapter("refund", transaction.id, refund.amount, { refund_id: refund.id, settlement_provider_reference: transaction.settlement_provider_reference ?? null });
+          const confirmed = this.validateRefundProvider(provider, refund);
+          this.transitionRefundAttempt(operationKey, {
+            from: "submitting",
+            status: "refunded",
+            provider_reference: confirmed.provider_reference,
+          });
           this.applyRefund(transaction, refund, provider);
           return { transaction: clone(transaction), refund: clone(refund) };
         } catch (error) {
-          if (error?.type !== "provider_unknown" && error?.code !== "refund_result_unknown") throw error;
+          if (error?.type !== "provider_unknown" && error?.code !== "refund_result_unknown") {
+            this.transitionRefundAttempt(operationKey, {
+              from: "submitting",
+              status: "failed",
+              reason_code: error?.code ?? "refund_failed",
+            });
+            throw error;
+          }
+          this.transitionRefundAttempt(operationKey, {
+            from: "submitting",
+            status: "provider_unknown",
+            reason_code: error.code ?? "refund_result_unknown",
+          });
           refund.status = "provider_unknown";
           refund.recovery_required = true;
           refund.failure_reason = error.code ?? "refund_result_unknown";
@@ -2463,7 +2641,11 @@ export class Bu2Sandbox {
       key,
       input,
       async () => {
-        const refund = this.refunds.get(refundId);
+        const refund = this.refunds.get(refundId) ?? (() => {
+          const attempt = this.refundAttemptById(refundId);
+          if (!attempt) return null;
+          return this.refundFromAttempt(attempt);
+        })();
         if (!refund) throw new ApiError(404, "resource_not_found", "refund_not_found", "Refund was not found.");
         if (refund.status === "refunded") return { transaction: clone(this.transactions.get(refund.transaction_id)), refund: clone(refund), recovery: { status: "refunded" } };
         if (refund.status !== "provider_unknown") throw new ApiError(409, "invalid_state_transition", "refund_not_recoverable", "Only a provider_unknown refund can be recovered.", { current_state: refund.status });
@@ -2471,10 +2653,27 @@ export class Bu2Sandbox {
         const transaction = this.transactions.get(refund.transaction_id);
         const provider = await this.executeAdapter("recoverRefund", transaction.id, refund.amount, { refund_id: refund.id });
         if (provider?.status !== "refunded") {
+          const attempt = this.refundAttemptById(refund.id);
+          if (attempt) {
+            this.transitionRefundAttempt(attempt.operation_key, {
+              from: ["provider_unknown", "submitting"],
+              status: "provider_unknown",
+              reason_code: provider?.reason_code ?? "refund_recovery_result_unknown",
+            });
+          }
           refund.recovery_required = true;
           refund.failure_reason = provider?.reason_code ?? "refund_recovery_result_unknown";
           this.event("refund.recovery_unknown", refund);
           return { transaction: clone(transaction), refund: clone(refund), recovery: { status: "provider_unknown", reason_code: refund.failure_reason } };
+        }
+        const confirmed = this.validateRefundProvider(provider, refund);
+        const attempt = this.refundAttemptById(refund.id);
+        if (attempt) {
+          this.transitionRefundAttempt(attempt.operation_key, {
+            from: ["provider_unknown", "submitting"],
+            status: "refunded",
+            provider_reference: confirmed.provider_reference,
+          });
         }
         this.applyRefund(transaction, refund, provider);
         return { transaction: clone(transaction), refund: clone(refund), recovery: { status: "refunded" } };

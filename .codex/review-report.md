@@ -1,5 +1,32 @@
 # F16a 内部 Sandbox 自主双向收付 Beta 候选自主审查报告
 
+# LA-01 持久化退款尝试与未决额度占用自主审查报告
+
+日期：2026-09-09
+审查者：Codex（Contributor / Verifier，非 R2 Approver）
+分支：`feat/ledger-assurance-refund-attempts`
+
+## 结果
+
+| 维度 | 得分 | 结论 |
+| --- | ---: | --- |
+| 需求覆盖 | 19/20 | 覆盖未知退款占用、Provider 结果校验、持久化尝试和同键恢复 |
+| 技术实现 | 19/20 | Schema v14 追加 RefundAttempt，不重做 Transaction Core 或 Provider |
+| 金融边界 | 20/20 | 未知结果不增加钱包余额、不标记 refunded、不释放可退额度 |
+| 自动化验证 | 20/20 | F13/LA-01 定向测试 7/7，通过三项审计反例 |
+| 文档与恢复 | 19/20 | 契约、路线、README、CHANGELOG、testing、verification 与 operations 已同步 |
+| 综合 | **97/100** | 通过本地整改审查，进入 R2 |
+
+## 结论
+
+建议：**通过 LA-01 本地整改实现，提交 R2 审查**。它只解决退款执行边界，不能把完整 Ledger Assurance Gate、真实 Provider 退款、Hosted 或 Live 准入描述为已通过。
+
+## 残余风险
+
+1. LA-02/LA-03/LA-04/LA-05 仍未完成，统一账簿、完整分录、收款推进和独立对账仍是产品基础准入阻断项。
+2. 当前退款分录完整性留给后续统一 Journal 过账 PR；LA-01 不伪造历史分录。
+3. E3.1 Pilot Manifest 保持暂停，直到账本基础整改获得进一步审查结论。
+
 # F16b Hosted Sandbox 外部集成基础准入自主审查报告
 
 日期：2026-09-09
