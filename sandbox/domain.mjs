@@ -2103,7 +2103,7 @@ export class Bu2Sandbox {
     const transaction = this.transactions.get(receipt.transaction_id);
     const settlementConfirmed = Boolean(
       transaction &&
-        transaction.status === "settled" &&
+        ["settled", "refunded"].includes(transaction.status) &&
         transaction.receipt_id === receipt.id &&
         transaction.settlement_id === receipt.settlement_id &&
         (transaction.settlement_provider_reference ?? null) === receipt.provider_reference &&
