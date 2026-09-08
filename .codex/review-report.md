@@ -2,6 +2,33 @@
 
 # LA-02 成组 Journal / Posting 保护自主审查报告
 
+# LA-03b 期初检查点与追加更正分录自主审查报告
+
+日期：2026-09-09
+审查者：Codex（Contributor / Verifier，非 R2 Approver）
+分支：`feat/ledger-assurance-opening-corrections`
+
+## 初步结果
+
+| 维度 | 得分 | 结论 |
+| --- | ---: | --- |
+| 需求覆盖 | 19/20 | 覆盖核对期初、原事件引用、追加更正和明确非目标 |
+| 技术实现 | 19/20 | 复用通用 resources、成组 Journal/Posting 和 SQLite 原子提交 |
+| 金融边界 | 20/20 | 不改变钱包投影，不更新/删除历史，不开放真实资金路径 |
+| 自动化验证 | 20/20 | LA-03b 3/3、LA-03a 3/3、Sandbox 170/170、运营/契约/SDK/Prototype/Hosted 门禁通过 |
+| 文档与恢复 | 19/20 | 契约、路线、README、CHANGELOG、testing、verification 与 operations 已同步 |
+| 综合 | **97/100** | 达到本地实现审查门槛，待独立 R2 |
+
+## 结论
+
+建议：**通过 LA-03b 本地期初/更正事实实现，提交 R2 审查**。本 PR 不声称完成余额重建、完整历史迁移、多账户投影或 Ledger Assurance Gate。
+
+## 残余风险
+
+1. 期初检查点是经核对的迁移边界，不是对缺失历史的推断；来源与覆盖范围需要独立人类审查。
+2. 当前余额仍由既有投影维护，完整从 Journal/Posting 重建留给后续 PR。
+3. E3.1 Pilot Manifest 保持暂停，Live/Mainnet、Hosted 和真实 Provider 仍关闭。
+
 # LA-03a 结算、退款与 ProviderFee 业务事实分录自主审查报告
 
 日期：2026-09-09

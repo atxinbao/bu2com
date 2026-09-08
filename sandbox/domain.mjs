@@ -30,6 +30,11 @@ const prefix = (value) => `${value}_${randomUUID().replaceAll("-", "").slice(0, 
 const clone = (value) => structuredClone(value);
 const hash = (value) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
 const accountToken = (value) => String(value ?? "unknown").replace(/[^A-Za-z0-9_-]/g, "_").slice(0, 120) || "unknown";
+const validateLedgerAccount = (value, field) => {
+  if (typeof value !== "string" || !/^[a-z][a-z0-9_.:-]{1,255}$/.test(value)) {
+    throw new ApiError(400, "validation_error", "invalid_ledger_account", `${field} must be a stable namespaced ledger account.`, { field });
+  }
+};
 
 const budgetScopeTypes = new Set(["workspace", "project", "account", "agent"]);
 const budgetPeriods = new Set(["lifetime", "calendar_month", "rolling_24h"]);
@@ -134,6 +139,8 @@ export class Bu2Sandbox {
     this.refunds = new Map(restored.resources.refunds ?? []);
     this.providerFees = new Map(restored.resources.provider_fees ?? []);
     this.reconciliationRuns = new Map(restored.resources.reconciliation_runs ?? []);
+    this.openingBalances = new Map(restored.resources.opening_balances ?? []);
+    this.ledgerCorrections = new Map(restored.resources.ledger_corrections ?? []);
     this.idempotency = new Map(restored.idempotency ?? []);
     this.events = restored.events ?? [];
     const financial = restored.financial ?? {};
@@ -235,6 +242,8 @@ export class Bu2Sandbox {
         refunds: [...this.refunds.entries()].map(([id, value]) => [id, clone(value)]),
         provider_fees: [...this.providerFees.entries()].map(([id, value]) => [id, clone(value)]),
         reconciliation_runs: [...this.reconciliationRuns.entries()].map(([id, value]) => [id, clone(value)]),
+        opening_balances: [...this.openingBalances.entries()].map(([id, value]) => [id, clone(value)]),
+        ledger_corrections: [...this.ledgerCorrections.entries()].map(([id, value]) => [id, clone(value)]),
         receipts: [...this.receipts.entries()].map(([id, value]) => [id, clone(value)]),
       },
       wallet: clone(this.wallet),
@@ -263,6 +272,8 @@ export class Bu2Sandbox {
     this.refunds = new Map(snapshot.resources.refunds ?? []);
     this.providerFees = new Map(snapshot.resources.provider_fees ?? []);
     this.reconciliationRuns = new Map(snapshot.resources.reconciliation_runs ?? []);
+    this.openingBalances = new Map(snapshot.resources.opening_balances ?? []);
+    this.ledgerCorrections = new Map(snapshot.resources.ledger_corrections ?? []);
     this.wallet = clone(snapshot.wallet);
     this.knownPayees = new Set(snapshot.knownPayees ?? []);
     const financial = snapshot.financial ?? {};
@@ -1121,6 +1132,169 @@ export class Bu2Sandbox {
       .filter((posting) => transactionId === null || posting.transaction_id === transactionId)
       .sort((left, right) => right.created_at.localeCompare(left.created_at) || right.id.localeCompare(left.id))
       .map((posting) => clone(posting));
+  }
+
+  listOpeningBalances() {
+    return [...this.openingBalances.values()]
+      .sort((left, right) => right.effective_at.localeCompare(left.effective_at) || right.id.localeCompare(left.id))
+      .map((checkpoint) => clone(checkpoint));
+  }
+
+  getOpeningBalance(id) {
+    const checkpoint = this.openingBalances.get(id);
+    if (!checkpoint) throw new ApiError(404, "resource_not_found", "opening_balance_not_found", "Opening balance checkpoint was not found.");
+    return clone(checkpoint);
+  }
+
+  listLedgerCorrections() {
+    return [...this.ledgerCorrections.values()]
+      .sort((left, right) => right.created_at.localeCompare(left.created_at) || right.id.localeCompare(left.id))
+      .map((correction) => clone(correction));
+  }
+
+  getLedgerCorrection(id) {
+    const correction = this.ledgerCorrections.get(id);
+    if (!correction) throw new ApiError(404, "resource_not_found", "ledger_correction_not_found", "Ledger correction was not found.");
+    return clone(correction);
+  }
+
+  addOpeningBalancePostings(event, checkpoint) {
+    const postings = [
+      {
+        id: prefix("pst"),
+        event_id: event.id,
+        event_type: event.type,
+        transaction_id: null,
+        budget_id: null,
+        source_id: checkpoint.id,
+        direction: "debit",
+        account: `asset.cash:${accountToken(checkpoint.account_id)}`,
+        amount_value: checkpoint.amount.value,
+        currency: checkpoint.amount.currency,
+        created_at: event.created_at,
+      },
+      {
+        id: prefix("pst"),
+        event_id: event.id,
+        event_type: event.type,
+        transaction_id: null,
+        budget_id: null,
+        source_id: checkpoint.id,
+        direction: "credit",
+        account: `equity.opening_balance:${accountToken(checkpoint.id)}`,
+        amount_value: checkpoint.amount.value,
+        currency: checkpoint.amount.currency,
+        created_at: event.created_at,
+      },
+    ];
+    for (const posting of postings) this.financialPostings.set(posting.id, posting);
+    return postings;
+  }
+
+  addCorrectionPostings(event, correction) {
+    const postings = [
+      {
+        id: prefix("pst"),
+        event_id: event.id,
+        event_type: event.type,
+        transaction_id: correction.transaction_id ?? null,
+        budget_id: null,
+        source_id: correction.id,
+        direction: correction.debit_direction,
+        account: correction.debit_account,
+        amount_value: correction.amount.value,
+        currency: correction.amount.currency,
+        created_at: event.created_at,
+      },
+      {
+        id: prefix("pst"),
+        event_id: event.id,
+        event_type: event.type,
+        transaction_id: correction.transaction_id ?? null,
+        budget_id: null,
+        source_id: correction.id,
+        direction: correction.credit_direction,
+        account: correction.credit_account,
+        amount_value: correction.amount.value,
+        currency: correction.amount.currency,
+        created_at: event.created_at,
+      },
+    ];
+    for (const posting of postings) this.financialPostings.set(posting.id, posting);
+    return postings;
+  }
+
+  async createOpeningBalance(input, key) {
+    return this.runIdempotentAsync("opening_balances", key, input, async () => {
+      requireFields(input, ["book_id", "account_id", "owner_account_id", "funding_source_id", "environment", "asset", "network", "amount", "effective_at", "source_reference", "reason"]);
+      validateIdentifier(input.account_id, "acct", "account_id");
+      validateIdentifier(input.owner_account_id, "acct", "owner_account_id");
+      validateIdentifier(input.funding_source_id, "fund", "funding_source_id");
+      if (!/^[A-Za-z0-9_-]{2,120}$/.test(input.book_id)) throw new ApiError(400, "validation_error", "invalid_book_id", "book_id is invalid.");
+      if (input.environment !== this.environmentConfig.environment) throw new ApiError(409, "environment_error", "opening_balance_environment_mismatch", "Opening balance environment must match the active runtime.");
+      if (typeof input.asset !== "string" || !/^[A-Za-z0-9._-]{2,32}$/.test(input.asset)) throw new ApiError(400, "validation_error", "invalid_asset", "asset is invalid.");
+      if (typeof input.network !== "string" || !/^[A-Za-z0-9._:-]{2,80}$/.test(input.network)) throw new ApiError(400, "validation_error", "invalid_network", "network is invalid.");
+      validateAmount(input.amount);
+      validateDate(input.effective_at, "effective_at");
+      const checkpoint = {
+        id: input.id ?? prefix("obc"),
+        book_id: input.book_id,
+        account_id: input.account_id,
+        owner_account_id: input.owner_account_id,
+        funding_source_id: input.funding_source_id,
+        environment: input.environment,
+        asset: input.asset,
+        network: input.network,
+        amount: clone(input.amount),
+        effective_at: input.effective_at,
+        source_reference: input.source_reference,
+        reason: input.reason,
+        status: "posted",
+        created_at: new Date().toISOString(),
+      };
+      validateIdentifier(checkpoint.id, "obc", "opening_balance_id");
+      if (this.openingBalances.has(checkpoint.id)) throw new ApiError(409, "conflict", "opening_balance_id_exists", "Opening balance checkpoint ID already exists.");
+      this.openingBalances.set(checkpoint.id, checkpoint);
+      const event = this.event("ledger.opening_balance_posted", checkpoint);
+      this.addOpeningBalancePostings(event, checkpoint);
+      return clone(checkpoint);
+    });
+  }
+
+  async postLedgerCorrection(input, key) {
+    return this.runIdempotentAsync("ledger_corrections", key, input, async () => {
+      requireFields(input, ["original_event_id", "book_id", "environment", "amount", "debit_account", "credit_account", "reason"]);
+      const original = this.events.find((event) => event.id === input.original_event_id);
+      if (!original) throw new ApiError(404, "resource_not_found", "original_event_not_found", "The original ledger event was not found.");
+      if (input.environment !== this.environmentConfig.environment) throw new ApiError(409, "environment_error", "correction_environment_mismatch", "Ledger correction environment must match the active runtime.");
+      if (!/^[A-Za-z0-9_-]{2,120}$/.test(input.book_id)) throw new ApiError(400, "validation_error", "invalid_book_id", "book_id is invalid.");
+      validateAmount(input.amount);
+      validateLedgerAccount(input.debit_account, "debit_account");
+      validateLedgerAccount(input.credit_account, "credit_account");
+      if (input.debit_account === input.credit_account) throw new ApiError(400, "validation_error", "correction_accounts_identical", "Correction debit and credit accounts must differ.");
+      if (input.transaction_id !== undefined && input.transaction_id !== null) validateIdentifier(input.transaction_id, "txn", "transaction_id");
+      const correction = {
+        id: input.id ?? prefix("cor"),
+        original_event_id: input.original_event_id,
+        book_id: input.book_id,
+        environment: input.environment,
+        transaction_id: input.transaction_id ?? null,
+        amount: clone(input.amount),
+        debit_account: input.debit_account,
+        credit_account: input.credit_account,
+        debit_direction: "debit",
+        credit_direction: "credit",
+        reason: input.reason,
+        status: "posted",
+        created_at: new Date().toISOString(),
+      };
+      validateIdentifier(correction.id, "cor", "correction_id");
+      if (this.ledgerCorrections.has(correction.id)) throw new ApiError(409, "conflict", "correction_id_exists", "Ledger correction ID already exists.");
+      this.ledgerCorrections.set(correction.id, correction);
+      const event = this.event("ledger.correction_posted", correction);
+      this.addCorrectionPostings(event, correction);
+      return clone(correction);
+    });
   }
 
   providerFeeView(fee) {
