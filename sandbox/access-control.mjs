@@ -184,6 +184,9 @@ export function permissionForRequest(method, pathname) {
   if (method === "GET" && pathname === "/v1/receivables") return "receivables:read";
   if (method === "POST" && pathname === "/v1/receivables") return "receivables:create";
   if (method === "GET" && /^\/v1\/receivables\/[^/]+$/.test(pathname)) return "receivables:read";
+  if (method === "GET" && pathname === "/v1/collections") return "collections:read";
+  if (method === "GET" && /^\/v1\/collections\/[^/]+$/.test(pathname)) return "collections:read";
+  if (method === "POST" && /^\/v1\/receivables\/[^/]+\/collections$/.test(pathname)) return "collections:create";
   if (method === "POST" && pathname === "/v1/payment_mandates") return "mandates:manage";
   if (method === "GET" && /^\/v1\/payment_mandates\/[^/]+$/.test(pathname)) return "mandates:read";
   if (method === "POST" && /^\/v1\/payment_mandates\/[^/]+\/(activate|suspend|revoke|expire)$/.test(pathname)) return "mandates:manage";
@@ -535,6 +538,13 @@ export class AccessController {
     if (actor?.platform_access) return receivables;
     return receivables.filter((receivable) =>
       actor.account_ids.includes(receivable.account_id) || actor.agent_ids.includes(receivable.agent_id),
+    );
+  }
+
+  filterCollections(actor, collections) {
+    if (actor?.platform_access) return collections;
+    return collections.filter((collection) =>
+      actor.account_ids.includes(collection.account_id) || actor.agent_ids.includes(collection.agent_id),
     );
   }
 }

@@ -1,3 +1,46 @@
+# F11 Inbound Collection Verification 自主审查报告
+
+日期：2026-09-08
+审查者：Codex（Contributor / Verifier，非 R2 Approver）
+任务：验证 Receivable 入站付款并一次性追加 Collection 与 FinancialPosting
+分支：`feat/verify-inbound-collections`
+
+## 评分
+
+| 维度 | 得分 | 依据 |
+| --- | ---: | --- |
+| 需求完整性 | 19/20 | 覆盖 Provider 验证、金额/引用/付款方约束、Receivable 状态、Collection 查询与一次性 Posting |
+| 技术实现 | 19/20 | 复用既有 Adapter、generic resources、runIdempotentAsync、FinancialPosting 和 SQLite 原子提交；未新增第二套交易核心 |
+| 金融不变量 | 20/20 | 只在 verified 结果下写入一对 Posting；不改变买方钱包；Provider Reference 全局唯一 |
+| 自动化验证 | 20/20 | F11 定向 4/4、Sandbox 135/135、Contract 63 + MCP 6、SDK 10/10、Prototype lint/build 和 diff 检查通过 |
+| 文档与边界 | 19/20 | F11 契约、README、Roadmap、Changelog、验证和操作日志已同步；R2 独立审查尚未完成 |
+
+综合评分：97/100
+
+## 结论
+
+建议：**通过本地实现，进入 R2 独立 Domain 与 Architecture 审查**。
+
+F11 将 Provider 已验证的入站付款绑定到 F10 Receivable，在同一幂等事务中更新 Receivable、写入 Collection、追加 `receivable.payment_posted` 事件和一对不可变 FinancialPosting。当前仅使用明确标记的 Simulation 验证，不改变买方钱包，不启用真实 Testnet、Hosted、Live/Mainnet 或生产凭证。
+
+## 核对
+
+- [x] Provider Reference 和 Collection Reference 具备唯一性与精确匹配校验。
+- [x] 金额、币种、可选资产/网络和预期付款方漂移失败关闭。
+- [x] verified 结果才会将 Receivable 标记为 paid 并追加 Posting。
+- [x] 相同幂等键和相同 Provider Reference 不会重复创建 Collection 或 Posting。
+- [x] SQLite 重启恢复 Receivable、Collection、事件和 Posting。
+- [x] HTTP API、权限、OpenAPI、SDK 和 generic resources 持久化已对齐。
+- [ ] R2 独立 Domain + Architecture 审查尚未完成。
+
+## 残余风险
+
+1. F11 尚未接入真实 Base Sepolia 入站观察或链上确认；Simulation 结果不能作为 Testnet 资金证据。
+2. 当前核心没有卖方钱包余额投影，Posting 只表达 Receiving Target 与 Receivable 的财务事实；F14 负责后续对账。
+3. Hosted、Live/Mainnet、托管和生产凭证继续关闭。
+
+---
+
 # F10 Account-Owned Receivable 自主审查报告
 
 日期：2026-09-08

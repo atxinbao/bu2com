@@ -251,6 +251,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/receivables/{receivable_id}/collections": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path: {
+                receivable_id: components["parameters"]["ReceivableId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Verify an inbound payment and post a receivable once */
+        post: operations["verifyInboundPayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/collections": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        /** List verified inbound collections */
+        get: operations["listCollections"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/collections/{collection_id}": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path: {
+                collection_id: components["parameters"]["CollectionId"];
+            };
+            cookie?: never;
+        };
+        /** Read one inbound collection */
+        get: operations["getCollection"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/payment_intents": {
         parameters: {
             query?: never;
@@ -1121,6 +1185,49 @@ export interface components {
             created_at: string;
             /** Format: date-time */
             updated_at: string;
+            collection_id?: string | null;
+            /** Format: date-time */
+            paid_at?: string | null;
+        };
+        VerifyInboundPayment: {
+            provider_reference: string;
+            collection_reference: string;
+            amount?: components["schemas"]["Amount"];
+            asset?: string;
+            network?: string;
+            payer_account_id?: string;
+            payer_agent_id?: string;
+        };
+        Collection: {
+            id: string;
+            receivable_id: string;
+            account_id: string;
+            agent_id: string;
+            receiving_target_id: string;
+            collection_reference: string;
+            provider: string;
+            provider_reference: string;
+            amount: components["schemas"]["Amount"];
+            asset?: string | null;
+            network?: string | null;
+            payer_account_id?: string | null;
+            payer_agent_id?: string | null;
+            /** @enum {string} */
+            verification_status: "pending" | "verified";
+            /** @enum {string} */
+            status: "pending" | "posted";
+            /** @enum {string} */
+            verification_mode: "simulation" | "provider";
+            /** Format: date-time */
+            verified_at: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        VerifyInboundPaymentResult: {
+            collection: components["schemas"]["Collection"];
+            receivable: components["schemas"]["Receivable"];
         };
         ExternalContext: {
             /** @enum {string} */
@@ -1410,6 +1517,28 @@ export interface components {
                 "application/json": components["schemas"]["Error"];
             };
         };
+        /** @description Provider returned an unverifiable or invalid payment result */
+        UnprocessableEntity: {
+            headers: {
+                "X-Request-Id": components["headers"]["RequestId"];
+                "X-Trace-Id": components["headers"]["TraceId"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /** @description Inbound verification provider is unavailable or unsupported */
+        ServiceUnavailable: {
+            headers: {
+                "X-Request-Id": components["headers"]["RequestId"];
+                "X-Trace-Id": components["headers"]["TraceId"];
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
     };
     parameters: {
         /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
@@ -1419,6 +1548,7 @@ export interface components {
         TransactionId: string;
         ReceiptId: string;
         ReceivableId: string;
+        CollectionId: string;
         TenantId: string;
         WebhookSubscriptionId: string;
         WebhookOutboxId: string;
@@ -1848,6 +1978,94 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Receivable"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    verifyInboundPayment: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                receivable_id: components["parameters"]["ReceivableId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerifyInboundPayment"];
+            };
+        };
+        responses: {
+            /** @description Inbound payment verification result */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VerifyInboundPaymentResult"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["UnprocessableEntity"];
+            503: components["responses"]["ServiceUnavailable"];
+        };
+    };
+    listCollections: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Collections visible to the current account or Agent */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Collection"][];
+                    };
+                };
+            };
+            400: components["responses"]["BadRequest"];
+        };
+    };
+    getCollection: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path: {
+                collection_id: components["parameters"]["CollectionId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current inbound collection */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Collection"];
                 };
             };
             400: components["responses"]["BadRequest"];

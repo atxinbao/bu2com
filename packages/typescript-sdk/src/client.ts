@@ -20,6 +20,7 @@ import type {
   CreateBudget,
   CreateQuote,
   CreateReceivable,
+  Collection,
   DeliveryEvidence,
   DeliveryResult,
   EnvironmentInfo,
@@ -37,6 +38,8 @@ import type {
   TransactionListQuery,
   TransactionPage,
   TransactionView,
+  VerifyInboundPayment,
+  VerifyInboundPaymentResult,
 } from "./types.js";
 import { ENVIRONMENT_CONTRACT } from "./generated/environment.js";
 
@@ -426,6 +429,35 @@ export class Bu2Client {
     return this.execute({ name: "getReceivable", mutation: false }, options, (signal) =>
       this.api.GET("/receivables/{receivable_id}", {
         params: { path: { receivable_id: receivableId }, header: traceHeaders(options) },
+        signal,
+      }),
+    );
+  }
+
+  listCollections(options: Bu2RequestOptions = {}): Promise<{ data: Collection[] }> {
+    return this.execute({ name: "listCollections", mutation: false }, options, (signal) =>
+      this.api.GET("/collections", { params: { header: traceHeaders(options) }, signal }),
+    );
+  }
+
+  verifyInboundPayment(
+    receivableId: string,
+    body: VerifyInboundPayment,
+    options: Bu2MutationOptions,
+  ): Promise<VerifyInboundPaymentResult> {
+    return this.execute({ name: "verifyInboundPayment", mutation: true }, options, (signal) =>
+      this.api.POST("/receivables/{receivable_id}/collections", {
+        params: { path: { receivable_id: receivableId }, header: mutationHeaders(options) },
+        body,
+        signal,
+      }),
+    );
+  }
+
+  getCollection(collectionId: string, options: Bu2RequestOptions = {}): Promise<Collection> {
+    return this.execute({ name: "getCollection", mutation: false }, options, (signal) =>
+      this.api.GET("/collections/{collection_id}", {
+        params: { path: { collection_id: collectionId }, header: traceHeaders(options) },
         signal,
       }),
     );

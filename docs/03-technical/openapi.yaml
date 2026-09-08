@@ -302,6 +302,65 @@ paths:
               schema: { $ref: '#/components/schemas/Receivable' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '404': { $ref: '#/components/responses/NotFound' }
+  /receivables/{receivable_id}/collections:
+    parameters:
+      - $ref: '#/components/parameters/TraceId'
+      - $ref: '#/components/parameters/ReceivableId'
+    post:
+      operationId: verifyInboundPayment
+      summary: Verify an inbound payment and post a receivable once
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/VerifyInboundPayment' }
+      responses:
+        '201':
+          description: Inbound payment verification result
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/VerifyInboundPaymentResult' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/UnprocessableEntity' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+  /collections:
+    parameters:
+      - $ref: '#/components/parameters/TraceId'
+    get:
+      operationId: listCollections
+      summary: List verified inbound collections
+      responses:
+        '200':
+          description: Collections visible to the current account or Agent
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Collection' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+  /collections/{collection_id}:
+    parameters:
+      - $ref: '#/components/parameters/TraceId'
+      - $ref: '#/components/parameters/CollectionId'
+    get:
+      operationId: getCollection
+      summary: Read one inbound collection
+      responses:
+        '200':
+          description: Current inbound collection
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Collection' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
   /payment_intents:
     parameters:
       - $ref: '#/components/parameters/TraceId'
@@ -800,6 +859,11 @@ components:
       in: path
       required: true
       schema: { type: string, pattern: '^rcv_[A-Za-z0-9_-]+$', maxLength: 255 }
+    CollectionId:
+      name: collection_id
+      in: path
+      required: true
+      schema: { type: string, pattern: '^cpay_[A-Za-z0-9_-]+$', maxLength: 255 }
     TenantId:
       name: tenant_id
       in: path
@@ -929,7 +993,7 @@ components:
         event_type: { type: string }
         transaction_id: { type: [string, 'null'], pattern: '^txn_[A-Za-z0-9_-]+$' }
         budget_id: { type: [string, 'null'], pattern: '^bud_[A-Za-z0-9_-]+$' }
-        source_id: { type: string, pattern: '^hold_[A-Za-z0-9_-]+$' }
+        source_id: { type: string, pattern: '^(hold|cpay)_[A-Za-z0-9_-]+$' }
         direction: { type: string, enum: [debit, credit] }
         account: { type: string, minLength: 1, maxLength: 120 }
         amount_value: { type: integer, minimum: 0 }
@@ -1367,6 +1431,49 @@ components:
             version: { type: integer, minimum: 1 }
             created_at: { type: string, format: date-time }
             updated_at: { type: string, format: date-time }
+            collection_id: { type: [string, 'null'], pattern: '^cpay_[A-Za-z0-9_-]+$' }
+            paid_at: { type: [string, 'null'], format: date-time }
+    VerifyInboundPayment:
+      type: object
+      additionalProperties: false
+      required: [provider_reference, collection_reference]
+      properties:
+        provider_reference: { type: string, minLength: 1, maxLength: 255 }
+        collection_reference: { type: string, pattern: '^col_[A-Za-z0-9_-]+$', maxLength: 255 }
+        amount: { $ref: '#/components/schemas/Amount' }
+        asset: { type: string, minLength: 1, maxLength: 120 }
+        network: { type: string, minLength: 1, maxLength: 120 }
+        payer_account_id: { type: string, pattern: '^acct_[A-Za-z0-9_-]+$', maxLength: 255 }
+        payer_agent_id: { type: string, pattern: '^agt_[A-Za-z0-9_-]+$', maxLength: 255 }
+    Collection:
+      type: object
+      required: [id, receivable_id, account_id, agent_id, receiving_target_id, collection_reference, provider, provider_reference, amount, verification_status, status, verification_mode, verified_at, created_at, updated_at]
+      properties:
+        id: { type: string, pattern: '^cpay_[A-Za-z0-9_-]+$' }
+        receivable_id: { type: string, pattern: '^rcv_[A-Za-z0-9_-]+$' }
+        account_id: { type: string, pattern: '^acct_[A-Za-z0-9_-]+$' }
+        agent_id: { type: string, pattern: '^agt_[A-Za-z0-9_-]+$' }
+        receiving_target_id: { type: string, pattern: '^tgt_[A-Za-z0-9_-]+$' }
+        collection_reference: { type: string, pattern: '^col_[A-Za-z0-9_-]+$' }
+        provider: { type: string, minLength: 1, maxLength: 120 }
+        provider_reference: { type: string, minLength: 1, maxLength: 255 }
+        amount: { $ref: '#/components/schemas/Amount' }
+        asset: { type: [string, 'null'] }
+        network: { type: [string, 'null'] }
+        payer_account_id: { type: [string, 'null'], pattern: '^acct_[A-Za-z0-9_-]+$' }
+        payer_agent_id: { type: [string, 'null'], pattern: '^agt_[A-Za-z0-9_-]+$' }
+        verification_status: { type: string, enum: [pending, verified] }
+        status: { type: string, enum: [pending, posted] }
+        verification_mode: { type: string, enum: [simulation, provider] }
+        verified_at: { type: string, format: date-time }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    VerifyInboundPaymentResult:
+      type: object
+      required: [collection, receivable]
+      properties:
+        collection: { $ref: '#/components/schemas/Collection' }
+        receivable: { $ref: '#/components/schemas/Receivable' }
     ExternalContext:
       type: object
       additionalProperties: false
@@ -1668,6 +1775,22 @@ components:
           schema: { $ref: '#/components/schemas/Error' }
     NotFound:
       description: Resource not found
+      headers:
+        X-Request-Id: { $ref: '#/components/headers/RequestId' }
+        X-Trace-Id: { $ref: '#/components/headers/TraceId' }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    UnprocessableEntity:
+      description: Provider returned an unverifiable or invalid payment result
+      headers:
+        X-Request-Id: { $ref: '#/components/headers/RequestId' }
+        X-Trace-Id: { $ref: '#/components/headers/TraceId' }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    ServiceUnavailable:
+      description: Inbound verification provider is unavailable or unsupported
       headers:
         X-Request-Id: { $ref: '#/components/headers/RequestId' }
         X-Trace-Id: { $ref: '#/components/headers/TraceId' }

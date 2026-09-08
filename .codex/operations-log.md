@@ -1,5 +1,13 @@
 # ENV-03 操作日志
 
+## 2026-09-08 · F11 Inbound Collection implementation
+
+- Tool: `git fetch`, `git switch`, `git pull`, `git branch -d`; result: verified F10 PR #36 merged at `b267a83`, synchronized `main`, deleted local `feat/account-owned-receivables`, and created `feat/verify-inbound-collections`.
+- Tool: `graphify query`; result: confirmed F11 is the next unimplemented roadmap item after F10 and must reuse Receivable, FinancialPosting, SQLite atomicity and existing adapter boundaries.
+- Tool: `apply_patch`; result: added Adapter inbound verification, Collection resource, provider-reference uniqueness, Receivable paid transition, immutable posting pair, HTTP/OpenAPI/SDK/access contract and F11 tests/docs.
+- Tool: `node`, `npm`; result: F11 targeted tests 4/4, Sandbox 135/135, Contract 63 + MCP 6, SDK generated/format/lint/typecheck/build and 10/10 tests, Prototype lint/build and diff check passed.
+- Boundary: F11 does not change the buyer wallet, create a second Transaction Core, call Live/Mainnet, enable Hosted, custody or production credentials; real Testnet collection remains a later evidence gate.
+
 ## 2026-09-08 · F10 Account-Owned Receivable implementation
 
 - Tool: `gh pr view`, `git fetch --prune`, `git switch`, `git pull`, `git branch -d`; result: verified F09a PR #35 merged at `66f466b56936a1528214ad6ae8608c151cb1734b`, synchronized `main`, deleted local `feat/autonomous-payment-execution`, and created `feat/account-owned-receivables`.

@@ -1,5 +1,20 @@
 # BU2 Product v0.1 验证结论
 
+## 2026-09-08 · F11 Inbound Collection Verification
+
+执行者：Codex
+
+- `node --test sandbox/f11.test.mjs sandbox/f11-http.test.mjs`：4/4 通过，覆盖一次性 Collection/Posting、金额/引用/付款方失败关闭、SQLite 重启和 HTTP 列表/详情。
+- `npm --prefix sandbox test`：135/135 通过，包含既有支付、恢复、访问控制、F07/F08/F09a/F10 回归。
+- `node docs/03-technical/validate-contract.mjs`：63 项不变量、6 个 MCP 工具通过。
+- `npm --prefix packages/typescript-sdk test`：生成检查、格式、Lint、TypeScript 类型检查、构建和 10/10 单元测试通过。
+- `npm --prefix prototype run lint && npm --prefix prototype run build`：通过。
+- `git diff --check`：通过。
+
+边界：F11 只接受 Adapter 返回的已验证或 pending 入站结果；已验证结果将 Receivable 标记为 `paid` 并追加一对 FinancialPosting，不改变买方钱包、不创建第二套 Transaction Core。当前仅使用 Simulation，未执行 Base Sepolia、Hosted、Live/Mainnet 或生产凭证。
+
+结论：本地实现达到 **GO for R2 Domain + Architecture review**；尚未构成真实收款或生产资金授权。
+
 ## 2026-09-08 · F10 Account-Owned Receivable 验证
 
 执行者：Codex

@@ -25,7 +25,8 @@
 | [F07 财务边界契约](F07_FINANCIAL_BOUNDARY_CONTRACT.md) | D1 冻结 Budget Scope、Budget Hold、Financial Posting、并发、幂等与对账边界 |
 | [F08 Payment Mandate 契约](F08_PAYMENT_MANDATE_CONTRACT.md) | 版本化授权、确定性 Policy Decision、绑定边界、幂等与 F07/F09 边界及运行时映射 |
 | [F09a 自主支付执行契约](F09A_AUTONOMOUS_EXECUTION_CONTRACT.md) | 已批准 PaymentIntent 的延迟执行、幂等、状态与 F09b 恢复边界 |
-| [F10 Account-Owned Receivable 契约](F10_RECEIVABLE_CONTRACT.md) | 从 active Quote 创建可持久化应收款，绑定收款主体与目标，等待 F11 入站验证 |
+| [F10 Account-Owned Receivable 契约](F10_RECEIVABLE_CONTRACT.md) | 从 active Quote 创建可持久化应收款，绑定收款主体与目标，由 F11 完成入站验证 |
+| [F11 Inbound Collection 契约](F11_INBOUND_COLLECTION_CONTRACT.md) | 验证入站付款、一次性标记 Receivable 并追加 FinancialPosting |
 | [页面与交互规格](INTERACTION_SPEC.md) | Transaction-first P0 的页面、状态、操作和验收标准 |
 | [Transaction-first P0 产品基线](P0_TRANSACTION_FIRST_BASELINE.md) | 当前正式定位、交易契约和原型验收路径 |
 | [Transaction-first P0 验收方案](TRANSACTION_P0_ACCEPTANCE.md) | 当前主路径、辅助路径和 GO/ITERATE/STOP 门槛 |

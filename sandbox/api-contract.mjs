@@ -121,6 +121,20 @@ const schemas = {
       },
     },
   },
+  verifyInboundPayment: {
+    type: "object",
+    additionalProperties: false,
+    required: ["provider_reference", "collection_reference"],
+    properties: {
+      provider_reference: { type: "string", minLength: 1, maxLength: 255 },
+      collection_reference: { type: "string", pattern: "^col_[A-Za-z0-9_-]+$", maxLength: 255 },
+      amount,
+      asset: { type: "string", minLength: 1, maxLength: 120 },
+      network: { type: "string", minLength: 1, maxLength: 120 },
+      payer_account_id: identifier("acct"),
+      payer_agent_id: identifier("agt"),
+    },
+  },
   createPaymentIntent: {
     type: "object",
     additionalProperties: false,

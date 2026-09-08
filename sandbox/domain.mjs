@@ -117,6 +117,7 @@ export class Bu2Sandbox {
     };
     this.quotes = new Map(restored.resources.quotes ?? []);
     this.receivables = new Map(restored.resources.receivables ?? []);
+    this.collections = new Map(restored.resources.collections ?? []);
     this.intents = new Map(restored.resources.intents ?? []);
     this.transactions = new Map(restored.resources.transactions ?? []);
     this.deliveries = new Map(restored.resources.deliveries ?? []);
@@ -212,6 +213,7 @@ export class Bu2Sandbox {
       resources: {
         quotes: [...this.quotes.entries()].map(([id, value]) => [id, clone(value)]),
         receivables: [...this.receivables.entries()].map(([id, value]) => [id, clone(value)]),
+        collections: [...this.collections.entries()].map(([id, value]) => [id, clone(value)]),
         intents: [...this.intents.entries()].map(([id, value]) => [id, clone(value)]),
         transactions: [...this.transactions.entries()].map(([id, value]) => [id, clone(value)]),
         deliveries: [...this.deliveries.entries()].map(([id, value]) => [id, clone(value)]),
@@ -232,6 +234,7 @@ export class Bu2Sandbox {
   restoreState(snapshot) {
     this.quotes = new Map(snapshot.resources.quotes ?? []);
     this.receivables = new Map(snapshot.resources.receivables ?? []);
+    this.collections = new Map(snapshot.resources.collections ?? []);
     this.intents = new Map(snapshot.resources.intents ?? []);
     this.transactions = new Map(snapshot.resources.transactions ?? []);
     this.deliveries = new Map(snapshot.resources.deliveries ?? []);
@@ -525,6 +528,247 @@ export class Bu2Sandbox {
       throw new ApiError(404, "resource_not_found", "receivable_not_found", "Receivable was not found.");
     }
     return clone(receivable);
+  }
+
+  listCollections() {
+    return [...this.collections.values()]
+      .sort((left, right) => right.created_at.localeCompare(left.created_at) || right.id.localeCompare(left.id))
+      .map((collection) => clone(collection));
+  }
+
+  getCollection(id) {
+    const collection = this.collections.get(id);
+    if (!collection) {
+      throw new ApiError(404, "resource_not_found", "collection_not_found", "Collection was not found.");
+    }
+    return clone(collection);
+  }
+
+  addCollectionPostings(event, collection) {
+    const postings = [
+      {
+        id: prefix("pst"),
+        event_id: event.id,
+        event_type: event.type,
+        transaction_id: null,
+        budget_id: null,
+        source_id: collection.id,
+        direction: "debit",
+        account: `cash.receiving_target:${collection.receiving_target_id}`,
+        amount_value: collection.amount.value,
+        currency: collection.amount.currency,
+        created_at: event.created_at,
+      },
+      {
+        id: prefix("pst"),
+        event_id: event.id,
+        event_type: event.type,
+        transaction_id: null,
+        budget_id: null,
+        source_id: collection.id,
+        direction: "credit",
+        account: `receivable:${collection.receivable_id}`,
+        amount_value: collection.amount.value,
+        currency: collection.amount.currency,
+        created_at: event.created_at,
+      },
+    ];
+    for (const posting of postings) this.financialPostings.set(posting.id, posting);
+    return postings;
+  }
+
+  async verifyInboundPayment(receivableId, input, key) {
+    return this.runIdempotentAsync(
+      `receivables/${receivableId}/collections`,
+      key,
+      input,
+      async () => {
+        validateIdentifier(receivableId, "rcv", "receivable_id");
+        requireFields(input, ["provider_reference", "collection_reference"]);
+        const receivable = this.receivables.get(receivableId);
+        if (!receivable) {
+          throw new ApiError(404, "resource_not_found", "receivable_not_found", "Receivable was not found.");
+        }
+        const prior = [...this.collections.values()].find(
+          (collection) => collection.provider_reference === input.provider_reference,
+        );
+        if (prior) {
+          if (prior.receivable_id !== receivableId || prior.collection_reference !== input.collection_reference) {
+            throw new ApiError(
+              409,
+              "conflict",
+              "provider_reference_reused",
+              "The provider reference is already attached to another collection.",
+            );
+          }
+          return { collection: clone(prior), receivable: clone(receivable) };
+        }
+        if (receivable.status === "paid") {
+          throw new ApiError(
+            409,
+            "invalid_state_transition",
+            "receivable_already_paid",
+            "The Receivable has already been paid.",
+            { current_state: receivable.status },
+          );
+        }
+        if (!["issued", "pending"].includes(receivable.status)) {
+          throw new ApiError(
+            409,
+            "invalid_state_transition",
+            "receivable_not_collectible",
+            "Only an issued or pending Receivable can accept an inbound payment.",
+            { current_state: receivable.status },
+          );
+        }
+        if (Date.parse(receivable.expires_at) <= Date.now()) {
+          throw new ApiError(
+            409,
+            "invalid_state_transition",
+            "receivable_expired",
+            "The Receivable has expired and cannot accept an inbound payment.",
+          );
+        }
+        if (typeof this.adapter?.verifyInboundPayment !== "function") {
+          throw new ApiError(
+            503,
+            "provider_unavailable",
+            "inbound_verification_unsupported",
+            "The active payment adapter does not support inbound payment verification.",
+          );
+        }
+        const verification = await this.adapter.verifyInboundPayment({ receivable: clone(receivable), input: clone(input) });
+        if (!["verified", "pending"].includes(verification?.status)) {
+          throw new ApiError(
+            422,
+            "provider_error",
+            "inbound_payment_unverified",
+            "The provider did not return a verified or pending inbound payment.",
+          );
+        }
+        if (typeof verification.provider_reference !== "string" || verification.provider_reference.length === 0) {
+          throw new ApiError(
+            422,
+            "provider_error",
+            "inbound_provider_reference_missing",
+            "The provider did not return a stable payment reference.",
+          );
+        }
+        if (verification.provider_reference !== input.provider_reference) {
+          throw new ApiError(
+            409,
+            "provider_error",
+            "inbound_provider_reference_mismatch",
+            "The provider reference does not match the requested verification reference.",
+          );
+        }
+        const verifiedReferenceOwner = [...this.collections.values()].find(
+          (collection) => collection.provider_reference === verification.provider_reference,
+        );
+        if (verifiedReferenceOwner) {
+          throw new ApiError(
+            409,
+            "conflict",
+            "provider_reference_reused",
+            "The provider reference is already attached to another collection.",
+          );
+        }
+        if (verification.collection_reference !== receivable.collection_reference) {
+          throw new ApiError(
+            409,
+            "provider_error",
+            "collection_reference_mismatch",
+            "The verified payment does not match the Receivable collection reference.",
+          );
+        }
+        validateAmount(verification.amount);
+        if (
+          verification.amount.value !== receivable.amount.value ||
+          verification.amount.currency !== receivable.amount.currency
+        ) {
+          throw new ApiError(
+            409,
+            "provider_error",
+            "inbound_amount_mismatch",
+            "The verified payment amount does not match the Receivable amount.",
+            { expected: receivable.amount, received: verification.amount },
+          );
+        }
+        if (receivable.asset !== null && verification.asset !== receivable.asset) {
+          throw new ApiError(
+            409,
+            "provider_error",
+            "inbound_asset_mismatch",
+            "The verified payment asset does not match the Receivable asset.",
+          );
+        }
+        if (receivable.network !== null && verification.network !== receivable.network) {
+          throw new ApiError(
+            409,
+            "provider_error",
+            "inbound_network_mismatch",
+            "The verified payment network does not match the Receivable network.",
+          );
+        }
+        if (
+          receivable.expected_payer_account_id &&
+          verification.payer_account_id !== receivable.expected_payer_account_id
+        ) {
+          throw new ApiError(
+            403,
+            "authorization_error",
+            "inbound_payer_mismatch",
+            "The verified payment payer does not match the expected payer account.",
+          );
+        }
+        if (
+          receivable.expected_buyer_agent_id &&
+          verification.payer_agent_id !== receivable.expected_buyer_agent_id
+        ) {
+          throw new ApiError(
+            403,
+            "authorization_error",
+            "inbound_payer_agent_mismatch",
+            "The verified payment payer does not match the expected buyer Agent.",
+          );
+        }
+        const now = new Date().toISOString();
+        const collection = {
+          id: prefix("cpay"),
+          receivable_id: receivable.id,
+          account_id: receivable.account_id,
+          agent_id: receivable.agent_id,
+          receiving_target_id: receivable.receiving_target_id,
+          collection_reference: receivable.collection_reference,
+          provider: verification.provider ?? this.adapter.name ?? "unknown",
+          provider_reference: verification.provider_reference,
+          amount: clone(verification.amount),
+          asset: verification.asset ?? null,
+          network: verification.network ?? null,
+          payer_account_id: verification.payer_account_id ?? null,
+          payer_agent_id: verification.payer_agent_id ?? null,
+          verification_status: verification.status,
+          status: verification.status === "verified" ? "posted" : "pending",
+          verification_mode: verification.verification_mode ?? "provider",
+          verified_at: verification.verified_at ?? now,
+          created_at: now,
+          updated_at: now,
+        };
+        this.collections.set(collection.id, collection);
+        receivable.status = collection.status === "posted" ? "paid" : "pending";
+        receivable.version += 1;
+        receivable.collection_id = collection.id;
+        receivable.updated_at = now;
+        if (collection.status === "posted") {
+          receivable.paid_at = now;
+          const event = this.event("receivable.payment_posted", collection);
+          this.addCollectionPostings(event, collection);
+        } else {
+          this.event("receivable.payment_pending", collection);
+        }
+        return { collection: clone(collection), receivable: clone(receivable) };
+      },
+    );
   }
 
   async createBudget(input, key) {

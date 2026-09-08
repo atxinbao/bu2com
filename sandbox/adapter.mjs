@@ -69,4 +69,28 @@ export class SimulatedPaymentAdapter {
       amount,
     );
   }
+
+  verifyInboundPayment({ receivable, input }) {
+    if (input.collection_reference !== receivable.collection_reference) {
+      throw new ApiError(
+        409,
+        "provider_error",
+        "collection_reference_mismatch",
+        "The simulated provider reference does not match the Receivable collection reference.",
+      );
+    }
+    return {
+      status: "verified",
+      provider: this.name,
+      provider_reference: input.provider_reference,
+      collection_reference: input.collection_reference,
+      amount: input.amount ?? receivable.amount,
+      asset: input.asset ?? receivable.asset,
+      network: input.network ?? receivable.network,
+      payer_account_id: input.payer_account_id ?? null,
+      payer_agent_id: input.payer_agent_id ?? null,
+      verified_at: new Date().toISOString(),
+      verification_mode: "simulation",
+    };
+  }
 }

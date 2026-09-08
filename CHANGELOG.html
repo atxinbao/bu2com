@@ -152,6 +152,27 @@
       <h2 id="unreleased">Unreleased</h2>
       <article class="release">
         <div class="release-head">
+          <div><h3>F11 · Inbound Collection Verification</h3><time datetime="2026-09-08">2026-09-08</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">验证 Receivable 的入站付款并一次性追加收款事实，让账户所有者能够查询已验证的 Collection 与不可变财务分录。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag added">Added</span>新增 <code>POST /v1/receivables/{id}/collections</code>、<code>GET /v1/collections</code> 与详情接口，以及 TypeScript SDK 方法。</li>
+            <li><span class="tag added">Added</span>Provider 验证结果必须匹配 Collection Reference、金额、币种、资产、网络和预期付款方；成功后追加一对 FinancialPosting。</li>
+            <li><span class="tag changed">Changed</span>Receivable 从 <code>issued/pending</code> 进入 <code>paid</code>，相同 Provider Reference 和幂等键均不会重复收款或入账。</li>
+            <li><span class="tag governance">Boundary</span>当前仅使用明确标记的 Simulation 验证；不改变买方钱包，不启用 Hosted、Live/Mainnet、托管或生产凭证。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R2 · 入站收款验证、持久化与财务事实</span></div>
+          <div><b>验证</b><span>F11 定向 4/4；Sandbox 全量 135/135；契约、SDK、Prototype lint/build 记录在 PR 中</span></div>
+          <div><b>恢复</b><span>Provider Reference 唯一性、幂等 Claim 与 SQLite 原子提交共同阻止重复 Posting</span></div>
+        </div>
+      </article>
+      <article class="release">
+        <div class="release-head">
           <div><h3>F10 · Account-Owned Receivable</h3><time datetime="2026-09-08">2026-09-08</time></div>
           <span class="status">Unreleased</span>
         </div>
