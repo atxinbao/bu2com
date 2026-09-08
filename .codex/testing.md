@@ -501,3 +501,12 @@
 - `npm --prefix prototype run lint && npm --prefix prototype run build`: passed.
 - `git diff --check`: passed.
 - Not run: Hosted Sandbox, public DNS/TLS, real Base Sepolia, Live/Mainnet, custody or production credentials.
+## 2026-09-09 · LA-06a 本地全量与隔离准入
+
+| 验证项 | 命令 | 结果 |
+|---|---|---|
+| LA-06a 定向边界 | `npm --prefix sandbox run test:la06a` | 待提交前执行 |
+| LA-06a 本地门禁 | `node deploy/la06a-local-gate.mjs` | 待提交前执行 |
+| 真实 Sandbox 双向收付 | 外部 Hosted/Base Sepolia | 未执行，保持 `accepted=false` |
+
+本 PR 只建立本地机器化准入输出；不把 Local/Simulation 结果描述为真实 Sandbox/Testnet 双向证据。

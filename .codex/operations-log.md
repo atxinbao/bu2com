@@ -425,3 +425,9 @@
 - Tool: `apply_patch`; result: added persisted ExecutionSession lifecycle, independent activation, 15-minute window, account/Agent/environment binding, session spend reservation/commit/release, HTTP/OpenAPI/access/SDK surfaces and F15a tests/docs.
 - Tool: `node`, `npm`; result: domain syntax, F15a targeted tests (4/4), contract validation (63 invariants / 6 MCP tools), SDK generation/typecheck/lint/build and SDK tests (10/10) passed.
 - Boundary: F15a remains Local / internal Sandbox-Testnet only; no BU2 Task platform, Hosted, Live/Mainnet, custody, production credential or real Provider payment was enabled. Independent R2 Domain and Architecture review is still required.
+## 2026-09-09 · LA-06a 本地全量与隔离准入
+
+- Scope: 暂停 E3.1；先把 Ledger Assurance Gate 的原仓库回归、故障/属性/跨租户证据收敛为本地门禁。真实 Sandbox 双向收付另列 LA-06b。
+- Tool: `graphify query`, `rg`, `sed`; result: traced existing atomicity, access-control, identity, operations, Hosted contract and full Sandbox suites; no new Provider or transaction core was required.
+- Tool: `apply_patch`; result: added deterministic LA-06a amount/claim tests, local gate runner, evidence validator, package script, product/technical/roadmap/README/CHANGELOG and audit records.
+- Boundary: `node deploy/la06a-local-gate.mjs` must report `execution_status=execution_disabled`, `payment_execution_attempted=false`, `live_enabled=false`, and `external_sandbox_bilateral.accepted=false`; no external settlement claim is allowed.
