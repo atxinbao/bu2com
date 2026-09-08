@@ -133,6 +133,19 @@
 
 结论：LA-01c 达到 **GO for R2 review**；合并前 Release 仍保持阻塞，不构成完整 Ledger Assurance Gate 或真实资金准入。
 
+## 2026-09-09 · LA-01d 退款请求条款持久化绑定
+
+执行者：Codex
+分支：`fix/refunds-bind-persisted-attempt-terms`
+
+- 修复：新增 SQLite Schema 18 `refund_attempts.request_fingerprint`，并在任何额度计算、状态转换或 Provider 调用前校验交易、金额、币种和原因条款。
+- 定向回归：`node --test sandbox/f13.test.mjs sandbox/la01-confirmed-unposted-refunds.test.mjs sandbox/la01-refund-request-binding.test.mjs`：14/14 通过。
+- 全量回归：`npm --prefix sandbox test`：198/198 通过。
+- 其他门槛：Runtime assurance Schema 1–18 通过；契约 63 项不变量/6 个 MCP 工具通过；SDK 10/10；Prototype lint/build 通过；`git diff --check` 通过。
+- 未执行：真实 Provider、Hosted、Base Sepolia、Live/Mainnet、托管钱包和 E3.1。
+
+结论：LA-01d 达到 **GO for R2 review**；该修复合并并完成候选复核前，Release 仍保持阻塞，不构成完整 Ledger Assurance Gate 或真实资金准入。
+
 ## 2026-09-09 · F16b Hosted Sandbox 外部集成基础准入
 
 执行者：Codex

@@ -24,16 +24,18 @@ prepared → submitting → refunded
 - 本地提交在外部退款成功后失败时，重试相同幂等键必须复用原 `refund_id` 和 Provider 幂等键，不能重新发起第二笔退款。
 - 如果外部退款成功且 `RefundAttempt=refunded` 已持久化，但本地 `Refund`/`Transaction` 提交失败，该 Attempt 在尚未被业务 Refund 事实覆盖前必须继续占用可退额度；换新幂等键只能使用剩余容量，不能再次占用或调用 Provider。
 - 原幂等键重试必须排除自身 `refund_id` 的占用，复用已确认 Attempt，仅补齐 Refund、Transaction、钱包和 Journal/Posting 事实；已覆盖的 Attempt 不得再次计入占用。
-- 已确认退款仍由既有 Refund、Transaction、Receipt 和对账事实表达；RefundAttempt 只保存外部执行边界与恢复状态。
+- 已确认退款仍由既有 Refund、Transaction、Receipt 和对账事实表达；RefundAttempt 还必须保存不可变请求条款指纹，作为 Claim 清理后的请求身份来源。
 
 ## 持久化
 
-SQLite Schema v14 新增 `refund_attempts`：
+SQLite Schema v14 新增 `refund_attempts`，Schema v18 增加 `request_fingerprint`：
 
 - 唯一 `operation_key` 和 `refund_id`；
-- 交易、金额、币种、状态、Provider 引用、原因和时间；
+- 交易、金额、币种、请求条款指纹、状态、Provider 引用、原因和时间；
 - `prepared`、`submitting`、`provider_unknown`、`refunded`、`failed` 状态约束；
-- 通过 `loadState()` 和领域快照恢复，支持本地提交失败后的重试与对账。
+- 通过 `loadState()` 和领域快照恢复，支持本地提交失败后的重试与对账；历史 Attempt 在迁移时按既有交易、金额、币种和原因回填指纹。
+
+请求条款指纹至少覆盖 `transaction_id`、金额、币种和 `reason`。处理失败后，临时 processing Claim 可以清理，但同一 operation key 的任何后续请求必须先与该指纹比较；不一致必须在额度计算和 Provider 调用前返回 `refund_attempt_conflict`。
 
 ## 验收
 
@@ -41,6 +43,6 @@ SQLite Schema v14 新增 `refund_attempts`：
 node --test sandbox/f13.test.mjs
 ```
 
-必须覆盖：未知退款占用额度、Provider 返回未知对象失败关闭、外部成功但本地提交失败后的同键恢复、换新幂等键在重启前后只能使用剩余容量、剩余容量与原键补记的交错顺序，以及既有已确认退款和恢复路径不回归。
+必须覆盖：未知退款占用额度、Provider 返回未知对象失败关闭、外部成功但本地提交失败后的同键恢复、换新幂等键在重启前后只能使用剩余容量、剩余容量与原键补记的交错顺序、failed Attempt 同键改金额/原因在额度检查前冲突，以及既有已确认退款和恢复路径不回归。
 
 本契约不开放 Live/Mainnet、托管钱包、生产凭证或真实 Provider 退款；Sandbox/Testnet 仍受既有环境和执行状态门槛约束。

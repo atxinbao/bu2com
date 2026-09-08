@@ -477,3 +477,12 @@
 - Tool: `apply_patch`; result: removed immediate new-request reconciliation, added `refunded` reservation with `excludeRefundId`/`knownRefundIds` safeguards, and added `sandbox/la01-confirmed-unposted-refunds.test.mjs`.
 - Tool: `node --test sandbox/f13.test.mjs sandbox/la01-confirmed-unposted-refunds.test.mjs`; result: 11/11 passed, covering same-process, SQLite restart, new-key over-capacity rejection, remainder-first, original-key posting and interleaved order.
 - Boundary: Local/Simulation only; no Schema change, LA-03d change, real Provider, Hosted, Base Sepolia, Live/Mainnet, custody or E3.1 activation.
+
+## 2026-09-09 · LA-01d 退款请求条款持久化绑定
+
+- Scope: 根据 PR #60 复审 R60-01，修复 processing Claim 清理后同一退款 key 可能携带新金额/原因而复用旧 RefundAttempt 的 P0 缺口。
+- Tool: `apply_patch`; result: added Schema 18 `refund_attempts.request_fingerprint`, legacy backfill, domain-side immutable terms comparison and pre-quota/provider rejection.
+- Tool: `node --test sandbox/la01-refund-request-binding.test.mjs sandbox/f13.test.mjs sandbox/la01-confirmed-unposted-refunds.test.mjs`; result: 14/14 passed, covering failed Attempt, SQLite restart, confirmed-unposted drift, remaining-capacity rejection and Adapter call count.
+- Tool: `npm --prefix sandbox test`; result: 198/198 passed.
+- Tool: `node deploy/runtime-assurance.mjs`, contract validation, SDK test, Prototype lint/build and `git diff --check`; result: Schema 1–18 passed, 63 invariants/6 MCP tools passed, SDK 10/10 and local quality gates passed.
+- Boundary: Local/Simulation only; no real Provider, Hosted, Base Sepolia, Live/Mainnet, custody or E3.1 activation. Release remains blocked pending R2 review and merge.

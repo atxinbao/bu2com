@@ -171,6 +171,27 @@
       </article>
       <article class="release">
         <div class="release-head">
+          <div><h3>LA-01d · 退款请求条款持久化绑定</h3><time datetime="2026-09-09">2026-09-09</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">修复失败后 processing Claim 被清理但 RefundAttempt 仍存在时的请求身份缺口，防止额度检查使用新金额而 Provider 实际执行旧金额。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag added">Added</span>SQLite Schema 18 为 <code>refund_attempts</code> 增加 <code>request_fingerprint</code>，覆盖交易、金额、币种和原因，并为历史 Attempt 回填指纹。</li>
+            <li><span class="tag changed">Changed</span>所有既有 Attempt 状态在额度计算、状态转换和 Provider 调用前校验请求条款；金额或原因漂移返回 <code>refund_attempt_conflict</code>。</li>
+            <li><span class="tag added">Added</span>新增失败前置拒绝、SQLite 重启、已确认未入账条款漂移回归，证明不产生第二次 Provider 调用或超额外部退款请求。</li>
+            <li><span class="tag governance">Boundary</span>仅修复 Local/Simulation 退款请求绑定；不开放真实 Provider、Hosted、Base Sepolia、Live/Mainnet 或 E3.1。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R2 · 退款请求身份、额度一致性、持久化迁移与外部调用</span></div>
+          <div><b>验证</b><span>定向退款回归 14/14；Sandbox 全量 198/198；Runtime assurance Schema 1–18</span></div>
+          <div><b>恢复</b><span>保留 RefundAttempt 与不可变条款指纹；不自动重放新退款指令，原键仅在条款一致时继续恢复</span></div>
+        </div>
+      </article>
+      <article class="release">
+        <div class="release-head">
           <div><h3>LA-03d · 多账户账簿所有权与余额投影契约</h3><time datetime="2026-09-09">2026-09-09</time></div>
           <span class="status">Unreleased</span>
         </div>

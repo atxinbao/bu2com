@@ -29,6 +29,15 @@ export class ApiError extends Error {
 const prefix = (value) => `${value}_${randomUUID().replaceAll("-", "").slice(0, 16)}`;
 const clone = (value) => structuredClone(value);
 const hash = (value) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
+const refundRequestFingerprint = (transactionId, amount, reason) =>
+  createHash("sha256")
+    .update(JSON.stringify({
+      transaction_id: transactionId,
+      amount_value: amount.value,
+      currency: amount.currency,
+      reason: reason ?? null,
+    }))
+    .digest("hex");
 const accountToken = (value) => String(value ?? "unknown").replace(/[^A-Za-z0-9_-]/g, "_").slice(0, 120) || "unknown";
 const validateLedgerAccount = (value, field) => {
   if (typeof value !== "string" || !/^[a-z][a-z0-9_.:-]{1,255}$/.test(value)) {
@@ -3013,6 +3022,28 @@ export class Bu2Sandbox {
     return [...this.refundAttempts.values()].find((attempt) => attempt.refund_id === refundId) ?? null;
   }
 
+  refundAttemptRequestFingerprint(attempt) {
+    return attempt.request_fingerprint ?? refundRequestFingerprint(
+      attempt.transaction_id,
+      { value: attempt.amount_value, currency: attempt.currency },
+      attempt.reason,
+    );
+  }
+
+  assertRefundAttemptTerms(attempt, transactionId, amount, reason) {
+    if (!attempt) return;
+    const requestFingerprint = refundRequestFingerprint(transactionId, amount, reason);
+    if (this.refundAttemptRequestFingerprint(attempt) !== requestFingerprint) {
+      throw new ApiError(
+        409,
+        "idempotency_conflict",
+        "refund_attempt_conflict",
+        "Refund request terms changed for an existing refund attempt.",
+        { refund_id: attempt.refund_id, operation_key: attempt.operation_key },
+      );
+    }
+  }
+
   syncRefundAttempt(attempt) {
     this.refundAttempts.set(attempt.operation_key, clone(attempt));
     return attempt;
@@ -3166,6 +3197,11 @@ export class Bu2Sandbox {
         }
         const operationKey = `refund:${transaction.id}:${hash(key)}`;
         const existingAttempt = this.refundAttemptFor(operationKey);
+        const reason = input.reason ?? null;
+        const requestFingerprint = refundRequestFingerprint(transaction.id, input.amount, reason);
+        // processing Claim 释放后仍保留 RefundAttempt；任何重试必须先校验不可变条款，
+        // 再进行额度计算、状态转换或 Provider 调用，避免校验金额与实际执行金额分离。
+        this.assertRefundAttemptTerms(existingAttempt, transaction.id, input.amount, reason);
         const remaining =
           transaction.settled_amount.value -
           transaction.refunded_amount.value -
@@ -3180,7 +3216,8 @@ export class Bu2Sandbox {
               refund_id: refundId,
               transaction_id: transaction.id,
               amount: input.amount,
-              reason: input.reason ?? null,
+              reason,
+              request_fingerprint: requestFingerprint,
             })
           : {
               id: prefix("rat"),
@@ -3191,14 +3228,15 @@ export class Bu2Sandbox {
               currency: input.amount.currency,
               status: "prepared",
               provider_reference: null,
-              reason: input.reason ?? null,
+              request_fingerprint: requestFingerprint,
+              reason,
               reason_code: null,
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
               resolved_at: null,
             });
         this.syncRefundAttempt(prepared);
-        const refund = this.refundFromAttempt(prepared, input.reason ?? null);
+        const refund = this.refundFromAttempt(prepared, reason);
         if (prepared.status === "refunded") {
           if (refund.status !== "refunded") {
             this.applyRefund(transaction, refund, {

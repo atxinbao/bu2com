@@ -9,7 +9,7 @@ BU2.com 是 Agent 的 AI 收付平台。它嵌入 ChatGPT、Codex、Claude 和�
 | 项目 | 当前基线 |
 | --- | --- |
 | 项目阶段 | Phase 0 · local execution / Sandbox architecture |
-| 当前工程关卡 | LA-01c · 已确认未入账退款容量修复待 R2 审查；LA-03d 多账户账簿基础与 LA-06b 外部双向证据仍阻塞 |
+| 当前工程关卡 | LA-01d · 退款请求条款绑定修复待 R2 审查；LA-03d 多账户账簿基础与 LA-06b 外部双向证据仍阻塞 |
 | 产品定义 | Product v0.3 · Transaction-first |
 | API 契约 | Agent Payment API v0.3.0 |
 | Reference Server | v0.17 · Node.js + SQLite WAL + 持久身份、钱包绑定、版本化 Mandate 与有界 ExecutionSession |
