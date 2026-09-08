@@ -1,5 +1,10 @@
 # ENV-03 操作日志
 
+## 2026-09-09 · LA-04 Draft PR
+
+- Tool: `git commit`, `git push`, `gh pr create`, `gh pr view`; result: committed `bff565f`, pushed `feat/ledger-assurance-collection-convergence`, and opened Draft PR #50 at `https://github.com/atxinbao/bu2com/pull/50` using `.github/pull_request_template.md`.
+- Review boundary: PR #50 is an R2 review candidate for Collection convergence and single posting; it does not complete LA-05, independent external reconciliation, Hosted/Testnet acceptance, or E3.1.
+
 ## 2026-09-09 · LA-04 Collection 持续验证与单次入账
 
 - Tool: `gh pr view`, `git fetch`, `git switch`, `git pull --ff-only`, `git branch -d`; result: verified PR #49 merged at `4eb3cad`, synchronized `main`, deleted local `feat/ledger-assurance-rebuild-projection`, and created `feat/ledger-assurance-collection-convergence`.
