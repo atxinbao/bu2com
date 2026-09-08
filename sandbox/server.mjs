@@ -296,6 +296,14 @@ export function createBu2Server({
       if (request.method === "GET" && url.pathname === "/v1/access") {
         return send(response, 200, activeAccess.publicActor(actor));
       }
+      if (request.method === "GET" && url.pathname === "/v1/payment_mandates") {
+        return send(response, 200, { data: activeAccess.filterMandates(actor, activeSandbox.listPaymentMandates()) });
+      }
+      if (request.method === "POST" && url.pathname === "/v1/payment_mandates") {
+        const body = validateBody("createPaymentMandate", await readJson(request));
+        activeAccess.assertClaims(actor, { accountIds: [body.account_id], agentIds: [body.agent_id] }, accessContext);
+        return send(response, 201, await activeSandbox.createPaymentMandate(body, validateIdempotencyKey(key)));
+      }
       if (executionMutation(request.method, url.pathname)) {
         assertExecutionEnabled(environmentConfig, `${request.method} ${url.pathname}`);
       }
@@ -565,6 +573,20 @@ export function createBu2Server({
               validateIdempotencyKey(key),
             ),
           );
+        }
+      }
+      if (segments[0] === "v1" && segments[1] === "payment_mandates" && segments[2]) {
+        const mandateId = validateResourceId(segments[2], "mdt", "mandate_id");
+        if (request.method === "GET" && segments.length === 3) {
+          const mandate = activeSandbox.getPaymentMandate(mandateId);
+          activeAccess.assertClaims(actor, { accountIds: [mandate.account_id], agentIds: [mandate.agent_id] }, accessContext);
+          return send(response, 200, mandate);
+        }
+        if (request.method === "POST" && segments.length === 4 && ["activate", "suspend", "revoke", "expire"].includes(segments[3])) {
+          const mandate = activeSandbox.getPaymentMandate(mandateId);
+          activeAccess.assertClaims(actor, { accountIds: [mandate.account_id], agentIds: [mandate.agent_id] }, accessContext);
+          const body = validateBody("mandateTransition", await readJson(request));
+          return send(response, 200, await activeSandbox.transitionPaymentMandate(mandateId, segments[3], body, validateIdempotencyKey(key)));
         }
       }
       if (segments[0] === "v1" && segments[1] === "budgets" && segments[2]) {

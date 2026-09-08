@@ -6,6 +6,7 @@
   "roles": {
     "agent": [
       "identity:read",
+      "mandates:read",
       "quotes:create",
       "payment_intents:create",
       "payment_intents:read",
@@ -15,6 +16,8 @@
     ],
     "developer": [
       "identity:read",
+      "mandates:read",
+      "mandates:manage",
       "quotes:create",
       "payment_intents:create",
       "payment_intents:read",
@@ -25,6 +28,8 @@
     ],
     "operator": [
       "identity:read",
+      "mandates:read",
+      "mandates:manage",
       "payment_intents:read",
       "transactions:read",
       "receipts:read",

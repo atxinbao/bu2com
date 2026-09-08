@@ -194,6 +194,11 @@ export class SqliteLedger {
         name: "budget_holds_financial_postings",
         apply: () => this.migrateBudgetFinancialPosting(),
       },
+      {
+        version: 13,
+        name: "versioned_payment_mandates_policy_decisions",
+        apply: () => this.migrateVersionedPaymentMandates(),
+      },
     ];
     for (const migration of migrations) {
       if (applied.has(migration.version)) continue;
@@ -713,6 +718,15 @@ export class SqliteLedger {
         ON financial_postings(transaction_id, created_at);
       CREATE INDEX IF NOT EXISTS idx_financial_postings_budget
         ON financial_postings(budget_id, created_at);
+    `);
+  }
+
+  migrateVersionedPaymentMandates() {
+    this.db.exec(`
+      CREATE INDEX IF NOT EXISTS idx_resources_payment_mandates
+        ON resources(kind, id) WHERE kind='mandates';
+      CREATE INDEX IF NOT EXISTS idx_resources_policy_decisions
+        ON resources(kind, id) WHERE kind='policy_decisions';
     `);
   }
 
@@ -2175,7 +2189,7 @@ export class SqliteLedger {
       (row) =>
         row.asset === asset &&
         row.network === network &&
-        (reference === null || row[referenceField] === reference),
+        (reference === null || row.id === reference || row[referenceField] === reference),
     );
     if (matching.length === 0) {
       throw new ApiError(
@@ -2186,6 +2200,32 @@ export class SqliteLedger {
           : "receiving_target_binding_mismatch",
         `The ${kind.replace("_", " ")} does not match an active verified wallet binding.`,
         { account_id: accountId, agent_id: agentId, asset, network, reference },
+      );
+    }
+    return { bound: true, binding: matching[0] };
+  }
+
+  assertWalletBindingById(
+    environment,
+    { kind, bindingId, asset, network = null },
+  ) {
+    const table = kind === "funding_source" ? "funding_sources" : "receiving_targets";
+    const rows = this.db
+      .prepare(`
+        SELECT * FROM ${table}
+        WHERE environment=? AND id=? AND status='active' AND verification_status='verified'
+      `)
+      .all(environment, bindingId);
+    const matching = rows.filter((row) => row.asset === asset && row.network === network);
+    if (matching.length === 0) {
+      throw new ApiError(
+        409,
+        "authorization_error",
+        kind === "funding_source"
+          ? "funding_source_binding_required"
+          : "receiving_target_binding_required",
+        `The ${kind.replace("_", " ")} must reference an active verified wallet binding.`,
+        { environment, binding_id: bindingId, asset, network },
       );
     }
     return { bound: true, binding: matching[0] };

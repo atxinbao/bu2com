@@ -741,3 +741,23 @@ npm --prefix sandbox run test:hosted-deployment
 未执行：Sandbox 单元/集成、SDK、Prototype、浏览器、Testnet 支付和 Hosted E2E；D2 只修改文档。风险等级为 R0，需独立 R2 Domain 与 Architecture 审查后才允许进入 F08 代码 PR。
 
 边界确认：未改变 API、Schema、交易状态、预算预留、账本、Adapter、Signer、环境或支付行为；Live/Mainnet、托管、生产凭证和 Hosted Sandbox 继续关闭。
+## F08 Payment Mandate 运行时实现验证
+
+日期：2026-09-08
+执行者：Codex
+分支：`feat/mandates-versioned-policy`
+
+本轮在 D2 契约基础上实现版本化 `PaymentMandate` 与确定性 `PolicyDecision`。Mandate 通过统一资源持久化并升级至 SQLite Schema v13；状态转换使用版本检查和幂等 Claim；PaymentIntent 保存决策 ID、Mandate 版本、输入快照、规则和稳定原因码。持久化运行时激活 Mandate 前强制验证 active/verified Funding Source 与 Receiving Target 绑定，避免未绑定授权进入预算预留。
+
+验证结果：
+
+- `node --test sandbox/f08.test.mjs`：4/4 通过，包含绑定门槛、版本冲突、幂等状态转换和决策持久化。
+- `npm --prefix sandbox test`：123/123 通过。
+- `node docs/03-technical/validate-contract.mjs`：63 项不变量、6 个 MCP 工具通过。
+- `npm --prefix packages/typescript-sdk test`：生成检查、格式、Lint、类型检查、构建和 10/10 单测通过。
+- `npm --prefix prototype run lint && npm --prefix prototype run build`：通过。
+- `git diff --check`：通过。
+
+验收边界：`approved` 才能进入 F07 Budget Hold；`review_required` 与 `denied` 不创建 Hold。F08 不调用 Provider、Signer、x402、AP2 或链上 RPC，不改变 `execution_status`，不启用真实 Testnet 双向收付、Hosted、Live/Mainnet、托管或生产凭证。
+
+残余风险：F08 需要独立 Domain 与 Architecture R2 人工审查；F09a 自主执行、F10/F11 收款、退款、对账和 Sandbox 双向 Beta 仍按路线图顺序推进。纯内存测试允许省略 Ledger，仅验证策略逻辑；持久化环境则强制钱包绑定。

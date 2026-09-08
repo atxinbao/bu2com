@@ -104,6 +104,72 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/payment_mandates": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        /** List versioned payment mandates */
+        get: operations["listPaymentMandates"];
+        put?: never;
+        /** Create a draft payment mandate version */
+        post: operations["createPaymentMandate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/payment_mandates/{mandate_id}": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path: {
+                mandate_id: string;
+            };
+            cookie?: never;
+        };
+        /** Read one payment mandate */
+        get: operations["getPaymentMandate"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/payment_mandates/{mandate_id}/{action}": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path: {
+                mandate_id: string;
+                action: "activate" | "suspend" | "revoke" | "expire";
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Change payment mandate state */
+        post: operations["transitionPaymentMandate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/financial_postings": {
         parameters: {
             query?: never;
@@ -508,6 +574,48 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        CreatePaymentMandate: {
+            id?: string;
+            account_id: string;
+            agent_id: string;
+            funding_source_id: string;
+            receiving_target_id: string;
+            /** @enum {string} */
+            environment: "local" | "sandbox" | "live";
+            currency: string;
+            max_single_amount: number;
+            daily_limit: number;
+            monthly_limit: number;
+            merchant_allowlist?: string[];
+            merchant_denylist?: string[];
+            category_allowlist?: string[];
+            purpose_constraints?: {
+                required_terms?: string[];
+            };
+            resource_constraints?: {
+                [key: string]: unknown;
+            };
+            /** Format: date-time */
+            effective_at: string;
+            /** Format: date-time */
+            expires_at?: string | null;
+            created_by?: string | null;
+            supersedes_mandate_id?: string;
+        };
+        MandateTransition: {
+            version: number;
+            reason?: string;
+        };
+        PaymentMandate: components["schemas"]["CreatePaymentMandate"] & {
+            id: string;
+            version: number;
+            /** @enum {string} */
+            status: "draft" | "active" | "suspended" | "revoked" | "expired";
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
         CreateBudget: {
             id?: string;
             /** @enum {string} */
@@ -951,6 +1059,29 @@ export interface components {
             decision: "allowed" | "review_required" | "denied";
             reason_code: string;
             matched_rules: string[];
+            policy_decision_id?: string;
+            mandate_version?: number;
+        };
+        PolicyDecision: {
+            id: string;
+            /** @enum {string} */
+            decision: "approved" | "review_required" | "denied";
+            mandate_id: string;
+            mandate_version: number;
+            request_fingerprint: string;
+            input_snapshot: {
+                [key: string]: unknown;
+            };
+            matched_rules: string[];
+            reason_codes: string[];
+            budget_context?: {
+                [key: string]: unknown;
+            } | null;
+            /** Format: date-time */
+            effective_until?: string | null;
+            idempotency_key: string;
+            /** Format: date-time */
+            created_at: string;
         };
         PaymentIntent: {
             id: string;
@@ -970,6 +1101,7 @@ export interface components {
             status: "requires_authorization" | "authorized" | "funds_reserved" | "delivery_submitted" | "settled" | "declined" | "expired" | "canceled" | "refunded" | "disputed";
             transaction_id: string | null;
             authorization: components["schemas"]["Authorization"];
+            policy_decision?: components["schemas"]["PolicyDecision"];
             funding_source_binding_id?: string | null;
             receiving_target_binding_id?: string | null;
             budget_id?: string | null;
@@ -1362,6 +1494,120 @@ export interface operations {
                 };
             };
             404: components["responses"]["NotFound"];
+        };
+    };
+    listPaymentMandates: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Payment mandates */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PaymentMandate"][];
+                    };
+                };
+            };
+        };
+    };
+    createPaymentMandate: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePaymentMandate"];
+            };
+        };
+        responses: {
+            /** @description Draft payment mandate */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentMandate"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    getPaymentMandate: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path: {
+                mandate_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Payment mandate */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentMandate"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    transitionPaymentMandate: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                mandate_id: string;
+                action: "activate" | "suspend" | "revoke" | "expire";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MandateTransition"];
+            };
+        };
+        responses: {
+            /** @description Updated payment mandate */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentMandate"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            409: components["responses"]["Conflict"];
         };
     };
     listFinancialPostings: {

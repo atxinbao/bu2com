@@ -204,3 +204,12 @@
 - `npm --prefix sandbox run sandbox:status`: passed; context `orbstack`, loopback port `3110`, healthy service.
 - Unauthenticated quote mutation smoke: HTTP 401 `credential_required`.
 - `git diff --check`: passed.
+## 2026-09-08 · F08 Payment Mandate 运行时
+
+- `node --test sandbox/f08.test.mjs`：4/4 通过，覆盖 Mandate 创建/激活、PolicyDecision、版本冲突、幂等终态和持久钱包绑定门槛。
+- `npm --prefix sandbox test`：123/123 通过。
+- `node docs/03-technical/validate-contract.mjs`：63 项不变量、6 个 MCP 工具通过。
+- `npm --prefix packages/typescript-sdk test`：生成检查、格式、Lint、类型检查、构建和 10/10 单测通过。
+- `npm --prefix prototype run lint && npm --prefix prototype run build`：通过。
+- `git diff --check`：通过。
+- 未执行：真实 Sandbox/Testnet 双向收付、Hosted E2E、Live/Mainnet、托管或生产凭证验证；F08 明确不开放这些能力。

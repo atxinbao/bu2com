@@ -9,10 +9,10 @@ BU2.com 是 Agent 的 AI 收付平台。它嵌入 ChatGPT、Codex、Claude 和�
 | 项目 | 当前基线 |
 | --- | --- |
 | 项目阶段 | Phase 0 · local execution / Sandbox architecture |
-| 当前工程关卡 | D2 · F08 Payment Mandate 契约冻结 |
+| 当前工程关卡 | F08 · 版本化 Payment Mandate 运行时实现，待 R2 审查 |
 | 产品定义 | Product v0.3 · Transaction-first |
 | API 契约 | Agent Payment API v0.3.0 |
-| Reference Server | v0.17 · Node.js + SQLite WAL + 持久身份与钱包绑定 + Hosted Sandbox 准入 |
+| Reference Server | v0.17 · Node.js + SQLite WAL + 持久身份、钱包绑定与版本化 Mandate |
 | TypeScript SDK | `@bu2/sdk` v0.3 · Monorepo private package |
 | MCP 分发 | stdio v0.3 · Codex / Claude Desktop / Generic Host |
 | 接入诊断 | `bu2-doctor` result v0.2 · 本地执行 / 零远程遥测 |
@@ -24,7 +24,7 @@ BU2.com 是 Agent 的 AI 收付平台。它嵌入 ChatGPT、Codex、Claude 和�
 
 当前代码已经形成可运行的 Agent 收付闭环，但仍是本地与 Base Sepolia 测试网证据，不是生产支付系统或法律合规结论。ENV-02–06 已由 PR #19–#23 合并；ENV-07A 为 Hosted Sandbox 增加专用启动门槛、文件型 Secret、不可变候选、独立激活与证据验证器，但尚未创建托管 Sandbox 或 Live。
 
-F06a 已把受控访问中的 Principal、Account 和 Agent 声明落到 SQLite Schema v10 的持久业务主体记录；F06b 在其上增加 Schema v11 的资金来源与收款目标绑定；F07 在 Schema v12 增加 Budget、Budget Hold 与 Financial Posting，并接入现有 Transaction Core 原子提交。当前 D2 正冻结 F08 版本化 Payment Mandate 契约，尚未修改运行时。上述能力都只在 Local / Sandbox / Testnet 边界内运行，不启用 Live/Mainnet、托管或生产凭证。
+F06a 已把受控访问中的 Principal、Account 和 Agent 声明落到 SQLite Schema v10 的持久业务主体记录；F06b 在其上增加 Schema v11 的资金来源与收款目标绑定；F07 在 Schema v12 增加 Budget、Budget Hold 与 Financial Posting；F08 在 Schema v13 增加版本化 PaymentMandate、PolicyDecision 及确定性授权判断，并接入 PaymentIntent。上述能力都只在 Local / Sandbox / Testnet 边界内运行，不启用 Live/Mainnet、托管或生产凭证。F08 当前等待独立 R2 Domain 与 Architecture 审查。
 
 [Phase 0 Epic 1：External Agent Transaction Integration & Reliability](docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md) 与 [Phase 0 Epic 2：Developer Integration Scale](docs/03-technical/PHASE0_EPIC2_DEVELOPER_INTEGRATION_SCALE.md) 已完成。Transaction Trust Gate 1–3 已经 PR #15–#17 合并，F01/ENV-01 至 ENV-06 分别由 PR #18–#23 批准。当前进入 ENV-07：ENV-07A 本地准入与证据契约已实现，ENV-07B 的部署单元、外部验收 Schema 与 Runbook 已准备，但公网部署、真实 Base Sepolia 双向收付和边缘 E2E 仍未执行。[Phase 0 Epic 3](docs/03-technical/PHASE0_EPIC3_EXTERNAL_PILOT_EVIDENCE.md) 保持 Ready，不能以 Local Simulation 代替正式外部证据。
 
@@ -76,6 +76,7 @@ BU2 将授权、资金预留、交付、结算和退款保存为不同事实。�
 - OpenAPI 生成类型的 `@bu2/sdk` v0.3 薄客户端；显式环境、外部 API key、本地开发确认、幂等、无自动重试和错误恢复分类。
 - HTTP、SDK tarball 和 MCP stdio 三条全新临时项目接入证据；均在 15 分钟内生成有效 Local Simulation Receipt。
 - Receipt v0.3：Ed25519、RFC 8785 JCS、环境/链/后端/issuer 签名绑定，以及签名、签发方、结算和环境四项独立验证；v0.2 历史签名字节保持可验证。
+- 版本化 PaymentMandate：draft/active/suspended/revoked/expired 状态机、Funding Source/Receiving Target 绑定、确定性 PolicyDecision、版本冲突和幂等状态转换；持久化环境激活时强制使用 active verified 钱包绑定。
 - 中英文 Transaction-first 产品界面，可展示真实 Reference API 数据并在离线时降级到演示数据。
 - OpenAPI 3.1、Agent 原生 MCP 工具和完整交易示例。
 - 同一不可变制品候选提升清单、配置漂移阻断、SQLite Online Backup、同环境隔离恢复演练与脱敏运营快照。
@@ -109,7 +110,7 @@ npm --prefix packages/typescript-sdk test
 npm --prefix sandbox run acceptance:clean-room
 ```
 
-当前基线应得到：Contract 63 项不变量通过、6 个 MCP 工具有效、Reference Server 115/115 通过、TypeScript SDK 10/10 通过、ENV-06 运营专项 6/6 通过、ENV-07A 准入专项 8/8 通过、两环境部署与恢复验收通过、三条 clean-room 路径全部生成有效 Local Receipt、Prototype lint 与 build 通过。
+当前基线应得到：Contract 63 项不变量通过、6 个 MCP 工具有效、Reference Server 123/123 通过、TypeScript SDK 10/10 通过、ENV-06 运营专项 6/6 通过、ENV-07A 准入专项 8/8 通过、两环境部署与恢复验收通过、三条 clean-room 路径全部生成有效 Local Receipt、Prototype lint 与 build 通过。
 
 ### 运行接入诊断
 

@@ -32,6 +32,28 @@ const hash = (value) => createHash("sha256").update(JSON.stringify(value)).diges
 
 const budgetScopeTypes = new Set(["workspace", "project", "account", "agent"]);
 const budgetPeriods = new Set(["lifetime", "calendar_month", "rolling_24h"]);
+const mandateStatuses = new Set(["draft", "active", "suspended", "revoked", "expired"]);
+const mandateActions = new Set(["activate", "suspend", "revoke", "expire"]);
+const legacyMandatePattern = /^mdt_(research_04|x402_test|doctor_buyer|env05_buyer|mcp_buyer|sdk_buyer|external_local|attacker|atomic_[A-Za-z0-9_-]+)$/;
+
+function validateIdentifier(value, prefixValue, field) {
+  if (typeof value !== "string" || !new RegExp(`^${prefixValue}_[A-Za-z0-9_-]+$`).test(value)) {
+    throw new ApiError(400, "validation_error", "invalid_resource_id", `${field} is invalid.`, { field });
+  }
+}
+
+function validateDate(value, field, { allowNull = false } = {}) {
+  if (allowNull && value === null) return;
+  if (typeof value !== "string" || !Number.isFinite(Date.parse(value))) {
+    throw new ApiError(400, "validation_error", "invalid_date", `${field} must be an ISO-8601 date-time.`, { field });
+  }
+}
+
+function validateNonNegativeInteger(value, field) {
+  if (!Number.isInteger(value) || value < 0) {
+    throw new ApiError(400, "validation_error", "invalid_amount", `${field} must be a non-negative integer.`, { field });
+  }
+}
 
 function requireFields(value, fields) {
   for (const field of fields) {
@@ -97,6 +119,8 @@ export class Bu2Sandbox {
     this.transactions = new Map(restored.resources.transactions ?? []);
     this.deliveries = new Map(restored.resources.deliveries ?? []);
     this.receipts = new Map(restored.resources.receipts ?? []);
+    this.mandates = new Map(restored.resources.mandates ?? []);
+    this.policyDecisions = new Map(restored.resources.policy_decisions ?? []);
     this.idempotency = new Map(restored.idempotency ?? []);
     this.events = restored.events ?? [];
     const financial = restored.financial ?? {};
@@ -188,6 +212,8 @@ export class Bu2Sandbox {
         intents: [...this.intents.entries()].map(([id, value]) => [id, clone(value)]),
         transactions: [...this.transactions.entries()].map(([id, value]) => [id, clone(value)]),
         deliveries: [...this.deliveries.entries()].map(([id, value]) => [id, clone(value)]),
+        mandates: [...this.mandates.entries()].map(([id, value]) => [id, clone(value)]),
+        policy_decisions: [...this.policyDecisions.entries()].map(([id, value]) => [id, clone(value)]),
       receipts: [...this.receipts.entries()].map(([id, value]) => [id, clone(value)]),
       },
       wallet: clone(this.wallet),
@@ -206,6 +232,8 @@ export class Bu2Sandbox {
     this.transactions = new Map(snapshot.resources.transactions ?? []);
     this.deliveries = new Map(snapshot.resources.deliveries ?? []);
     this.receipts = new Map(snapshot.resources.receipts ?? []);
+    this.mandates = new Map(snapshot.resources.mandates ?? []);
+    this.policyDecisions = new Map(snapshot.resources.policy_decisions ?? []);
     this.wallet = clone(snapshot.wallet);
     this.knownPayees = new Set(snapshot.knownPayees ?? []);
     const financial = snapshot.financial ?? {};
@@ -520,6 +548,222 @@ export class Bu2Sandbox {
     return posting;
   }
 
+  mandateView(mandate) {
+    return clone(mandate);
+  }
+
+  async createPaymentMandate(input, key) {
+    return this.runIdempotentAsync("payment_mandates", key, input, async () => {
+      requireFields(input, [
+        "account_id",
+        "agent_id",
+        "funding_source_id",
+        "receiving_target_id",
+        "environment",
+        "currency",
+        "max_single_amount",
+        "daily_limit",
+        "monthly_limit",
+        "effective_at",
+      ]);
+      validateIdentifier(input.account_id, "acct", "account_id");
+      validateIdentifier(input.agent_id, "agt", "agent_id");
+      validateIdentifier(input.funding_source_id, "fund", "funding_source_id");
+      validateIdentifier(input.receiving_target_id, "tgt", "receiving_target_id");
+      if (input.environment !== this.environmentConfig.environment) {
+        throw new ApiError(409, "policy_error", "mandate_environment_mismatch", "Mandate environment must match the active runtime environment.");
+      }
+      if (!/^[A-Z]{3}$/.test(input.currency)) {
+        throw new ApiError(400, "validation_error", "invalid_currency", "Currency must be an ISO 4217 uppercase code.");
+      }
+      for (const field of ["max_single_amount", "daily_limit", "monthly_limit"]) {
+        validateNonNegativeInteger(input[field], field);
+      }
+      validateDate(input.effective_at, "effective_at");
+      validateDate(input.expires_at ?? null, "expires_at", { allowNull: true });
+      if (input.expires_at && Date.parse(input.expires_at) <= Date.parse(input.effective_at)) {
+        throw new ApiError(400, "validation_error", "invalid_mandate_window", "expires_at must be later than effective_at.");
+      }
+      const supersedes = input.supersedes_mandate_id ?? null;
+      let previous = null;
+      if (supersedes) {
+        validateIdentifier(supersedes, "mdt", "supersedes_mandate_id");
+        previous = this.mandates.get(supersedes);
+        if (!previous) throw new ApiError(404, "resource_not_found", "mandate_not_found", "Superseded mandate was not found.");
+        if (previous.account_id !== input.account_id || previous.agent_id !== input.agent_id) {
+          throw new ApiError(409, "policy_error", "mandate_binding_conflict", "A replacement mandate must retain the account and Agent binding.");
+        }
+      }
+      const mandate = {
+        id: input.id ?? prefix("mdt"),
+        account_id: input.account_id,
+        agent_id: input.agent_id,
+        funding_source_id: input.funding_source_id,
+        receiving_target_id: input.receiving_target_id,
+        version: previous ? previous.version + 1 : 1,
+        status: "draft",
+        environment: input.environment,
+        currency: input.currency,
+        max_single_amount: input.max_single_amount,
+        daily_limit: input.daily_limit,
+        monthly_limit: input.monthly_limit,
+        merchant_allowlist: [...new Set(input.merchant_allowlist ?? [])],
+        merchant_denylist: [...new Set(input.merchant_denylist ?? [])],
+        category_allowlist: [...new Set(input.category_allowlist ?? [])],
+        purpose_constraints: clone(input.purpose_constraints ?? {}),
+        resource_constraints: clone(input.resource_constraints ?? {}),
+        effective_at: input.effective_at,
+        expires_at: input.expires_at ?? null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        created_by: input.created_by ?? null,
+        supersedes_mandate_id: supersedes,
+      };
+      if (this.mandates.has(mandate.id)) {
+        throw new ApiError(409, "conflict", "mandate_id_exists", "Mandate ID already exists.");
+      }
+      this.mandates.set(mandate.id, mandate);
+      this.event("mandate.created", mandate);
+      return mandate;
+    });
+  }
+
+  listPaymentMandates() {
+    return [...this.mandates.values()]
+      .filter((mandate) => !mandate.legacy)
+      .sort((left, right) => right.created_at.localeCompare(left.created_at) || right.id.localeCompare(left.id))
+      .map((mandate) => this.mandateView(mandate));
+  }
+
+  getPaymentMandate(id) {
+    const mandate = this.mandates.get(id);
+    if (!mandate || mandate.legacy) {
+      throw new ApiError(404, "resource_not_found", "mandate_not_found", "Payment mandate was not found.");
+    }
+    return this.mandateView(mandate);
+  }
+
+  async transitionPaymentMandate(id, action, input, key) {
+    return this.runIdempotentAsync(`payment_mandates/${id}/${action}`, key, input, async () => {
+      if (!mandateActions.has(action)) {
+        throw new ApiError(400, "validation_error", "invalid_mandate_action", "Mandate action is invalid.");
+      }
+      const mandate = this.mandates.get(id);
+      if (!mandate || mandate.legacy) throw new ApiError(404, "resource_not_found", "mandate_not_found", "Payment mandate was not found.");
+      if (input.version !== mandate.version) {
+        throw new ApiError(409, "concurrency_conflict", "mandate_version_conflict", "Mandate version changed; query before retrying.", { current_version: mandate.version });
+      }
+      const transitions = {
+        activate: { draft: "active", suspended: "active" },
+        suspend: { active: "suspended" },
+        revoke: { active: "revoked", suspended: "revoked", draft: "revoked" },
+        expire: { active: "expired", suspended: "expired" },
+      };
+      const next = transitions[action]?.[mandate.status];
+      if (!next) throw new ApiError(409, "invalid_state_transition", "mandate_not_transitionable", "Mandate cannot perform this state transition.", { current_state: mandate.status, action });
+      if (action === "activate") {
+        const now = Date.now();
+        if (Date.parse(mandate.effective_at) > now || (mandate.expires_at && Date.parse(mandate.expires_at) <= now)) {
+          throw new ApiError(409, "policy_error", "mandate_outside_effective_window", "Mandate is outside its effective window.");
+        }
+        if (this.ledger) {
+          const asset = this.environmentConfig.asset ?? mandate.currency;
+          const network = this.environmentConfig.network ?? null;
+          const fundingBinding = this.ledger.assertWalletBinding(this.environmentConfig.environment, {
+            kind: "funding_source",
+            accountId: mandate.account_id,
+            agentId: mandate.agent_id,
+            asset,
+            network,
+            reference: mandate.funding_source_id,
+          });
+          if (!fundingBinding.bound) {
+            throw new ApiError(
+              409,
+              "authorization_error",
+              "funding_source_binding_required",
+              "The funding source must reference an active verified wallet binding.",
+            );
+          }
+          this.ledger.assertWalletBindingById(this.environmentConfig.environment, {
+            kind: "receiving_target",
+            bindingId: mandate.receiving_target_id,
+            asset,
+            network,
+          });
+        }
+      }
+      mandate.status = next;
+      mandate.updated_at = new Date().toISOString();
+      mandate.transition_reason = input.reason ?? null;
+      this.event(`mandate.${next === "active" ? "activated" : next}`, mandate);
+      return clone(mandate);
+    });
+  }
+
+  legacyMandateFor(input, quote) {
+    if (!legacyMandatePattern.test(input.payment_mandate_id)) return null;
+    return {
+      id: input.payment_mandate_id,
+      version: 0,
+      status: "active",
+      legacy: true,
+      account_id: input.payer_account_id,
+      agent_id: input.buyer_agent_id,
+      funding_source_id: input.funding_source_id ?? null,
+      receiving_target_id: input.receiving_target_id ?? quote.receiving_target_id ?? null,
+      environment: this.environmentConfig.environment,
+      currency: input.amount.currency,
+      max_single_amount: 5000,
+      daily_limit: Number.MAX_SAFE_INTEGER,
+      monthly_limit: Number.MAX_SAFE_INTEGER,
+      merchant_allowlist: [],
+      merchant_denylist: [],
+      category_allowlist: [],
+      purpose_constraints: {},
+      resource_constraints: {},
+      effective_at: "1970-01-01T00:00:00.000Z",
+      expires_at: null,
+    };
+  }
+
+  spendTotal(mandate, since) {
+    return [...this.intents.values()]
+      .filter((intent) => intent.payment_mandate_id === mandate.id && intent.payer_account_id === mandate.account_id && intent.buyer_agent_id === mandate.agent_id)
+      .filter((intent) => Date.parse(intent.created_at) >= since && !["declined", "expired"].includes(intent.status))
+      .reduce((total, intent) => total + intent.amount.value, 0);
+  }
+
+  evaluatePaymentMandate(input, quote) {
+    const mandate = this.mandates.get(input.payment_mandate_id) ?? this.legacyMandateFor(input, quote);
+    if (!mandate) throw new ApiError(409, "mandate_denied", "mandate_not_found", "Payment intent references an unknown mandate.");
+    const now = Date.now();
+    const reasons = [];
+    const rules = [];
+    const fail = (code, rule) => { reasons.push(code); rules.push(rule); };
+    if (mandate.environment !== this.environmentConfig.environment) fail("mandate_environment_mismatch", "environment:match");
+    if (mandate.status !== "active") fail("mandate_not_active", `status:${mandate.status}`);
+    if (Date.parse(mandate.effective_at) > now) fail("mandate_not_effective", "effective_at");
+    if (mandate.expires_at && Date.parse(mandate.expires_at) <= now) fail("mandate_expired", "expires_at");
+    if (mandate.account_id !== input.payer_account_id || mandate.agent_id !== input.buyer_agent_id) fail("mandate_binding_mismatch", "binding:account_agent");
+    if (!mandate.legacy && input.funding_source_id !== mandate.funding_source_id) fail("funding_source_mismatch", "binding:funding_source");
+    if (!mandate.legacy && (input.receiving_target_id ?? quote.receiving_target_id) !== mandate.receiving_target_id) fail("receiving_target_mismatch", "binding:receiving_target");
+    if (mandate.currency !== input.amount.currency) fail("mandate_currency_mismatch", "currency");
+    if (input.amount.value > mandate.max_single_amount) fail("amount_above_mandate", `amount_lte:${mandate.max_single_amount}`);
+    const merchant = input.merchant ?? quote.payee_account_id;
+    const category = input.category ?? quote.item.delivery_type;
+    if (mandate.merchant_denylist.includes(merchant)) fail("merchant_denied", "merchant:denylist");
+    if (mandate.merchant_allowlist.length && !mandate.merchant_allowlist.includes(merchant)) fail("merchant_not_allowed", "merchant:allowlist");
+    if (mandate.category_allowlist.length && !mandate.category_allowlist.includes(category)) fail("category_not_allowed", "category:allowlist");
+    const requiredTerms = mandate.purpose_constraints?.required_terms ?? [];
+    if (requiredTerms.some((term) => !input.purpose.toLowerCase().includes(String(term).toLowerCase()))) fail("purpose_constraint_failed", "purpose:required_terms");
+    if (this.spendTotal(mandate, now - 86_400_000) + input.amount.value > mandate.daily_limit) fail("daily_limit_exceeded", `daily_lte:${mandate.daily_limit}`);
+    if (this.spendTotal(mandate, now - 31 * 86_400_000) + input.amount.value > mandate.monthly_limit) fail("monthly_limit_exceeded", `monthly_lte:${mandate.monthly_limit}`);
+    if (reasons.length) return { mandate, decision: "denied", reason_code: reasons[0], matched_rules: rules };
+    if (!this.knownPayees.has(quote.payee_account_id)) return { mandate, decision: "review_required", reason_code: "first_time_payee", matched_rules: [...rules, "payee:first_use"] };
+    return { mandate, decision: "approved", reason_code: "mandate_match", matched_rules: [...rules, `amount_lte:${mandate.max_single_amount}`] };
+  }
+
   createBudgetHold(transaction, intent) {
     if (!intent.budget_id) return null;
     const budget = this.budgets.get(intent.budget_id);
@@ -626,15 +870,26 @@ export class Bu2Sandbox {
         network: quote.network ?? this.environmentConfig.network ?? null,
         reference: quote.receiving_target_id ?? null,
       });
-      let decision = "allowed";
-      let reason_code = "mandate_match";
-      if (input.amount.value > 5000) {
-        decision = "denied";
-        reason_code = "amount_above_mandate";
-      } else if (!this.knownPayees.has(quote.payee_account_id)) {
-        decision = "review_required";
-        reason_code = "first_time_payee";
-      }
+      const evaluation = this.evaluatePaymentMandate(input, quote);
+      const policyDecision = {
+        id: prefix("dec"),
+        decision: evaluation.decision,
+        mandate_id: evaluation.mandate.id,
+        mandate_version: evaluation.mandate.version,
+        request_fingerprint: hash(input),
+        input_snapshot: clone({ ...input, quote_id: quote.id }),
+        matched_rules: evaluation.matched_rules,
+        reason_codes: [evaluation.reason_code],
+        budget_context: input.budget_id
+          ? { budget_id: input.budget_id, requested_minor: input.amount.value }
+          : null,
+        effective_until: evaluation.mandate.expires_at,
+        idempotency_key: key,
+        created_at: new Date().toISOString(),
+      };
+      this.policyDecisions.set(policyDecision.id, policyDecision);
+      const decision = evaluation.decision === "approved" ? "allowed" : evaluation.decision;
+      const reason_code = evaluation.reason_code;
       const status =
         decision === "allowed"
           ? "authorized"
@@ -654,8 +909,11 @@ export class Bu2Sandbox {
           id: prefix("auth"),
           decision,
           reason_code,
-          matched_rules: ["category:research_data", "amount_lte:5000"],
+          matched_rules: evaluation.matched_rules,
+          policy_decision_id: policyDecision.id,
+          mandate_version: evaluation.mandate.version,
         },
+        policy_decision: policyDecision,
         created_at: new Date().toISOString(),
       };
       this.intents.set(intent.id, intent);
@@ -797,10 +1055,24 @@ export class Bu2Sandbox {
             "invalid_decision",
             "Decision must be authorize or decline.",
           );
+        const mandate = this.mandates.get(intent.payment_mandate_id);
+        if (mandate && !mandate.legacy && mandate.status !== "active") {
+          intent.status = "declined";
+          intent.authorization.decision = "denied";
+          intent.authorization.reason_code = "mandate_not_active";
+          this.policyDecisions.get(intent.authorization.policy_decision_id)?.reason_codes.push("mandate_not_active");
+          this.event("payment_intent.declined", intent);
+          return clone(intent);
+        }
         const wasKnownPayee = this.knownPayees.has(intent.payee_account_id);
         intent.status = "authorized";
         intent.authorization.decision = "allowed";
         intent.authorization.reason_code = "human_confirmation";
+        const decision = this.policyDecisions.get(intent.authorization.policy_decision_id);
+        if (decision) {
+          decision.decision = "approved";
+          decision.reason_codes = ["human_confirmation"];
+        }
         this.knownPayees.add(intent.payee_account_id);
         try {
           return await this.reserve(intent, { emitAuthorization: true });

@@ -23,6 +23,9 @@ import type {
   DeliveryResult,
   EnvironmentInfo,
   FinancialPosting,
+  PaymentMandate,
+  CreatePaymentMandate,
+  MandateTransition,
   PaymentIntent,
   Quote,
   Receipt,
@@ -379,6 +382,49 @@ export class Bu2Client {
   listFinancialPostings(options: Bu2RequestOptions = {}): Promise<{ data: FinancialPosting[] }> {
     return this.execute({ name: "listFinancialPostings", mutation: false }, options, (signal) =>
       this.api.GET("/financial_postings", { params: { header: traceHeaders(options) }, signal }),
+    );
+  }
+
+  listPaymentMandates(options: Bu2RequestOptions = {}): Promise<{ data: PaymentMandate[] }> {
+    return this.execute({ name: "listPaymentMandates", mutation: false }, options, (signal) =>
+      this.api.GET("/payment_mandates", { params: { header: traceHeaders(options) }, signal }),
+    );
+  }
+
+  createPaymentMandate(
+    body: CreatePaymentMandate,
+    options: Bu2MutationOptions,
+  ): Promise<PaymentMandate> {
+    return this.execute({ name: "createPaymentMandate", mutation: true }, options, (signal) =>
+      this.api.POST("/payment_mandates", {
+        params: { header: mutationHeaders(options) },
+        body,
+        signal,
+      }),
+    );
+  }
+
+  getPaymentMandate(mandateId: string, options: Bu2RequestOptions = {}): Promise<PaymentMandate> {
+    return this.execute({ name: "getPaymentMandate", mutation: false }, options, (signal) =>
+      this.api.GET("/payment_mandates/{mandate_id}", {
+        params: { path: { mandate_id: mandateId }, header: traceHeaders(options) },
+        signal,
+      }),
+    );
+  }
+
+  transitionPaymentMandate(
+    mandateId: string,
+    action: "activate" | "suspend" | "revoke" | "expire",
+    body: MandateTransition,
+    options: Bu2MutationOptions,
+  ): Promise<PaymentMandate> {
+    return this.execute({ name: "transitionPaymentMandate", mutation: true }, options, (signal) =>
+      this.api.POST("/payment_mandates/{mandate_id}/{action}", {
+        params: { path: { mandate_id: mandateId, action }, header: mutationHeaders(options) },
+        body,
+        signal,
+      }),
     );
   }
 
