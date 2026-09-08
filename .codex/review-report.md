@@ -988,3 +988,24 @@ F06b 让 Quote 和 PaymentIntent 能够保留可验证的资金来源与收款�
 ### 风险与未覆盖项
 
 真实公网 Hosted、独立 Activation、Base Sepolia 双向收付和 G-F 独立审查属于 LA-06b，当前未执行。LA-06a 不能作为外部 Beta、完整 Ledger Assurance Gate 或生产财务准入证据。
+## RT-01 固定运行时与 SQLite 账本准入自主审查
+
+日期：2026-09-09
+审查者：Codex
+风险等级：R2
+
+### 审查结论
+
+建议 **通过 RT-01 本地实现，提交 R2 审查**。本 PR 只验证现有固定运行时和 SQLite 恢复路径，不修改生产制品、Schema、交易状态机或资金执行能力。
+
+### 审查清单
+
+- [x] Node 运行时 floor 与 Docker 两阶段基础镜像固定值一致。
+- [x] SQLite WAL、foreign keys 和 migration 1–15 连续性通过。
+- [x] Online Backup 恢复到新隔离文件，源/目标完整性与 Schema 一致。
+- [x] 证据明确 Provider、Signer、付款、Live 均未启用。
+- [x] LA-06b、E3.1 和真实 Sandbox 双向证据保持独立。
+
+### 风险与未覆盖项
+
+本地运行时门禁不证明多节点高可用、生产 RTO/RPO、Hosted 边缘、Base Sepolia 双向收付或 G-F 审查。LA-03 完整多账户/历史迁移能力仍是后续范围。

@@ -431,3 +431,11 @@
 - Tool: `graphify query`, `rg`, `sed`; result: traced existing atomicity, access-control, identity, operations, Hosted contract and full Sandbox suites; no new Provider or transaction core was required.
 - Tool: `apply_patch`; result: added deterministic LA-06a amount/claim tests, local gate runner, evidence validator, package script, product/technical/roadmap/README/CHANGELOG and audit records.
 - Boundary: `node deploy/la06a-local-gate.mjs` must report `execution_status=execution_disabled`, `payment_execution_attempted=false`, `live_enabled=false`, and `external_sandbox_bilateral.accepted=false`; no external settlement claim is allowed.
+## 2026-09-09 · RT-01 固定运行时与 SQLite 账本准入
+
+- Scope: LA-06a 合并后推进审计路线 RT-01；LA-06b 真实 Sandbox 双向收付仍需外部 Hosted 条件，未在本 PR 执行。
+- Tool: `rg`, `sed`; result: confirmed Dockerfile pins Node 22.16.0 in both stages, Sandbox requires Node >=22.16.0, SqliteLedger exposes WAL, migration, integrity and Online Backup paths.
+- Tool: `apply_patch`; result: added runtime assurance runner/test, `test:rt01`, RT-01 product/technical/roadmap/README/CHANGELOG and audit records.
+- Tool: `npm`, `node`; result: RT-01 2/2, Node v23.11.0, WAL, foreign keys, Schema 1–15 continuity, backup integrity and isolated restore passed; no Provider/Signer/payment execution.
+- Submission verification: `npm --prefix packages/typescript-sdk test`, `npm --prefix prototype run lint`, `npm --prefix prototype run build`, `git diff --check`; result: SDK 10/10 with generated/format/lint/type/build gates, Prototype lint/build and diff check passed; final `rt01.v1` remained `passed`.
+- Boundary: Local-only evidence; no image mutation, Schema migration, Hosted endpoint, Base Sepolia payment, Live/Mainnet or E3.1 activation.

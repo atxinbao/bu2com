@@ -152,6 +152,26 @@
       <h2 id="unreleased">Unreleased</h2>
       <article class="release">
         <div class="release-head">
+          <div><h3>RT-01 · 固定运行时与 SQLite 账本准入</h3><time datetime="2026-09-09">2026-09-09</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">核对包含已修复 SQLite 账本的固定 Node 运行时、WAL、迁移连续性以及 Online Backup 隔离恢复，输出可重复的本地运行时证据。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag added">Added</span><code>node deploy/runtime-assurance.mjs</code> 与 <code>rt01.v1</code> 机器证据。</li>
+            <li><span class="tag added">Added</span>固定 Node `22.16.0`、SQLite WAL/foreign keys、Schema 1–15 连续迁移和 Online Backup/隔离恢复测试。</li>
+            <li><span class="tag governance">Boundary</span>不修改运行时制品或 Schema，不调用 Provider、不加载 Signer、不执行 Base Sepolia/Mainnet 付款；LA-06b 仍需独立真实双向证据。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R2 · 账本持久化与恢复运行时，必须独立人工审查</span></div>
+          <div><b>验证</b><span>Node 运行时、WAL、foreign keys、15 版迁移、备份完整性和隔离恢复</span></div>
+          <div><b>恢复</b><span>恢复到新 SQLite 文件；不自动重放 Provider，不改变源库或交易事实</span></div>
+        </div>
+      </article>
+      <article class="release">
+        <div class="release-head">
           <div><h3>LA-06a · 本地全量与隔离准入</h3><time datetime="2026-09-09">2026-09-09</time></div>
           <span class="status">Unreleased</span>
         </div>

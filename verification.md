@@ -1023,3 +1023,12 @@ npm --prefix sandbox run test:hosted-deployment
 - 未执行：公网 Hosted、真实 Base Sepolia 双向收付、独立 Activation、外部团队证据和 G-F 审查。
 
 结论：LA-06a 达到 **GO for R2 review**，仅表示本地全量与隔离证据可重复；不构成完整 Ledger Assurance Gate、真实 Sandbox/Testnet、Hosted 或生产准入。LA-06b 保留真实双向 Sandbox 证据和 G-F 审查。
+## 2026-09-09 · RT-01 固定运行时与 SQLite 账本准入
+
+- 目标：核对包含已修复 SQLite 的固定 Node 运行时、WAL、迁移连续性和 Online Backup 隔离恢复。
+- 新增 `deploy/runtime-assurance.mjs` 和 `deploy/runtime-assurance.test.mjs`，输出 `rt01.v1` 证据。
+- 运行时证据：Node v23.11.0 满足 `>=22.16.0`；Docker 两阶段固定 `node:22.16.0-bookworm-slim`；SQLite `journal_mode=wal`、`foreign_keys=1`；Schema migration 1–15 连续；备份恢复 `integrity=ok` 且 Schema 一致。
+- 资金边界：Provider 未调用、Signer 未加载、付款未执行、Live 未启用。
+- 未执行：Hosted、真实 Base Sepolia 双向收付、LA-06b 外部证据和 G-F 审查。
+
+结论：RT-01 达到 **GO for R2 review**，仅证明固定本地运行时与账本恢复证据可重复，不构成完整 Ledger Assurance Gate、真实 Sandbox/Testnet 或生产准入。
