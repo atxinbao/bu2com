@@ -53,3 +53,7 @@ LA-03a～LA-03c 已经把业务资金事实写入受保护的 Journal/Posting，
 ## 6. 非目标与顺序
 
 本 PR 只冻结契约，不改变 Schema、API、运行时余额或交易状态。下一实现 PR 应按“Schema/归属约束 → 写入原语与投影刷新 → 隔离历史迁移与切换证据”拆分，并分别通过 R2 Domain 与 Architecture 审查。LA-06b 的真实 Hosted/Base Sepolia 双向证据、E3.1、Live/Mainnet、托管和生产资金路径继续关闭。
+
+### 实现状态
+
+Schema/归属约束子范围已在后续实现分支中增加 ledger_accounts Schema 16、唯一所有权元组、幂等注册、隔离查询和条件版本状态转换。该实现仍不接入 Financial Posting、运行时余额或历史迁移切换；以上剩余范围必须继续独立取证。

@@ -1027,7 +1027,7 @@ npm --prefix sandbox run test:hosted-deployment
 
 - 目标：核对包含已修复 SQLite 的固定 Node 运行时、WAL、迁移连续性和 Online Backup 隔离恢复。
 - 新增 `deploy/runtime-assurance.mjs` 和 `deploy/runtime-assurance.test.mjs`，输出 `rt01.v1` 证据。
-- 运行时证据：Node v23.11.0 满足 `>=22.16.0`；Docker 两阶段固定 `node:22.16.0-bookworm-slim`；SQLite `journal_mode=wal`、`foreign_keys=1`；Schema migration 1–15 连续；备份恢复 `integrity=ok` 且 Schema 一致。
+- 运行时证据：Node v23.11.0 满足 `>=22.16.0`；Docker 两阶段固定 `node:22.16.0-bookworm-slim`；SQLite `journal_mode=wal`、`foreign_keys=1`；Schema migration 1–16 连续；备份恢复 `integrity=ok` 且 Schema 一致。
 - 资金边界：Provider 未调用、Signer 未加载、付款未执行、Live 未启用。
 - 未执行：Hosted、真实 Base Sepolia 双向收付、LA-06b 外部证据和 G-F 审查。
 
@@ -1039,3 +1039,12 @@ npm --prefix sandbox run test:hosted-deployment
 - 验证：文档导航与路线图交叉引用、工作区 diff 检查。
 
 结论：LA-03d 文档契约达到 **GO for implementation planning**；后续 Schema/归属约束、写入原语/投影刷新、迁移/切换证据必须拆为 R2 实现 PR。LA-06b、E3.1、Live/Mainnet 和生产资金路径继续关闭。
+
+## 2026-09-09 · LA-03d Schema 与所有权约束实现
+
+- Schema 16 新增 ledger_accounts，固定环境、租户、账簿、所有者、资产/网络、状态与版本，并建立所有权唯一约束。
+- SqliteLedger 提供幂等注册、按环境/租户过滤查询和条件版本状态转换；退休账户不可重新激活。
+- node --test sandbox/la03d.test.mjs：4/4 通过；覆盖重复注册、跨环境/租户隔离、版本冲突、终态和 SQLite 重启。
+- 未执行：资金 Posting 接入、实时余额切换、历史迁移、Provider、Hosted、Base Sepolia、Live/Mainnet。
+
+结论：LA-03d Schema 子范围达到 **GO for R2 review**；不构成完整 Ledger Assurance Gate，后续仍需写入原语、投影刷新和迁移切换证据。

@@ -209,6 +209,11 @@ export class SqliteLedger {
         name: "journal_posting_guards",
         apply: () => this.migrateJournalPostingGuards(),
       },
+      {
+        version: 16,
+        name: "ledger_account_ownership",
+        apply: () => this.migrateLedgerAccountOwnership(),
+      },
     ];
     for (const migration of migrations) {
       if (applied.has(migration.version)) continue;
@@ -740,6 +745,29 @@ export class SqliteLedger {
     `);
   }
 
+  migrateLedgerAccountOwnership() {
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS ledger_accounts (
+        id TEXT PRIMARY KEY,
+        environment TEXT NOT NULL CHECK (environment IN ('local', 'sandbox', 'live')),
+        tenant_id TEXT NOT NULL,
+        book_id TEXT NOT NULL,
+        owner_account_id TEXT NOT NULL,
+        asset TEXT NOT NULL,
+        network TEXT,
+        status TEXT NOT NULL CHECK (status IN ('active', 'suspended', 'retired')),
+        version INTEGER NOT NULL CHECK (version >= 1),
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        UNIQUE(environment, tenant_id, book_id, owner_account_id, asset, network)
+      );
+      CREATE INDEX IF NOT EXISTS idx_ledger_accounts_owner
+        ON ledger_accounts(environment, tenant_id, owner_account_id, status);
+      CREATE INDEX IF NOT EXISTS idx_ledger_accounts_book_asset
+        ON ledger_accounts(environment, tenant_id, book_id, asset, network, status);
+    `);
+  }
+
   migrateDurableRefundAttempts() {
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS refund_attempts (
@@ -986,6 +1014,68 @@ export class SqliteLedger {
         new Date().toISOString(),
       );
     return this.environmentMetadata();
+  }
+
+  registerLedgerAccount(record) {
+    const {
+      id, environment, tenant_id, book_id, owner_account_id, asset,
+      network = null, status = "active", version = 1,
+      created_at = new Date().toISOString(), updated_at = created_at,
+    } = record ?? {};
+    if (typeof id !== "string" || !/^lga_[A-Za-z0-9_-]+$/.test(id)) throw new ApiError(400, "validation_error", "invalid_ledger_account_id", "Ledger account ID is invalid.");
+    if (!["local", "sandbox", "live"].includes(environment)) throw new ApiError(400, "validation_error", "invalid_ledger_account_environment", "Ledger account environment is invalid.");
+    for (const [field, value] of [["tenant_id", tenant_id], ["book_id", book_id]]) {
+      if (typeof value !== "string" || !/^[A-Za-z0-9_-]{2,120}$/.test(value)) throw new ApiError(400, "validation_error", "invalid_ledger_account_field", `${field} is invalid.`, { field });
+    }
+    if (typeof owner_account_id !== "string" || !/^acct_[A-Za-z0-9_-]+$/.test(owner_account_id)) {
+      throw new ApiError(400, "validation_error", "invalid_ledger_owner_account", "owner_account_id must be a stable Account ID.");
+    }
+    if (typeof asset !== "string" || !/^[A-Za-z0-9._-]{2,32}$/.test(asset)) throw new ApiError(400, "validation_error", "invalid_ledger_account_asset", "Ledger account asset is invalid.");
+    if (network !== null && (typeof network !== "string" || !/^[A-Za-z0-9._:-]{2,80}$/.test(network))) throw new ApiError(400, "validation_error", "invalid_ledger_account_network", "Ledger account network is invalid.");
+    if (!["active", "suspended", "retired"].includes(status)) throw new ApiError(400, "validation_error", "invalid_ledger_account_status", "Ledger account status is invalid.");
+    if (!Number.isSafeInteger(version) || version < 1) throw new ApiError(400, "validation_error", "invalid_ledger_account_version", "Ledger account version must be a positive safe integer.");
+    return immediateTransaction(this.db, () => {
+      const existing = this.db.prepare("SELECT * FROM ledger_accounts WHERE id=?").get(id);
+      if (existing) {
+        const expected = { environment, tenant_id, book_id, owner_account_id, asset, network, status, version };
+        const same = Object.keys(expected).every((field) => existing[field] === expected[field]);
+        if (!same) throw new ApiError(409, "conflict", "ledger_account_content_conflict", "Ledger account ID already belongs to different ownership metadata.", { ledger_account_id: id });
+        return existing;
+      }
+      const duplicate = this.db.prepare("SELECT id FROM ledger_accounts WHERE environment=? AND tenant_id=? AND book_id=? AND owner_account_id=? AND asset=? AND network IS ?").get(environment, tenant_id, book_id, owner_account_id, asset, network);
+      if (duplicate) throw new ApiError(409, "conflict", "ledger_account_ownership_exists", "The ledger account ownership tuple already exists.", { ledger_account_id: duplicate.id });
+      this.db.prepare("INSERT INTO ledger_accounts(id, environment, tenant_id, book_id, owner_account_id, asset, network, status, version, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)").run(id, environment, tenant_id, book_id, owner_account_id, asset, network, status, version, created_at, updated_at);
+      return this.getLedgerAccount(id);
+    });
+  }
+
+  getLedgerAccount(id) {
+    const row = this.db.prepare("SELECT * FROM ledger_accounts WHERE id=?").get(id);
+    if (!row) throw new ApiError(404, "resource_not_found", "ledger_account_not_found", "Ledger account was not found.", { ledger_account_id: id });
+    return row;
+  }
+
+  listLedgerAccounts({ environment = null, tenant_id = null, owner_account_id = null, status = null } = {}) {
+    const clauses = [];
+    const values = [];
+    for (const [field, value] of [["environment", environment], ["tenant_id", tenant_id], ["owner_account_id", owner_account_id], ["status", status]]) {
+      if (value !== null) { clauses.push(`${field}=?`); values.push(value); }
+    }
+    const where = clauses.length > 0 ? `WHERE ${clauses.join(" AND ")}` : "";
+    return this.db.prepare(`SELECT * FROM ledger_accounts ${where} ORDER BY created_at, id`).all(...values);
+  }
+
+  transitionLedgerAccount(id, { status, version, updated_at = new Date().toISOString() } = {}) {
+    if (!["active", "suspended", "retired"].includes(status)) throw new ApiError(400, "validation_error", "invalid_ledger_account_status", "Ledger account status is invalid.");
+    if (!Number.isSafeInteger(version) || version < 1) throw new ApiError(400, "validation_error", "invalid_ledger_account_version", "Ledger account version must be a positive safe integer.");
+    return immediateTransaction(this.db, () => {
+      const existing = this.getLedgerAccount(id);
+      if (existing.version !== version) throw new ApiError(409, "concurrency_conflict", "ledger_account_version_conflict", "Ledger account changed concurrently; query it before retrying.", { ledger_account_id: id, expected_version: version, actual_version: existing.version });
+      if (existing.status === "retired" && status !== "retired") throw new ApiError(409, "conflict", "ledger_account_retired", "A retired ledger account cannot be reactivated.");
+      if (existing.status === status) return existing;
+      this.db.prepare("UPDATE ledger_accounts SET status=?, version=version+1, updated_at=? WHERE id=? AND version=? AND status=?").run(status, updated_at, id, version, existing.status);
+      return this.getLedgerAccount(id);
+    });
   }
 
   registerReceiptVerificationKey({

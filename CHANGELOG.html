@@ -152,6 +152,25 @@
       <h2 id="unreleased">Unreleased</h2>
       <article class="release">
         <div class="release-head">
+          <div><h3>LA-03d · Schema 与多账户所有权约束实现</h3><time datetime="2026-09-09">2026-09-09</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">增加可持久化的账簿账户所有权注册表，为后续按账簿账户投影和历史迁移提供环境、租户、账簿、所有者、资产/网络与版本边界。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag added">Added</span>SQLite Schema 16 <code>ledger_accounts</code>、所有权唯一约束、按环境/租户查询和条件版本状态转换。</li>
+            <li><span class="tag governance">Boundary</span>不接入 Financial Posting、运行时余额、Provider、Hosted、Base Sepolia、Live/Mainnet 或 E3.1。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R2 · 持久化账簿边界，需独立 Domain / Architecture 审查</span></div>
+          <div><b>验证</b><span>LA-03d 4/4、Sandbox 188/188、RT-01 2/2、契约 63 项不变量、Prototype lint/build</span></div>
+          <div><b>恢复</b><span>新 Schema 只追加账簿账户注册表；运行时资金投影仍由既有路径提供</span></div>
+        </div>
+      </article>
+      <article class="release">
+        <div class="release-head">
           <div><h3>LA-03d · 多账户账簿所有权与余额投影契约</h3><time datetime="2026-09-09">2026-09-09</time></div>
           <span class="status">Unreleased</span>
         </div>
@@ -179,13 +198,13 @@
           <h4>Changes</h4>
           <ul>
             <li><span class="tag added">Added</span><code>node deploy/runtime-assurance.mjs</code> 与 <code>rt01.v1</code> 机器证据。</li>
-            <li><span class="tag added">Added</span>固定 Node `22.16.0`、SQLite WAL/foreign keys、Schema 1–15 连续迁移和 Online Backup/隔离恢复测试。</li>
+            <li><span class="tag added">Added</span>固定 Node `22.16.0`、SQLite WAL/foreign keys、Schema 1–16 连续迁移和 Online Backup/隔离恢复测试。</li>
             <li><span class="tag governance">Boundary</span>不修改运行时制品或 Schema，不调用 Provider、不加载 Signer、不执行 Base Sepolia/Mainnet 付款；LA-06b 仍需独立真实双向证据。</li>
           </ul>
         </div>
         <div class="evidence">
           <div><b>风险等级</b><span>R2 · 账本持久化与恢复运行时，必须独立人工审查</span></div>
-          <div><b>验证</b><span>Node 运行时、WAL、foreign keys、15 版迁移、备份完整性和隔离恢复</span></div>
+          <div><b>验证</b><span>Node 运行时、WAL、foreign keys、16 版迁移、备份完整性和隔离恢复</span></div>
           <div><b>恢复</b><span>恢复到新 SQLite 文件；不自动重放 Provider，不改变源库或交易事实</span></div>
         </div>
       </article>

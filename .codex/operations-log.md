@@ -436,7 +436,7 @@
 - Scope: LA-06a 合并后推进审计路线 RT-01；LA-06b 真实 Sandbox 双向收付仍需外部 Hosted 条件，未在本 PR 执行。
 - Tool: `rg`, `sed`; result: confirmed Dockerfile pins Node 22.16.0 in both stages, Sandbox requires Node >=22.16.0, SqliteLedger exposes WAL, migration, integrity and Online Backup paths.
 - Tool: `apply_patch`; result: added runtime assurance runner/test, `test:rt01`, RT-01 product/technical/roadmap/README/CHANGELOG and audit records.
-- Tool: `npm`, `node`; result: RT-01 2/2, Node v23.11.0, WAL, foreign keys, Schema 1–15 continuity, backup integrity and isolated restore passed; no Provider/Signer/payment execution.
+- Tool: `npm`, `node`; result: RT-01 2/2, Node v23.11.0, WAL, foreign keys, Schema 1–16 continuity, backup integrity and isolated restore passed; no Provider/Signer/payment execution.
 - Submission verification: `npm --prefix packages/typescript-sdk test`, `npm --prefix prototype run lint`, `npm --prefix prototype run build`, `git diff --check`; result: SDK 10/10 with generated/format/lint/type/build gates, Prototype lint/build and diff check passed; final `rt01.v1` remained `passed`.
 - Boundary: Local-only evidence; no image mutation, Schema migration, Hosted endpoint, Base Sepolia payment, Live/Mainnet or E3.1 activation.
 
@@ -446,3 +446,10 @@
 - Tool: graphify query, rg, sed; result: confirmed LA-03c is read-only, current wallet persistence is single-projection, and the audit still lists multi-account ownership, projection cutover and historical migration as incomplete.
 - Tool: apply_patch; result: added LA-03d contract and synchronized product/technical/roadmap/CHANGELOG/verification documentation.
 - Boundary: documentation-only; no Schema, API, runtime balance, Provider, Sandbox/Testnet payment, Hosted, Live/Mainnet or E3.1 activation changed.
+
+## 2026-09-09 · LA-03d Schema 与所有权约束实现
+
+- Scope: 依据已合并 LA-03d 契约，增加多账户账簿所有权的持久化 Schema 与条件版本状态转换；不接入现有资金过账或运行时余额切换。
+- Tool: apply_patch; result: added Schema 16 ledger_accounts, unique ownership tuple, environment/tenant/book/owner/asset/network validation and restart-safe persistence.
+- Tool: node --test sandbox/la03d.test.mjs; result: 4/4 passed, covering idempotency, tenant/environment isolation, version conflicts, terminal retirement and SQLite restart.
+- Boundary: local-only schema foundation; no Provider, signer, payment, Hosted, Base Sepolia, Live/Mainnet or E3.1 activation.
