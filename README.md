@@ -9,7 +9,7 @@ BU2.com 是 Agent 的 AI 收付平台。它嵌入 ChatGPT、Codex、Claude 和�
 | 项目 | 当前基线 |
 | --- | --- |
 | 项目阶段 | Phase 0 · local execution / Sandbox architecture |
-| 当前工程关卡 | F10 · Account-Owned Receivable 运行时实现，待 R2 审查 |
+| 当前工程关卡 | F11 · Inbound Collection 运行时实现，待 R2 审查 |
 | 产品定义 | Product v0.3 · Transaction-first |
 | API 契约 | Agent Payment API v0.3.0 |
 | Reference Server | v0.17 · Node.js + SQLite WAL + 持久身份、钱包绑定与版本化 Mandate |
@@ -61,7 +61,8 @@ BU2 将授权、资金预留、交付、结算和退款保存为不同事实。�
 ## 已实现能力
 
 - Quote、PaymentIntent、人工授权、资金预留、DeliveryEvidence、Settlement 和 Receipt。
-- Account-Owned Receivable：从 active Quote 创建收款事实，绑定收款 Account、Seller Agent 和 Receiving Target，等待 F11 入站验证。
+- Account-Owned Receivable：从 active Quote 创建收款事实，绑定收款 Account、Seller Agent 和 Receiving Target，并由 F11 完成入站验证。
+- Inbound Collection：验证 Provider 入站结果，幂等标记 Receivable 为 paid，并追加不可变 FinancialPosting。
 - 整数最小货币单位、明确币种和受约束的交易状态机。
 - 端到端幂等、载荷冲突拒绝和非法状态转换保护。
 - SQLite WAL 持久化、追加式 LedgerEvent 和进程重启恢复。

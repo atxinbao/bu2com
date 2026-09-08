@@ -13,7 +13,7 @@ BU2 继续定位为嵌入式 Agent AI 收付平台。外部 Agent 在自己的�
 ## 2. 当前状态
 
 - 已完成：Epic 1、Epic 2、Transaction Trust Gate 1–3、F06a、F06b、ENV-01～ENV-06。
-- 当前可用：Local Simulation；内部 Sandbox/Testnet 调试能力；F07 Budget Hold / Financial Posting、F08 版本化 PaymentMandate、F09a 自主支付执行与 F10 Account-Owned Receivable 已实现，均待对应 R2 审查。
+- 当前可用：Local Simulation；内部 Sandbox/Testnet 调试能力；F07 Budget Hold / Financial Posting、F08 版本化 PaymentMandate、F09a 自主支付执行、F10 Account-Owned Receivable 与 F11 Inbound Collection 已实现，均待对应 R2 审查。
 - 尚未验收：Hosted Sandbox 的 ENV-07B、真实 Base Sepolia 双向收付、外部团队证据。
 - 明确关闭：Live/Mainnet、真实生产资金、托管钱包、生产凭证和无人值守生产执行。
 
@@ -41,8 +41,8 @@ BU2 继续定位为嵌入式 Agent AI 收付平台。外部 Agent 在自己的�
 | F08 | `feat(mandates): enforce versioned autonomous payment grants` | D2 | R2 |
 | F09a | `feat(execution): run authorized payment commands without operator approval` | F08 | R2 |
 | F09b | `feat(recovery): schedule evidence-based recovery for existing attempts` | F09a | 历史实现已存在，需按当前路线补齐状态与审查记录 |
-| F10 | `feat(collections): create account-owned receivables` | F07 | 进行中 |
-| F11 | `feat(collections): verify inbound payments and post funds once` | F10 | R2 |
+| F10 | `feat(collections): create account-owned receivables` | F07 | 已实现，待 R2 |
+| F11 | `feat(collections): verify inbound payments and post funds once` | F10 | 进行中 |
 | F12 | `feat(fulfillment): make paid access recoverable and separate delivery facts` | F09a、F11 | R2 |
 | F13 | `feat(refunds): implement bounded cancellation and refund recovery` | F12、F09b | R2；实际资金执行另行受控 |
 | F14 | `feat(reconciliation): reconcile payments collections refunds and fees` | F13 | R2 |
@@ -62,4 +62,4 @@ BU2 继续定位为嵌入式 Agent AI 收付平台。外部 Agent 在自己的�
 
 D0/D1/D2 文档基线与 F07 代码实现已合并。F08 运行时与 F09a 已完成版本化授权、确定性 PolicyDecision、绑定校验、幂等状态转换和 Agent 执行命令，当前进入独立 R2 Domain 与 Architecture 审查。
 
-D2 只改文档；F08/F09a/F10 代码 PR 不启用真实 Testnet 双向收付、Hosted Sandbox、Live/Mainnet、托管或生产凭证，必须独立完成 Domain 与 Architecture R2 审查。F09b 的历史实现已覆盖持久化 payment attempt、unknown-result 冻结和显式 recovery 查询，本轮不重复引入第二套恢复实现。
+D2 只改文档；F08/F09a/F10/F11 代码 PR 不启用真实 Testnet 双向收付、Hosted Sandbox、Live/Mainnet、托管或生产凭证，必须独立完成 Domain 与 Architecture R2 审查。F09b 的历史实现已覆盖持久化 payment attempt、unknown-result 冻结和显式 recovery 查询，本轮不重复引入第二套恢复实现。

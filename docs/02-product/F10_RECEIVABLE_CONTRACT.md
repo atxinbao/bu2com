@@ -68,6 +68,6 @@ Agent/Developer 使用 `receivables:create` 创建自己的收款请求；Agent�
 - [x] 到期时间窗口和 Quote 状态校验生效。
 - [x] 创建、查询、列表和幂等 HTTP 契约可运行。
 - [x] SQLite 重启后 Receivable 与状态保持一致。
-- [ ] F11 入站付款验证与一次性入账尚未实现。
+- [x] F11 入站付款验证与一次性入账已实现；真实 Testnet/Hosted/Mainnet 仍未执行。
 
 本契约不构成真实收款、Testnet 双向资金或生产结算授权。

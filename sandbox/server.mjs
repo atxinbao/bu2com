@@ -46,6 +46,7 @@ const executionMutation = (method, pathname) =>
   method === "POST" &&
   (/^\/v1\/quotes$/.test(pathname) ||
     /^\/v1\/receivables$/.test(pathname) ||
+    /^\/v1\/receivables\/[^/]+\/collections$/.test(pathname) ||
     /^\/v1\/payment_intents$/.test(pathname) ||
     /^\/v1\/payment_intents\/[^/]+\/authorization$/.test(pathname) ||
     /^\/v1\/payment_intents\/[^/]+\/execution$/.test(pathname) ||
@@ -313,6 +314,9 @@ export function createBu2Server({
         const body = validateBody("createReceivable", await readJson(request));
         activeAccess.assertClaims(actor, { accountIds: [body.account_id], agentIds: [body.agent_id] }, accessContext);
         return send(response, 201, await activeSandbox.createReceivable(body, validateIdempotencyKey(key)));
+      }
+      if (request.method === "GET" && url.pathname === "/v1/collections") {
+        return send(response, 200, { data: activeAccess.filterCollections(actor, activeSandbox.listCollections()) });
       }
       if (executionMutation(request.method, url.pathname)) {
         assertExecutionEnabled(environmentConfig, `${request.method} ${url.pathname}`);
@@ -636,6 +640,32 @@ export function createBu2Server({
             { ...accessContext, resourceId: receivableId },
           );
           return send(response, 200, receivable);
+        }
+        if (request.method === "POST" && segments.length === 4 && segments[3] === "collections") {
+          const body = validateBody("verifyInboundPayment", await readJson(request));
+          const receivable = activeSandbox.getReceivable(receivableId);
+          activeAccess.assertClaims(
+            actor,
+            { accountIds: [receivable.account_id], agentIds: [receivable.agent_id] },
+            { ...accessContext, resourceId: receivableId },
+          );
+          return send(
+            response,
+            201,
+            await activeSandbox.verifyInboundPayment(receivableId, body, validateIdempotencyKey(key)),
+          );
+        }
+      }
+      if (segments[0] === "v1" && segments[1] === "collections" && segments[2]) {
+        const collectionId = validateResourceId(segments[2], "cpay", "collection_id");
+        if (request.method === "GET" && segments.length === 3) {
+          const collection = activeSandbox.getCollection(collectionId);
+          activeAccess.assertClaims(
+            actor,
+            { accountIds: [collection.account_id], agentIds: [collection.agent_id] },
+            { ...accessContext, resourceId: collectionId },
+          );
+          return send(response, 200, collection);
         }
       }
       if (segments[0] === "v1" && segments[1] === "budgets" && segments[2]) {
