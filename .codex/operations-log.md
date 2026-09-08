@@ -6,6 +6,7 @@
 - Tool: `apply_patch`; result: added settlement, confirmed refund and ProviderFee Journal/Posting writers, LA-03 focused tests, product/technical/roadmap/README/CHANGELOG and verification records.
 - Tool: `npm`; result: LA-03a 3/3, affected regression 13/13, Sandbox 167/167, ENV-06 operations 6/6, F15b/F16a/LA-01 4/4/7/7, contract 63 invariants / 6 MCP tools, SDK 10/10, Hosted 8/8/2/2 and Prototype lint/build passed.
 - Tool: `apply_patch`; result: aligned deploy/operations.mjs backup evidence counts with recovery counts for budgets, budget_holds and financial_postings; ENV-06 operations regression returned 6/6.
+- Tool: `git commit`, `git push`, `gh pr create`, `gh pr view`; result: committed `0a6b1d9`, pushed `feat/ledger-assurance-business-postings`, and opened Draft PR #47 at `https://github.com/atxinbao/bu2com/pull/47` using `.github/pull_request_template.md`.
 - Boundary: Local/Simulation only; no real Provider, Base Sepolia, Hosted, Live/Mainnet, custody or production credential capability was enabled; E3.1 remains paused.
 
 ## 2026-09-09 · LA-02 Ledger Assurance Gate：Journal / Posting 保护
