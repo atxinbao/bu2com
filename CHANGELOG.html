@@ -152,6 +152,27 @@
       <h2 id="unreleased">Unreleased</h2>
       <article class="release">
         <div class="release-head">
+          <div><h3>F09a · 自主支付执行</h3><time datetime="2026-09-08">2026-09-08</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">让已通过 F08 PaymentMandate 的 Agent 请求在不重复请求管理员批准的情况下执行，并为异步 Agent 增加可审计、幂等的延迟执行命令。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag added">Added</span>PaymentIntent 支持 <code>immediate</code>（默认）与 <code>deferred</code> 执行模式。</li>
+            <li><span class="tag added">Added</span>新增 <code>POST /v1/payment_intents/{id}/execution</code> 与 SDK <code>executePaymentIntent()</code>，复用现有预留、Budget Hold、Adapter 和原子提交。</li>
+            <li><span class="tag changed">Changed</span>执行命令只接受 F08 approved 且 Mandate 仍 active、版本一致的 Intent；review_required、暂停、撤销、过期和版本漂移均失败关闭。</li>
+            <li><span class="tag governance">Boundary</span>F09b 继续负责未知结果恢复；本 PR 不启用 Hosted、Live/Mainnet、托管或生产凭证。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R2 · Agent 执行命令、状态机与资金预留边界</span></div>
+          <div><b>验证</b><span>F09a 定向测试、Sandbox 全量、SDK 生成/格式/lint/类型/build 与契约校验记录在 PR 中</span></div>
+          <div><b>恢复</b><span>执行命令复用现有幂等 Claim 和未知结果边界，不自动重复 Adapter 调用</span></div>
+        </div>
+      </article>
+      <article class="release">
+        <div class="release-head">
           <div><h3>F08 · 版本化 Payment Mandate 运行时</h3><time datetime="2026-09-08">2026-09-08</time></div>
           <span class="status">Unreleased</span>
         </div>

@@ -1,5 +1,20 @@
 # BU2 Product v0.1 验证结论
 
+## 2026-09-08 · F09a 自主支付执行验证
+
+执行者：Codex
+
+- `node --test sandbox/f09a.test.mjs sandbox/f09a-http.test.mjs`：4/4 通过，覆盖已批准 deferred Intent、自主执行、HTTP 端点、幂等重放、review-required 拒绝和 Mandate 暂停失败关闭。
+- `npm --prefix sandbox test`：127/127 通过。
+- `node docs/03-technical/validate-contract.mjs`：63 项不变量、6 个 MCP 工具通过。
+- `npm --prefix packages/typescript-sdk test`：生成检查、格式、Lint、TypeScript 类型检查、构建和 10/10 单元测试通过。
+- `npm --prefix prototype run lint && npm --prefix prototype run build`：通过。
+- `git diff --check`：通过。
+
+边界：F09a 仅提供已批准 PaymentIntent 的自主执行命令；不绕过人工审批、不启用 Live/Mainnet、Hosted、生产凭证或托管，不实现 Provider 未知结果恢复（留给 F09b）。
+
+结论：本地实现达到 **GO for R2 Domain + Architecture review**；尚未构成合并或真实资金生产授权。
+
 日期：2026-09-01  
 执行者：Codex
 
@@ -761,3 +776,17 @@ npm --prefix sandbox run test:hosted-deployment
 验收边界：`approved` 才能进入 F07 Budget Hold；`review_required` 与 `denied` 不创建 Hold。F08 不调用 Provider、Signer、x402、AP2 或链上 RPC，不改变 `execution_status`，不启用真实 Testnet 双向收付、Hosted、Live/Mainnet、托管或生产凭证。
 
 残余风险：F08 需要独立 Domain 与 Architecture R2 人工审查；F09a 自主执行、F10/F11 收款、退款、对账和 Sandbox 双向 Beta 仍按路线图顺序推进。纯内存测试允许省略 Ledger，仅验证策略逻辑；持久化环境则强制钱包绑定。
+# F09a 自主支付执行验证
+
+日期：2026-09-08
+执行者：Codex
+分支：`feat/autonomous-payment-execution`
+
+本轮新增 deferred PaymentIntent 执行模式和 `POST /v1/payment_intents/{id}/execution`。F08 approved 的 deferred Intent 可以由 Agent 在不调用人工授权接口的情况下进入现有 `reserve()`；review_required、Mandate suspended/revoked/expired 或版本漂移均失败关闭。执行命令复用既有 Idempotency Claim、Budget Hold、Wallet CAS、Adapter 和原子提交。
+
+验证结果：
+
+- `node --test sandbox/f09a.test.mjs`：3/3 通过。
+- 其余全量验证将在本 PR 收口后记录。
+
+边界：F09a 不负责 Provider unknown 恢复（F09b），不启用真实 Sandbox/Testnet 双向付款、Hosted、Live/Mainnet、托管或生产凭证。

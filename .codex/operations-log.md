@@ -1,5 +1,15 @@
 # ENV-03 操作日志
 
+## 2026-09-08 · F09a Autonomous Payment Execution
+
+- Tool: `git fetch`, `git switch`, `git pull`, `git branch -d`; result: verified F08 PR #34 merged at `151cf7f9661e609042aae3a66a3caabeed9b8d3e`, synchronized `main`, removed local `feat/mandates-versioned-policy`, and created `feat/autonomous-payment-execution`.
+- Tool: `graphify query`; result: connected F09a to existing `PaymentIntent`, `PolicyDecision`, `reserve()`, Budget Hold, Adapter, Wallet CAS, Ledger and idempotency boundaries; no second Transaction Core introduced.
+- Tool: `apply_patch`; result: added optional `execution_mode`, explicit `/execution` command, `payment_intents:execute`, deferred execution state transition, SDK/OpenAPI contract, targeted domain/HTTP tests and F09a product documentation.
+- Tool: `npm`, `node`; result: corrected OpenAPI optional-field generation and fixed the HTTP route identifier validation; targeted F09a tests now pass 4/4.
+- Tool: `git diff --check`, `node docs/03-technical/validate-contract.mjs`, `npm --prefix sandbox test`, `npm --prefix packages/typescript-sdk test`, `npm --prefix prototype run lint && npm --prefix prototype run build`; result: diff clean, Contract 63 + MCP 6, Sandbox 127/127, SDK 10/10 with all quality gates, and Prototype lint/build passed.
+- Tool: `git commit`; result: created local commit `34bb999` (`feat(execution): run approved payment intents autonomously`); branch remains local and has not been pushed or opened as a remote PR.
+- Boundary: F09a cannot execute `review_required` or denied intents, rechecks active Mandate version, reuses existing reservation/ledger atomicity, and does not add F09b recovery, Hosted, Live/Mainnet or production credential capability.
+
 ## 2026-09-08 · F07 Budget Hold / Financial Posting implementation
 
 - Tool: `git switch -c`; result: created `feat/f07-budget-financial-posting` from merged D1 `main` baseline `9c05889`.
@@ -250,3 +260,10 @@
 - Tool: `git commit`; result: created `502a977` (`feat(mandates): enforce versioned autonomous payment grants`) and `a232fcc` (`docs(f08): prepare R2 review evidence`).
 - Tool: `git push -u origin`; result: pushed `feat/mandates-versioned-policy` to `origin`.
 - Tool: `gh pr create` / `gh pr edit`; result: opened Draft PR #34 with `.github/pull_request_template.md`, title `feat(mandates): enforce versioned autonomous payment grants`, and complete R2 evidence.
+## 2026-09-08 · F09a 自主支付执行实现
+
+- Tool: `gh pr view`, `git switch/pull/branch -d`; result: confirmed PR #34 merged at `151cf7f`, synchronized `main`, deleted local `feat/mandates-versioned-policy`.
+- Tool: `graphify query`; result: traced F08 PolicyDecision → PaymentIntent → reserve() → Adapter/Wallet/Budget Hold/atomic commit and existing execution_status gate.
+- Tool: `apply_patch`; result: added immediate/deferred execution mode, idempotent execution endpoint, `payment_intents:execute` permission, OpenAPI/SDK bindings and F09a tests.
+- Tool: `node --test sandbox/f09a.test.mjs`; result: 3/3 passed.
+- Boundary: F09a does not change Provider unknown recovery, does not call Live/Mainnet or Hosted resources, and does not load production credentials.

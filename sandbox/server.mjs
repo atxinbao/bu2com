@@ -47,6 +47,7 @@ const executionMutation = (method, pathname) =>
   (/^\/v1\/quotes$/.test(pathname) ||
     /^\/v1\/payment_intents$/.test(pathname) ||
     /^\/v1\/payment_intents\/[^/]+\/authorization$/.test(pathname) ||
+    /^\/v1\/payment_intents\/[^/]+\/execution$/.test(pathname) ||
     /^\/v1\/transactions\/[^/]+\/deliveries$/.test(pathname) ||
     /^\/v1\/transactions\/[^/]+\/settlements$/.test(pathname));
 
@@ -568,6 +569,33 @@ export function createBu2Server({
             response,
             200,
             await activeSandbox.decideAuthorization(
+              paymentIntentId,
+              body,
+              validateIdempotencyKey(key),
+            ),
+          );
+        }
+        if (
+          request.method === "POST" &&
+          segments.length === 4 &&
+          segments[3] === "execution"
+        ) {
+          const paymentIntentId = validateResourceId(
+            segments[2],
+            "pi",
+            "payment_intent_id",
+          );
+          const body = validateBody("executePaymentIntent", await readJson(request));
+          const intent = activeSandbox.getPaymentIntent(paymentIntentId);
+          activeAccess.assertClaims(
+            actor,
+            { accountIds: [intent.payer_account_id], agentIds: [intent.buyer_agent_id] },
+            { ...accessContext, resourceId: paymentIntentId },
+          );
+          return send(
+            response,
+            200,
+            await activeSandbox.executePaymentIntent(
               paymentIntentId,
               body,
               validateIdempotencyKey(key),

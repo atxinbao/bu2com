@@ -184,6 +184,9 @@ export function permissionForRequest(method, pathname) {
   if (method === "POST" && pathname === "/v1/payment_mandates") return "mandates:manage";
   if (method === "GET" && /^\/v1\/payment_mandates\/[^/]+$/.test(pathname)) return "mandates:read";
   if (method === "POST" && /^\/v1\/payment_mandates\/[^/]+\/(activate|suspend|revoke|expire)$/.test(pathname)) return "mandates:manage";
+  if (method === "POST" && /^\/v1\/payment_intents\/[^/]+\/execution$/.test(pathname)) {
+    return "payment_intents:execute";
+  }
   if (method === "POST" && pathname === "/v1/quotes") return "quotes:create";
   if (method === "POST" && pathname === "/v1/payment_intents") {
     return "payment_intents:create";
