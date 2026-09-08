@@ -510,3 +510,14 @@
 | 真实 Sandbox 双向收付 | 外部 Hosted/Base Sepolia | 未执行，保持 `accepted=false` |
 
 本 PR 只建立本地机器化准入输出；不把 Local/Simulation 结果描述为真实 Sandbox/Testnet 双向证据。
+## 2026-09-09 · RT-01 固定运行时与 SQLite 账本准入
+
+| 验证项 | 命令 | 结果 |
+|---|---|---|
+| RT-01 定向 | `npm --prefix sandbox run test:rt01` | 2/2 通过 |
+| RT-01 证据 | `node deploy/runtime-assurance.mjs` | `rt01.v1` passed；Node v23.11.0、WAL、Schema 15、备份完整性通过 |
+| Provider / 付款 | 运行时门禁 | 未执行，`payment_execution_attempted=false` |
+
+提交前回归：TypeScript SDK 10/10（生成、格式、Lint、类型、build 通过）；Prototype lint/build 通过；`git diff --check` 通过。
+
+本 PR 只验证本地固定运行时与 SQLite 恢复边界，不构成真实 Sandbox/Base Sepolia 双向收付证据。
