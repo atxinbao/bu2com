@@ -1,5 +1,10 @@
 # ENV-03 操作日志
 
+## 2026-09-09 · LA-05a Draft PR
+
+- Tool: `git commit`, `git push`, `gh pr create`, `gh pr view`; result: committed `4ef4439`, pushed `feat/ledger-assurance-independent-reconciliation`, and opened Draft PR #51 at `https://github.com/atxinbao/bu2com/pull/51` using `.github/pull_request_template.md`.
+- Review boundary: PR #51 is an R2 review candidate for independent external observation reconciliation; it does not complete LA-05b historical replay/backup catch-up, Hosted/Testnet acceptance, real Provider reconciliation, or E3.1.
+
 ## 2026-09-09 · LA-05a 外部观察对账
 
 - Tool: `git switch`, `graphify query`, `rg`, `sed`; result: verified PR #50 merge baseline at `86a1268`, created `feat/ledger-assurance-independent-reconciliation`, and traced LA-05a to F14 ReconciliationRun plus existing transaction/collection/persistence modules.
