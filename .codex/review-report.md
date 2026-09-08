@@ -1035,3 +1035,10 @@ F06b 让 Quote 和 PaymentIntent 能够保留可验证的资金来源与收款�
 - 战略评分：96/100。直接覆盖审计确认的 Release 阻断，不扩大 Provider、Hosted 或真实资金边界；重复请求安全优先于把新请求解释为另一笔退款。
 - 遗留风险：该恢复路径仍需 R2 人工审查；真实 Provider 对账、历史异常数据修复和跨进程恢复演练仍未执行。
 - 结论：建议提交 R2 PR；在合并前 Release 保持阻塞，Live/Mainnet、Hosted、Base Sepolia 和 E3.1 继续关闭。
+
+## 2026-09-09 · LA-01c 已确认但未入账退款继续占用剩余容量审查
+
+- 技术评分：95/100。`refundReservation` 将孤立 `refunded` Attempt 纳入容量计算，并以 `excludeRefundId` 与 `knownRefundIds` 避免原键补记和已入账事实重复计数；真实模块测试覆盖重启和交错顺序。
+- 战略评分：97/100。该修复直接对应审计矩阵，既阻止重复额度/Provider 调用，又保留合法剩余容量路径，不扩大任何资金环境。
+- 遗留风险：仍需 R2 人工审查；真实 Provider 对账、历史异常数据清理、Hosted 与主网准入未执行。
+- 结论：建议提交 R2 PR；合并前 Release 保持阻塞，LA-06b、Live/Mainnet 和 E3.1 继续关闭。

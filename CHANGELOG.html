@@ -414,23 +414,44 @@
       </article>
       <article class="release">
         <div class="release-head">
-          <div><h3>LA-01b · 已确认退款事实恢复与新请求防重复</h3><time datetime="2026-09-09">2026-09-09</time></div>
+          <div><h3>LA-01b · 已确认退款事实恢复与新请求防重复（已由 LA-01c 收紧）</h3><time datetime="2026-09-09">2026-09-09</time></div>
           <span class="status">Unreleased</span>
         </div>
-        <p class="summary">修复外部退款已成功但本地 Transaction/Refund 提交失败后的 Release 阻断：新幂等键不再重新调用 Provider，而是先恢复已持久化的 RefundAttempt 事实。</p>
+        <p class="summary">记录外部退款已成功但本地 Transaction/Refund 提交失败后的第一版修复；LA-01c 已将其收紧为“已确认未入账继续占用额度、原键补记”的顺序一致性语义。</p>
         <div class="change-group">
           <h4>Changes</h4>
           <ul>
-            <li><span class="tag changed">Changed</span>新退款请求在执行 Provider 前扫描交易的已确认 <code>RefundAttempt</code>，补齐缺失 Refund、Transaction、钱包和 Journal/Posting 事实。</li>
-            <li><span class="tag changed">Changed</span>发现孤立的已确认退款时返回 <code>recovery.reason_code=refund_attempt_reconciled</code>，不创建第二个退款，也不进行第二次 Provider 调用。</li>
-            <li><span class="tag added">Added</span>覆盖换新幂等键的回归测试，验证外部调用次数保持为一次且额度只占用一次。</li>
+            <li><span class="tag changed">Changed</span>第一版修复曾尝试在新退款请求前扫描已确认 <code>RefundAttempt</code> 并补齐缺失事实；该即时恢复路径已由 LA-01c 替换。</li>
+            <li><span class="tag changed">Changed</span>当前语义不再以新请求触发自动补记；确认但未入账的 Attempt 继续占用剩余容量，原幂等键重试时才补齐本地事实。</li>
+            <li><span class="tag added">Added</span>LA-01c 增加换新幂等键、重启、剩余容量先用和交错顺序的真实模块回归测试。</li>
             <li><span class="tag governance">Boundary</span>仍仅覆盖 Local/Simulation 恢复，不开放真实 Provider、Hosted、Base Sepolia、Live/Mainnet 或 E3.1。</li>
           </ul>
         </div>
         <div class="evidence">
           <div><b>风险等级</b><span>R2 · 退款状态、额度一致性、外部调用与持久化恢复</span></div>
           <div><b>验证</b><span>F13/LA-01 定向回归与 Sandbox 全量结果以 PR 实际本地记录为准</span></div>
-          <div><b>恢复</b><span>以持久化 RefundAttempt 为外部成功事实来源；异常仍失败关闭，不自动发起新退款</span></div>
+          <div><b>恢复</b><span>以持久化 RefundAttempt 为外部成功事实来源；详细的额度占用与原键补记规则以 LA-01c 为准</span></div>
+        </div>
+      </article>
+      <article class="release">
+        <div class="release-head">
+          <div><h3>LA-01c · 已确认但未入账退款继续占用剩余容量</h3><time datetime="2026-09-09">2026-09-09</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">补齐 LA-01 的顺序一致性：Provider 已确认但业务 Refund 尚未入账时，该金额继续占用可退额度；新请求可使用剩余容量，原幂等键仍可无外部重试地补记原退款。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag changed">Changed</span><code>refundReservation</code> 将尚未被 Refund 资源覆盖的 <code>refunded</code> Attempt 计入占用。</li>
+            <li><span class="tag changed">Changed</span>原请求通过 <code>excludeRefundId</code> 排除自身 Attempt；已过账 Refund 由 <code>knownRefundIds</code> 防止重复计数。</li>
+            <li><span class="tag added">Added</span>覆盖同进程、SQLite 重启、换新键超额拒绝、剩余容量先用、原键补记和交错顺序的真实模块回归。</li>
+            <li><span class="tag governance">Boundary</span>仅修复 Local/Simulation 退款事实边界；不改变 Schema，不涉及 LA-03d、真实 Provider、Hosted、Base Sepolia、Live/Mainnet 或 E3.1。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R2 · 退款额度、外部调用、持久化恢复与 Journal 唯一性</span></div>
+          <div><b>验证</b><span>F13/LA-01 与 confirmed-unposted-refunds 定向回归及 Sandbox 全量结果以 PR 记录为准</span></div>
+          <div><b>恢复</b><span>外部已确认事实保留占用；原键补记只产生一次本地退款分录，未知结果继续失败关闭</span></div>
         </div>
       </article>
       <article class="release">

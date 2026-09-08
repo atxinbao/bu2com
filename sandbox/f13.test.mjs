@@ -232,7 +232,7 @@ test("LA-01 reuses a persisted confirmed refund after local commit failure", asy
   ledger.close();
 });
 
-test("LA-01 reconciles a confirmed refund before accepting a new refund request", async () => {
+test("LA-01 reserves a confirmed but unposted refund for new requests", async () => {
   let injectFailure = false;
   class CountingAdapter extends SimulatedPaymentAdapter {
     refundCalls = 0;
@@ -264,16 +264,23 @@ test("LA-01 reconciles a confirmed refund before accepting a new refund request"
   );
   assert.equal(adapter.refundCalls, 1);
 
-  const restarted = new Bu2Sandbox({ ledger, adapter });
-  const recovered = await restarted.requestRefund(
+  await assert.rejects(
+    sandbox.requestRefund(
+      flow.transactionId,
+      { amount: { value: 221, currency: "CNY" } },
+      "la01-refund-new-key-over-capacity",
+    ),
+    (error) => error.code === "refund_amount_exceeded",
+  );
+  assert.equal(adapter.refundCalls, 1);
+
+  const recovered = await sandbox.requestRefund(
     flow.transactionId,
     { amount: { value: 80, currency: "CNY" } },
-    "la01-refund-new-key-second",
+    "la01-refund-new-key-first",
   );
   assert.equal(recovered.refund.status, "refunded");
   assert.equal(recovered.transaction.refunded_amount.value, 80);
-  assert.equal(recovered.recovery.status, "refunded");
-  assert.equal(recovered.recovery.reason_code, "refund_attempt_reconciled");
   assert.equal(adapter.refundCalls, 1);
   assert.equal(ledger.refundAttempts(flow.transactionId)[0].status, "refunded");
   ledger.close();
