@@ -49,6 +49,7 @@
 - [D1 F07 财务边界契约](../02-product/F07_FINANCIAL_BOUNDARY_CONTRACT.md)
 - [D2 F08 Payment Mandate 契约](../02-product/F08_PAYMENT_MANDATE_CONTRACT.md)
 - [F09a 自主支付执行契约](../02-product/F09A_AUTONOMOUS_EXECUTION_CONTRACT.md)
+- [F10 Account-Owned Receivable 契约](../02-product/F10_RECEIVABLE_CONTRACT.md)
 
 Contract v0.3.0 已具备本地 SQLite Reference Server、数据库 processing 幂等 Claim、状态版本 CAS、原子化 Ledger/Outbox、预算 Scope/Hold/Financial Posting、版本化 PaymentMandate/PolicyDecision、有限重试与死信、审计重放、Secret 版本轮换、端到端交易关联、结构化观测、环境自描述、签名 Receipt、环境绑定的 Agent/Developer/Operator 访问控制、租户隔离与受控运维入口，以及基于官方 MCP/x402 SDK 的 Agent 支付接入。Epic 1 与 Epic 2 已完成；Transaction Trust Gate 1–3 已经 PR #15–#17 合并。F06a/F06b/F07 已完成，F08 运行时已实现，待独立 R2 Domain 与 Architecture 审查。
 

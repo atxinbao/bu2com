@@ -181,6 +181,9 @@ export function permissionForRequest(method, pathname) {
   if (method === "GET" && /^\/v1\/receipts\/[^/]+\/verify$/.test(pathname)) return null;
   if (method === "GET" && pathname === "/v1/access") return "identity:read";
   if (method === "GET" && pathname === "/v1/payment_mandates") return "mandates:read";
+  if (method === "GET" && pathname === "/v1/receivables") return "receivables:read";
+  if (method === "POST" && pathname === "/v1/receivables") return "receivables:create";
+  if (method === "GET" && /^\/v1\/receivables\/[^/]+$/.test(pathname)) return "receivables:read";
   if (method === "POST" && pathname === "/v1/payment_mandates") return "mandates:manage";
   if (method === "GET" && /^\/v1\/payment_mandates\/[^/]+$/.test(pathname)) return "mandates:read";
   if (method === "POST" && /^\/v1\/payment_mandates\/[^/]+\/(activate|suspend|revoke|expire)$/.test(pathname)) return "mandates:manage";
@@ -525,6 +528,13 @@ export class AccessController {
     if (actor?.platform_access) return mandates;
     return mandates.filter((mandate) =>
       actor.account_ids.includes(mandate.account_id) || actor.agent_ids.includes(mandate.agent_id),
+    );
+  }
+
+  filterReceivables(actor, receivables) {
+    if (actor?.platform_access) return receivables;
+    return receivables.filter((receivable) =>
+      actor.account_ids.includes(receivable.account_id) || actor.agent_ids.includes(receivable.agent_id),
     );
   }
 }

@@ -1,3 +1,47 @@
+# F10 Account-Owned Receivable 自主审查报告
+
+日期：2026-09-08
+审查者：Codex（Contributor / Verifier，非 R2 Approver）
+任务：从 active Quote 创建可持久化、账户所有的 Receivable
+分支：`feat/account-owned-receivables`
+
+## 评分
+
+| 维度 | 得分 | 依据 |
+| --- | ---: | --- |
+| 需求完整性 | 19/20 | 覆盖 Quote 派生金额、Account/Agent/Receiving Target 绑定、状态、幂等、查询和 F11 边界 |
+| 技术实现 | 19/20 | 复用通用 resources 持久化、既有 idempotency、Access claims、OpenAPI/SDK 生成链路；未新增第二套账本 |
+| 金融不变量 | 20/20 | 创建不移动余额、不创建 Transaction、不写 Financial Posting；Quote 金额为唯一金额来源 |
+| 自动化验证 | 20/20 | 定向领域/HTTP/重启 4/4、Sandbox 131/131、Contract 63 + MCP 6、SDK 10/10、Prototype lint/build 和 diff 检查通过 |
+| 文档与边界 | 19/20 | F10 契约、README、Roadmap、Changelog、验证和操作日志已同步；R2 独立审查尚未完成 |
+
+综合评分：97/100
+
+## 结论
+
+建议：**通过本地实现，进入 R2 独立 Domain 与 Architecture 审查**。
+
+Receivable 是 F11 入站付款验证之前唯一的收款业务事实。它从 active Quote 派生金额与币种，绑定收款 Account、Seller Agent、Receiving Target 和可选付款方，创建时只追加资源与事件，不改变钱包或结算状态。F09b 的历史恢复实现已存在，本 PR 不重复创建恢复路径。
+
+## 核对
+
+- [x] active Quote 才能创建 Receivable。
+- [x] Quote payee/seller 与 Receivable Account/Agent 必须一致。
+- [x] 金额从 Quote 派生，不能由第二份输入覆盖。
+- [x] Receiving Target、到期时间和预期付款方约束已校验。
+- [x] HTTP API、权限、OpenAPI、SDK 和 generic resources 持久化已对齐。
+- [x] 相同幂等键重放不创建第二个 Receivable。
+- [x] F11 入站验证与入账明确留在后续范围。
+- [ ] R2 独立 Domain + Architecture 审查尚未完成。
+
+## 残余风险
+
+1. F10 不验证链上或 Provider 入站付款；在 F11 合并前，Receivable 只能作为 issued 业务事实。
+2. generic resources 复用既有 Schema v13，不新增专用 Receivable 表；若后续需要高吞吐查询，应另行评估索引而非复制账本。
+3. 当前仍只验证 Local/Simulation，Sandbox/Testnet 双向收款必须通过 F11/F16 证据门禁。
+
+---
+
 # F09a 自主支付执行自主审查报告
 
 日期：2026-09-08

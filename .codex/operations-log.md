@@ -1,5 +1,15 @@
 # ENV-03 操作日志
 
+## 2026-09-08 · F10 Account-Owned Receivable implementation
+
+- Tool: `gh pr view`, `git fetch --prune`, `git switch`, `git pull`, `git branch -d`; result: verified F09a PR #35 merged at `66f466b56936a1528214ad6ae8608c151cb1734b`, synchronized `main`, deleted local `feat/autonomous-payment-execution`, and created `feat/account-owned-receivables`.
+- Tool: `graphify query`; result: confirmed F09b unknown-result recovery already exists in historical PR #7 through persisted payment attempts, adapter recovery attempts and explicit settlement recovery; no duplicate F09b implementation introduced.
+- Tool: `apply_patch`; result: added persisted generic Receivable resource, Quote-derived amount, ownership/target/expiry validation, account-scoped HTTP API, access permissions, OpenAPI and TypeScript SDK methods.
+- Tool: `apply_patch`; result: added F10 product contract, Changelog, roadmap status, verification/test records and targeted domain/HTTP/restart tests.
+- Tool: `node`, `npm`; result: F10 targeted tests 4/4, Sandbox 131/131, Contract 63 + MCP 6, SDK generated/format/lint/typecheck/build and 10/10 tests, Prototype lint/build and diff check passed.
+- Tool: `git commit`; result: created the local F10 commit (`feat(collections): create account-owned receivables`); branch remains local and has not been pushed or opened as a remote PR.
+- Boundary: F10 does not move balances, create transactions, post financial ledger entries, verify inbound payments, call Provider/Signer/x402, or enable Hosted/Live/Mainnet/production credentials; F11 owns inbound verification and one-time posting.
+
 ## 2026-09-08 · F09a Autonomous Payment Execution
 
 - Tool: `git fetch`, `git switch`, `git pull`, `git branch -d`; result: verified F08 PR #34 merged at `151cf7f9661e609042aae3a66a3caabeed9b8d3e`, synchronized `main`, removed local `feat/mandates-versioned-policy`, and created `feat/autonomous-payment-execution`.

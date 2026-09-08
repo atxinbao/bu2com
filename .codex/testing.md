@@ -1,5 +1,21 @@
 # ENV-02 测试记录
 
+## 2026-09-08 · F10 Account-Owned Receivable
+
+执行者：Codex
+
+| 范围 | 命令 | 结果 |
+| --- | --- | --- |
+| F10 定向领域与 HTTP | `node --test sandbox/f10.test.mjs sandbox/f10-http.test.mjs` | 4/4 通过 |
+| Reference Server 全量 | `npm --prefix sandbox test` | 131/131 通过 |
+| API/MCP Contract | `node docs/03-technical/validate-contract.mjs` | 63 invariants、6 MCP tools 通过 |
+| TypeScript SDK | `npm --prefix packages/typescript-sdk test` | generated/format/lint/typecheck/build、10/10 通过 |
+| Prototype | `npm --prefix prototype run lint && npm --prefix prototype run build` | 通过 |
+| Diff | `git diff --check` | 通过 |
+
+未运行 Hosted、Base Sepolia 双向付款、Mainnet、生产凭证或托管；这些不属于 F10 本地准入范围。
+
+
 ## 2026-09-08 · F09a 自主支付执行
 
 执行者：Codex

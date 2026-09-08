@@ -45,6 +45,7 @@ const packageMetadata = JSON.parse(
 const executionMutation = (method, pathname) =>
   method === "POST" &&
   (/^\/v1\/quotes$/.test(pathname) ||
+    /^\/v1\/receivables$/.test(pathname) ||
     /^\/v1\/payment_intents$/.test(pathname) ||
     /^\/v1\/payment_intents\/[^/]+\/authorization$/.test(pathname) ||
     /^\/v1\/payment_intents\/[^/]+\/execution$/.test(pathname) ||
@@ -304,6 +305,14 @@ export function createBu2Server({
         const body = validateBody("createPaymentMandate", await readJson(request));
         activeAccess.assertClaims(actor, { accountIds: [body.account_id], agentIds: [body.agent_id] }, accessContext);
         return send(response, 201, await activeSandbox.createPaymentMandate(body, validateIdempotencyKey(key)));
+      }
+      if (request.method === "GET" && url.pathname === "/v1/receivables") {
+        return send(response, 200, { data: activeAccess.filterReceivables(actor, activeSandbox.listReceivables()) });
+      }
+      if (request.method === "POST" && url.pathname === "/v1/receivables") {
+        const body = validateBody("createReceivable", await readJson(request));
+        activeAccess.assertClaims(actor, { accountIds: [body.account_id], agentIds: [body.agent_id] }, accessContext);
+        return send(response, 201, await activeSandbox.createReceivable(body, validateIdempotencyKey(key)));
       }
       if (executionMutation(request.method, url.pathname)) {
         assertExecutionEnabled(environmentConfig, `${request.method} ${url.pathname}`);
@@ -615,6 +624,18 @@ export function createBu2Server({
           activeAccess.assertClaims(actor, { accountIds: [mandate.account_id], agentIds: [mandate.agent_id] }, accessContext);
           const body = validateBody("mandateTransition", await readJson(request));
           return send(response, 200, await activeSandbox.transitionPaymentMandate(mandateId, segments[3], body, validateIdempotencyKey(key)));
+        }
+      }
+      if (segments[0] === "v1" && segments[1] === "receivables" && segments[2]) {
+        const receivableId = validateResourceId(segments[2], "rcv", "receivable_id");
+        if (request.method === "GET" && segments.length === 3) {
+          const receivable = activeSandbox.getReceivable(receivableId);
+          activeAccess.assertClaims(
+            actor,
+            { accountIds: [receivable.account_id], agentIds: [receivable.agent_id] },
+            { ...accessContext, resourceId: receivableId },
+          );
+          return send(response, 200, receivable);
         }
       }
       if (segments[0] === "v1" && segments[1] === "budgets" && segments[2]) {

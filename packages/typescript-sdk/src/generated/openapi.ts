@@ -210,6 +210,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/receivables": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        /** List account-owned receivables */
+        get: operations["listReceivables"];
+        put?: never;
+        /** Create an account-owned receivable from an active quote */
+        post: operations["createReceivable"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/receivables/{receivable_id}": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        /** Read one account-owned receivable */
+        get: operations["getReceivable"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/payment_intents": {
         parameters: {
             query?: never;
@@ -1051,6 +1092,36 @@ export interface components {
             /** Format: date-time */
             created_at: string;
         };
+        CreateReceivable: {
+            id?: string;
+            quote_id: string;
+            account_id: string;
+            agent_id: string;
+            receiving_target_id: string;
+            /** Format: date-time */
+            expires_at: string;
+            purpose: string;
+            expected_payer_account_id?: string;
+            expected_buyer_agent_id?: string;
+            metadata?: {
+                [key: string]: string;
+            };
+        };
+        Receivable: components["schemas"]["CreateReceivable"] & {
+            id: string;
+            receiving_target_binding_id?: string | null;
+            amount: components["schemas"]["Amount"];
+            asset?: string | null;
+            network?: string | null;
+            collection_reference: string;
+            /** @enum {string} */
+            status: "issued" | "pending" | "paid" | "expired" | "cancelled";
+            version: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
         ExternalContext: {
             /** @enum {string} */
             type: "chatgpt_conversation" | "codex_task" | "agent_run" | "automation" | "other";
@@ -1347,6 +1418,7 @@ export interface components {
         PaymentIntentId: string;
         TransactionId: string;
         ReceiptId: string;
+        ReceivableId: string;
         TenantId: string;
         WebhookSubscriptionId: string;
         WebhookOutboxId: string;
@@ -1694,6 +1766,92 @@ export interface operations {
             409: components["responses"]["Conflict"];
             413: components["responses"]["RequestTooLarge"];
             415: components["responses"]["UnsupportedMediaType"];
+        };
+    };
+    listReceivables: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Receivables visible to the current account or Agent */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Receivable"][];
+                    };
+                };
+            };
+            400: components["responses"]["BadRequest"];
+        };
+    };
+    createReceivable: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateReceivable"];
+            };
+        };
+        responses: {
+            /** @description Receivable created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Receivable"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            413: components["responses"]["RequestTooLarge"];
+            415: components["responses"]["UnsupportedMediaType"];
+        };
+    };
+    getReceivable: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path: {
+                receivable_id: components["parameters"]["ReceivableId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current receivable */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Receivable"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            404: components["responses"]["NotFound"];
         };
     };
     createPaymentIntent: {
