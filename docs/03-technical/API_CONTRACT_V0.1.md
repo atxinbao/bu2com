@@ -253,6 +253,13 @@ Webhook 使用事件 ID 去重；接收方应按至少一次投递处理，不�
 - `POST /v1/refunds/{refund_id}/recoveries` 只处理 `provider_unknown`，不得自动重新调用退款提交入口。
 - x402 没有标准退款原语时返回稳定的 `refund_unsupported`，不将本地 Simulation 结果解释为 Testnet 或生产退款。
 
+## 15.5 F11 / LA-04 入站收款持续验证
+
+- `POST /v1/receivables/{receivable_id}/collections` 使用 `provider_reference` 作为经济付款去重边界；相同引用只能绑定一个 Collection。
+- Provider 返回 `pending` 时只记录 Collection 与 `CollectionVerificationAttempt`，不产生 Financial Posting；后续使用新的幂等键可以继续观察同一引用。
+- 首次 `verified` 观察将同一 Collection 收敛为 `posted`，追加一对平衡 Posting；重复验证、重启和新幂等键不会重复调用或重复入账。
+- 过期 Receivable 的迟到入站证据仍可保留并入账，但 Collection 标记为 `late` 且不可直接派生 AccessGrant，供后续对账和人工处置。
+
 ## 16. F14 对账与手续费事实
 
 - `POST /v1/provider_fees` 只接受绑定已确认 Payment、Collection 或 Refund 的 ProviderFee；source、币种、金额和 Provider Reference 漂移失败关闭。

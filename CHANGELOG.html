@@ -152,6 +152,27 @@
       <h2 id="unreleased">Unreleased</h2>
       <article class="release">
         <div class="release-head">
+          <div><h3>LA-04 · Collection 持续验证与单次入账</h3><time datetime="2026-09-09">2026-09-09</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">修复 pending 入站收款无法继续验证的问题，复用同一 Collection 追加验证证据，并在首次 verified 收敛时只写入一对 Financial Posting。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag added">Added</span>持久化 <code>CollectionVerificationAttempt</code>，保留每次 Provider 观察的状态、金额、付款方、验证模式和时间。</li>
+            <li><span class="tag changed">Changed</span>相同 <code>provider_reference</code> 的 pending Collection 可使用新的幂等键持续验证并收敛到 posted，不创建第二个 Collection。</li>
+            <li><span class="tag changed">Changed</span>verified 收敛只追加一次平衡 Posting；已 posted 重放不再调用 Provider 或重复入账。</li>
+            <li><span class="tag governance">Boundary</span>迟到入站证据可入账但标记为不可履约，不能自动授予过期权益；不代表外部 Provider、Base Sepolia、Hosted、Live/Mainnet 或 E3.1 放行。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R2 · 入站资金事实、持续验证、单次过账，必须独立人工审查</span></div>
+          <div><b>验证</b><span>LA-04 专项覆盖 pending→verified、SQLite 重启、迟到证据与单次 Posting</span></div>
+          <div><b>恢复</b><span>验证证据与 Collection/Posting 同事务持久化；失败保持 pending，不移动资金</span></div>
+        </div>
+      </article>
+      <article class="release">
+        <div class="release-head">
           <div><h3>LA-03c · 从不可变 Posting 重建账务投影</h3><time datetime="2026-09-09">2026-09-09</time></div>
           <span class="status">Unreleased</span>
         </div>

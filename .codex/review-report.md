@@ -2,6 +2,33 @@
 
 # LA-02 成组 Journal / Posting 保护自主审查报告
 
+# LA-04 Collection 持续验证与单次入账自主审查报告
+
+日期：2026-09-09
+审查者：Codex（Contributor / Verifier，非 R2 Approver）
+分支：`feat/ledger-assurance-collection-convergence`
+
+## 初步结果
+
+| 维度 | 得分 | 结论 |
+| --- | ---: | --- |
+| 需求覆盖 | 20/20 | 覆盖 pending 收敛、连续证据、迟到款和单次过账 |
+| 技术实现 | 19/20 | 复用现有 Collection、幂等队列、Journal/Posting 与通用资源持久化 |
+| 金融边界 | 20/20 | 不重复过账、不调用真实 Provider、不自动授予迟到权益 |
+| 自动化验证 | 20/20 | LA-04 3/3、受影响回归 9/9、Sandbox 174/174 及全套本地门禁通过 |
+| 文档与恢复 | 19/20 | F11、OpenAPI、SDK、产品/技术/路线、CHANGELOG 与证据记录已同步 |
+| 综合 | **98/100** | 达到本地实现审查门槛，待独立 R2 |
+
+## 结论
+
+建议：**通过 LA-04 本地 Collection 持续验证实现，提交 R2 审查**。本报告不代表外部 Provider 对账、Hosted、Testnet 或完整 Ledger Assurance Gate 完成。
+
+## 残余风险
+
+1. Provider/链上独立观察、checkpoint、孤立外部付款和完整历史重放仍属于 LA-05/ENV-07B。
+2. 迟到 Collection 只保留财务事实，不可直接发放已过期权益；产品侧仍需明确待匹配处理。
+3. Live/Mainnet、Hosted 和真实 Provider 仍关闭，E3.1 Pilot Manifest 保持暂停。
+
 # LA-03c 账务投影重建自主审查报告
 
 日期：2026-09-09

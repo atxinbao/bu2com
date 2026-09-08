@@ -128,6 +128,7 @@ export class Bu2Sandbox {
     this.quotes = new Map(restored.resources.quotes ?? []);
     this.receivables = new Map(restored.resources.receivables ?? []);
     this.collections = new Map(restored.resources.collections ?? []);
+    this.collectionVerificationAttempts = new Map(restored.resources.collection_verification_attempts ?? []);
     this.accessGrants = new Map(restored.resources.access_grants ?? []);
     this.intents = new Map(restored.resources.intents ?? []);
     this.transactions = new Map(restored.resources.transactions ?? []);
@@ -232,6 +233,7 @@ export class Bu2Sandbox {
         quotes: [...this.quotes.entries()].map(([id, value]) => [id, clone(value)]),
         receivables: [...this.receivables.entries()].map(([id, value]) => [id, clone(value)]),
         collections: [...this.collections.entries()].map(([id, value]) => [id, clone(value)]),
+        collection_verification_attempts: [...this.collectionVerificationAttempts.entries()].map(([id, value]) => [id, clone(value)]),
         access_grants: [...this.accessGrants.entries()].map(([id, value]) => [id, clone(value)]),
         intents: [...this.intents.entries()].map(([id, value]) => [id, clone(value)]),
         transactions: [...this.transactions.entries()].map(([id, value]) => [id, clone(value)]),
@@ -261,6 +263,7 @@ export class Bu2Sandbox {
     this.quotes = new Map(snapshot.resources.quotes ?? []);
     this.receivables = new Map(snapshot.resources.receivables ?? []);
     this.collections = new Map(snapshot.resources.collections ?? []);
+    this.collectionVerificationAttempts = new Map(snapshot.resources.collection_verification_attempts ?? []);
     this.accessGrants = new Map(snapshot.resources.access_grants ?? []);
     this.intents = new Map(snapshot.resources.intents ?? []);
     this.transactions = new Map(snapshot.resources.transactions ?? []);
@@ -567,7 +570,7 @@ export class Bu2Sandbox {
   listCollections() {
     return [...this.collections.values()]
       .sort((left, right) => right.created_at.localeCompare(left.created_at) || right.id.localeCompare(left.id))
-      .map((collection) => clone(collection));
+      .map((collection) => this.collectionView(collection));
   }
 
   getCollection(id) {
@@ -575,7 +578,42 @@ export class Bu2Sandbox {
     if (!collection) {
       throw new ApiError(404, "resource_not_found", "collection_not_found", "Collection was not found.");
     }
-    return clone(collection);
+    return this.collectionView(collection);
+  }
+
+  collectionView(collection) {
+    const verificationAttempts = (collection.verification_attempt_ids ?? [])
+      .map((attemptId) => this.collectionVerificationAttempts.get(attemptId))
+      .filter(Boolean)
+      .sort((left, right) => left.observed_at.localeCompare(right.observed_at) || left.id.localeCompare(right.id))
+      .map((attempt) => clone(attempt));
+    return {
+      ...clone(collection),
+      verification_attempts: verificationAttempts,
+    };
+  }
+
+  recordCollectionVerificationAttempt(collection, verification, observedAt) {
+    const attempt = {
+      id: prefix("cva"),
+      collection_id: collection.id,
+      receivable_id: collection.receivable_id,
+      provider: verification.provider ?? collection.provider,
+      provider_reference: verification.provider_reference,
+      status: verification.status,
+      amount: clone(verification.amount),
+      asset: verification.asset ?? null,
+      network: verification.network ?? null,
+      payer_account_id: verification.payer_account_id ?? null,
+      payer_agent_id: verification.payer_agent_id ?? null,
+      verification_mode: verification.verification_mode ?? collection.verification_mode,
+      observed_at: observedAt,
+      created_at: observedAt,
+    };
+    this.collectionVerificationAttempts.set(attempt.id, attempt);
+    collection.verification_attempt_ids ??= [];
+    collection.verification_attempt_ids.push(attempt.id);
+    return attempt;
   }
 
   listAccessGrants() {
@@ -613,6 +651,15 @@ export class Bu2Sandbox {
         "collection_not_paid",
         "Access can only be granted from a verified posted Collection.",
         { current_state: collection.status, verification_status: collection.verification_status },
+      );
+    }
+    if (collection.fulfillment_eligible === false) {
+      throw new ApiError(
+        409,
+        "invalid_state_transition",
+        "collection_not_fulfillable",
+        "A late Collection is recorded for reconciliation but cannot grant paid access.",
+        { current_state: collection.status, late: true },
       );
     }
     return collection;
@@ -856,11 +903,11 @@ export class Bu2Sandbox {
         if (!receivable) {
           throw new ApiError(404, "resource_not_found", "receivable_not_found", "Receivable was not found.");
         }
-        const prior = [...this.collections.values()].find(
+        let collection = [...this.collections.values()].find(
           (collection) => collection.provider_reference === input.provider_reference,
         );
-        if (prior) {
-          if (prior.receivable_id !== receivableId || prior.collection_reference !== input.collection_reference) {
+        if (collection) {
+          if (collection.receivable_id !== receivableId || collection.collection_reference !== input.collection_reference) {
             throw new ApiError(
               409,
               "conflict",
@@ -868,9 +915,11 @@ export class Bu2Sandbox {
               "The provider reference is already attached to another collection.",
             );
           }
-          return { collection: clone(prior), receivable: clone(receivable) };
+          if (collection.status === "posted" && collection.verification_status === "verified") {
+            return { collection: this.collectionView(collection), receivable: clone(receivable) };
+          }
         }
-        if (receivable.status === "paid") {
+        if (!collection && receivable.status === "paid") {
           throw new ApiError(
             409,
             "invalid_state_transition",
@@ -879,21 +928,13 @@ export class Bu2Sandbox {
             { current_state: receivable.status },
           );
         }
-        if (!["issued", "pending"].includes(receivable.status)) {
+        if (!collection && !["issued", "pending", "expired"].includes(receivable.status)) {
           throw new ApiError(
             409,
             "invalid_state_transition",
             "receivable_not_collectible",
             "Only an issued or pending Receivable can accept an inbound payment.",
             { current_state: receivable.status },
-          );
-        }
-        if (Date.parse(receivable.expires_at) <= Date.now()) {
-          throw new ApiError(
-            409,
-            "invalid_state_transition",
-            "receivable_expired",
-            "The Receivable has expired and cannot accept an inbound payment.",
           );
         }
         if (typeof this.adapter?.verifyInboundPayment !== "function") {
@@ -930,7 +971,7 @@ export class Bu2Sandbox {
           );
         }
         const verifiedReferenceOwner = [...this.collections.values()].find(
-          (collection) => collection.provider_reference === verification.provider_reference,
+          (candidate) => candidate.provider_reference === verification.provider_reference && candidate.id !== collection?.id,
         );
         if (verifiedReferenceOwner) {
           throw new ApiError(
@@ -1000,40 +1041,66 @@ export class Bu2Sandbox {
           );
         }
         const now = new Date().toISOString();
-        const collection = {
-          id: prefix("cpay"),
-          receivable_id: receivable.id,
-          account_id: receivable.account_id,
-          agent_id: receivable.agent_id,
-          receiving_target_id: receivable.receiving_target_id,
-          collection_reference: receivable.collection_reference,
-          provider: verification.provider ?? this.adapter.name ?? "unknown",
-          provider_reference: verification.provider_reference,
-          amount: clone(verification.amount),
-          asset: verification.asset ?? null,
-          network: verification.network ?? null,
-          payer_account_id: verification.payer_account_id ?? null,
-          payer_agent_id: verification.payer_agent_id ?? null,
-          verification_status: verification.status,
-          status: verification.status === "verified" ? "posted" : "pending",
-          verification_mode: verification.verification_mode ?? "provider",
-          verified_at: verification.verified_at ?? now,
-          created_at: now,
-          updated_at: now,
-        };
-        this.collections.set(collection.id, collection);
-        receivable.status = collection.status === "posted" ? "paid" : "pending";
-        receivable.version += 1;
+        const late = collection?.late ?? Date.parse(receivable.expires_at) <= Date.now();
+        if (!collection) {
+          collection = {
+            id: prefix("cpay"),
+            receivable_id: receivable.id,
+            account_id: receivable.account_id,
+            agent_id: receivable.agent_id,
+            receiving_target_id: receivable.receiving_target_id,
+            collection_reference: receivable.collection_reference,
+            provider: verification.provider ?? this.adapter.name ?? "unknown",
+            provider_reference: verification.provider_reference,
+            amount: clone(verification.amount),
+            asset: verification.asset ?? null,
+            network: verification.network ?? null,
+            payer_account_id: verification.payer_account_id ?? null,
+            payer_agent_id: verification.payer_agent_id ?? null,
+            verification_status: verification.status,
+            status: verification.status === "verified" ? "posted" : "pending",
+            verification_mode: verification.verification_mode ?? "provider",
+            verified_at: verification.verified_at ?? now,
+            last_observed_at: now,
+            late,
+            fulfillment_eligible: !late,
+            verification_attempt_ids: [],
+            created_at: now,
+            updated_at: now,
+          };
+          this.collections.set(collection.id, collection);
+        } else {
+          collection.provider = verification.provider ?? collection.provider;
+          collection.verification_status = verification.status;
+          collection.status = verification.status === "verified" ? "posted" : "pending";
+          collection.verification_mode = verification.verification_mode ?? collection.verification_mode;
+          collection.verified_at = verification.verified_at ?? collection.verified_at ?? now;
+          collection.last_observed_at = now;
+          collection.late ??= late;
+          collection.fulfillment_eligible ??= !late;
+          collection.updated_at = now;
+          collection.payer_account_id ??= verification.payer_account_id ?? null;
+          collection.payer_agent_id ??= verification.payer_agent_id ?? null;
+        }
+        this.recordCollectionVerificationAttempt(collection, verification, now);
         receivable.collection_id = collection.id;
+        receivable.version += 1;
         receivable.updated_at = now;
         if (collection.status === "posted") {
-          receivable.paid_at = now;
-          const event = this.event("receivable.payment_posted", collection);
-          this.addCollectionPostings(event, collection);
+          if (receivable.status !== "expired") receivable.status = "paid";
+          receivable.paid_at ??= now;
+          const hasPosting = [...this.financialPostings.values()].some(
+            (posting) => posting.source_id === collection.id && posting.event_type === "receivable.payment_posted",
+          );
+          if (!hasPosting) {
+            const event = this.event(late ? "receivable.payment_posted_late" : "receivable.payment_posted", collection);
+            this.addCollectionPostings(event, collection);
+          }
         } else {
+          if (receivable.status !== "expired") receivable.status = "pending";
           this.event("receivable.payment_pending", collection);
         }
-        return { collection: clone(collection), receivable: clone(receivable) };
+        return { collection: this.collectionView(collection), receivable: clone(receivable) };
       },
     );
   }
