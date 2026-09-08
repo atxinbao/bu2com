@@ -656,3 +656,29 @@ F06b 让 Quote 和 PaymentIntent 能够保留可验证的资金来源与收款�
 1. 当前 ProviderFee 由受控 API 录入，尚未连接真实 Provider 对账文件或链上索引。
 2. F14 不自动修正历史金额；费用或外部事实发生更正时必须追加新事实并重新运行对账。
 3. 多币种只按币种分别汇总，不提供跨币种换算；汇率与商业结算留给后续范围。
+# F15a 内部 Sandbox 执行会话自主审查报告
+
+日期：2026-09-09
+审查者：Codex（Contributor / Verifier，非 R2 Approver）
+分支：`feat/bounded-sandbox-execution-sessions`
+
+## 结果
+
+| 维度 | 得分 | 结论 |
+| --- | ---: | --- |
+| 需求覆盖 | 19/20 | 覆盖独立激活、15 分钟窗口、主体/环境绑定、会话支出与状态机 |
+| 技术实现 | 19/20 | 复用通用 resources、既有原子事务、Wallet/Budget Hold/Transaction，不新增第二账本 |
+| 金融边界 | 20/20 | Session 不能替代 PaymentMandate 或放宽 execution_status；预留、结算、取消保持有界 |
+| 自动化验证 | 20/20 | F15a Domain/HTTP、SDK、契约和现有回归门禁已覆盖；最终全量门禁待收口 |
+| 文档与恢复 | 19/20 | 产品/技术/API/CHANGELOG/verification/testing 已同步；R2 尚待独立人工审查 |
+| 综合 | **97/100** | 通过本地实现审查，进入 R2 |
+
+## 结论
+
+建议：**通过本地实现，提交 R2 Domain 与 Architecture 审查**。F15a 为外部 Agent 的既有工作流增加短时、隔离且可恢复的内部执行窗口，并把环境激活、业务授权和会话支出三个事实保持独立。
+
+## 遗留风险与门槛
+
+1. R2 审查必须由独立人类完成，Codex 不作为批准者。
+2. F15a 尚不等于 Sandbox/Testnet 双向支付验收；F15b/F16a 仍需固定候选上的业务、故障、退款和对账证据。
+3. Live/Mainnet、Hosted、托管钱包和生产凭证继续关闭；ExecutionSession 激活不能绕过环境或 Mandate 门禁。

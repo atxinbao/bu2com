@@ -170,6 +170,72 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/execution_sessions": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        /** List bounded internal Sandbox execution sessions */
+        get: operations["listExecutionSessions"];
+        put?: never;
+        /** Create a bounded internal execution session request */
+        post: operations["createExecutionSession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/execution_sessions/{execution_session_id}": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path: {
+                execution_session_id: string;
+            };
+            cookie?: never;
+        };
+        /** Read one bounded execution session */
+        get: operations["getExecutionSession"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/execution_sessions/{execution_session_id}/{action}": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path: {
+                execution_session_id: string;
+                action: "activate" | "pause" | "complete" | "revoke" | "expire";
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve or change a bounded internal execution session */
+        post: operations["transitionExecutionSession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/financial_postings": {
         parameters: {
             query?: never;
@@ -1017,6 +1083,44 @@ export interface components {
             /** Format: date-time */
             updated_at: string;
         };
+        CreateExecutionSession: {
+            id?: string;
+            tenant_id: string;
+            account_id: string;
+            agent_id: string;
+            /** @enum {string} */
+            environment: "local" | "sandbox" | "live";
+            purpose: string;
+            max_spend: components["schemas"]["Amount"];
+            /** Format: date-time */
+            starts_at: string;
+            /** Format: date-time */
+            expires_at: string;
+        };
+        ExecutionSessionTransition: {
+            version: number;
+            activation_id?: string;
+            approved_by?: string;
+            reason?: string;
+        };
+        ExecutionSession: components["schemas"]["CreateExecutionSession"] & {
+            id: string;
+            reserved_spend_minor: number;
+            committed_spend_minor: number;
+            remaining_spend: components["schemas"]["Amount"];
+            /** @enum {string} */
+            status: "requested" | "active" | "paused" | "completed" | "expired" | "revoked";
+            /** @enum {string} */
+            activation_status: "pending" | "active" | "expired" | "revoked";
+            activation_id: string | null;
+            activation_reviewer?: string | null;
+            activation_reason?: string | null;
+            version: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
         CreateBudget: {
             id?: string;
             /** @enum {string} */
@@ -1630,6 +1734,7 @@ export interface components {
             funding_source_id?: string;
             receiving_target_id?: string;
             budget_id?: string;
+            execution_session_id?: string;
             external_context?: components["schemas"]["ExternalContext"];
             metadata?: {
                 [key: string]: string;
@@ -1689,6 +1794,7 @@ export interface components {
             funding_source_binding_id?: string | null;
             receiving_target_binding_id?: string | null;
             budget_id?: string | null;
+            execution_session_id?: string | null;
             /** Format: date-time */
             created_at: string;
         };
@@ -1709,6 +1815,7 @@ export interface components {
         Transaction: {
             id: string;
             payment_intent_id: string;
+            execution_session_id?: string | null;
             /** @enum {string} */
             status: "authorized" | "funds_reserved" | "delivery_submitted" | "settled" | "canceled" | "refunded" | "disputed";
             authorized_amount: components["schemas"]["Amount"];
@@ -1719,6 +1826,7 @@ export interface components {
         TransactionView: {
             transaction: components["schemas"]["Transaction"];
             payment_intent: components["schemas"]["PaymentIntent"] | null;
+            execution_session: components["schemas"]["ExecutionSession"] | null;
             quote: components["schemas"]["Quote"] | null;
             delivery: components["schemas"]["DeliveryRecord"] | null;
             receipt: components["schemas"]["Receipt"] | null;
@@ -2256,6 +2364,120 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PaymentMandate"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    listExecutionSessions: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Execution sessions visible to the caller */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ExecutionSession"][];
+                    };
+                };
+            };
+        };
+    };
+    createExecutionSession: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateExecutionSession"];
+            };
+        };
+        responses: {
+            /** @description Requested execution session */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExecutionSession"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    getExecutionSession: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path: {
+                execution_session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Execution session */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExecutionSession"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    transitionExecutionSession: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                execution_session_id: string;
+                action: "activate" | "pause" | "complete" | "revoke" | "expire";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExecutionSessionTransition"];
+            };
+        };
+        responses: {
+            /** @description Updated execution session */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExecutionSession"];
                 };
             };
             400: components["responses"]["BadRequest"];

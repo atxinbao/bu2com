@@ -178,6 +178,7 @@ const schemas = {
       funding_source_id: identifier("fund"),
       receiving_target_id: identifier("tgt"),
       budget_id: identifier("bud"),
+      execution_session_id: identifier("ses"),
       external_context: {
         type: "object",
         additionalProperties: false,
@@ -195,6 +196,33 @@ const schemas = {
         maxProperties: 20,
         additionalProperties: { type: "string", maxLength: 500 },
       },
+    },
+  },
+  createExecutionSession: {
+    type: "object",
+    additionalProperties: false,
+    required: ["tenant_id", "account_id", "agent_id", "environment", "purpose", "max_spend", "starts_at", "expires_at"],
+    properties: {
+      id: identifier("ses"),
+      tenant_id: identifier("ten"),
+      account_id: identifier("acct"),
+      agent_id: identifier("agt"),
+      environment: { type: "string", enum: ["local", "sandbox", "live"] },
+      purpose: { type: "string", minLength: 1, maxLength: 500 },
+      max_spend: amount,
+      starts_at: { type: "string", format: "date-time" },
+      expires_at: { type: "string", format: "date-time" },
+    },
+  },
+  executionSessionTransition: {
+    type: "object",
+    additionalProperties: false,
+    required: ["version"],
+    properties: {
+      version: { type: "integer", minimum: 1 },
+      activation_id: { type: "string", pattern: "^act_[A-Za-z0-9_-]+$", maxLength: 255 },
+      approved_by: { type: "string", minLength: 3, maxLength: 255 },
+      reason: { type: "string", maxLength: 500 },
     },
   },
   authorizationDecision: {

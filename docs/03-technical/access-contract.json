@@ -6,6 +6,8 @@
   "roles": {
     "agent": [
       "identity:read",
+      "execution_sessions:read",
+      "execution_sessions:create",
       "mandates:read",
       "quotes:create",
       "receivables:create",
@@ -26,6 +28,9 @@
     ],
     "developer": [
       "identity:read",
+      "execution_sessions:read",
+      "execution_sessions:create",
+      "execution_sessions:manage",
       "mandates:read",
       "mandates:manage",
       "quotes:create",
@@ -50,6 +55,8 @@
     ],
     "operator": [
       "identity:read",
+      "execution_sessions:read",
+      "execution_sessions:manage",
       "mandates:read",
       "mandates:manage",
       "receivables:read",

@@ -310,3 +310,11 @@
 - Tool: `apply_patch`; result: added immutable ProviderFee facts, deterministic ReconciliationRun snapshots, HTTP/OpenAPI/Access Contract/TypeScript SDK surfaces and F14 tests/docs.
 - Tool: `node`, `npm`; result: F14 domain 2/2, HTTP 1/1, Sandbox 147/147 regression, SDK generated/typecheck/lint and contract checks passed.
 - Boundary: F14 only reads and records Local/Simulation evidence; it does not query or mutate real Providers, does not replay unknown results, and does not enable Hosted, Live/Mainnet, custody or production credentials.
+## 2026-09-09 · F15a bounded internal execution sessions
+
+- Tool: `gh pr view`, `git checkout`, `git pull --ff-only`, `git branch -d`; result: verified PR #40 merged, fast-forwarded `main` to `0995aac`, deleted `feat/reconciliation-payment-facts`.
+- Tool: `graphify query`; result: traced environment `execution_status`, hosted activation, PaymentMandate, Transaction Core and generic SQLite resources before selecting the F15a boundary.
+- Tool: `git checkout -b feat/bounded-sandbox-execution-sessions`; result: created the next isolated implementation branch from merged `main`.
+- Tool: `apply_patch`; result: added persisted ExecutionSession lifecycle, independent activation, 15-minute window, account/Agent/environment binding, session spend reservation/commit/release, HTTP/OpenAPI/access/SDK surfaces and F15a tests/docs.
+- Tool: `node`, `npm`; result: domain syntax, F15a targeted tests (4/4), contract validation (63 invariants / 6 MCP tools), SDK generation/typecheck/lint/build and SDK tests (10/10) passed.
+- Boundary: F15a remains Local / internal Sandbox-Testnet only; no BU2 Task platform, Hosted, Live/Mainnet, custody, production credential or real Provider payment was enabled. Independent R2 Domain and Architecture review is still required.

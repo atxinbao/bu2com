@@ -27,6 +27,7 @@
 | AgentIdentity | `agt_` | 证明哪个 Agent 代表哪个 Account |
 | Wallet | `wal_` | 保存可用、预留与结算余额视图 |
 | PaymentMandate | `mdt_` | 定义 Agent 自主支付边界 |
+| ExecutionSession | `ses_` | 定义短时、隔离且有界的内部 Sandbox 执行窗口；不替代 PaymentMandate |
 | Quote | `quo_` | 卖方对服务、价格和交付条件的承诺 |
 | PaymentIntent | `pi_` | 买方对一笔具体交易的支付意图 |
 | Authorization | `auth_` | Mandate 或人工授权的判断记录 |
@@ -43,6 +44,8 @@
 | WebhookReplay | `whrp_` | 死信人工重放的操作者与理由 |
 | AdapterRecoveryAttempt | `arv_` | 未知支付结果的一次不可变查询审计 |
 
+ExecutionSession 通过 `/execution_sessions` 创建、查询和转换；会话激活必须携带独立 `activation_id` 与审核人。绑定会话的 PaymentIntent 可携带 `execution_session_id`，其支出在预留、结算和取消时分别记录，最长窗口为 15 分钟，Live 禁止创建。
+
 ## 3. PaymentIntent 最小输入
 
 ```json
@@ -53,6 +56,7 @@
   "payment_mandate_id": "mdt_research_04",
   "amount": { "value": 3900, "currency": "CNY" },
   "purpose": "Southeast Asia commerce dataset · 2026 Q2",
+  "execution_session_id": "ses_internal_run_01",
   "external_context": {
     "type": "chatgpt_conversation",
     "id": "conv_external_8421"
@@ -108,7 +112,7 @@ requires_authorization
 
 ## 6. 幂等契约
 
-- `POST /quotes`、`POST /payment_intents`、授权、交付、结算、收款、AccessGrant、退款、Webhook 订阅、Secret 轮换和死信重放均要求 `Idempotency-Key`。
+- `POST /quotes`、`POST /payment_intents`、授权、交付、结算、收款、AccessGrant、退款、ExecutionSession 创建/转换、Webhook 订阅、Secret 轮换和死信重放均要求 `Idempotency-Key`。
 - 同一 Account、同一路径、同一 Key 和相同请求体返回第一次结果。
 - 同一 Key 配合不同请求体返回 `409 idempotency_conflict`。
 - Key 至少保留 24 小时；资金动作建议永久绑定到业务记录。

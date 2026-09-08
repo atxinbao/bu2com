@@ -13,7 +13,7 @@ BU2 继续定位为嵌入式 Agent AI 收付平台。外部 Agent 在自己的�
 ## 2. 当前状态
 
 - 已完成：Epic 1、Epic 2、Transaction Trust Gate 1–3、F06a、F06b、ENV-01～ENV-06。
-- 当前可用：Local Simulation；内部 Sandbox/Testnet 调试能力；F07 Budget Hold / Financial Posting、F08 版本化 PaymentMandate、F09a 自主支付执行、F10 Account-Owned Receivable 与 F11 Inbound Collection 已实现，均待对应 R2 审查。
+- 当前可用：Local Simulation；内部 Sandbox/Testnet 调试能力；F07 Budget Hold / Financial Posting、F08 版本化 PaymentMandate、F09a 自主支付执行、F10 Account-Owned Receivable、F11 Inbound Collection 与 F15a 有界内部 ExecutionSession 已实现，均待对应 R2 审查。
 - 尚未验收：Hosted Sandbox 的 ENV-07B、真实 Base Sepolia 双向收付、外部团队证据。
 - 明确关闭：Live/Mainnet、真实生产资金、托管钱包、生产凭证和无人值守生产执行。
 
@@ -46,7 +46,7 @@ BU2 继续定位为嵌入式 Agent AI 收付平台。外部 Agent 在自己的�
 | F12 | `feat(fulfillment): make paid access recoverable and separate delivery facts` | F09a、F11 | 运行时已实现，待 R2 |
 | F13 | `feat(refunds): implement bounded cancellation and refund recovery` | F12、F09b | R2；实际资金执行另行受控 |
 | F14 | `feat(reconciliation): reconcile payments collections refunds and fees` | F13 | R2 |
-| F15a | `feat(sandbox): add isolated bounded internal execution sessions` | F08、F09a | R2；环境激活与业务 Mandate 分开批准 |
+| F15a | `feat(sandbox): add isolated bounded internal execution sessions` | F08、F09a | 已实现；R2；环境激活与业务 Mandate 分开批准 |
 | F15b | `test(operations): verify business load shutdown and financial recovery` | F14、F15a | R2 |
 | F16a | `test(sandbox): accept autonomous internal pay-and-collect beta` | F09b、F11、F12、F13、F14、F15b、F02-CI | R2 |
 | F16b-ENV07B | `test(hosted): qualify external sandbox integrations for foundation gate` | F16a | R2；部署授权独立 |
@@ -60,7 +60,7 @@ BU2 继续定位为嵌入式 Agent AI 收付平台。外部 Agent 在自己的�
 
 ## 6. 当前下一步
 
-D0/D1/D2 文档基线与 F07 代码实现已合并。F08 运行时与 F09a 已完成版本化授权、确定性 PolicyDecision、绑定校验、幂等状态转换和 Agent 执行命令，当前进入独立 R2 Domain 与 Architecture 审查。
+D0/D1/D2 文档基线与 F07 代码实现已合并。F08 运行时与 F09a 已完成版本化授权、确定性 PolicyDecision、绑定校验、幂等状态转换和 Agent 执行命令；F15a 已增加独立激活、15 分钟窗口和会话级支出边界，当前进入独立 R2 Domain 与 Architecture 审查。
 
 D2 只改文档；F08/F09a/F10/F11/F12 代码 PR 不启用真实 Testnet 双向收付、Hosted Sandbox、Live/Mainnet、托管或生产凭证，必须独立完成 Domain 与 Architecture R2 审查。F09b 的历史实现已覆盖持久化 payment attempt、unknown-result 冻结和显式 recovery 查询，本轮不重复引入第二套恢复实现。
 

@@ -54,7 +54,8 @@
 - [F12 Paid Access 与 Delivery Fact 契约](../02-product/F12_FULFILLMENT_ACCESS_CONTRACT.md)
 - [F13 有界取消与退款恢复契约](../02-product/F13_REFUND_RECOVERY_CONTRACT.md)
 - [F14 支付、收款、退款与手续费对账契约](../02-product/F14_RECONCILIATION_CONTRACT.md)
+- [F15a 内部 Sandbox 执行会话契约](../02-product/F15A_SANDBOX_EXECUTION_SESSION_CONTRACT.md)
 
-Contract v0.3.0 已具备本地 SQLite Reference Server、数据库 processing 幂等 Claim、状态版本 CAS、原子化 Ledger/Outbox、预算 Scope/Hold/Financial Posting、版本化 PaymentMandate/PolicyDecision、Receivable/Collection 入站收款事实、可恢复 AccessGrant、独立 Delivery Fact、有限重试与死信、审计重放、Secret 版本轮换、端到端交易关联、结构化观测、环境自描述、签名 Receipt、ProviderFee 与 ReconciliationRun、环境绑定的 Agent/Developer/Operator 访问控制、租户隔离与受控运维入口，以及基于官方 MCP/x402 SDK 的 Agent 支付接入。Epic 1 与 Epic 2 已完成；Transaction Trust Gate 1–3 已经 PR #15–#17 合并。F06a/F06b/F07 已完成，F08/F09a/F10/F11/F12/F13/F14 运行时已实现，待对应独立 R2 Domain 与 Architecture 审查。
+Contract v0.3.0 已具备本地 SQLite Reference Server、数据库 processing 幂等 Claim、状态版本 CAS、原子化 Ledger/Outbox、预算 Scope/Hold/Financial Posting、版本化 PaymentMandate/PolicyDecision、短时有界 ExecutionSession、Receivable/Collection 入站收款事实、可恢复 AccessGrant、独立 Delivery Fact、有限重试与死信、审计重放、Secret 版本轮换、端到端交易关联、结构化观测、环境自描述、签名 Receipt、ProviderFee 与 ReconciliationRun、环境绑定的 Agent/Developer/Operator 访问控制、租户隔离与受控运维入口，以及基于官方 MCP/x402 SDK 的 Agent 支付接入。Epic 1 与 Epic 2 已完成；Transaction Trust Gate 1–3 已经 PR #15–#17 合并。F06a/F06b/F07 已完成，F08/F09a/F10/F11/F12/F13/F14/F15a 运行时已实现，待对应独立 R2 Domain 与 Architecture 审查。
 
-F01/ENV-01 至 ENV-06 已分别由 PR #18–#23 批准。ENV-07A 与 ENV-07B 本地部署准备、外部验收 Schema 和 Runbook 已实现；真实托管 Sandbox、Base Sepolia 双向收付与边缘 E2E 仍为 Not yet accepted。D0/D1/D2 与 F07 已合并，F08～F14 代码实现已完成并等待各自独立 R2 审查。SDK/MCP 未公开发布，Live/Mainnet、真实资金托管与生产凭证仍未经独立准入。
+F01/ENV-01 至 ENV-06 已分别由 PR #18–#23 批准。ENV-07A 与 ENV-07B 本地部署准备、外部验收 Schema 和 Runbook 已实现；真实托管 Sandbox、Base Sepolia 双向收付与边缘 E2E 仍为 Not yet accepted。D0/D1/D2 与 F07 已合并，F08～F15a 代码实现已完成并等待各自独立 R2 审查。SDK/MCP 未公开发布，Live/Mainnet、真实资金托管与生产凭证仍未经独立准入。

@@ -52,6 +52,9 @@ import type {
   Refund,
   RefundRequest,
   RefundResult,
+  ExecutionSession,
+  CreateExecutionSession,
+  ExecutionSessionTransition,
 } from "./types.js";
 import { ENVIRONMENT_CONTRACT } from "./generated/environment.js";
 
@@ -558,6 +561,58 @@ export class Bu2Client {
     return this.execute({ name: "transitionPaymentMandate", mutation: true }, options, (signal) =>
       this.api.POST("/payment_mandates/{mandate_id}/{action}", {
         params: { path: { mandate_id: mandateId, action }, header: mutationHeaders(options) },
+        body,
+        signal,
+      }),
+    );
+  }
+
+  listExecutionSessions(options: Bu2RequestOptions = {}): Promise<{ data: ExecutionSession[] }> {
+    return this.execute({ name: "listExecutionSessions", mutation: false }, options, (signal) =>
+      this.api.GET("/execution_sessions", { params: { header: traceHeaders(options) }, signal }),
+    );
+  }
+
+  createExecutionSession(
+    body: CreateExecutionSession,
+    options: Bu2MutationOptions,
+  ): Promise<ExecutionSession> {
+    return this.execute(
+      { name: "createExecutionSession", mutation: true, requiresExecution: false },
+      options,
+      (signal) =>
+        this.api.POST("/execution_sessions", {
+          params: { header: mutationHeaders(options) },
+          body,
+          signal,
+        }),
+    );
+  }
+
+  getExecutionSession(
+    sessionId: string,
+    options: Bu2RequestOptions = {},
+  ): Promise<ExecutionSession> {
+    return this.execute({ name: "getExecutionSession", mutation: false }, options, (signal) =>
+      this.api.GET("/execution_sessions/{execution_session_id}", {
+        params: { path: { execution_session_id: sessionId }, header: traceHeaders(options) },
+        signal,
+      }),
+    );
+  }
+
+  transitionExecutionSession(
+    sessionId: string,
+    action: "activate" | "pause" | "complete" | "revoke" | "expire",
+    body: ExecutionSessionTransition,
+    options: Bu2MutationOptions,
+  ): Promise<ExecutionSession> {
+    return this.execute({ name: "transitionExecutionSession", mutation: true }, options, (signal) =>
+      this.api.POST("/execution_sessions/{execution_session_id}/{action}", {
+        params: {
+          path: { execution_session_id: sessionId, action },
+          header: mutationHeaders(options),
+        },
         body,
         signal,
       }),
