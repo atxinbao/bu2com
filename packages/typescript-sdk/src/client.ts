@@ -23,6 +23,7 @@ import type {
   Collection,
   AccessGrant,
   AccessGrantResult,
+  CancellationResult,
   CreateAccessGrant,
   DeliveryEvidence,
   DeliveryResult,
@@ -44,6 +45,9 @@ import type {
   VerifyInboundPayment,
   VerifyInboundPaymentResult,
   RecoverAccessGrant,
+  Refund,
+  RefundRequest,
+  RefundResult,
 } from "./types.js";
 import { ENVIRONMENT_CONTRACT } from "./generated/environment.js";
 
@@ -678,6 +682,62 @@ export class Bu2Client {
             path: { transaction_id: transactionId },
             header: mutationHeaders(options),
           },
+          body: {},
+          signal,
+        }),
+    );
+  }
+
+  cancelTransaction(
+    transactionId: string,
+    body: { reason?: string } = {},
+    options: Bu2MutationOptions,
+  ): Promise<CancellationResult> {
+    return this.execute({ name: "cancelTransaction", mutation: true }, options, (signal) =>
+      this.api.POST("/transactions/{transaction_id}/cancellations", {
+        params: { path: { transaction_id: transactionId }, header: mutationHeaders(options) },
+        body,
+        signal,
+      }),
+    );
+  }
+
+  requestTransactionRefund(
+    transactionId: string,
+    body: RefundRequest,
+    options: Bu2MutationOptions,
+  ): Promise<RefundResult> {
+    return this.execute({ name: "requestTransactionRefund", mutation: true }, options, (signal) =>
+      this.api.POST("/transactions/{transaction_id}/refunds", {
+        params: { path: { transaction_id: transactionId }, header: mutationHeaders(options) },
+        body,
+        signal,
+      }),
+    );
+  }
+
+  listRefunds(options: Bu2RequestOptions = {}): Promise<{ data: Refund[] }> {
+    return this.execute({ name: "listRefunds", mutation: false }, options, (signal) =>
+      this.api.GET("/refunds", { params: { header: traceHeaders(options) }, signal }),
+    );
+  }
+
+  getRefund(refundId: string, options: Bu2RequestOptions = {}): Promise<Refund> {
+    return this.execute({ name: "getRefund", mutation: false }, options, (signal) =>
+      this.api.GET("/refunds/{refund_id}", {
+        params: { path: { refund_id: refundId }, header: traceHeaders(options) },
+        signal,
+      }),
+    );
+  }
+
+  recoverRefund(refundId: string, options: Bu2MutationOptions): Promise<RefundResult> {
+    return this.execute(
+      { name: "recoverRefund", mutation: true, requiresExecution: false },
+      options,
+      (signal) =>
+        this.api.POST("/refunds/{refund_id}/recoveries", {
+          params: { path: { refund_id: refundId }, header: mutationHeaders(options) },
           body: {},
           signal,
         }),

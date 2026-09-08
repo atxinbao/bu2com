@@ -1,5 +1,15 @@
 # ENV-02 测试记录
 
+## 2026-09-09 · F13 Bounded Cancellation & Refund Recovery
+
+| 范围 | 命令 | 结果 |
+| --- | --- | --- |
+| F13 领域与 HTTP | `node --test sandbox/f13.test.mjs sandbox/f13-http.test.mjs` | 4/4 通过 |
+| Sandbox 全量 | `npm --prefix sandbox test` | 143/143 通过 |
+| TypeScript SDK | `npm --prefix packages/typescript-sdk test` | 生成、格式、Lint、类型检查、构建与 10/10 单测通过 |
+
+边界：未执行 Hosted、Base Sepolia 双向收付、Live/Mainnet、真实 Provider 退款、托管或生产凭证；F13 只验证 Local/Simulation 与既有环境契约。
+
 ## 2026-09-08 · F12 Recoverable Paid Access
 
 执行者：Codex

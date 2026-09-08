@@ -581,6 +581,110 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/transactions/{transaction_id}/cancellations": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel a reserved transaction and release its funds */
+        post: operations["cancelTransaction"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/transactions/{transaction_id}/refunds": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Request a bounded full or partial refund */
+        post: operations["requestTransactionRefund"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/refunds": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        /** List visible refund facts */
+        get: operations["listRefunds"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/refunds/{refund_id}": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path: {
+                refund_id: string;
+            };
+            cookie?: never;
+        };
+        /** Read a refund fact */
+        get: operations["getRefund"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/refunds/{refund_id}/recoveries": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path: {
+                refund_id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Recover a provider-unknown refund without submitting a new refund */
+        post: operations["recoverRefund"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/receipts/{receipt_id}": {
         parameters: {
             query?: never;
@@ -1472,8 +1576,51 @@ export interface components {
             quote: components["schemas"]["Quote"] | null;
             delivery: components["schemas"]["DeliveryRecord"] | null;
             receipt: components["schemas"]["Receipt"] | null;
+            refunds: components["schemas"]["Refund"][];
+            cancellation: components["schemas"]["Cancellation"] | null;
             payment_channel: string;
             settlement_control: components["schemas"]["SettlementControl"] | null;
+        };
+        Cancellation: {
+            reason?: string | null;
+            /** @enum {string} */
+            status?: "canceled";
+            provider_reference?: string | null;
+            /** Format: date-time */
+            canceled_at?: string | null;
+        };
+        CancellationResult: {
+            transaction: components["schemas"]["Transaction"];
+            cancellation: components["schemas"]["Cancellation"];
+        };
+        RefundRequest: {
+            amount: components["schemas"]["Amount"];
+            reason?: string | null;
+        };
+        Refund: {
+            id: string;
+            transaction_id: string;
+            payment_intent_id: string;
+            amount: components["schemas"]["Amount"];
+            /** @enum {string} */
+            status: "processing" | "refunded" | "provider_unknown";
+            reason: string | null;
+            provider_reference: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            refunded_at: string | null;
+            recovery_required: boolean;
+            failure_reason?: string | null;
+        };
+        RefundResult: {
+            transaction: components["schemas"]["Transaction"];
+            refund: components["schemas"]["Refund"];
+            recovery?: {
+                /** @enum {string} */
+                status?: "refunded" | "provider_unknown";
+                reason_code?: string | null;
+            };
         };
         SettlementControl: {
             /** @enum {string} */
@@ -2626,6 +2773,152 @@ export interface operations {
             409: components["responses"]["Conflict"];
             413: components["responses"]["RequestTooLarge"];
             415: components["responses"]["UnsupportedMediaType"];
+        };
+    };
+    cancelTransaction: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                transaction_id: components["parameters"]["TransactionId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Cancellation"];
+            };
+        };
+        responses: {
+            /** @description Canceled transaction */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CancellationResult"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    requestTransactionRefund: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                transaction_id: components["parameters"]["TransactionId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RefundRequest"];
+            };
+        };
+        responses: {
+            /** @description Refund fact or provider-unknown recovery requirement */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RefundResult"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    listRefunds: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Refund facts */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["Refund"][];
+                    };
+                };
+            };
+        };
+    };
+    getRefund: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path: {
+                refund_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Refund fact */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Refund"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    recoverRefund: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                refund_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": Record<string, never>;
+            };
+        };
+        responses: {
+            /** @description Refund recovery result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RefundResult"];
+                };
+            };
+            409: components["responses"]["Conflict"];
         };
     };
     getReceipt: {

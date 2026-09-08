@@ -676,6 +676,111 @@ paths:
         '409': { $ref: '#/components/responses/Conflict' }
         '413': { $ref: '#/components/responses/RequestTooLarge' }
         '415': { $ref: '#/components/responses/UnsupportedMediaType' }
+  /transactions/{transaction_id}/cancellations:
+    parameters:
+      - $ref: '#/components/parameters/TraceId'
+    post:
+      operationId: cancelTransaction
+      summary: Cancel a reserved transaction and release its funds
+      parameters:
+        - $ref: '#/components/parameters/TransactionId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Cancellation' }
+      responses:
+        '200':
+          description: Canceled transaction
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CancellationResult' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /transactions/{transaction_id}/refunds:
+    parameters:
+      - $ref: '#/components/parameters/TraceId'
+    post:
+      operationId: requestTransactionRefund
+      summary: Request a bounded full or partial refund
+      parameters:
+        - $ref: '#/components/parameters/TransactionId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RefundRequest' }
+      responses:
+        '200':
+          description: Refund fact or provider-unknown recovery requirement
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RefundResult' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /refunds:
+    parameters:
+      - $ref: '#/components/parameters/TraceId'
+    get:
+      operationId: listRefunds
+      summary: List visible refund facts
+      responses:
+        '200':
+          description: Refund facts
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Refund' }
+  /refunds/{refund_id}:
+    parameters:
+      - $ref: '#/components/parameters/TraceId'
+      - name: refund_id
+        in: path
+        required: true
+        schema: { type: string, pattern: '^ref_[A-Za-z0-9_-]+$' }
+    get:
+      operationId: getRefund
+      summary: Read a refund fact
+      responses:
+        '200':
+          description: Refund fact
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Refund' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /refunds/{refund_id}/recoveries:
+    parameters:
+      - $ref: '#/components/parameters/TraceId'
+      - name: refund_id
+        in: path
+        required: true
+        schema: { type: string, pattern: '^ref_[A-Za-z0-9_-]+$' }
+    post:
+      operationId: recoverRefund
+      summary: Recover a provider-unknown refund without submitting a new refund
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+      responses:
+        '200':
+          description: Refund recovery result
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RefundResult' }
+        '409': { $ref: '#/components/responses/Conflict' }
   /receipts/{receipt_id}:
     parameters:
       - $ref: '#/components/parameters/TraceId'
@@ -1713,7 +1818,7 @@ components:
         refunded_amount: { $ref: '#/components/schemas/Amount' }
     TransactionView:
       type: object
-      required: [transaction, payment_intent, quote, delivery, receipt, payment_channel, settlement_control]
+      required: [transaction, payment_intent, quote, delivery, receipt, refunds, cancellation, payment_channel, settlement_control]
       properties:
         transaction: { $ref: '#/components/schemas/Transaction' }
         payment_intent:
@@ -1732,11 +1837,67 @@ components:
           anyOf:
             - { $ref: '#/components/schemas/Receipt' }
             - { type: 'null' }
+        refunds:
+          type: array
+          items: { $ref: '#/components/schemas/Refund' }
+        cancellation:
+          anyOf:
+            - { $ref: '#/components/schemas/Cancellation' }
+            - { type: 'null' }
         payment_channel: { type: string }
         settlement_control:
           anyOf:
             - { $ref: '#/components/schemas/SettlementControl' }
             - { type: 'null' }
+    Cancellation:
+      type: object
+      additionalProperties: false
+      properties:
+        reason: { type: [string, 'null'], maxLength: 500 }
+        status: { type: string, enum: [canceled] }
+        provider_reference: { type: [string, 'null'] }
+        canceled_at: { type: [string, 'null'], format: date-time }
+    CancellationResult:
+      type: object
+      required: [transaction, cancellation]
+      properties:
+        transaction: { $ref: '#/components/schemas/Transaction' }
+        cancellation: { $ref: '#/components/schemas/Cancellation' }
+    RefundRequest:
+      type: object
+      additionalProperties: false
+      required: [amount]
+      properties:
+        amount: { $ref: '#/components/schemas/Amount' }
+        reason: { type: [string, 'null'], maxLength: 500 }
+    Refund:
+      type: object
+      additionalProperties: false
+      required: [id, transaction_id, payment_intent_id, amount, status, reason, provider_reference, created_at, refunded_at, recovery_required]
+      properties:
+        id: { type: string, pattern: '^ref_[A-Za-z0-9_-]+$' }
+        transaction_id: { type: string, pattern: '^txn_[A-Za-z0-9_-]+$' }
+        payment_intent_id: { type: string, pattern: '^pi_[A-Za-z0-9_-]+$' }
+        amount: { $ref: '#/components/schemas/Amount' }
+        status: { type: string, enum: [processing, refunded, provider_unknown] }
+        reason: { type: [string, 'null'] }
+        provider_reference: { type: [string, 'null'] }
+        created_at: { type: string, format: date-time }
+        refunded_at: { type: [string, 'null'], format: date-time }
+        recovery_required: { type: boolean }
+        failure_reason: { type: [string, 'null'] }
+    RefundResult:
+      type: object
+      required: [transaction, refund]
+      properties:
+        transaction: { $ref: '#/components/schemas/Transaction' }
+        refund: { $ref: '#/components/schemas/Refund' }
+        recovery:
+          type: object
+          additionalProperties: false
+          properties:
+            status: { type: string, enum: [refunded, provider_unknown] }
+            reason_code: { type: [string, 'null'] }
     SettlementControl:
       type: object
       additionalProperties: false

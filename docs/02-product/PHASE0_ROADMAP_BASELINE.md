@@ -64,4 +64,4 @@ D0/D1/D2 文档基线与 F07 代码实现已合并。F08 运行时与 F09a 已�
 
 D2 只改文档；F08/F09a/F10/F11/F12 代码 PR 不启用真实 Testnet 双向收付、Hosted Sandbox、Live/Mainnet、托管或生产凭证，必须独立完成 Domain 与 Architecture R2 审查。F09b 的历史实现已覆盖持久化 payment attempt、unknown-result 冻结和显式 recovery 查询，本轮不重复引入第二套恢复实现。
 
-F12 本地实现已完成，下一步是 F13：在不突破当前环境边界的前提下，实现有界取消、退款事实与显式恢复；F13 之前不得把 AccessGrant 解释为已完成退款或财务对账。
+F12 本地实现已完成，F13 已在不突破当前环境边界的前提下实现有界取消、退款事实与显式恢复；F13 仍不得被解释为 F14 财务对账或真实 Provider 退款。

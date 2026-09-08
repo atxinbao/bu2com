@@ -18,8 +18,11 @@
       "payment_intents:execute",
       "payment_intents:read",
       "transactions:read",
+      "transactions:cancel",
       "deliveries:create",
-      "receipts:read"
+      "receipts:read",
+      "refunds:read",
+      "refunds:create"
     ],
     "developer": [
       "identity:read",
@@ -36,8 +39,12 @@
       "payment_intents:execute",
       "payment_intents:read",
       "transactions:read",
+      "transactions:cancel",
       "deliveries:create",
       "receipts:read",
+      "refunds:read",
+      "refunds:create",
+      "refunds:recover",
       "webhooks:manage"
     ],
     "operator": [
@@ -49,10 +56,14 @@
       "access_grants:read",
       "payment_intents:read",
       "transactions:read",
+      "transactions:cancel",
       "receipts:read",
       "authorizations:decide",
       "settlements:create",
       "settlements:recover",
+      "refunds:read",
+      "refunds:create",
+      "refunds:recover",
       "ledger:read",
       "webhooks:manage",
       "webhooks:operate",

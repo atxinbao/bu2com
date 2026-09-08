@@ -240,3 +240,11 @@ Webhook 使用事件 ID 去重；接收方应按至少一次投递处理，不�
 - 再次调用普通 settlement 必须返回 `x402_settlement_unknown`，不得再次提交付款。
 - 恢复查询只能使用 Provider 明确支持的查询边界；官方协议没有通用查询时不得伪造链上结论。
 - 每次实际恢复查询追加 `AdapterRecoveryAttempt`；只有明确 `settled` 才能完成 Transaction 并签发 Receipt。
+
+## 15. F13 取消与退款恢复
+
+- `POST /v1/transactions/{transaction_id}/cancellations` 只允许 `funds_reserved`，成功后进入 `canceled`，恢复 Wallet reserved 和 active Budget Hold。
+- `POST /v1/transactions/{transaction_id}/refunds` 只允许有剩余可退金额的 `settled` 交易，支持部分退款；金额不得超过 `settled_amount - refunded_amount`。
+- `GET /v1/refunds` 与 `GET /v1/refunds/{refund_id}` 返回独立退款事实；退款事实不替代 Transaction、Receipt 或 F14 对账记录。
+- `POST /v1/refunds/{refund_id}/recoveries` 只处理 `provider_unknown`，不得自动重新调用退款提交入口。
+- x402 没有标准退款原语时返回稳定的 `refund_unsupported`，不将本地 Simulation 结果解释为 Testnet 或生产退款。
