@@ -1,5 +1,13 @@
 # ENV-03 操作日志
 
+## 2026-09-09 · F16b Hosted Sandbox 外部集成基础准入
+
+- Tool: `gh pr view`, `git switch`, `git pull --ff-only`, `git branch -d`; result: verified PR #43 merged at `259b3b74b8e439e776c0e37e8ed3a5e231c1b22c`, synchronized `main`, deleted local `test/internal-sandbox-pay-collect-beta`, and created `test/hosted-sandbox-foundation-gate`.
+- Tool: `graphify query`, `rg`, `sed`; result: traced F16b to the existing Hosted Candidate, Activation, Evidence validators, Sandbox-only Compose contract and ENV-07B Runbook; no new transaction core or hosted secret integration was required.
+- Tool: `apply_patch`; result: added the non-authorizing `qualifyHostedSandboxFoundation` composition and F16b negative-matrix tests, package script, product/technical/roadmap/README/CHANGELOG documentation and evidence records.
+- Tool: `npm`, `node`; result: F16b 3/3, Hosted Runtime 8/8, Hosted deployment 2/2, Evidence Schema 2/2, Sandbox 158/158, Contract 63 invariants / 6 MCP tools, SDK 10/10, Prototype lint/build and `git diff --check` passed.
+- Boundary: local qualification only; no DNS/TLS, cloud resource, managed Secret, independent production activation, external endpoint, real Base Sepolia settlement, Live/Mainnet or custody capability was enabled.
+
 ## 2026-09-09 · F16a 内部 Sandbox 自主双向收付 Beta 候选
 
 - Tool: `gh pr view`, `git switch`, `git pull --ff-only`, `git branch -d`; result: verified PR #42 merged at `65ba20f`, synchronized `main`, deleted local `test/operations-recovery-evidence`, and created `test/internal-sandbox-pay-collect-beta`.

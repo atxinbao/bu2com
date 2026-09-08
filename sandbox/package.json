@@ -19,6 +19,7 @@
     "test:deployment-contract": "node --test ../deploy/deployment-contract.test.mjs",
     "test:operations": "node --test ../deploy/operations.test.mjs",
     "test:hosted-sandbox": "node --test ../deploy/hosted-sandbox.test.mjs",
+    "test:f16b-hosted": "node --test ../deploy/f16b-hosted-qualification.test.mjs",
     "test:hosted-deployment": "node --test ../deploy/hosted-sandbox-deployment.test.mjs",
     "test:hosted-evidence-schema": "node --test ../deploy/hosted-sandbox-evidence-schema.test.mjs",
     "acceptance:deployment": "node ../deploy/acceptance.mjs",

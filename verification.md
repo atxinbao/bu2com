@@ -1,5 +1,17 @@
 # BU2 Product v0.1 验证结论
 
+## 2026-09-09 · F16b Hosted Sandbox 外部集成基础准入
+
+执行者：Codex
+分支：`test/hosted-sandbox-foundation-gate`
+
+- `npm --prefix sandbox run test:f16b-hosted`：3/3 通过，覆盖本地 Candidate → Activation → Evidence 基础资格、候选漂移/自授权、激活不匹配、边缘鉴权失败和 Live 边界拒绝。
+- `git diff --check`：通过。
+- 资格结果明确 `qualification=local_contract_passed`、`env07b_accepted=false`，并列出公网 HTTPS/DNS/TLS、托管 Secret、独立 Activation、外部机器鉴权和真实 Base Sepolia 双向结算等待完成关卡。
+- 本轮未执行公网部署、云资源、DNS/TLS、托管 Secret、真实 Base Sepolia、Live/Mainnet、生产凭证或托管钱包。
+
+结论：F16b 本地 Hosted foundation qualification 达到 **GO for R2 review**；ENV-07B 真实 Hosted 验收仍为 **Not yet accepted**。
+
 ## 2026-09-09 · F16a 内部 Sandbox 自主双向收付 Beta 候选
 
 执行者：Codex

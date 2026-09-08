@@ -152,6 +152,26 @@
       <h2 id="unreleased">Unreleased</h2>
       <article class="release">
         <div class="release-head">
+          <div><h3>F16b · Hosted Sandbox 外部集成基础准入</h3><time datetime="2026-09-09">2026-09-09</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">把 Hosted Sandbox 的 Candidate、独立 Activation、Evidence 和失败边界组合成可重复的本地基础资格检查，为 ENV-07B 外部验收准备清晰的非授权结果。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag added">Added</span>新增 <code>qualifyHostedSandboxFoundation</code>，验证候选摘要、激活摘要、双向结算证据、边缘机器鉴权和 Live 排除。</li>
+            <li><span class="tag added">Added</span>新增 F16b 定向测试，覆盖制品漂移、候选自授权、Activation 不匹配、边缘鉴权失败和 Live 证据拒绝。</li>
+            <li><span class="tag governance">Boundary</span>本地资格结果固定 <code>env07b_accepted=false</code>；公网 HTTPS/DNS/TLS、托管 Secret、独立激活、外部机器和真实 Base Sepolia 双向结算仍未执行。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R2 · Hosted 部署边界与外部证据准入，必须独立人工审查</span></div>
+          <div><b>验证</b><span>F16b foundation 专项 3/3；既有 Hosted Sandbox、部署契约和 Evidence Schema 测试继续作为回归门禁</span></div>
+          <div><b>恢复</b><span>移除基础资格组合器与测试即可恢复；不修改交易状态、账本、Schema、支付通道或环境授权</span></div>
+        </div>
+      </article>
+      <article class="release">
+        <div class="release-head">
           <div><h3>F16a · 内部 Sandbox 自主双向收付 Beta 候选</h3><time datetime="2026-09-09">2026-09-09</time></div>
           <span class="status">Unreleased</span>
         </div>
