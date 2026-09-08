@@ -1,5 +1,16 @@
 # ENV-02 测试记录
 
+## 2026-09-09 · LA-01 持久化退款尝试与未决额度占用
+
+执行者：Codex
+
+| 范围 | 命令 | 结果 |
+| --- | --- | --- |
+| LA-01 / F13 定向 | `node --test sandbox/f13.test.mjs` | 7/7 通过 |
+| 覆盖 | 未知退款占用、未知结果对象失败关闭、外部成功后本地提交失败同键恢复 | 通过 |
+
+本轮未执行真实 Provider、Base Sepolia、Hosted、Live/Mainnet 或托管钱包。E3.1 Pilot Manifest 保持暂停。
+
 ## 2026-09-09 · F16b Hosted Sandbox 外部集成基础准入
 
 执行者：Codex

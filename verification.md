@@ -1,5 +1,17 @@
 # BU2 Product v0.1 验证结论
 
+## 2026-09-09 · LA-01 Ledger Assurance Gate：持久化退款尝试
+
+执行者：Codex
+分支：`feat/ledger-assurance-refund-attempts`
+
+- `node --test sandbox/f13.test.mjs`：7/7 通过。
+- 新增反例覆盖：未知退款后第二笔退款被剩余可退额度拒绝；Provider 返回 `provider_unknown` 对象不再标记为已退款；外部退款成功但本地提交失败后，同一幂等键复用原 RefundAttempt 且 Adapter 不重复调用。
+- SQLite Schema v14 新增持久化 `refund_attempts`，重启读取并保留 `prepared/submitting/provider_unknown/refunded/failed` 状态。
+- E3.1 Pilot Manifest 保持暂停；本轮未执行真实 Provider、Base Sepolia、Hosted、Live/Mainnet、托管或生产凭证路径。
+
+结论：LA-01 本地实现达到 **GO for R2 review**；它不构成完整 Ledger Assurance Gate 通过，也不改变 Hosted/Live 准入。
+
 ## 2026-09-09 · F16b Hosted Sandbox 外部集成基础准入
 
 执行者：Codex

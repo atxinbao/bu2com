@@ -199,6 +199,11 @@ export class SqliteLedger {
         name: "versioned_payment_mandates_policy_decisions",
         apply: () => this.migrateVersionedPaymentMandates(),
       },
+      {
+        version: 14,
+        name: "durable_refund_attempts",
+        apply: () => this.migrateDurableRefundAttempts(),
+      },
     ];
     for (const migration of migrations) {
       if (applied.has(migration.version)) continue;
@@ -730,6 +735,30 @@ export class SqliteLedger {
     `);
   }
 
+  migrateDurableRefundAttempts() {
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS refund_attempts (
+        id TEXT PRIMARY KEY,
+        operation_key TEXT NOT NULL UNIQUE,
+        refund_id TEXT NOT NULL UNIQUE,
+        transaction_id TEXT NOT NULL,
+        amount_value INTEGER NOT NULL CHECK (amount_value >= 0),
+        currency TEXT NOT NULL CHECK (currency GLOB '[A-Z][A-Z][A-Z]'),
+        status TEXT NOT NULL CHECK (status IN ('prepared', 'submitting', 'provider_unknown', 'refunded', 'failed')),
+        provider_reference TEXT,
+        reason TEXT,
+        reason_code TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        resolved_at TEXT
+      );
+      CREATE INDEX IF NOT EXISTS idx_refund_attempts_transaction
+        ON refund_attempts(transaction_id, created_at);
+      CREATE INDEX IF NOT EXISTS idx_refund_attempts_status
+        ON refund_attempts(status, created_at);
+    `);
+  }
+
   environmentMetadata() {
     return this.db
       .prepare(`
@@ -899,6 +928,10 @@ export class SqliteLedger {
         .map((row) => [row.id, { ...row, amount_value: Number(row.amount_value) }]),
       financial_postings: this.db
         .prepare("SELECT * FROM financial_postings ORDER BY created_at, id")
+        .all()
+        .map((row) => [row.id, { ...row, amount_value: Number(row.amount_value) }]),
+      refund_attempts: this.db
+        .prepare("SELECT * FROM refund_attempts ORDER BY created_at, id")
         .all()
         .map((row) => [row.id, { ...row, amount_value: Number(row.amount_value) }]),
     };
@@ -1148,6 +1181,33 @@ export class SqliteLedger {
           posting.amount_value,
           posting.currency,
           posting.created_at,
+        );
+      }
+      const refundAttemptUpsert = this.db.prepare(`
+        INSERT INTO refund_attempts(
+          id, operation_key, refund_id, transaction_id, amount_value, currency,
+          status, provider_reference, reason, reason_code, created_at, updated_at, resolved_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET
+          status=excluded.status, provider_reference=excluded.provider_reference,
+          reason=excluded.reason, reason_code=excluded.reason_code,
+          updated_at=excluded.updated_at, resolved_at=excluded.resolved_at
+      `);
+      for (const [, attempt] of financial.refund_attempts ?? []) {
+        refundAttemptUpsert.run(
+          attempt.id,
+          attempt.operation_key,
+          attempt.refund_id,
+          attempt.transaction_id,
+          attempt.amount_value,
+          attempt.currency,
+          attempt.status,
+          attempt.provider_reference ?? null,
+          attempt.reason ?? null,
+          attempt.reason_code ?? null,
+          attempt.created_at,
+          attempt.updated_at,
+          attempt.resolved_at ?? null,
         );
       }
       this.failureInjector?.("after_state_write");
@@ -2651,6 +2711,111 @@ export class SqliteLedger {
 
   adapterOperations() {
     return this.db.prepare("SELECT * FROM adapter_operations ORDER BY created_at").all();
+  }
+
+  getRefundAttempt(operationKey) {
+    const row = this.db
+      .prepare("SELECT * FROM refund_attempts WHERE operation_key=?")
+      .get(operationKey);
+    return row ? { ...row, amount_value: Number(row.amount_value) } : null;
+  }
+
+  getRefundAttemptByRefundId(refundId) {
+    const row = this.db
+      .prepare("SELECT * FROM refund_attempts WHERE refund_id=?")
+      .get(refundId);
+    return row ? { ...row, amount_value: Number(row.amount_value) } : null;
+  }
+
+  refundAttempts(transactionId = null) {
+    const rows = transactionId
+      ? this.db
+          .prepare("SELECT * FROM refund_attempts WHERE transaction_id=? ORDER BY created_at, id")
+          .all(transactionId)
+      : this.db.prepare("SELECT * FROM refund_attempts ORDER BY created_at, id").all();
+    return rows.map((row) => ({ ...row, amount_value: Number(row.amount_value) }));
+  }
+
+  prepareRefundAttempt({
+    operation_key,
+    refund_id,
+    transaction_id,
+    amount,
+    reason = null,
+    created_at = new Date().toISOString(),
+  }) {
+    return immediateTransaction(this.db, () => {
+      const existing = this.getRefundAttempt(operation_key);
+      if (existing) {
+        if (
+          existing.refund_id !== refund_id ||
+          existing.transaction_id !== transaction_id ||
+          existing.amount_value !== amount.value ||
+          existing.currency !== amount.currency
+        ) {
+          throw new ApiError(
+            409,
+            "idempotency_conflict",
+            "refund_attempt_conflict",
+            "Refund attempt details changed for an existing operation key.",
+          );
+        }
+        return existing;
+      }
+      const id = `rat_${randomUUID().replaceAll("-", "").slice(0, 16)}`;
+      this.db
+        .prepare(`
+          INSERT INTO refund_attempts(
+            id, operation_key, refund_id, transaction_id, amount_value, currency,
+            status, provider_reference, reason, reason_code, created_at, updated_at, resolved_at
+          ) VALUES (?, ?, ?, ?, ?, ?, 'prepared', NULL, ?, NULL, ?, ?, NULL)
+        `)
+        .run(
+          id,
+          operation_key,
+          refund_id,
+          transaction_id,
+          amount.value,
+          amount.currency,
+          reason,
+          created_at,
+          created_at,
+        );
+      return this.getRefundAttempt(operation_key);
+    });
+  }
+
+  transitionRefundAttempt(
+    operationKey,
+    { from, status, provider_reference = null, reason_code = null, updated_at = new Date().toISOString() },
+  ) {
+    return immediateTransaction(this.db, () => {
+      const current = this.getRefundAttempt(operationKey);
+      if (!current) {
+        throw new ApiError(404, "resource_not_found", "refund_attempt_not_found", "Refund attempt was not found.");
+      }
+      const allowedFrom = Array.isArray(from) ? from : [from];
+      if (!allowedFrom.includes(current.status)) {
+        throw new ApiError(
+          409,
+          "invalid_state_transition",
+          "refund_attempt_transition_conflict",
+          "Refund attempt is no longer in the expected state.",
+          { expected: allowedFrom, current: current.status },
+        );
+      }
+      const resolvedAt = ["refunded", "provider_unknown", "failed"].includes(status)
+        ? updated_at
+        : null;
+      this.db
+        .prepare(`
+          UPDATE refund_attempts
+          SET status=?, provider_reference=?, reason_code=?, updated_at=?, resolved_at=?
+          WHERE operation_key=?
+        `)
+        .run(status, provider_reference, reason_code, updated_at, resolvedAt, operationKey);
+      return this.getRefundAttempt(operationKey);
+    });
   }
 
   saveX402Authorization(authorization) {

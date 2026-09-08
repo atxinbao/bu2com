@@ -138,3 +138,94 @@ test("F13 persists provider-unknown refund and recovers it explicitly", async ()
     rmSync(directory, { recursive: true, force: true });
   }
 });
+
+test("LA-01 keeps an unknown refund reserved and blocks a second refund", async () => {
+  class UnknownRefundAdapter extends SimulatedPaymentAdapter {
+    refund() {
+      throw new ApiError(503, "provider_unknown", "refund_result_unknown", "Refund result is unknown.");
+    }
+  }
+  const ledger = new SqliteLedger(":memory:");
+  const sandbox = new Bu2Sandbox({ ledger, adapter: new UnknownRefundAdapter({ ledger }) });
+  const flow = await settledTransaction(sandbox, "unknown-reserved");
+  const pending = await sandbox.requestRefund(
+    flow.transactionId,
+    { amount: { value: 200, currency: "CNY" } },
+    "la01-refund-unknown",
+  );
+  assert.equal(pending.refund.status, "provider_unknown");
+  assert.equal(ledger.getRefundAttemptByRefundId(pending.refund.id).status, "provider_unknown");
+  await assert.rejects(
+    sandbox.requestRefund(
+      flow.transactionId,
+      { amount: { value: 101, currency: "CNY" } },
+      "la01-refund-second",
+    ),
+    (error) => error.code === "refund_amount_exceeded",
+  );
+  assert.equal(sandbox.getTransaction(flow.transactionId).transaction.refunded_amount.value, 0);
+  ledger.close();
+});
+
+test("LA-01 rejects a provider_unknown result object instead of marking refunded", async () => {
+  class UnknownObjectAdapter extends SimulatedPaymentAdapter {
+    refund() {
+      return { status: "provider_unknown", reason_code: "provider_timeout" };
+    }
+  }
+  const ledger = new SqliteLedger(":memory:");
+  const sandbox = new Bu2Sandbox({ ledger, adapter: new UnknownObjectAdapter({ ledger }) });
+  const flow = await settledTransaction(sandbox, "unknown-object");
+  const result = await sandbox.requestRefund(
+    flow.transactionId,
+    { amount: { value: 50, currency: "CNY" } },
+    "la01-refund-object",
+  );
+  assert.equal(result.refund.status, "provider_unknown");
+  assert.equal(result.transaction.refunded_amount.value, 0);
+  assert.equal(sandbox.wallet.available, 99_700);
+  ledger.close();
+});
+
+test("LA-01 reuses a persisted confirmed refund after local commit failure", async () => {
+  let injectFailure = false;
+  class CountingAdapter extends SimulatedPaymentAdapter {
+    refundCalls = 0;
+
+    refund(...args) {
+      this.refundCalls += 1;
+      return super.refund(...args);
+    }
+  }
+  const ledger = new SqliteLedger(":memory:", {
+    failureInjector: (stage) => {
+      if (injectFailure && stage === "after_state_write") {
+        injectFailure = false;
+        throw new Error("injected refund commit failure");
+      }
+    },
+  });
+  const adapter = new CountingAdapter({ ledger });
+  const sandbox = new Bu2Sandbox({ ledger, adapter });
+  const flow = await settledTransaction(sandbox, "commit-failure");
+  injectFailure = true;
+  await assert.rejects(
+    sandbox.requestRefund(
+      flow.transactionId,
+      { amount: { value: 80, currency: "CNY" } },
+      "la01-refund-commit-failure",
+    ),
+    /injected refund commit failure/,
+  );
+  assert.equal(adapter.refundCalls, 1);
+  const recovered = await sandbox.requestRefund(
+    flow.transactionId,
+    { amount: { value: 80, currency: "CNY" } },
+    "la01-refund-commit-failure",
+  );
+  assert.equal(recovered.refund.status, "refunded");
+  assert.equal(recovered.transaction.refunded_amount.value, 80);
+  assert.equal(adapter.refundCalls, 1);
+  assert.equal(ledger.refundAttempts(flow.transactionId)[0].status, "refunded");
+  ledger.close();
+});
