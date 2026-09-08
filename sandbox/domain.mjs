@@ -45,6 +45,8 @@ const MAX_INTERNAL_SESSION_MS = 15 * 60 * 1000;
 const receivableStatuses = new Set(["issued", "pending", "paid", "expired", "cancelled"]);
 const accessGrantStatuses = new Set(["active", "expired", "revoked"]);
 const reconciliationFeeSources = new Set(["payment", "collection", "refund"]);
+const reconciliationObservationKinds = new Set(["payment", "collection", "refund", "fee"]);
+const reconciliationObservationStatuses = new Set(["verified", "pending", "unknown"]);
 const legacyMandatePattern = /^mdt_(research_04|x402_test|doctor_buyer|env05_buyer|mcp_buyer|sdk_buyer|external_local|attacker|atomic_[A-Za-z0-9_-]+)$/;
 
 function validateIdentifier(value, prefixValue, field) {
@@ -98,6 +100,27 @@ function validateAmount(amount) {
       "Currency must be an ISO 4217 uppercase code.",
     );
   }
+}
+
+function validateReconciliationObservation(observation) {
+  requireFields(observation ?? {}, ["kind", "provider", "provider_reference", "amount"]);
+  if (!reconciliationObservationKinds.has(observation.kind)) {
+    throw new ApiError(400, "validation_error", "invalid_reconciliation_observation_kind", "Reconciliation observation kind is invalid.");
+  }
+  if (typeof observation.provider !== "string" || observation.provider.length === 0 || observation.provider.length > 120) {
+    throw new ApiError(400, "validation_error", "invalid_reconciliation_observation_provider", "Reconciliation observation provider is invalid.");
+  }
+  if (typeof observation.provider_reference !== "string" || observation.provider_reference.length === 0 || observation.provider_reference.length > 255) {
+    throw new ApiError(400, "validation_error", "invalid_reconciliation_observation_reference", "Reconciliation observation provider reference is invalid.");
+  }
+  validateAmount(observation.amount);
+  if (observation.status !== undefined && !reconciliationObservationStatuses.has(observation.status)) {
+    throw new ApiError(400, "validation_error", "invalid_reconciliation_observation_status", "Reconciliation observation status is invalid.");
+  }
+  if (observation.source_id !== undefined && (typeof observation.source_id !== "string" || observation.source_id.length === 0 || observation.source_id.length > 255)) {
+    throw new ApiError(400, "validation_error", "invalid_reconciliation_observation_source", "Reconciliation observation source_id is invalid.");
+  }
+  if (observation.observed_at !== undefined) validateDate(observation.observed_at, "observed_at");
 }
 
 export class Bu2Sandbox {
@@ -1547,15 +1570,17 @@ export class Bu2Sandbox {
     });
   }
 
-  reconciliationItems(asOf = null) {
+  reconciliationItems(asOf = null, observations = undefined) {
     const cutoff = asOf ? Date.parse(asOf) : null;
     const withinCutoff = (value) => cutoff === null || Date.parse(value) <= cutoff;
     const items = [];
     for (const transaction of this.transactions.values()) {
-      if (!["settled", "refunded"].includes(transaction.status)) continue;
+      if (!["delivery_submitted", "settled", "refunded"].includes(transaction.status)) continue;
       if (!withinCutoff(transaction.created_at)) continue;
       const operation = this.ledger?.getAdapterOperation(`settle:${transaction.id}`) ?? null;
-      const expected = transaction.settled_amount;
+      const expected = ["settled", "refunded"].includes(transaction.status)
+        ? transaction.settled_amount
+        : transaction.reserved_amount;
       const issues = [];
       let status = "matched";
       if (!operation || operation.status !== "settled") {
@@ -1615,6 +1640,57 @@ export class Bu2Sandbox {
         issues: [],
       });
     }
+    if (observations === undefined) return items.sort((left, right) => left.source_id.localeCompare(right.source_id));
+    if (!Array.isArray(observations) || observations.length > 1_000) {
+      throw new ApiError(400, "validation_error", "invalid_reconciliation_observations", "Reconciliation observations must be an array with at most 1000 entries.");
+    }
+    observations.forEach(validateReconciliationObservation);
+    const consumed = new Set();
+    for (const item of items) {
+      const index = observations.findIndex((observation, candidateIndex) => {
+        if (consumed.has(candidateIndex) || observation.kind !== item.kind) return false;
+        if (observation.source_id) return observation.source_id === item.source_id;
+        return observation.provider_reference === item.provider_reference;
+      });
+      if (index < 0) {
+        item.status = "unknown";
+        item.observed_amount = null;
+        item.issues = [...new Set([...item.issues, "external_observation_missing"])];
+        continue;
+      }
+      const observation = observations[index];
+      consumed.add(index);
+      item.observation = clone(observation);
+      item.observed_amount = clone(observation.amount);
+      if ((observation.status ?? "verified") !== "verified") {
+        item.status = "unknown";
+        item.issues = [...new Set([...item.issues, "external_observation_unknown"])];
+      }
+      if (
+        observation.amount.value !== item.expected_amount.value ||
+        observation.amount.currency !== item.expected_amount.currency ||
+        (item.provider_reference !== null && observation.provider_reference !== item.provider_reference)
+      ) {
+        item.status = "exception";
+        item.issues = [...new Set([...item.issues, "external_observation_mismatch"])];
+      }
+      if (item.status === "unknown" && (observation.status ?? "verified") === "verified") {
+        item.issues = [...new Set([...item.issues, "local_fact_unknown"])];
+      }
+    }
+    observations.forEach((observation, index) => {
+      if (consumed.has(index)) return;
+      items.push({
+        kind: "external",
+        source_id: `external:${observation.provider}:${observation.provider_reference}`,
+        provider_reference: observation.provider_reference,
+        expected_amount: clone(observation.amount),
+        observed_amount: clone(observation.amount),
+        observation: clone(observation),
+        status: "unknown",
+        issues: ["external_fact_unmatched"],
+      });
+    });
     return items.sort((left, right) => left.source_id.localeCompare(right.source_id));
   }
 
@@ -1622,9 +1698,10 @@ export class Bu2Sandbox {
     return this.runIdempotentAsync("reconciliations", key, input ?? {}, async () => {
       const asOf = input?.as_of ?? new Date().toISOString();
       validateDate(asOf, "as_of");
-      const items = this.reconciliationItems(asOf);
+      const items = this.reconciliationItems(asOf, input?.observations);
       const totals = {};
       for (const item of items) {
+        if (!["payment", "collection", "refund", "fee"].includes(item.kind)) continue;
         const currency = item.expected_amount.currency;
         totals[currency] ??= { payments: 0, collections: 0, refunds: 0, fees: 0 };
         const bucket = totals[currency];
@@ -1639,6 +1716,7 @@ export class Bu2Sandbox {
       const run = {
         id: input?.id ?? prefix("rec"),
         as_of: asOf,
+        mode: input?.observations === undefined ? "internal" : "external",
         status,
         item_count: items.length,
         exception_count: items.filter((item) => item.status === "exception").length,

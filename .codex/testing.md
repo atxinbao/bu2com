@@ -1,5 +1,23 @@
 # ENV-02 测试记录
 
+## 2026-09-09 · LA-05a 外部观察对账
+
+执行者：Codex
+分支：`feat/ledger-assurance-independent-reconciliation`
+
+| 范围 | 命令 | 结果 |
+| --- | --- | --- |
+| LA-05a 定向 | `npm --prefix sandbox run test:la05a` | 4/4 通过 |
+| Sandbox 全量 | `npm --prefix sandbox test` | 178/178 通过 |
+| LA-04 / Operations / F15b / F16a | 对应 Sandbox 专项 | 3/3、6/6、4/4、3/3 通过 |
+| API/MCP 契约 | `node docs/03-technical/validate-contract.mjs` | 63 invariants、6 MCP tools 通过 |
+| TypeScript SDK | `npm --prefix packages/typescript-sdk test` | 生成、格式、Lint、类型检查、构建与 10/10 单测通过 |
+| Prototype | `npm --prefix prototype run lint && npm --prefix prototype run build` | 均通过 |
+| Hosted 合约回归 | `test:hosted-sandbox`, `test:hosted-deployment`, `test:hosted-evidence-schema` | 8/8、2/2、2/2 通过 |
+| 差异检查 | `git diff --check` | 通过 |
+
+覆盖独立外部观察金额不匹配、`delivery_submitted` Payment 未决、外部孤立事实、HTTP 观察输入和 SQLite 重启证据保留。边界：Local/Simulation only；不调用真实 Provider 或链上网络。
+
 ## 2026-09-09 · LA-04 Collection 持续验证与单次入账
 
 执行者：Codex

@@ -1444,12 +1444,28 @@ components:
       properties:
         id: { type: string, pattern: '^rec_[A-Za-z0-9_-]+$' }
         as_of: { type: string, format: date-time }
+        observations:
+          type: array
+          maxItems: 1000
+          items: { $ref: '#/components/schemas/ReconciliationObservation' }
+    ReconciliationObservation:
+      type: object
+      additionalProperties: false
+      required: [kind, provider, provider_reference, amount]
+      properties:
+        kind: { type: string, enum: [payment, collection, refund, fee] }
+        source_id: { type: string, minLength: 1, maxLength: 255 }
+        provider: { type: string, minLength: 1, maxLength: 120 }
+        provider_reference: { type: string, minLength: 1, maxLength: 255 }
+        amount: { $ref: '#/components/schemas/Amount' }
+        status: { type: string, enum: [verified, pending, unknown] }
+        observed_at: { type: string, format: date-time }
     ReconciliationItem:
       type: object
       additionalProperties: false
       required: [kind, source_id, provider_reference, expected_amount, observed_amount, status, issues]
       properties:
-        kind: { type: string, enum: [payment, collection, refund, fee] }
+        kind: { type: string, enum: [payment, collection, refund, fee, external] }
         source_id: { type: string }
         provider_reference: { type: [string, 'null'] }
         expected_amount: { $ref: '#/components/schemas/Amount' }
@@ -1459,6 +1475,7 @@ components:
             - { type: 'null' }
         status: { type: string, enum: [matched, exception, unknown] }
         issues: { type: array, items: { type: string } }
+        observation: { $ref: '#/components/schemas/ReconciliationObservation' }
     ReconciliationRun:
       type: object
       additionalProperties: false
@@ -1466,6 +1483,7 @@ components:
       properties:
         id: { type: string, pattern: '^rec_[A-Za-z0-9_-]+$' }
         as_of: { type: string, format: date-time }
+        mode: { type: string, enum: [internal, external] }
         status: { type: string, enum: [matched, exception, unknown] }
         item_count: { type: integer, minimum: 0 }
         exception_count: { type: integer, minimum: 0 }

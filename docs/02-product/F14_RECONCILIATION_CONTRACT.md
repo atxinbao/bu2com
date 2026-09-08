@@ -6,7 +6,7 @@
 
 ## 1. 目标与边界
 
-F14 将已有 Payment、Collection、Refund、ProviderFee 和 FinancialPosting 事实汇总为可持久化、可重取、可解释的 `ReconciliationRun`。对账只读取并记录证据，不改写交易、收款、退款、钱包或历史 LedgerEvent。
+F14 将已有 Payment、Collection、Refund、ProviderFee 和 FinancialPosting 事实汇总为可持久化、可重取、可解释的 `ReconciliationRun`。对账只读取并记录证据，不改写交易、收款、退款、钱包或历史 LedgerEvent。LA-05a 在此基础上增加外部观察输入；外部观察契约与未决队列见 [LA-05a](LA05A_EXTERNAL_RECONCILIATION_CONTRACT.md)。
 
 本 PR 只在 Local / Simulation 边界验收。它不执行真实 Provider 查询、不发起支付或退款、不开放 Hosted、Live/Mainnet、托管或生产凭证。真实 Testnet 对账仍需独立 Provider 证据和环境准入。
 
@@ -27,7 +27,7 @@ F14 将已有 Payment、Collection、Refund、ProviderFee 和 FinancialPosting �
 
 ## 3. 对账规则
 
-- 已结算 Payment 必须存在状态为 `settled` 的 Adapter Operation，金额、币种和 Provider Reference 必须与 Transaction/Receipt 一致。
+- 已结算 Payment 必须存在状态为 `settled` 的 Adapter Operation，金额、币种和 Provider Reference 必须与 Transaction/Receipt 一致。`delivery_submitted` Payment 在外部对账模式中也必须进入未决队列，以预留金额作为预期金额。
 - `posted` Collection 以已验证金额和 Provider Reference 作为观察事实；`pending` Collection 为 `unknown`。
 - `refunded` Refund 需要 Provider Reference；`processing` 或 `provider_unknown` 为 `unknown`，不能推断退款已完成。
 - 已登记 ProviderFee 作为独立费用事实计入对应币种，不从余额差额反推手续费。
@@ -60,4 +60,3 @@ ProviderFee 与 ReconciliationRun 复用 SQLite `resources` 表，随通用 Snap
 - [x] HTTP、OpenAPI、Access Contract、TypeScript SDK 和领域测试一致。
 - [x] SQLite 重启保留 ProviderFee 与 ReconciliationRun。
 - [ ] 真实 Provider / Base Sepolia / Hosted / Live/Mainnet 和 F14 后续财务修正仍未开放。
-
