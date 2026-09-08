@@ -247,3 +247,6 @@
 - Tool: `npm --prefix prototype run lint && npm --prefix prototype run build`; result: passed.
 - Tool: `git diff --check`; result: passed.
 - Boundary: F08 remains Local/ Sandbox/Testnet contract and authorization logic only; no Provider, Signer, x402/AP2 execution, Hosted deployment, Live/Mainnet, custody or production credentials were enabled.
+- Tool: `git commit`; result: created `502a977` (`feat(mandates): enforce versioned autonomous payment grants`) and `a232fcc` (`docs(f08): prepare R2 review evidence`).
+- Tool: `git push -u origin`; result: pushed `feat/mandates-versioned-policy` to `origin`.
+- Tool: `gh pr create` / `gh pr edit`; result: opened Draft PR #34 with `.github/pull_request_template.md`, title `feat(mandates): enforce versioned autonomous payment grants`, and complete R2 evidence.
