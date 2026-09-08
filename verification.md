@@ -1,5 +1,20 @@
 # BU2 Product v0.1 验证结论
 
+## 2026-09-09 · F16a 内部 Sandbox 自主双向收付 Beta 候选
+
+执行者：Codex
+分支：`test/internal-sandbox-pay-collect-beta`
+
+- `node --test sandbox/f16a.test.mjs`：3/3 通过，覆盖预授权 Agent 无逐笔批准完成付款/收款/权益恢复/退款/对账、Provider unknown 重启恢复、未预授权商户与 Sandbox/Testnet `execution_disabled` 失败关闭。
+- `node --test sandbox/f15a.test.mjs sandbox/f15a-http.test.mjs sandbox/f15b.test.mjs`：8/8 通过；F15a/F15b 回归保持通过。
+- `npm --prefix sandbox test`：158/158 通过。
+- `node docs/03-technical/validate-contract.mjs`：63 项不变量、6 个 MCP 工具通过。
+- `npm --prefix packages/typescript-sdk test`：生成检查、格式、Lint、类型检查、构建和 10/10 单测通过。
+- `npm --prefix prototype run lint && npm --prefix prototype run build`：通过。
+- `git diff --check`：通过。
+- F16a 仅为 Local/Simulation 固定候选证据；未执行真实 Base Sepolia、Hosted、Live/Mainnet、托管或生产凭证路径。
+- 完整门禁将在提交前执行：F15a/F15b 回归、Sandbox 全量、契约验证、SDK 生成/格式/Lint/类型/build、Prototype lint/build 与 `git diff --check`。
+
 # 2026-09-09 · F15b 业务负载、停机与财务恢复验收
 
 执行者：Codex
