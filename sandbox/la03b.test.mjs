@@ -104,3 +104,47 @@ test("LA-03b rejects wrong environments and correction account drift", async () 
   );
   ledger.close();
 });
+
+test("LA-03c rebuilds account balances from immutable postings and survives restart", async () => {
+  const directory = mkdtempSync(join(tmpdir(), "bu2-la03c-projection-"));
+  const database = join(directory, "projection.sqlite");
+  try {
+    const firstLedger = new SqliteLedger(database);
+    const first = new Bu2Sandbox({ ledger: firstLedger });
+    const checkpoint = await first.createOpeningBalance({ ...openingInput, id: "obc_la03c_projection" }, "la03c-opening");
+    const original = first.events.find((event) => event.resource_id === checkpoint.id);
+    await first.postLedgerCorrection(
+      {
+        id: "cor_la03c_projection",
+        original_event_id: original.id,
+        book_id: openingInput.book_id,
+        environment: "local",
+        amount: { value: 25, currency: "CNY" },
+        debit_account: "expense.migration_adjustment",
+        credit_account: "equity.opening_balance:obc_la03c_projection",
+        reason: "projection test correction",
+      },
+      "la03c-correction",
+    );
+    const projection = first.rebuildLedgerProjection({ currency: "CNY" });
+    assert.equal(projection.posting_count, 4);
+    assert.equal(projection.journal_count, 2);
+    assert.equal(projection.unbalanced_journal_count, 0);
+    assert.equal(projection.accounts.find((account) => account.account === "asset.cash:acct_bu2_ventures").balance_minor, 100_000);
+    assert.equal(projection.accounts.find((account) => account.account === "expense.migration_adjustment").balance_minor, 25);
+    firstLedger.close();
+
+    const secondLedger = new SqliteLedger(database);
+    const second = new Bu2Sandbox({ ledger: secondLedger });
+    const restored = second.rebuildLedgerProjection({ currency: "CNY" });
+    assert.equal(restored.posting_count, 4);
+    assert.equal(restored.unbalanced_journal_count, 0);
+    assert.deepEqual(
+      restored.accounts.map(({ account, balance_minor }) => ({ account, balance_minor })),
+      projection.accounts.map(({ account, balance_minor }) => ({ account, balance_minor })),
+    );
+    secondLedger.close();
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
