@@ -109,6 +109,18 @@
 
 结论：LA-01 本地实现达到 **GO for R2 review**；它不构成完整 Ledger Assurance Gate 通过，也不改变 Hosted/Live 准入。
 
+## 2026-09-09 · LA-01b 已确认退款事实恢复与新请求防重复
+
+执行者：Codex
+分支：`fix/refund-attempt-reconciliation`
+
+- 根因：Provider 已返回明确 `refunded` 后，`RefundAttempt` 先提交成功，但本地 Transaction/Refund 快照在提交阶段失败；换新幂等键只按 Transaction 的旧退款金额计算额度，可能再次调用 Provider。
+- 修复：新退款请求在 Provider 调用前扫描当前交易的持久化 `RefundAttempt(status=refunded)`；对缺失的 Refund 事实执行一次本地恢复并返回 `recovery.status=reconciled`，不再调用 Provider。
+- 新增反例：外部成功、本地提交失败后使用新幂等键，Adapter 调用次数保持 1，退款金额只恢复一次，额度不会重复占用。
+- 未执行：真实 Provider、Hosted、Base Sepolia、Live/Mainnet、托管钱包和 E3.1。
+
+结论：LA-01b 本地修复达到 **GO for R2 review**；该修复完成前的 Release 仍保持阻塞，不构成完整 Ledger Assurance Gate 或真实资金准入。
+
 ## 2026-09-09 · F16b Hosted Sandbox 外部集成基础准入
 
 执行者：Codex

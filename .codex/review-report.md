@@ -1028,3 +1028,10 @@ F06b 让 Quote 和 PaymentIntent 能够保留可验证的资金来源与收款�
 - 战略评分：94/100。实现继续遵守“Posting 是事实、投影是派生读模型”的边界，保留未绑定历史事实，不把投影基础误报为运行时余额切换或完整迁移。
 - 遗留风险：历史 Posting 的归属迁移、运行时余额切换、条件版本投影发布和并发刷新仍未实现；需要后续独立 R2 PR 与证据。
 - 结论：建议提交 R2 PR；保持 Hosted、Base Sepolia、Live/Mainnet 和 E3.1 关闭。
+
+## 2026-09-09 · LA-01b 已确认退款事实恢复与新请求防重复审查
+
+- 技术评分：93/100。修复以持久化 `RefundAttempt(status=refunded)` 为外部成功事实，在新退款 Provider 调用前补齐本地 Refund/Transaction/钱包/Posting，并通过回归测试证明新幂等键不重复调用 Adapter。
+- 战略评分：96/100。直接覆盖审计确认的 Release 阻断，不扩大 Provider、Hosted 或真实资金边界；重复请求安全优先于把新请求解释为另一笔退款。
+- 遗留风险：该恢复路径仍需 R2 人工审查；真实 Provider 对账、历史异常数据修复和跨进程恢复演练仍未执行。
+- 结论：建议提交 R2 PR；在合并前 Release 保持阻塞，Live/Mainnet、Hosted、Base Sepolia 和 E3.1 继续关闭。
