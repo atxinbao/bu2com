@@ -1,5 +1,20 @@
 # BU2 Product v0.1 验证结论
 
+## 2026-09-09 · LA-02 Ledger Assurance Gate：成组 Journal / Posting 保护
+
+执行者：Codex
+分支：`feat/ledger-assurance-journal-guards`
+
+- `npm --prefix sandbox run test:la02`：3/3 通过，覆盖平衡 Journal、同 ID 内容漂移、不平衡、浮点、孤立来源、不可变保护和安全整数边界。
+- `node --test sandbox/f07.test.mjs sandbox/f11.test.mjs sandbox/f12.test.mjs sandbox/f13.test.mjs sandbox/f14.test.mjs`：19/19 通过。
+- `npm --prefix prototype run lint`：通过。
+- `git diff --check`：通过。
+- Schema v15 新增 `journal_headers`、`financial_postings.journal_id` 及受控写入/数据库不可变保护。
+
+结论：LA-02 当前实现达到 **GO for R2 review**；只建立 Journal/Posting 基础原语，不构成完整 Ledger Assurance Gate，通过不代表 LA-03/LA-04/LA-05 或真实资金路径已放行。
+
+边界：Local/Simulation；未执行真实 Provider、Base Sepolia、Hosted、Live/Mainnet、托管或生产凭证。E3.1 Pilot Manifest 保持暂停。
+
 ## 2026-09-09 · LA-01 Ledger Assurance Gate：持久化退款尝试
 
 执行者：Codex

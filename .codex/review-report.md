@@ -1,5 +1,32 @@
 # F16a 内部 Sandbox 自主双向收付 Beta 候选自主审查报告
 
+# LA-02 成组 Journal / Posting 保护自主审查报告
+
+日期：2026-09-09
+审查者：Codex（Contributor / Verifier，非 R2 Approver）
+分支：`feat/ledger-assurance-journal-guards`
+
+## 结果
+
+| 维度 | 得分 | 结论 |
+| --- | ---: | --- |
+| 需求覆盖 | 19/20 | 覆盖平衡 Journal、严格金额、来源、同 ID 内容漂移和不可变事实 |
+| 技术实现 | 19/20 | Schema v15 追加 Journal Header、统一写入入口和 SQLite 触发器 |
+| 金融边界 | 20/20 | 不平衡、孤立、浮点和已过账修改均失败关闭 |
+| 自动化验证 | 20/20 | LA-02 定向 3/3，F07/F11/F12/F13/F14 回归 19/19 |
+| 文档与恢复 | 19/20 | 契约、路线、README、CHANGELOG、testing、verification 与 operations 已同步 |
+| 综合 | **97/100** | 通过本地整改审查，进入 R2 |
+
+## 结论
+
+建议：**通过 LA-02 本地 Journal/Posting 保护实现，提交 R2 审查**。LA-03 仍需把付款、收款、退款、费用、期初和更正全部接入完整账务语义；本 PR 不把现有局部 Posting 宣称为完整账本。
+
+## 残余风险
+
+1. LA-03/LA-04/LA-05 尚未完成，完整业务分录、pending 收款收敛和独立对账仍是准入阻断项。
+2. 当前迁移只为既有 Posting 建立兼容性 Journal 引用，不伪造缺失历史分录。
+3. E3.1 Pilot Manifest 保持暂停，Live/Mainnet、Hosted 和真实 Provider 仍关闭。
+
 # LA-01 持久化退款尝试与未决额度占用自主审查报告
 
 日期：2026-09-09

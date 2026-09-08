@@ -152,6 +152,27 @@
       <h2 id="unreleased">Unreleased</h2>
       <article class="release">
         <div class="release-head">
+          <div><h3>LA-02 · 成组 Journal / Posting 保护</h3><time datetime="2026-09-09">2026-09-09</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">在 LA-01 之后建立账务写入的最小可信边界：所有新增 Financial Posting 必须属于可验证、借贷平衡且不可变的 Journal。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag added">Added</span>新增 SQLite Schema v15 <code>journal_headers</code> 与 <code>financial_postings.journal_id</code>，并为旧 Posting 建立兼容性 Journal 引用。</li>
+            <li><span class="tag changed">Changed</span>统一写入入口校验事件、来源、科目、币种、借贷平衡和安全整数；同 ID 内容漂移、孤立来源和不平衡分录直接拒绝。</li>
+            <li><span class="tag changed">Changed</span>数据库触发器拒绝浮点金额以及已过账 Journal/Posting 的 UPDATE/DELETE；更正只能追加补偿事实。</li>
+            <li><span class="tag governance">Boundary</span>只建立账务保护原语，不声称完整付款/收款/退款/费用分录、历史重放或真实 Sandbox/Live 准入已完成。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R2 · 账务状态、金额、数据库迁移与不可变事实，必须独立人工审查</span></div>
+          <div><b>验证</b><span>LA-02 定向测试覆盖平衡 Journal、内容漂移、不平衡、浮点、孤立和不可变约束；完整回归记录在 PR 中</span></div>
+          <div><b>恢复</b><span>不删除历史账；旧记录保留兼容引用，后续更正使用新 Journal/Posting 追加表达</span></div>
+        </div>
+      </article>
+      <article class="release">
+        <div class="release-head">
           <div><h3>LA-01 · 持久化退款尝试与未决额度占用</h3><time datetime="2026-09-09">2026-09-09</time></div>
           <span class="status">Unreleased</span>
         </div>

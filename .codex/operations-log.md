@@ -1,5 +1,12 @@
 # ENV-03 操作日志
 
+## 2026-09-09 · LA-02 Ledger Assurance Gate：Journal / Posting 保护
+
+- Tool: `gh pr view`, `git fetch`, `git switch`, `git pull --ff-only`, `git branch -d`; result: verified PR #45 merged at `8927098`, synchronized `main`, deleted local `feat/ledger-assurance-refund-attempts`, and created `feat/ledger-assurance-journal-guards`.
+- Tool: `rg`, `sed`; result: traced audit L-02/L-06/L-07 to `financial_postings`, budget/collection posting writers, SQLite DDL and unsafe integer validation; kept LA-03 full business posting coverage separate.
+- Tool: `apply_patch`; result: added Schema v15 `journal_headers`, `journal_id`, one balanced journal write path, strict safe-integer validation, source checks, immutable posting/journal triggers, LA-02 tests and synchronized contracts/docs.
+- Boundary: Local/Simulation ledger guard only; no real Provider, Base Sepolia, Hosted, Live/Mainnet, custody or production credential capability was enabled; E3.1 remains paused.
+
 ## 2026-09-09 · LA-01 Ledger Assurance Gate：持久化退款尝试
 
 - Tool: `gh pr view`, `git switch`, `git pull --ff-only`, `git branch -d`; result: verified PR #44 merged at `e0d8c47`, synchronized `main`, deleted local `feat/pilot-manifest-preflight` after E3.1 was paused, and created `feat/ledger-assurance-refund-attempts`.
