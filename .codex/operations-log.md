@@ -461,4 +461,5 @@
 - Tool: `node --test sandbox/la03d-posting.test.mjs`; result: targeted LA-03d Posting/投影 tests 3/3 passed, covering binding, inactive/unknown/cross-environment rejection and account isolation.
 - Tool: `npm --prefix sandbox test`; result: 191/191 passed after normalizing legacy `ledger_account_id: null` in replay evidence; `node deploy/runtime-assurance.mjs` passed with Schema 1–17; contract validation 63 invariants/6 MCP tools; SDK 10/10; Prototype lint/build and `git diff --check` passed.
 - Audit boundary: the separately reported refund external-success/local-commit-failure re-occupation issue remains a Release blocker and is intentionally not mixed into this LA-03d PR; it requires the next dedicated R2 repair.
+- Follow-up check: `writeBalancedJournals(..., { environment })` now rejects an active ledger account from another environment; targeted 3/3 and full Sandbox 191/191 were rerun after this guard.
 - Boundary: local-only; no Provider, signer, payment, Hosted, Base Sepolia, Live/Mainnet or E3.1 activation.

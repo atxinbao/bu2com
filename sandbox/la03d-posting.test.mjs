@@ -102,6 +102,10 @@ test("LA-03d rejects inactive, unknown, and cross-environment posting bindings",
     () => ledger.assertLedgerAccountBinding(account.id, { environment: "sandbox" }),
     (error) => error.code === "ledger_account_environment_mismatch",
   );
+  assert.throws(
+    () => ledger.writeBalancedJournals(postings(fixture, account.id), [fixture.event], { environment: "sandbox" }),
+    (error) => error.code === "ledger_account_environment_mismatch",
+  );
   ledger.close();
 });
 
