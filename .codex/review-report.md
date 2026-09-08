@@ -1,5 +1,32 @@
 # F16a 内部 Sandbox 自主双向收付 Beta 候选自主审查报告
 
+# LA-05b 历史账务重放与备份追平自主审查报告
+
+日期：2026-09-09
+审查者：Codex（Contributor / Verifier，非 R2 Approver）
+分支：`feat/ledger-assurance-history-replay-catchup`
+
+## 初步结果
+
+| 维度 | 得分 | 结论 |
+| --- | ---: | --- |
+| 需求覆盖 | 19/20 | 覆盖期初重放、历史缺口和备份追加事实追平 |
+| 技术实现 | 18/20 | 复用不可变 Posting、SQLite Online Backup 和既有 Projection |
+| 金融边界 | 20/20 | 只读，不写回恢复库，不自动回放 Provider |
+| 自动化验证 | 20/20 | LA-05b 定向 4/4；完整门禁待提交前执行 |
+| 文档与恢复 | 19/20 | 契约、路线、README、CHANGELOG 和证据边界已同步 |
+| 综合 | **96/100** | 达到本地实现审查门槛，待独立 R2 |
+
+## 结论
+
+建议：**通过 LA-05b 本地历史重放与备份追平实现，提交 R2 审查**。本报告不代表完整 Ledger Assurance Gate、真实 Provider 对账、Hosted/Testnet 或生产准入。
+
+## 残余风险
+
+1. 追平结果是追加事实证据，不自动应用到恢复库；受控应用流程仍需独立审查。
+2. 没有期初或缺少 Posting 的历史保持 incomplete，不能伪造旧账。
+3. Live/Mainnet、Hosted、真实资金和 E3.1 Pilot Manifest 继续关闭。
+
 # LA-05a 外部观察对账自主审查报告
 
 日期：2026-09-09

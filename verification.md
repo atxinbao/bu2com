@@ -1,5 +1,18 @@
 # BU2 Product v0.1 验证结论
 
+## 2026-09-09 · LA-05b 历史账务重放与备份追平
+
+执行者：Codex
+分支：`feat/ledger-assurance-history-replay-catchup`
+
+- LA-05b 专项覆盖期初检查点时间点重放、缺失分录不补造、验证 SQLite 备份后的追加事实追平、基线漂移阻断和 SQLite 重启。
+- 重放与追平均为只读证据；`automatic_provider_replay=false`，不写回恢复库、不调用 Provider、不重新付款。
+- `npm --prefix sandbox run test:la05b`：4/4 通过；`npm --prefix sandbox test`：182/182 通过。
+- LA-04/LA-05a/Operations/F15b/F16a 专项：3/3、4/4、6/6、4/4、3/3；契约 63 项不变量与 6 个 MCP 工具；TypeScript SDK 10/10；Prototype lint/build；Hosted 合约 8/8、2/2、2/2；`git diff --check` 均通过。
+- Hosted、真实 Provider、Base Sepolia、Live/Mainnet 和 E3.1 继续关闭。
+
+结论：LA-05b 达到 **GO for R2 review**，不构成完整 Ledger Assurance Gate 或任何外部/生产准入。
+
 ## 2026-09-09 · LA-05a 外部观察对账
 
 执行者：Codex

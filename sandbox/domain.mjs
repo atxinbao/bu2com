@@ -47,6 +47,15 @@ const accessGrantStatuses = new Set(["active", "expired", "revoked"]);
 const reconciliationFeeSources = new Set(["payment", "collection", "refund"]);
 const reconciliationObservationKinds = new Set(["payment", "collection", "refund", "fee"]);
 const reconciliationObservationStatuses = new Set(["verified", "pending", "unknown"]);
+const replayableLedgerEventTypes = new Set([
+  "ledger.opening_balance_posted",
+  "ledger.correction_posted",
+  "transaction.settled",
+  "receivable.payment_posted",
+  "receivable.payment_posted_late",
+  "transaction.refunded",
+  "reconciliation.fee_recorded",
+]);
 const legacyMandatePattern = /^mdt_(research_04|x402_test|doctor_buyer|env05_buyer|mcp_buyer|sdk_buyer|external_local|attacker|atomic_[A-Za-z0-9_-]+)$/;
 
 function validateIdentifier(value, prefixValue, field) {
@@ -121,6 +130,47 @@ function validateReconciliationObservation(observation) {
     throw new ApiError(400, "validation_error", "invalid_reconciliation_observation_source", "Reconciliation observation source_id is invalid.");
   }
   if (observation.observed_at !== undefined) validateDate(observation.observed_at, "observed_at");
+}
+
+function postingProjection(postings, currency = null) {
+  const balances = new Map();
+  const journals = new Map();
+  for (const posting of postings) {
+    if (currency !== null && posting.currency !== currency) continue;
+    const key = `${posting.currency}:${posting.account}`;
+    const current = balances.get(key) ?? {
+      account: posting.account,
+      currency: posting.currency,
+      balance_minor: 0,
+      posting_count: 0,
+    };
+    const signedAmount = posting.direction === "debit" ? posting.amount_value : -posting.amount_value;
+    const nextBalance = current.balance_minor + signedAmount;
+    if (!Number.isSafeInteger(nextBalance)) {
+      throw new ApiError(422, "financial_constraint", "projection_amount_overflow", "Ledger projection exceeds the safe integer boundary.", { account: posting.account, currency: posting.currency });
+    }
+    current.balance_minor = nextBalance;
+    current.posting_count += 1;
+    balances.set(key, current);
+    const journal = journals.get(posting.event_id) ?? { event_id: posting.event_id, currency: posting.currency, debit_minor: 0, credit_minor: 0, posting_count: 0 };
+    if (posting.direction === "debit") journal.debit_minor += posting.amount_value;
+    if (posting.direction === "credit") journal.credit_minor += posting.amount_value;
+    journal.posting_count += 1;
+    journals.set(posting.event_id, journal);
+  }
+  const journalRows = [...journals.values()].map((journal) => ({
+    ...journal,
+    balanced: journal.debit_minor === journal.credit_minor,
+  }));
+  return {
+    posting_count: [...balances.values()].reduce((total, account) => total + account.posting_count, 0),
+    journal_count: journalRows.length,
+    unbalanced_journal_count: journalRows.filter((journal) => !journal.balanced).length,
+    accounts: [...balances.values()]
+      .sort((left, right) => left.currency.localeCompare(right.currency) || left.account.localeCompare(right.account))
+      .map((account) => clone(account)),
+    journals: journalRows.sort((left, right) => left.event_id.localeCompare(right.event_id)).map((journal) => clone(journal)),
+  };
 }
 
 export class Bu2Sandbox {
@@ -1225,45 +1275,124 @@ export class Bu2Sandbox {
   }
 
   rebuildLedgerProjection({ currency = null } = {}) {
-    const balances = new Map();
-    const journals = new Map();
-    for (const posting of this.financialPostings.values()) {
-      if (currency !== null && posting.currency !== currency) continue;
-      const key = `${posting.currency}:${posting.account}`;
-      const current = balances.get(key) ?? {
-        account: posting.account,
-        currency: posting.currency,
-        balance_minor: 0,
-        posting_count: 0,
-      };
-      const signedAmount = posting.direction === "debit" ? posting.amount_value : -posting.amount_value;
-      const nextBalance = current.balance_minor + signedAmount;
-      if (!Number.isSafeInteger(nextBalance)) {
-        throw new ApiError(422, "financial_constraint", "projection_amount_overflow", "Ledger projection exceeds the safe integer boundary.", { account: posting.account, currency: posting.currency });
-      }
-      current.balance_minor = nextBalance;
-      current.posting_count += 1;
-      balances.set(key, current);
-      const journal = journals.get(posting.event_id) ?? { event_id: posting.event_id, currency: posting.currency, debit_minor: 0, credit_minor: 0, posting_count: 0 };
-      if (posting.direction === "debit") journal.debit_minor += posting.amount_value;
-      if (posting.direction === "credit") journal.credit_minor += posting.amount_value;
-      journal.posting_count += 1;
-      journals.set(posting.event_id, journal);
-    }
-    const journalRows = [...journals.values()].map((journal) => ({
-      ...journal,
-      balanced: journal.debit_minor === journal.credit_minor,
-    }));
+    const projection = postingProjection([...this.financialPostings.values()], currency);
     return {
       generated_at: new Date().toISOString(),
       currency,
-      posting_count: [...balances.values()].reduce((total, account) => total + account.posting_count, 0),
-      journal_count: journalRows.length,
-      unbalanced_journal_count: journalRows.filter((journal) => !journal.balanced).length,
-      accounts: [...balances.values()]
-        .sort((left, right) => left.currency.localeCompare(right.currency) || left.account.localeCompare(right.account))
-        .map((account) => clone(account)),
-      journals: journalRows.sort((left, right) => left.event_id.localeCompare(right.event_id)).map((journal) => clone(journal)),
+      ...projection,
+    };
+  }
+
+  exportLedgerReplayEvidence({ as_of = null } = {}) {
+    if (as_of !== null) validateDate(as_of, "as_of");
+    const cutoff = as_of === null ? null : Date.parse(as_of);
+    const withinCutoff = (value) => cutoff === null || Date.parse(value) <= cutoff;
+    const events = this.events
+      .filter((event) => replayableLedgerEventTypes.has(event.type) && withinCutoff(event.created_at))
+      .map((event, index) => ({ sequence: index + 1, ...clone(event) }));
+    const postings = [...this.financialPostings.values()]
+      .filter((posting) => withinCutoff(posting.created_at))
+      .map((posting) => {
+        const { journal_id: _journalId, ...immutablePosting } = clone(posting);
+        return immutablePosting;
+      })
+      .sort((left, right) => left.created_at.localeCompare(right.created_at) || left.id.localeCompare(right.id));
+    const opening_balances = [...this.openingBalances.values()]
+      .filter((checkpoint) => withinCutoff(checkpoint.effective_at))
+      .map((checkpoint) => clone(checkpoint))
+      .sort((left, right) => left.effective_at.localeCompare(right.effective_at) || left.id.localeCompare(right.id));
+    return {
+      schema_version: "la05b.v1",
+      as_of: as_of ?? null,
+      events,
+      postings,
+      opening_balances,
+    };
+  }
+
+  replayLedgerHistory({ as_of = null, currency = null } = {}) {
+    if (as_of !== null) validateDate(as_of, "as_of");
+    if (currency !== null && !/^[A-Z]{3}$/.test(currency)) {
+      throw new ApiError(400, "validation_error", "invalid_currency", "currency must be an uppercase three-letter code.");
+    }
+    const evidence = this.exportLedgerReplayEvidence({ as_of });
+    const eventIds = new Set(evidence.events.map((event) => event.id));
+    const postingEventIds = new Set(evidence.postings.map((posting) => posting.event_id));
+    const eventCurrency = (event) => event.amount?.currency ?? event.currency ?? null;
+    const relevantEvents = evidence.events.filter((event) => currency === null || eventCurrency(event) === null || eventCurrency(event) === currency);
+    const gaps = [];
+    const checkpoints = evidence.opening_balances.filter((checkpoint) => currency === null || checkpoint.amount.currency === currency);
+    if ((relevantEvents.length > 0 || evidence.postings.length > 0) && checkpoints.length === 0) {
+      gaps.push({ code: "opening_checkpoint_missing", message: "No reconciled opening checkpoint covers the replay window." });
+    }
+    for (const event of relevantEvents) {
+      if (!postingEventIds.has(event.id)) {
+        gaps.push({ code: "financial_event_without_posting", event_id: event.id, event_type: event.type, created_at: event.created_at });
+      }
+    }
+    for (const posting of evidence.postings) {
+      if (!eventIds.has(posting.event_id)) {
+        gaps.push({ code: "posting_without_event", posting_id: posting.id, event_id: posting.event_id });
+      }
+    }
+    const projection = postingProjection(evidence.postings, currency);
+    return {
+      schema_version: "la05b.v1",
+      source: "immutable_postings",
+      as_of: as_of ?? null,
+      currency,
+      status: gaps.length === 0 ? "complete" : "incomplete",
+      automatic_provider_replay: false,
+      checkpoint_count: checkpoints.length,
+      event_count: relevantEvents.length,
+      replayed_event_count: relevantEvents.filter((event) => postingEventIds.has(event.id)).length,
+      gap_count: gaps.length,
+      gaps,
+      ...projection,
+    };
+  }
+
+  catchUpLedgerFromBackup({ baseline, as_of = null, currency = null } = {}) {
+    if (!baseline || baseline.schema_version !== "la05b.v1" || !Array.isArray(baseline.events) || !Array.isArray(baseline.postings) || !Array.isArray(baseline.opening_balances)) {
+      throw new ApiError(400, "validation_error", "invalid_replay_baseline", "A LA-05b replay baseline must contain versioned events, postings, and opening balances.");
+    }
+    const current = this.exportLedgerReplayEvidence({ as_of });
+    const conflicts = [];
+    const baselineEvents = new Map(baseline.events.map((event) => [event.id, event]));
+    const baselinePostings = new Map(baseline.postings.map((posting) => [posting.id, posting]));
+    const baselineCheckpoints = new Map(baseline.opening_balances.map((checkpoint) => [checkpoint.id, checkpoint]));
+    for (const event of baseline.events) {
+      const currentEvent = current.events.find((candidate) => candidate.id === event.id);
+      if (!currentEvent) conflicts.push({ code: "baseline_event_missing", event_id: event.id });
+      else if (hash(currentEvent) !== hash(event)) conflicts.push({ code: "baseline_event_changed", event_id: event.id });
+    }
+    for (const posting of baseline.postings) {
+      const currentPosting = current.postings.find((candidate) => candidate.id === posting.id);
+      if (!currentPosting) conflicts.push({ code: "baseline_posting_missing", posting_id: posting.id });
+      else if (hash(currentPosting) !== hash(posting)) conflicts.push({ code: "baseline_posting_changed", posting_id: posting.id });
+    }
+    for (const checkpoint of baseline.opening_balances) {
+      const currentCheckpoint = current.opening_balances.find((candidate) => candidate.id === checkpoint.id);
+      if (!currentCheckpoint) conflicts.push({ code: "baseline_checkpoint_missing", checkpoint_id: checkpoint.id });
+      else if (hash(currentCheckpoint) !== hash(checkpoint)) conflicts.push({ code: "baseline_checkpoint_changed", checkpoint_id: checkpoint.id });
+    }
+    const append_events = current.events.filter((event) => !baselineEvents.has(event.id));
+    const append_postings = current.postings.filter((posting) => !baselinePostings.has(posting.id));
+    const append_opening_balances = current.opening_balances.filter((checkpoint) => !baselineCheckpoints.has(checkpoint.id));
+    const replay = this.replayLedgerHistory({ as_of, currency });
+    return {
+      schema_version: "la05b.v1",
+      as_of: as_of ?? null,
+      status: conflicts.length > 0 ? "blocked" : append_events.length > 0 || append_postings.length > 0 ? "catch_up_required" : "caught_up",
+      automatic_provider_replay: false,
+      conflicts,
+      append_event_count: append_events.length,
+      append_posting_count: append_postings.length,
+      append_opening_balance_count: append_opening_balances.length,
+      append_events,
+      append_postings,
+      append_opening_balances,
+      replay,
     };
   }
 
