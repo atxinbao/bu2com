@@ -231,3 +231,50 @@ test("LA-01 reuses a persisted confirmed refund after local commit failure", asy
   assert.equal(ledger.refundAttempts(flow.transactionId)[0].status, "refunded");
   ledger.close();
 });
+
+test("LA-01 reconciles a confirmed refund before accepting a new refund request", async () => {
+  let injectFailure = false;
+  class CountingAdapter extends SimulatedPaymentAdapter {
+    refundCalls = 0;
+
+    refund(...args) {
+      this.refundCalls += 1;
+      return super.refund(...args);
+    }
+  }
+  const ledger = new SqliteLedger(":memory:", {
+    failureInjector: (stage) => {
+      if (injectFailure && stage === "after_state_write") {
+        injectFailure = false;
+        throw new Error("injected refund commit failure");
+      }
+    },
+  });
+  const adapter = new CountingAdapter({ ledger });
+  const sandbox = new Bu2Sandbox({ ledger, adapter });
+  const flow = await settledTransaction(sandbox, "new-key-recovery");
+  injectFailure = true;
+  await assert.rejects(
+    sandbox.requestRefund(
+      flow.transactionId,
+      { amount: { value: 80, currency: "CNY" } },
+      "la01-refund-new-key-first",
+    ),
+    /injected refund commit failure/,
+  );
+  assert.equal(adapter.refundCalls, 1);
+
+  const restarted = new Bu2Sandbox({ ledger, adapter });
+  const recovered = await restarted.requestRefund(
+    flow.transactionId,
+    { amount: { value: 80, currency: "CNY" } },
+    "la01-refund-new-key-second",
+  );
+  assert.equal(recovered.refund.status, "refunded");
+  assert.equal(recovered.transaction.refunded_amount.value, 80);
+  assert.equal(recovered.recovery.status, "refunded");
+  assert.equal(recovered.recovery.reason_code, "refund_attempt_reconciled");
+  assert.equal(adapter.refundCalls, 1);
+  assert.equal(ledger.refundAttempts(flow.transactionId)[0].status, "refunded");
+  ledger.close();
+});

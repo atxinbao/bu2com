@@ -463,3 +463,10 @@
 - Audit boundary: the separately reported refund external-success/local-commit-failure re-occupation issue remains a Release blocker and is intentionally not mixed into this LA-03d PR; it requires the next dedicated R2 repair.
 - Follow-up check: `writeBalancedJournals(..., { environment })` now rejects an active ledger account from another environment; targeted 3/3 and full Sandbox 191/191 were rerun after this guard.
 - Boundary: local-only; no Provider, signer, payment, Hosted, Base Sepolia, Live/Mainnet or E3.1 activation.
+
+## 2026-09-09 · LA-01b 已确认退款事实恢复与新请求防重复
+
+- Scope: PR #58 合并后处理审计确认的 Release 阻断；修复外部退款成功、RefundAttempt 已持久化但本地 Transaction/Refund 提交失败时，换新幂等键可能重复调用 Provider 和重复占用额度。
+- Tool: `apply_patch`; result: added `reconcileConfirmedRefundAttempts`, invoked before a new refund Provider call, and added a regression using a new idempotency key.
+- Tool: `node --test sandbox/f13.test.mjs`; result: regression currently passes 8/8, including the new-key recovery case.
+- Boundary: Local/Simulation only; no real Provider, Hosted, Base Sepolia, Live/Mainnet, custody or E3.1 activation. Release remains blocked until this PR is reviewed and merged.

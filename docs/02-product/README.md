@@ -34,7 +34,7 @@
 | [F15b 业务负载、停机与财务恢复验收契约](F15B_OPERATIONS_ACCEPTANCE.md) | 验证有限业务闭环、SQLite 重启、优雅停机、无重复事实与 Sandbox/Testnet 失败关闭 |
 | [F16a 内部 Sandbox 自主双向收付 Beta 验收契约](F16A_INTERNAL_BETA_ACCEPTANCE.md) | 验证预授权 Agent 无逐笔批准完成付款、收款、权益恢复、退款、故障恢复与对账 |
 | [F16b Hosted Sandbox 外部集成基础准入](F16B_HOSTED_QUALIFICATION.md) | 验证 Candidate、Activation、Evidence 和部署边界；不代表公网 ENV-07B 已验收 |
-| [LA-01 持久化退款尝试与未决额度占用](LA01_REFUND_ATTEMPT_CONTRACT.md) | Ledger Assurance Gate 第一项整改：退款前持久化、未知结果占用和同键恢复 |
+| [LA-01 持久化退款尝试与未决额度占用](LA01_REFUND_ATTEMPT_CONTRACT.md) | Ledger Assurance Gate 第一项整改：退款前持久化、未知结果占用、同键恢复与新请求防重复 |
 | [LA-02 成组 Journal / Posting 保护](LA02_JOURNAL_POSTING_CONTRACT.md) | Ledger Assurance Gate 第二项整改：严格金额、来源引用、借贷平衡和已过账不可变 |
 | [LA-03a 业务资金事实分录](LA03_BUSINESS_POSTINGS_CONTRACT.md) | Ledger Assurance Gate 第三项整改的首个子范围：结算、确认退款与 ProviderFee 接入受保护 Journal/Posting |
 | [LA-03b 期初检查点与追加更正](LA03B_OPENING_CORRECTION_CONTRACT.md) | Ledger Assurance Gate 第三项整改的第二个子范围：核对期初与不可变更正事实 |
@@ -67,7 +67,7 @@ Agent 商业账户、信誉与服务网络
 
 ## 当前状态
 
-- 产品阶段：Phase 0 开发（Simulation / Testnet）；F07 已合并，F08～F15b 运行时/验收已实现，F16a 本地 Beta 候选、F16b Hosted 基础资格、LA-01 退款安全整改、LA-02 Journal/Posting 保护、LA-03a 业务事实分录、LA-03b 期初/更正事实、LA-03c 账务投影重建、LA-04 Collection 持续验证、LA-05a 外部观察对账、LA-05b 历史重放/备份追平、LA-06a 本地全量/隔离准入与 RT-01 固定运行时准入已实现，LA-03d 契约、Schema/所有权与 Posting 绑定/投影子范围已完成，均待各自 R2 Domain 与 Architecture 审查；LA-03 完整范围未完成；LA-06b 真实 Sandbox 双向证据未执行；E3.1 暂停
+- 产品阶段：Phase 0 开发（Simulation / Testnet）；F07 已合并，F08～F15b 运行时/验收已实现，F16a 本地 Beta 候选、F16b Hosted 基础资格、LA-01 退款安全整改与本次新请求防重复修复、LA-02 Journal/Posting 保护、LA-03a 业务事实分录、LA-03b 期初/更正事实、LA-03c 账务投影重建、LA-04 Collection 持续验证、LA-05a 外部观察对账、LA-05b 历史重放/备份追平、LA-06a 本地全量/隔离准入与 RT-01 固定运行时准入已实现，LA-03d 契约、Schema/所有权与 Posting 绑定/投影子范围已完成，均待各自 R2 Domain 与 Architecture 审查；当前 Release 仍被退款外部成功/本地提交失败后的额度一致性修复阻塞，LA-03 完整范围未完成；LA-06b 真实 Sandbox 双向证据未执行；E3.1 暂停
 - 产品版本：Product v0.3 Transaction-first
 - 对应商业计划：BP v0.1
 - 更新日期：2026-09-09

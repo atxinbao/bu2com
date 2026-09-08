@@ -3072,6 +3072,25 @@ export class Bu2Sandbox {
     return reserved;
   }
 
+  reconcileConfirmedRefundAttempts(transaction) {
+    const attempts = this.ledger?.refundAttempts(transaction.id) ?? [...this.refundAttempts.values()];
+    const reconciled = [];
+    for (const attempt of attempts) {
+      if (attempt.transaction_id !== transaction.id || attempt.status !== "refunded") continue;
+      const existing = this.refunds.get(attempt.refund_id);
+      if (existing?.status === "refunded") continue;
+      const refund = this.refundFromAttempt(attempt);
+      this.applyRefund(transaction, refund, {
+        status: "refunded",
+        provider_reference: attempt.provider_reference,
+        amount_value: attempt.amount_value,
+        currency: attempt.currency,
+      });
+      reconciled.push(refund);
+    }
+    return reconciled;
+  }
+
   refundFromAttempt(attempt, reason = null) {
     const existing = this.refunds.get(attempt.refund_id);
     if (existing) return existing;
@@ -3161,6 +3180,14 @@ export class Bu2Sandbox {
         }
         if (typeof this.adapter?.refund !== "function") {
           throw new ApiError(409, "invalid_state_transition", "refund_unsupported", "The active payment adapter does not support refunds.");
+        }
+        const reconciledRefunds = this.reconcileConfirmedRefundAttempts(transaction);
+        if (reconciledRefunds.length > 0) {
+          return {
+            transaction: clone(transaction),
+            refund: clone(reconciledRefunds[0]),
+            recovery: { status: "refunded", reason_code: "refund_attempt_reconciled" },
+          };
         }
         const operationKey = `refund:${transaction.id}:${hash(key)}`;
         const existingAttempt = this.refundAttemptFor(operationKey);

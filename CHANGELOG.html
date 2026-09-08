@@ -414,6 +414,27 @@
       </article>
       <article class="release">
         <div class="release-head">
+          <div><h3>LA-01b · 已确认退款事实恢复与新请求防重复</h3><time datetime="2026-09-09">2026-09-09</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">修复外部退款已成功但本地 Transaction/Refund 提交失败后的 Release 阻断：新幂等键不再重新调用 Provider，而是先恢复已持久化的 RefundAttempt 事实。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag changed">Changed</span>新退款请求在执行 Provider 前扫描交易的已确认 <code>RefundAttempt</code>，补齐缺失 Refund、Transaction、钱包和 Journal/Posting 事实。</li>
+            <li><span class="tag changed">Changed</span>发现孤立的已确认退款时返回 <code>recovery.reason_code=refund_attempt_reconciled</code>，不创建第二个退款，也不进行第二次 Provider 调用。</li>
+            <li><span class="tag added">Added</span>覆盖换新幂等键的回归测试，验证外部调用次数保持为一次且额度只占用一次。</li>
+            <li><span class="tag governance">Boundary</span>仍仅覆盖 Local/Simulation 恢复，不开放真实 Provider、Hosted、Base Sepolia、Live/Mainnet 或 E3.1。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R2 · 退款状态、额度一致性、外部调用与持久化恢复</span></div>
+          <div><b>验证</b><span>F13/LA-01 定向回归与 Sandbox 全量结果以 PR 实际本地记录为准</span></div>
+          <div><b>恢复</b><span>以持久化 RefundAttempt 为外部成功事实来源；异常仍失败关闭，不自动发起新退款</span></div>
+        </div>
+      </article>
+      <article class="release">
+        <div class="release-head">
           <div><h3>F16b · Hosted Sandbox 外部集成基础准入</h3><time datetime="2026-09-09">2026-09-09</time></div>
           <span class="status">Unreleased</span>
         </div>
