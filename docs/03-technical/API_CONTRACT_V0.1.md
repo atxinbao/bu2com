@@ -271,3 +271,10 @@ Webhook 使用事件 ID 去重；接收方应按至少一次投递处理，不�
 - ReconciliationRun 与 ProviderFee 复用通用 SQLite resources 和幂等 Claim；重启后可重取，不能自动重新调用 Provider。
 - F14 只在 Local / Simulation 验收；真实 Provider、Base Sepolia、Hosted、Live/Mainnet、托管和生产结算仍保持关闭。
 - LA-05a 只实现独立观察对账；历史重放、备份后追平和完整迁移属于后续 LA-05b。
+
+## 16.5 LA-05b 历史重放与备份追平
+
+- `replayLedgerHistory()` 是本地只读审计能力，从 OpeningBalanceCheckpoint、不可变 FinancialPosting 和已知财务事件生成指定 `as_of` 的账务投影。
+- 没有期初检查点、财务事件缺少 Posting 或 Posting 缺少 LedgerEvent 时返回 `incomplete` 与稳定缺口码，不伪造历史分录。
+- `catchUpLedgerFromBackup()` 接受经验证的 `la05b.v1` replay evidence，识别备份后的追加事件/Posting；基线事实缺失或漂移时返回 `blocked`。
+- 重放和追平固定 `automatic_provider_replay=false`，不自动写回恢复库、Wallet、Transaction、Posting 或 Receipt。

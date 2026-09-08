@@ -1,5 +1,23 @@
 # ENV-02 测试记录
 
+## 2026-09-09 · LA-05b 历史账务重放与备份追平
+
+执行者：Codex
+分支：`feat/ledger-assurance-history-replay-catchup`
+
+| 范围 | 命令 | 结果 |
+| --- | --- | --- |
+| LA-05b 定向 | `npm --prefix sandbox run test:la05b` | 4/4 通过 |
+| Sandbox 全量 | `npm --prefix sandbox test` | 182/182 通过 |
+| LA-04 / LA-05a / Operations / F15b / F16a | 对应 Sandbox 专项 | 3/3、4/4、6/6、4/4、3/3 通过 |
+| API/MCP 契约 | `node docs/03-technical/validate-contract.mjs` | 63 invariants、6 MCP tools 通过 |
+| TypeScript SDK | `npm --prefix packages/typescript-sdk test` | 生成、格式、Lint、类型检查、构建与 10/10 单测通过 |
+| Prototype | `npm --prefix prototype run lint && npm --prefix prototype run build` | 均通过 |
+| Hosted 合约回归 | `test:hosted-sandbox`, `test:hosted-deployment`, `test:hosted-evidence-schema` | 8/8、2/2、2/2 通过 |
+| 差异检查 | `git diff --check` | 通过 |
+
+当前已验证期初重放、缺失历史、SQLite 备份追加事实、基线漂移和重启恢复。边界：Local/Simulation only。
+
 ## 2026-09-09 · LA-05a 外部观察对账
 
 执行者：Codex

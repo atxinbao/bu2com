@@ -10,7 +10,7 @@ LA-05a 在 F14 的内部事实快照之上增加“独立外部观察”输入�
 
 本 PR 只在 Local / Simulation 边界验收。它不查询真实 Provider，不签名、不发起支付或退款，不改变 Transaction、Collection、Refund、Wallet、FinancialPosting 或历史 LedgerEvent，也不开放 Hosted、Base Sepolia、Live/Mainnet、托管或生产凭证。
 
-LA-05a 不实现历史事件重放、备份后追平、实时余额切换或完整多账簿迁移；这些内容属于后续 LA-05b，不能用本 PR 的外部观察输入替代。
+LA-05a 不实现历史事件重放、备份后追平、实时余额切换或完整多账簿迁移；这些内容属于后续 [LA-05b](LA05B_HISTORY_REPLAY_CATCHUP_CONTRACT.md)，不能用本 PR 的外部观察输入替代。
 
 ## 2. 外部观察事实
 

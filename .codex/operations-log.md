@@ -1,5 +1,13 @@
 # ENV-03 操作日志
 
+## 2026-09-09 · LA-05b 历史账务重放与备份追平
+
+- Tool: `gh pr view`, `git fetch`, `git switch`, `git pull --ff-only`, `git branch -d`; result: verified PR #51 merged at `b79eb8c`, synchronized `main`, deleted `feat/ledger-assurance-independent-reconciliation`, and created `feat/ledger-assurance-history-replay-catchup`.
+- Tool: `graphify query`, `rg`, `sed`; result: traced LA-05b to existing SqliteLedger Online Backup/loadState, immutable ledger events, Journal/Posting persistence, LA-03c projection and ENV-06 restore boundary.
+- Tool: `apply_patch`; result: added time-point immutable ledger replay, missing-history gap reporting, backup append-only catch-up evidence, LA-05b tests, package script and synchronized product/technical/roadmap/README/CHANGELOG/evidence docs.
+- Tool: `npm`, `git diff --check`; result: LA-05b 4/4, Sandbox 182/182, LA-04/LA-05a/Operations/F15b/F16a 3/3/4/4/6/6/4/4/3/3, contract 63 invariants / 6 MCP tools, SDK 10/10, Prototype lint/build, Hosted 8/8/2/2 and diff check passed.
+- Boundary: Local/Simulation only; no automatic restore write-back, Provider replay, Base Sepolia, Hosted, Live/Mainnet, custody or production credential capability; E3.1 remains paused.
+
 ## 2026-09-09 · LA-05a Draft PR
 
 - Tool: `git commit`, `git push`, `gh pr create`, `gh pr view`; result: committed `4ef4439`, pushed `feat/ledger-assurance-independent-reconciliation`, and opened Draft PR #51 at `https://github.com/atxinbao/bu2com/pull/51` using `.github/pull_request_template.md`.

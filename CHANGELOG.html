@@ -152,6 +152,26 @@
       <h2 id="unreleased">Unreleased</h2>
       <article class="release">
         <div class="release-head">
+          <div><h3>LA-05b · 历史账务重放与备份追平</h3><time datetime="2026-09-09">2026-09-09</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">从经核对的期初检查点与不可变 Posting 重放指定时间点账务，并比较备份快照与当前追加事实，输出可审查的追平清单。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag added">Added</span><code>replayLedgerHistory()</code>，返回账户余额、Journal 平衡、历史缺口和完整性状态。</li>
+            <li><span class="tag added">Added</span><code>catchUpLedgerFromBackup()</code>，比较版本化备份 evidence，区分 caught_up、catch_up_required 和 blocked。</li>
+            <li><span class="tag governance">Boundary</span>重放和追平均只读，不写回 Wallet/Transaction/Posting，不自动应用恢复事实，不调用 Provider 或重新付款。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R2 · 历史账务解释、备份追平与恢复边界，必须独立人工审查</span></div>
+          <div><b>验证</b><span>LA-05b 专项覆盖历史时间点、缺失分录、SQLite 备份追加事实、基线漂移和重启</span></div>
+          <div><b>恢复</b><span>基线漂移进入 blocked；所有 Provider replay 与恢复库写入保持关闭</span></div>
+        </div>
+      </article>
+      <article class="release">
+        <div class="release-head">
           <div><h3>LA-05a · 外部观察对账</h3><time datetime="2026-09-09">2026-09-09</time></div>
           <span class="status">Unreleased</span>
         </div>
