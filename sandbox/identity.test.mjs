@@ -73,7 +73,7 @@ test("persistent identity onboarding is idempotent and survives restart", () => 
     assert.deepEqual(replay, first);
     assert.deepEqual(first.tenant_ids, ["ten_identity_buyer", "ten_identity_seller"]);
     assert.equal(first.identities[0].credentials[0].token_sha256, undefined);
-    assert.equal(firstLedger.schemaVersion(), 16);
+    assert.equal(firstLedger.schemaVersion(), 17);
     assert.equal(firstLedger.identityTenants("local").length, 2);
   } finally {
     firstLedger.close();

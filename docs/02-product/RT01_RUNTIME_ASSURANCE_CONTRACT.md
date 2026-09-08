@@ -6,7 +6,7 @@
 
 ## 1. 目标
 
-RT-01 验证包含已修复 SQLite 账本的固定运行时可以在本地重复启动、迁移、写入 WAL 并完成 Online Backup 与隔离恢复。当前迁移连续性为 Schema 1–16；入口为：
+RT-01 验证包含已修复 SQLite 账本的固定运行时可以在本地重复启动、迁移、写入 WAL 并完成 Online Backup 与隔离恢复。当前迁移连续性为 Schema 1–17；入口为：
 
 ```bash
 node deploy/runtime-assurance.mjs

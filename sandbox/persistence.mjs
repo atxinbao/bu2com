@@ -214,6 +214,11 @@ export class SqliteLedger {
         name: "ledger_account_ownership",
         apply: () => this.migrateLedgerAccountOwnership(),
       },
+      {
+        version: 17,
+        name: "ledger_account_posting_binding",
+        apply: () => this.migrateLedgerAccountPostingBinding(),
+      },
     ];
     for (const migration of migrations) {
       if (applied.has(migration.version)) continue;
@@ -747,25 +752,34 @@ export class SqliteLedger {
 
   migrateLedgerAccountOwnership() {
     this.db.exec(`
-      CREATE TABLE IF NOT EXISTS ledger_accounts (
-        id TEXT PRIMARY KEY,
-        environment TEXT NOT NULL CHECK (environment IN ('local', 'sandbox', 'live')),
-        tenant_id TEXT NOT NULL,
-        book_id TEXT NOT NULL,
-        owner_account_id TEXT NOT NULL,
-        asset TEXT NOT NULL,
-        network TEXT,
-        status TEXT NOT NULL CHECK (status IN ('active', 'suspended', 'retired')),
-        version INTEGER NOT NULL CHECK (version >= 1),
-        created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL,
-        UNIQUE(environment, tenant_id, book_id, owner_account_id, asset, network)
-      );
-      CREATE INDEX IF NOT EXISTS idx_ledger_accounts_owner
-        ON ledger_accounts(environment, tenant_id, owner_account_id, status);
-      CREATE INDEX IF NOT EXISTS idx_ledger_accounts_book_asset
-        ON ledger_accounts(environment, tenant_id, book_id, asset, network, status);
-    `);
+     CREATE TABLE IF NOT EXISTS ledger_accounts (
+       id TEXT PRIMARY KEY,
+       environment TEXT NOT NULL CHECK (environment IN ('local', 'sandbox', 'live')),
+       tenant_id TEXT NOT NULL,
+       book_id TEXT NOT NULL,
+       owner_account_id TEXT NOT NULL,
+       asset TEXT NOT NULL,
+       network TEXT,
+       status TEXT NOT NULL CHECK (status IN ('active', 'suspended', 'retired')),
+       version INTEGER NOT NULL CHECK (version >= 1),
+       created_at TEXT NOT NULL,
+       updated_at TEXT NOT NULL,
+       UNIQUE(environment, tenant_id, book_id, owner_account_id, asset, network)
+     );
+     CREATE INDEX IF NOT EXISTS idx_ledger_accounts_owner
+       ON ledger_accounts(environment, tenant_id, owner_account_id, status);
+     CREATE INDEX IF NOT EXISTS idx_ledger_accounts_book_asset
+       ON ledger_accounts(environment, tenant_id, book_id, asset, network, status);
+   `);
+  }
+
+  migrateLedgerAccountPostingBinding() {
+    const columns = this.db.prepare("PRAGMA table_info(financial_postings)").all();
+    if (!columns.some((column) => column.name === "ledger_account_id")) {
+      this.db.exec("ALTER TABLE financial_postings ADD COLUMN ledger_account_id TEXT");
+    }
+    this.db.exec("CREATE INDEX IF NOT EXISTS idx_financial_postings_ledger_account ON financial_postings(ledger_account_id, currency, created_at)");
+    this.db.exec("CREATE TRIGGER IF NOT EXISTS financial_postings_ledger_account_guard BEFORE INSERT ON financial_postings WHEN NEW.ledger_account_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM ledger_accounts WHERE id = NEW.ledger_account_id AND status = 'active') BEGIN SELECT RAISE(ABORT, 'financial_posting_requires_active_ledger_account'); END;");
   }
 
   migrateDurableRefundAttempts() {
@@ -1055,6 +1069,17 @@ export class SqliteLedger {
     return row;
   }
 
+  assertLedgerAccountBinding(id, { environment = null } = {}) {
+    const account = this.getLedgerAccount(id);
+    if (account.status !== "active") {
+      throw new ApiError(422, "financial_constraint", "ledger_account_not_active", "Financial posting requires an active ledger account.", { ledger_account_id: id, status: account.status });
+    }
+    if (environment !== null && account.environment !== environment) {
+      throw new ApiError(409, "environment_error", "ledger_account_environment_mismatch", "Ledger account environment does not match the active runtime.", { ledger_account_id: id, environment, account_environment: account.environment });
+    }
+    return account;
+  }
+
   listLedgerAccounts({ environment = null, tenant_id = null, owner_account_id = null, status = null } = {}) {
     const clauses = [];
     const values = [];
@@ -1163,7 +1188,7 @@ export class SqliteLedger {
       financial_postings: this.db
         .prepare("SELECT * FROM financial_postings ORDER BY created_at, id")
         .all()
-        .map((row) => [row.id, { ...row, amount_value: Number(row.amount_value), journal_id: row.journal_id }]),
+        .map((row) => [row.id, { ...row, amount_value: Number(row.amount_value), journal_id: row.journal_id, ledger_account_id: row.ledger_account_id ?? null }]),
       refund_attempts: this.db
         .prepare("SELECT * FROM refund_attempts ORDER BY created_at, id")
         .all()
@@ -1280,6 +1305,9 @@ export class SqliteLedger {
       if (!/^[a-z][a-z0-9_.:-]{1,255}$/.test(posting.account ?? "")) {
         throw new ApiError(422, "financial_constraint", "journal_account_invalid", "Financial posting account names must use a stable namespaced format.");
       }
+      if (posting.ledger_account_id !== undefined && posting.ledger_account_id !== null) {
+        this.assertLedgerAccountBinding(posting.ledger_account_id);
+      }
       const group = groups.get(posting.event_id) ?? [];
       group.push(posting);
       groups.set(posting.event_id, group);
@@ -1301,8 +1329,9 @@ export class SqliteLedger {
     const insertPosting = this.db.prepare(`
       INSERT INTO financial_postings(
         id, event_id, event_type, transaction_id, budget_id, source_id,
-        direction, account, amount_value, currency, created_at, journal_id
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        direction, account, amount_value, currency, created_at, journal_id,
+        ledger_account_id
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     const postHeader = this.db.prepare("UPDATE journal_headers SET status='posted', posted_at=? WHERE id=? AND status='draft'");
     for (const [eventId, group] of groups) {
@@ -1342,6 +1371,7 @@ export class SqliteLedger {
         amount_value: posting.amount_value,
         currency: posting.currency,
         created_at: posting.created_at,
+        ledger_account_id: posting.ledger_account_id ?? null,
       })).sort((left, right) => left.id.localeCompare(right.id)));
       const createdAt = group.map((posting) => posting.created_at).sort()[0];
       const existingHeader = findHeader.get(eventId);
@@ -1369,6 +1399,7 @@ export class SqliteLedger {
             [Number(existingPosting.amount_value), posting.amount_value],
             [existingPosting.currency, posting.currency],
             [existingPosting.created_at, posting.created_at],
+            [existingPosting.ledger_account_id ?? null, posting.ledger_account_id ?? null],
           ].every(([left, right]) => left === right);
           if (!same || existingPosting.journal_id !== headerId) {
             throw new ApiError(409, "conflict", "financial_posting_content_conflict", "A financial posting ID cannot be reused with different content.", { posting_id: posting.id });
@@ -1388,6 +1419,7 @@ export class SqliteLedger {
           posting.currency,
           posting.created_at,
           headerId,
+          posting.ledger_account_id ?? null,
         );
       }
       if (!existingHeader) {
