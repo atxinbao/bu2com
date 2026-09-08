@@ -152,6 +152,26 @@
       <h2 id="unreleased">Unreleased</h2>
       <article class="release">
         <div class="release-head">
+          <div><h3>F16a · 内部 Sandbox 自主双向收付 Beta 候选</h3><time datetime="2026-09-09">2026-09-09</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">验证预授权买方 Agent 无逐笔管理员批准完成付款，卖方 Agent 完成收款与权益恢复，并覆盖退款、Provider unknown 恢复和财务对账。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag added">Added</span>新增 F16a 本地固定候选验收，覆盖自主 deferred PaymentIntent、ExecutionSession、Receivable、Collection、AccessGrant、Refund、ProviderFee 与 ReconciliationRun。</li>
+            <li><span class="tag changed">Changed</span>增加未预授权商户的 `review_required` 失败关闭、Provider unknown 显式恢复和 SQLite 重启后无重复支付证据。</li>
+            <li><span class="tag governance">Boundary</span>本候选使用 Local/Simulation；Sandbox/Testnet 继续保持 <code>execution_disabled</code>，不代表真实 Base Sepolia、Hosted、Live/Mainnet 或生产 Beta 放行。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R2 · Agent 自主支付、收款、退款、故障恢复与财务对账，必须独立人工审查</span></div>
+          <div><b>验证</b><span>F16a 定向验收 3/3；完整 Sandbox、F15b、SDK、契约和 Prototype 门禁记录在 PR 中</span></div>
+          <div><b>恢复</b><span>结算 unknown 保持 delivery_submitted，显式 recovery 只完成一次结算并签发 Receipt</span></div>
+        </div>
+      </article>
+      <article class="release">
+        <div class="release-head">
           <div><h3>F15b · 业务负载、停机与财务恢复验收</h3><time datetime="2026-09-09">2026-09-09</time></div>
           <span class="status">Unreleased</span>
         </div>

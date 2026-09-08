@@ -1,5 +1,14 @@
 # ENV-03 操作日志
 
+## 2026-09-09 · F16a 内部 Sandbox 自主双向收付 Beta 候选
+
+- Tool: `gh pr view`, `git switch`, `git pull --ff-only`, `git branch -d`; result: verified PR #42 merged at `65ba20f`, synchronized `main`, deleted local `test/operations-recovery-evidence`, and created `test/internal-sandbox-pay-collect-beta`.
+- Tool: `graphify query`; result: traced F16a to PaymentMandate, ExecutionSession, F09a autonomous execution, F11 collection, F12 AccessGrant, F13 refund, F14 reconciliation and F15b recovery evidence; no new transaction core was required.
+- Tool: `apply_patch`; result: added the F16a fixed-candidate Beta acceptance suite, package script, product contract and synchronized documentation/evidence.
+- Tool: `node --test sandbox/f16a.test.mjs`; result: 3/3 passed, covering autonomous bilateral pay-and-collect, provider-unknown recovery after restart, and authorization/environment fail-closed gates.
+- Tool: `node`, `npm`; result: F15a/F15b regression 8/8, Sandbox 158/158, Contract 63 invariants / 6 MCP tools, SDK 10/10, Prototype lint/build and `git diff --check` passed.
+- Boundary: F16a is Local/Simulation evidence only; Sandbox/Testnet remains `execution_disabled`, and Hosted, Live/Mainnet, custody and production credentials remain closed.
+
 ## 2026-09-09 · F15b 业务负载、停机与财务恢复验收
 
 - Tool: `gh pr view`, `git switch`, `git pull --ff-only`, `git branch -d`; result: verified PR #41 merged at `6082cd3`, synchronized `main`, deleted local `feat/bounded-sandbox-execution-sessions`, and created `test/operations-recovery-evidence`.

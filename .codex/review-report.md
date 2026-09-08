@@ -1,3 +1,24 @@
+# F16a 内部 Sandbox 自主双向收付 Beta 候选自主审查报告
+
+日期：2026-09-09
+审查者：Codex（Contributor / Verifier，非 R2 Approver）
+分支：`test/internal-sandbox-pay-collect-beta`
+
+## 结果
+
+| 维度 | 得分 | 结论 |
+| --- | ---: | --- |
+| 需求覆盖 | 19/20 | 覆盖自主付款、收款、权益恢复、退款、故障恢复与对账 |
+| 技术实现 | 19/20 | 复用现有 Mandate、Session、Transaction Core、Adapter 和 ReconciliationRun |
+| 金融边界 | 20/20 | 无逐笔管理员批准只适用于预授权商户；unknown、越权和 disabled 路径失败关闭 |
+| 自动化验证 | 20/20 | F16a 定向验收 3/3，通过正常、恢复和停止条件 |
+| 文档与恢复 | 19/20 | 契约、路线、README、CHANGELOG、testing、verification 和 operations 已同步；R2 尚待独立审查 |
+| 综合 | **97/100** | 通过本地候选审查，进入 R2 |
+
+## 结论
+
+建议：**通过本地候选实现，提交 R2 审查**。F16a 不能解释为真实 Sandbox/Testnet、Hosted、外部团队或生产 Beta 放行；这些仍需 ENV-07B、F16b 和独立人工准入。
+
 # F15b 业务负载、停机与财务恢复自主审查报告
 
 日期：2026-09-09

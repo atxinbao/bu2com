@@ -1,5 +1,21 @@
 # ENV-02 测试记录
 
+## 2026-09-09 · F16a 内部 Sandbox 自主双向收付 Beta 候选
+
+执行者：Codex
+
+| 范围 | 命令 | 结果 |
+| --- | --- | --- |
+| F16a 定向 Beta 验收 | `node --test sandbox/f16a.test.mjs` | 3/3 通过 |
+| F15a/F15b 回归 | `node --test sandbox/f15a.test.mjs sandbox/f15a-http.test.mjs sandbox/f15b.test.mjs` | 8/8 通过 |
+| Sandbox 全量 | `npm --prefix sandbox test` | 158/158 通过 |
+| API/MCP Contract | `node docs/03-technical/validate-contract.mjs` | 63 invariants、6 MCP tools 通过 |
+| TypeScript SDK | `npm --prefix packages/typescript-sdk test` | 生成、格式、Lint、类型检查、构建与 10/10 单测通过 |
+| Prototype | `npm --prefix prototype run lint && npm --prefix prototype run build` | 通过 |
+| Diff | `git diff --check` | 通过 |
+
+覆盖预授权 Agent 无逐笔批准完成付款/收款/权益恢复/退款/对账、Provider unknown 重启恢复，以及未预授权商户和 Sandbox/Testnet `execution_disabled` 的失败关闭。真实 Provider、Base Sepolia、Hosted、Live/Mainnet、托管和生产凭证未执行。
+
 # 2026-09-09 · F15b 业务负载、停机与财务恢复验收
 
 执行者：Codex
