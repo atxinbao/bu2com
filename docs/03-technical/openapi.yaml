@@ -361,6 +361,83 @@ paths:
               schema: { $ref: '#/components/schemas/Collection' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '404': { $ref: '#/components/responses/NotFound' }
+  /collections/{collection_id}/access_grants:
+    parameters:
+      - $ref: '#/components/parameters/TraceId'
+      - $ref: '#/components/parameters/CollectionId'
+    post:
+      operationId: createAccessGrant
+      summary: Grant recoverable paid access from a posted Collection
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateAccessGrant' }
+      responses:
+        '201':
+          description: Access grant created or replayed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AccessGrant' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /access_grants:
+    parameters:
+      - $ref: '#/components/parameters/TraceId'
+    get:
+      operationId: listAccessGrants
+      summary: List recoverable paid access grants
+      responses:
+        '200':
+          description: Access grants visible to the current account or Agent
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/AccessGrant' }
+  /access_grants/{access_grant_id}:
+    parameters:
+      - $ref: '#/components/parameters/TraceId'
+      - $ref: '#/components/parameters/AccessGrantId'
+    get:
+      operationId: getAccessGrant
+      summary: Read one recoverable paid access grant
+      responses:
+        '200':
+          description: Access grant
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AccessGrant' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /access_grants/{access_grant_id}/recover:
+    parameters:
+      - $ref: '#/components/parameters/TraceId'
+      - $ref: '#/components/parameters/AccessGrantId'
+    post:
+      operationId: recoverAccessGrant
+      summary: Re-read and reactivate a paid access grant from its posted Collection
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RecoverAccessGrant' }
+      responses:
+        '200':
+          description: Recovered access grant
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AccessGrant' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
   /payment_intents:
     parameters:
       - $ref: '#/components/parameters/TraceId'
@@ -864,6 +941,11 @@ components:
       in: path
       required: true
       schema: { type: string, pattern: '^cpay_[A-Za-z0-9_-]+$', maxLength: 255 }
+    AccessGrantId:
+      name: access_grant_id
+      in: path
+      required: true
+      schema: { type: string, pattern: '^agr_[A-Za-z0-9_-]+$', maxLength: 255 }
     TenantId:
       name: tenant_id
       in: path
@@ -1474,6 +1556,46 @@ components:
       properties:
         collection: { $ref: '#/components/schemas/Collection' }
         receivable: { $ref: '#/components/schemas/Receivable' }
+    CreateAccessGrant:
+      type: object
+      additionalProperties: false
+      required: [access_type, access_reference]
+      properties:
+        id: { type: string, pattern: '^agr_[A-Za-z0-9_-]+$', maxLength: 255 }
+        access_type: { type: string, minLength: 1, maxLength: 100 }
+        access_reference: { type: string, minLength: 1, maxLength: 255 }
+        expires_at: { type: [string, 'null'], format: date-time }
+        metadata:
+          type: object
+          maxProperties: 20
+          additionalProperties: { type: string, maxLength: 500 }
+    RecoverAccessGrant:
+      type: object
+      additionalProperties: false
+      properties: {}
+    AccessGrant:
+      type: object
+      required: [id, collection_id, receivable_id, account_id, agent_id, access_type, access_reference, status, source_type, source_id, expires_at, metadata, version, granted_at, recovered_at, created_at, updated_at]
+      properties:
+        id: { type: string, pattern: '^agr_[A-Za-z0-9_-]+$' }
+        collection_id: { type: string, pattern: '^cpay_[A-Za-z0-9_-]+$' }
+        receivable_id: { type: string, pattern: '^rcv_[A-Za-z0-9_-]+$' }
+        account_id: { type: string, pattern: '^acct_[A-Za-z0-9_-]+$' }
+        agent_id: { type: string, pattern: '^agt_[A-Za-z0-9_-]+$' }
+        access_type: { type: string, minLength: 1, maxLength: 100 }
+        access_reference: { type: string, minLength: 1, maxLength: 255 }
+        status: { type: string, enum: [active, expired, revoked] }
+        source_type: { type: string, enum: [collection] }
+        source_id: { type: string, pattern: '^cpay_[A-Za-z0-9_-]+$' }
+        expires_at: { type: [string, 'null'], format: date-time }
+        metadata: { type: object, additionalProperties: { type: string, maxLength: 500 } }
+        version: { type: integer, minimum: 1 }
+        granted_at: { type: string, format: date-time }
+        recovered_at: { type: [string, 'null'], format: date-time }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+        collection_status: { type: [string, 'null'], enum: [pending, posted] }
+        collection_verification_status: { type: [string, 'null'], enum: [pending, verified] }
     ExternalContext:
       type: object
       additionalProperties: false

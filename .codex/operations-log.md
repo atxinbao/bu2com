@@ -1,5 +1,13 @@
 # ENV-03 操作日志
 
+## 2026-09-08 · F12 Recoverable Paid Access implementation
+
+- Tool: `git fetch --prune`, `git switch`, `git pull`, `git branch -d`; result: verified F11 PR #37 merged at `67679f5`, synchronized `main`, confirmed no remaining local feature branch, and created `feat/recoverable-paid-access`.
+- Tool: `graphify query`; result: confirmed F12 must reuse F11 Collection, existing DeliveryRecord/Receipt separation, generic resources, SQLite atomicity and idempotency; no second Transaction or Ledger core introduced.
+- Tool: `apply_patch`; result: added persistent AccessGrant resource, posted Collection precondition, idempotent create/recovery, HTTP/OpenAPI/SDK/access contract, F12 product contract and tests.
+- Tool: `npm`, `node`; result: F12 targeted tests 4/4, Sandbox 139/139, Contract 63 + MCP 6, SDK generated/format/lint/typecheck/build and 10/10 tests, Prototype lint/build and diff check passed.
+- Boundary: F12 does not create provider calls, refunds, reconciliation, Hosted, Live/Mainnet, custody or production credential capability; only local Simulation/Testnet-compatible contracts remain.
+
 ## 2026-09-08 · F11 Inbound Collection implementation
 
 - Tool: `git fetch`, `git switch`, `git pull`, `git branch -d`; result: verified F10 PR #36 merged at `b267a83`, synchronized `main`, deleted local `feat/account-owned-receivables`, and created `feat/verify-inbound-collections`.

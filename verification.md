@@ -1,5 +1,20 @@
 # BU2 Product v0.1 验证结论
 
+## 2026-09-08 · F12 Recoverable Paid Access
+
+执行者：Codex
+
+- `node --test sandbox/f12.test.mjs sandbox/f12-http.test.mjs`：4/4 通过，覆盖已入账 Collection 授权、重复来源、撤销失败关闭、SQLite 重启和 HTTP 列表/恢复。
+- `npm --prefix sandbox test`：139/139 通过，包含既有支付、恢复、访问控制、F07～F11 回归。
+- `node docs/03-technical/validate-contract.mjs`：63 项不变量、6 个 MCP 工具通过。
+- `npm --prefix packages/typescript-sdk test`：生成检查、格式、Lint、TypeScript 类型检查、构建和 10/10 单元测试通过。
+- `npm --prefix prototype run lint && npm --prefix prototype run build`：通过。
+- `git diff --check`：通过。
+
+边界：F12 只从 `posted/verified` Collection 授予 AccessGrant；DeliveryRecord、Receipt、Collection 与 FinancialPosting 保持独立。当前仅使用 Simulation，未执行 Base Sepolia、Hosted、Live/Mainnet 或生产凭证。
+
+结论：本地实现达到 **GO for R2 Domain + Architecture review**；尚未构成真实访问交付、退款、对账或生产资金授权。
+
 ## 2026-09-08 · F11 Inbound Collection Verification
 
 执行者：Codex

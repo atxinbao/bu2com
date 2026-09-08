@@ -1,5 +1,20 @@
 # ENV-02 测试记录
 
+## 2026-09-08 · F12 Recoverable Paid Access
+
+执行者：Codex
+
+| 范围 | 命令 | 结果 |
+| --- | --- | --- |
+| F12 定向领域与 HTTP | `node --test sandbox/f12.test.mjs sandbox/f12-http.test.mjs` | 4/4 通过 |
+| Reference Server 全量 | `npm --prefix sandbox test` | 139/139 通过 |
+| API/MCP Contract | `node docs/03-technical/validate-contract.mjs` | 63 invariants、6 MCP tools 通过 |
+| TypeScript SDK | `npm --prefix packages/typescript-sdk test` | generated/format/lint/typecheck/build、10/10 通过 |
+| Prototype | `npm --prefix prototype run lint && npm --prefix prototype run build` | 通过 |
+| Diff | `git diff --check` | 通过 |
+
+未运行 Base Sepolia 双向收付、Hosted、Mainnet、生产凭证或托管；这些不属于 F12 本地准入范围。
+
 ## 2026-09-08 · F11 Inbound Collection Verification
 
 执行者：Codex

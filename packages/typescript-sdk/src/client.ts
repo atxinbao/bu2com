@@ -21,6 +21,9 @@ import type {
   CreateQuote,
   CreateReceivable,
   Collection,
+  AccessGrant,
+  AccessGrantResult,
+  CreateAccessGrant,
   DeliveryEvidence,
   DeliveryResult,
   EnvironmentInfo,
@@ -40,6 +43,7 @@ import type {
   TransactionView,
   VerifyInboundPayment,
   VerifyInboundPaymentResult,
+  RecoverAccessGrant,
 } from "./types.js";
 import { ENVIRONMENT_CONTRACT } from "./generated/environment.js";
 
@@ -565,6 +569,55 @@ export class Bu2Client {
     return this.execute({ name: "listTransactions", mutation: false }, options, (signal) =>
       this.api.GET("/transactions", {
         params: { query, header: traceHeaders(options) },
+        signal,
+      }),
+    );
+  }
+
+  listAccessGrants(options: Bu2RequestOptions = {}): Promise<{ data: AccessGrant[] }> {
+    return this.execute({ name: "listAccessGrants", mutation: false }, options, (signal) =>
+      this.api.GET("/access_grants", { params: { header: traceHeaders(options) }, signal }),
+    );
+  }
+
+  getAccessGrant(accessGrantId: string, options: Bu2RequestOptions = {}): Promise<AccessGrant> {
+    return this.execute({ name: "getAccessGrant", mutation: false }, options, (signal) =>
+      this.api.GET("/access_grants/{access_grant_id}", {
+        params: { path: { access_grant_id: accessGrantId }, header: traceHeaders(options) },
+        signal,
+      }),
+    );
+  }
+
+  createAccessGrant(
+    collectionId: string,
+    body: CreateAccessGrant,
+    options: Bu2MutationOptions,
+  ): Promise<AccessGrantResult> {
+    return this.execute({ name: "createAccessGrant", mutation: true }, options, (signal) =>
+      this.api.POST("/collections/{collection_id}/access_grants", {
+        params: {
+          path: { collection_id: collectionId },
+          header: mutationHeaders(options),
+        },
+        body,
+        signal,
+      }),
+    );
+  }
+
+  recoverAccessGrant(
+    accessGrantId: string,
+    body: RecoverAccessGrant = {},
+    options: Bu2MutationOptions,
+  ): Promise<AccessGrant> {
+    return this.execute({ name: "recoverAccessGrant", mutation: true }, options, (signal) =>
+      this.api.POST("/access_grants/{access_grant_id}/recover", {
+        params: {
+          path: { access_grant_id: accessGrantId },
+          header: mutationHeaders(options),
+        },
+        body,
         signal,
       }),
     );
