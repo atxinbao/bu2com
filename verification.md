@@ -1,5 +1,23 @@
 # BU2 Product v0.1 验证结论
 
+## 2026-09-09 · F15a 有界内部 Sandbox 执行会话
+
+执行者：Codex
+分支：`feat/bounded-sandbox-execution-sessions`
+
+本轮新增持久化 `ExecutionSession`，为内部 Agent 执行提供独立 activation、15 分钟最大窗口、Account/Agent/environment 绑定和会话级支出边界。绑定 PaymentIntent 的支出在预留、结算、取消和 SQLite 重启路径保持可审计；PaymentMandate 仍是业务授权来源。
+
+验证结果：
+
+- `node --test sandbox/f15a.test.mjs sandbox/f15a-http.test.mjs`：4/4 通过。
+- `npm --prefix sandbox test`：151/151 通过。
+- `node docs/03-technical/validate-contract.mjs`：63 项不变量、6 个 MCP 工具通过。
+- `npm --prefix packages/typescript-sdk test`：生成检查、格式、Lint、类型检查、构建和 10/10 单元测试通过。
+- `npm --prefix prototype run lint && npm --prefix prototype run build`：通过。
+- `git diff --check`：通过。
+
+边界：F15a 仅支持 Local / 内部 Sandbox-Testnet 契约，不创建 BU2 Task 平台，不启用 Hosted、Live/Mainnet、托管、生产凭证或真实 Provider 付款。ExecutionSession 激活不能替代 PaymentMandate 激活，未知 Provider 结果仍由 F09b 负责。
+
 ## 2026-09-09 · F14 Payment / Collection / Refund / Fee Reconciliation
 
 本轮新增不可变 `ProviderFee` 事实和 `ReconciliationRun` 快照。对账按币种汇总 Payment、Collection、Refund 与 Fee，并为每个来源返回 `matched`、`exception` 或 `unknown`；对账不会修改原始交易、收款、退款、钱包或历史 Posting。

@@ -34,6 +34,8 @@ const budgetScopeTypes = new Set(["workspace", "project", "account", "agent"]);
 const budgetPeriods = new Set(["lifetime", "calendar_month", "rolling_24h"]);
 const mandateStatuses = new Set(["draft", "active", "suspended", "revoked", "expired"]);
 const mandateActions = new Set(["activate", "suspend", "revoke", "expire"]);
+const executionSessionActions = new Set(["activate", "pause", "complete", "revoke", "expire"]);
+const MAX_INTERNAL_SESSION_MS = 15 * 60 * 1000;
 const receivableStatuses = new Set(["issued", "pending", "paid", "expired", "cancelled"]);
 const accessGrantStatuses = new Set(["active", "expired", "revoked"]);
 const reconciliationFeeSources = new Set(["payment", "collection", "refund"]);
@@ -127,6 +129,7 @@ export class Bu2Sandbox {
     this.receipts = new Map(restored.resources.receipts ?? []);
     this.mandates = new Map(restored.resources.mandates ?? []);
     this.policyDecisions = new Map(restored.resources.policy_decisions ?? []);
+    this.executionSessions = new Map(restored.resources.execution_sessions ?? []);
     this.refunds = new Map(restored.resources.refunds ?? []);
     this.providerFees = new Map(restored.resources.provider_fees ?? []);
     this.reconciliationRuns = new Map(restored.resources.reconciliation_runs ?? []);
@@ -226,6 +229,7 @@ export class Bu2Sandbox {
         deliveries: [...this.deliveries.entries()].map(([id, value]) => [id, clone(value)]),
         mandates: [...this.mandates.entries()].map(([id, value]) => [id, clone(value)]),
         policy_decisions: [...this.policyDecisions.entries()].map(([id, value]) => [id, clone(value)]),
+        execution_sessions: [...this.executionSessions.entries()].map(([id, value]) => [id, clone(value)]),
         refunds: [...this.refunds.entries()].map(([id, value]) => [id, clone(value)]),
         provider_fees: [...this.providerFees.entries()].map(([id, value]) => [id, clone(value)]),
         reconciliation_runs: [...this.reconciliationRuns.entries()].map(([id, value]) => [id, clone(value)]),
@@ -252,6 +256,7 @@ export class Bu2Sandbox {
     this.receipts = new Map(snapshot.resources.receipts ?? []);
     this.mandates = new Map(snapshot.resources.mandates ?? []);
     this.policyDecisions = new Map(snapshot.resources.policy_decisions ?? []);
+    this.executionSessions = new Map(snapshot.resources.execution_sessions ?? []);
     this.refunds = new Map(snapshot.resources.refunds ?? []);
     this.providerFees = new Map(snapshot.resources.provider_fees ?? []);
     this.reconciliationRuns = new Map(snapshot.resources.reconciliation_runs ?? []);
@@ -1441,6 +1446,206 @@ export class Bu2Sandbox {
     });
   }
 
+  executionSessionView(session) {
+    const view = clone(session);
+    if (["requested", "active", "paused"].includes(view.status) && Date.parse(view.expires_at) <= Date.now()) {
+      view.status = "expired";
+    }
+    view.remaining_spend = {
+      value: Math.max(0, view.max_spend.value - view.reserved_spend_minor - view.committed_spend_minor),
+      currency: view.max_spend.currency,
+    };
+    return view;
+  }
+
+  async createExecutionSession(input, key) {
+    return this.runIdempotentAsync("execution_sessions", key, input, async () => {
+      requireFields(input, [
+        "tenant_id",
+        "account_id",
+        "agent_id",
+        "environment",
+        "purpose",
+        "max_spend",
+        "starts_at",
+        "expires_at",
+      ]);
+      validateIdentifier(input.tenant_id, "ten", "tenant_id");
+      validateIdentifier(input.account_id, "acct", "account_id");
+      validateIdentifier(input.agent_id, "agt", "agent_id");
+      if (input.environment !== this.environmentConfig.environment) {
+        throw new ApiError(409, "policy_error", "session_environment_mismatch", "Execution session environment must match the active runtime environment.");
+      }
+      if (input.environment === "live") {
+        throw new ApiError(403, "authorization_error", "live_session_forbidden", "Internal execution sessions cannot be created for Live.");
+      }
+      validateAmount(input.max_spend);
+      if (input.max_spend.value <= 0) {
+        throw new ApiError(400, "validation_error", "invalid_session_spend", "max_spend must be positive.");
+      }
+      if (typeof input.purpose !== "string" || input.purpose.trim().length === 0 || input.purpose.length > 500) {
+        throw new ApiError(400, "validation_error", "invalid_session_purpose", "purpose must be a non-empty string up to 500 characters.");
+      }
+      validateDate(input.starts_at, "starts_at");
+      validateDate(input.expires_at, "expires_at");
+      const startsAt = Date.parse(input.starts_at);
+      const expiresAt = Date.parse(input.expires_at);
+      if (expiresAt <= startsAt || expiresAt - startsAt > MAX_INTERNAL_SESSION_MS) {
+        throw new ApiError(400, "validation_error", "invalid_session_window", "Execution session must end after it starts and last no longer than 15 minutes.");
+      }
+      const session = {
+        id: input.id ?? prefix("ses"),
+        tenant_id: input.tenant_id,
+        account_id: input.account_id,
+        agent_id: input.agent_id,
+        environment: input.environment,
+        purpose: input.purpose.trim(),
+        max_spend: clone(input.max_spend),
+        reserved_spend_minor: 0,
+        committed_spend_minor: 0,
+        status: "requested",
+        activation_status: "pending",
+        activation_id: null,
+        activation_reviewer: null,
+        activation_reason: null,
+        starts_at: input.starts_at,
+        expires_at: input.expires_at,
+        version: 1,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      validateIdentifier(session.id, "ses", "execution_session_id");
+      if (this.executionSessions.has(session.id)) {
+        throw new ApiError(409, "conflict", "execution_session_id_exists", "Execution session ID already exists.");
+      }
+      this.executionSessions.set(session.id, session);
+      this.event("execution_session.created", session);
+      return this.executionSessionView(session);
+    });
+  }
+
+  listExecutionSessions() {
+    return [...this.executionSessions.values()]
+      .sort((left, right) => right.created_at.localeCompare(left.created_at) || right.id.localeCompare(left.id))
+      .map((session) => this.executionSessionView(session));
+  }
+
+  getExecutionSession(id) {
+    validateIdentifier(id, "ses", "execution_session_id");
+    const session = this.executionSessions.get(id);
+    if (!session) throw new ApiError(404, "resource_not_found", "execution_session_not_found", "Execution session was not found.");
+    return this.executionSessionView(session);
+  }
+
+  async transitionExecutionSession(id, action, input, key) {
+    return this.runIdempotentAsync(`execution_sessions/${id}/${action}`, key, input, async () => {
+      validateIdentifier(id, "ses", "execution_session_id");
+      if (!executionSessionActions.has(action)) {
+        throw new ApiError(400, "validation_error", "invalid_session_action", "Execution session action is invalid.");
+      }
+      const session = this.executionSessions.get(id);
+      if (!session) throw new ApiError(404, "resource_not_found", "execution_session_not_found", "Execution session was not found.");
+      if (input.version !== session.version) {
+        throw new ApiError(409, "concurrency_conflict", "execution_session_version_conflict", "Execution session version changed; query before retrying.", { current_version: session.version });
+      }
+      const now = Date.now();
+      if (["requested", "active", "paused"].includes(session.status) && Date.parse(session.expires_at) <= now && action !== "expire") {
+        session.status = "expired";
+        session.activation_status = session.activation_status === "active" ? "expired" : session.activation_status;
+        session.version += 1;
+        session.updated_at = new Date().toISOString();
+        this.event("execution_session.expired", session);
+        throw new ApiError(409, "invalid_state_transition", "execution_session_expired", "Execution session has expired.");
+      }
+      if (action === "activate") {
+        requireFields(input, ["activation_id", "approved_by"]);
+        if (!/^act_[A-Za-z0-9_-]+$/.test(input.activation_id) || typeof input.approved_by !== "string" || input.approved_by.trim().length < 3) {
+          throw new ApiError(400, "validation_error", "invalid_session_activation", "Activation requires a valid activation_id and reviewer.");
+        }
+      }
+      const transitions = {
+        activate: { requested: "active", paused: "active" },
+        pause: { active: "paused" },
+        complete: { active: "completed", paused: "completed" },
+        revoke: { requested: "revoked", active: "revoked", paused: "revoked" },
+        expire: { requested: "expired", active: "expired", paused: "expired" },
+      };
+      const next = transitions[action]?.[session.status];
+      if (!next) throw new ApiError(409, "invalid_state_transition", "execution_session_not_transitionable", "Execution session cannot perform this state transition.", { current_state: session.status, action });
+      if (action === "activate") {
+        if (this.environmentConfig.execution_status !== "execution_enabled") {
+          throw new ApiError(503, "policy_error", "environment_execution_disabled", "Payment execution is disabled for this environment.", { environment: this.environmentConfig.environment });
+        }
+        session.activation_status = "active";
+        session.activation_id = input.activation_id;
+        session.activation_reviewer = input.approved_by;
+        session.activation_reason = input.reason ?? null;
+        session.activated_at = new Date().toISOString();
+      } else if (action === "revoke") {
+        session.activation_status = "revoked";
+        session.revoked_at = new Date().toISOString();
+      } else if (action === "expire") {
+        session.activation_status = "expired";
+      }
+      session.status = next;
+      session.version += 1;
+      session.updated_at = new Date().toISOString();
+      this.event(`execution_session.${next}`, session);
+      return this.executionSessionView(session);
+    });
+  }
+
+  assertExecutionSessionForIntent(input) {
+    if (!input.execution_session_id) return null;
+    validateIdentifier(input.execution_session_id, "ses", "execution_session_id");
+    const session = this.executionSessions.get(input.execution_session_id);
+    if (!session) throw new ApiError(404, "resource_not_found", "execution_session_not_found", "Execution session was not found.");
+    if (session.environment !== this.environmentConfig.environment || session.account_id !== input.payer_account_id || session.agent_id !== input.buyer_agent_id) {
+      throw new ApiError(409, "authorization_error", "execution_session_binding_mismatch", "Execution session must belong to the payment account, Agent and environment.");
+    }
+    if (session.status !== "active" || session.activation_status !== "active" || Date.parse(session.expires_at) <= Date.now()) {
+      throw new ApiError(409, "authorization_error", "execution_session_not_active", "Payment requires an active, separately approved execution session.", { session_id: session.id, status: session.status });
+    }
+    if (session.max_spend.currency !== input.amount.currency) {
+      throw new ApiError(409, "financial_constraint", "execution_session_currency_mismatch", "Execution session currency must match the payment amount.");
+    }
+    return session;
+  }
+
+  reserveExecutionSession(intent) {
+    const session = intent.execution_session_id ? this.executionSessions.get(intent.execution_session_id) : null;
+    if (!session) return null;
+    this.assertExecutionSessionForIntent(intent);
+    const remaining = session.max_spend.value - session.reserved_spend_minor - session.committed_spend_minor;
+    if (remaining < intent.amount.value) {
+      throw new ApiError(409, "financial_constraint", "execution_session_limit_exceeded", "Execution session has insufficient remaining spend.", { session_id: session.id, remaining_minor: remaining, requested_minor: intent.amount.value });
+    }
+    session.reserved_spend_minor += intent.amount.value;
+    session.updated_at = new Date().toISOString();
+    this.event("execution_session.spend_reserved", session);
+    return session;
+  }
+
+  commitExecutionSession(transaction) {
+    const intent = this.intents.get(transaction.payment_intent_id);
+    const session = intent?.execution_session_id ? this.executionSessions.get(intent.execution_session_id) : null;
+    if (!session) return;
+    const value = transaction.settled_amount.value;
+    session.reserved_spend_minor = Math.max(0, session.reserved_spend_minor - value);
+    session.committed_spend_minor += value;
+    session.updated_at = new Date().toISOString();
+    this.event("execution_session.spend_committed", session);
+  }
+
+  releaseExecutionSession(transaction) {
+    const intent = this.intents.get(transaction.payment_intent_id);
+    const session = intent?.execution_session_id ? this.executionSessions.get(intent.execution_session_id) : null;
+    if (!session) return;
+    session.reserved_spend_minor = Math.max(0, session.reserved_spend_minor - transaction.reserved_amount.value);
+    session.updated_at = new Date().toISOString();
+    this.event("execution_session.spend_released", session);
+  }
+
   legacyMandateFor(input, quote) {
     if (!legacyMandatePattern.test(input.payment_mandate_id)) return null;
     return {
@@ -1627,6 +1832,7 @@ export class Bu2Sandbox {
         network: quote.network ?? this.environmentConfig.network ?? null,
         reference: quote.receiving_target_id ?? null,
       });
+      this.assertExecutionSessionForIntent(input);
       const evaluation = this.evaluatePaymentMandate(input, quote);
       const policyDecision = {
         id: prefix("dec"),
@@ -1766,6 +1972,9 @@ export class Bu2Sandbox {
   transactionView(transaction) {
     const intent = this.intents.get(transaction.payment_intent_id) ?? null;
     const quote = intent ? (this.quotes.get(intent.quote_id) ?? null) : null;
+    const executionSession = intent?.execution_session_id
+      ? (this.executionSessions.get(intent.execution_session_id) ?? null)
+      : null;
     const delivery = transaction.delivery_id
       ? (this.deliveries.get(transaction.delivery_id) ?? null)
       : null;
@@ -1783,6 +1992,7 @@ export class Bu2Sandbox {
     return {
       transaction: clone(transaction),
       payment_intent: intent ? clone(intent) : null,
+      execution_session: executionSession ? this.executionSessionView(executionSession) : null,
       quote: quote ? clone(quote) : null,
       delivery: delivery ? clone(delivery) : null,
       receipt: receiptView,
@@ -1927,11 +2137,13 @@ export class Bu2Sandbox {
         "wallet_balance_too_low",
         "Wallet has insufficient available funds.",
       );
+    this.reserveExecutionSession(intent);
     const zero = { value: 0, currency: intent.amount.currency };
-    const transaction = {
-      id: prefix("txn"),
-      payment_intent_id: intent.id,
-      status: "funds_reserved",
+      const transaction = {
+        id: prefix("txn"),
+        payment_intent_id: intent.id,
+        execution_session_id: intent.execution_session_id ?? null,
+        status: "funds_reserved",
       authorized_amount: clone(intent.amount),
       reserved_amount: clone(intent.amount),
       settled_amount: clone(zero),
@@ -2141,6 +2353,7 @@ export class Bu2Sandbox {
         transaction.cancel_provider_reference = provider?.provider_reference ?? null;
         this.wallet.reserved -= transaction.reserved_amount.value;
         this.wallet.available += transaction.reserved_amount.value;
+        this.releaseExecutionSession(transaction);
         this.releaseBudgetHold(transaction);
         const intent = this.intents.get(transaction.payment_intent_id);
         if (intent) intent.status = "canceled";
@@ -2278,6 +2491,7 @@ export class Bu2Sandbox {
       transaction.settlement_provider_reference = provider.provider_reference;
     }
     this.consumeBudgetHold(transaction);
+    this.commitExecutionSession(transaction);
     this.wallet.reserved -= transaction.settled_amount.value;
     const intent = this.intents.get(transaction.payment_intent_id);
     intent.status = "settled";

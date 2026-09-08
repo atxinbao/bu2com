@@ -115,6 +115,8 @@ try {
 - `recoverTransactionSettlement`
 - `getReceipt`
 - `verifyReceipt`
+- `listExecutionSessions` / `createExecutionSession`
+- `getExecutionSession` / `transitionExecutionSession`
 
 ## English
 

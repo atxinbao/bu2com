@@ -201,6 +201,88 @@ paths:
               schema: { $ref: '#/components/schemas/PaymentMandate' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '409': { $ref: '#/components/responses/Conflict' }
+  /execution_sessions:
+    parameters:
+      - $ref: '#/components/parameters/TraceId'
+    get:
+      operationId: listExecutionSessions
+      summary: List bounded internal Sandbox execution sessions
+      responses:
+        '200':
+          description: Execution sessions visible to the caller
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/ExecutionSession' }
+    post:
+      operationId: createExecutionSession
+      summary: Create a bounded internal execution session request
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateExecutionSession' }
+      responses:
+        '201':
+          description: Requested execution session
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExecutionSession' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /execution_sessions/{execution_session_id}:
+    parameters:
+      - $ref: '#/components/parameters/TraceId'
+      - name: execution_session_id
+        in: path
+        required: true
+        schema: { type: string, pattern: '^ses_[A-Za-z0-9_-]+$' }
+    get:
+      operationId: getExecutionSession
+      summary: Read one bounded execution session
+      responses:
+        '200':
+          description: Execution session
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExecutionSession' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /execution_sessions/{execution_session_id}/{action}:
+    parameters:
+      - $ref: '#/components/parameters/TraceId'
+      - name: execution_session_id
+        in: path
+        required: true
+        schema: { type: string, pattern: '^ses_[A-Za-z0-9_-]+$' }
+      - name: action
+        in: path
+        required: true
+        schema: { type: string, enum: [activate, pause, complete, revoke, expire] }
+    post:
+      operationId: transitionExecutionSession
+      summary: Approve or change a bounded internal execution session
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ExecutionSessionTransition' }
+      responses:
+        '200':
+          description: Updated execution session
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ExecutionSession' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '409': { $ref: '#/components/responses/Conflict' }
   /financial_postings:
     parameters:
       - $ref: '#/components/parameters/TraceId'
@@ -1232,6 +1314,47 @@ components:
             status: { type: string, enum: [draft, active, suspended, revoked, expired] }
             created_at: { type: string, format: date-time }
             updated_at: { type: string, format: date-time }
+    CreateExecutionSession:
+      type: object
+      additionalProperties: false
+      required: [tenant_id, account_id, agent_id, environment, purpose, max_spend, starts_at, expires_at]
+      properties:
+        id: { type: string, pattern: '^ses_[A-Za-z0-9_-]+$' }
+        tenant_id: { type: string, pattern: '^ten_[A-Za-z0-9_-]+$' }
+        account_id: { type: string, pattern: '^acct_[A-Za-z0-9_-]+$' }
+        agent_id: { type: string, pattern: '^agt_[A-Za-z0-9_-]+$' }
+        environment: { type: string, enum: [local, sandbox, live] }
+        purpose: { type: string, minLength: 1, maxLength: 500 }
+        max_spend: { $ref: '#/components/schemas/Amount' }
+        starts_at: { type: string, format: date-time }
+        expires_at: { type: string, format: date-time }
+    ExecutionSessionTransition:
+      type: object
+      additionalProperties: false
+      required: [version]
+      properties:
+        version: { type: integer, minimum: 1 }
+        activation_id: { type: string, pattern: '^act_[A-Za-z0-9_-]+$' }
+        approved_by: { type: string, minLength: 3, maxLength: 255 }
+        reason: { type: string, maxLength: 500 }
+    ExecutionSession:
+      allOf:
+        - $ref: '#/components/schemas/CreateExecutionSession'
+        - type: object
+          required: [id, reserved_spend_minor, committed_spend_minor, remaining_spend, status, activation_status, activation_id, version, created_at, updated_at]
+          properties:
+            id: { type: string, pattern: '^ses_[A-Za-z0-9_-]+$' }
+            reserved_spend_minor: { type: integer, minimum: 0 }
+            committed_spend_minor: { type: integer, minimum: 0 }
+            remaining_spend: { $ref: '#/components/schemas/Amount' }
+            status: { type: string, enum: [requested, active, paused, completed, expired, revoked] }
+            activation_status: { type: string, enum: [pending, active, expired, revoked] }
+            activation_id: { type: [string, 'null'], pattern: '^act_[A-Za-z0-9_-]+$' }
+            activation_reviewer: { type: [string, 'null'] }
+            activation_reason: { type: [string, 'null'] }
+            version: { type: integer, minimum: 1 }
+            created_at: { type: string, format: date-time }
+            updated_at: { type: string, format: date-time }
     CreateBudget:
       type: object
       additionalProperties: false
@@ -1900,6 +2023,7 @@ components:
         funding_source_id: { type: string, pattern: '^fund_[A-Za-z0-9_-]+$', maxLength: 255 }
         receiving_target_id: { type: string, pattern: '^tgt_[A-Za-z0-9_-]+$', maxLength: 255 }
         budget_id: { type: string, pattern: '^bud_[A-Za-z0-9_-]+$', maxLength: 255 }
+        execution_session_id: { type: string, pattern: '^ses_[A-Za-z0-9_-]+$', maxLength: 255 }
         external_context: { $ref: '#/components/schemas/ExternalContext' }
         metadata:
           type: object
@@ -1960,6 +2084,7 @@ components:
         funding_source_binding_id: { type: [string, 'null'], pattern: '^fund_[A-Za-z0-9_-]+$' }
         receiving_target_binding_id: { type: [string, 'null'], pattern: '^tgt_[A-Za-z0-9_-]+$' }
         budget_id: { type: [string, 'null'], pattern: '^bud_[A-Za-z0-9_-]+$' }
+        execution_session_id: { type: [string, 'null'], pattern: '^ses_[A-Za-z0-9_-]+$' }
         created_at: { type: string, format: date-time }
     DeliveryEvidence:
       type: object
@@ -1986,6 +2111,7 @@ components:
       properties:
         id: { type: string, pattern: '^txn_[A-Za-z0-9_-]+$' }
         payment_intent_id: { type: string, pattern: '^pi_[A-Za-z0-9_-]+$' }
+        execution_session_id: { type: [string, 'null'], pattern: '^ses_[A-Za-z0-9_-]+$' }
         status: { type: string, enum: [authorized, funds_reserved, delivery_submitted, settled, canceled, refunded, disputed] }
         authorized_amount: { $ref: '#/components/schemas/Amount' }
         reserved_amount: { $ref: '#/components/schemas/Amount' }
@@ -1993,12 +2119,16 @@ components:
         refunded_amount: { $ref: '#/components/schemas/Amount' }
     TransactionView:
       type: object
-      required: [transaction, payment_intent, quote, delivery, receipt, refunds, cancellation, payment_channel, settlement_control]
+      required: [transaction, payment_intent, execution_session, quote, delivery, receipt, refunds, cancellation, payment_channel, settlement_control]
       properties:
         transaction: { $ref: '#/components/schemas/Transaction' }
         payment_intent:
           anyOf:
             - { $ref: '#/components/schemas/PaymentIntent' }
+            - { type: 'null' }
+        execution_session:
+          anyOf:
+            - { $ref: '#/components/schemas/ExecutionSession' }
             - { type: 'null' }
         quote:
           anyOf:

@@ -180,6 +180,10 @@ export function permissionForRequest(method, pathname) {
   }
   if (method === "GET" && /^\/v1\/receipts\/[^/]+\/verify$/.test(pathname)) return null;
   if (method === "GET" && pathname === "/v1/access") return "identity:read";
+  if (method === "GET" && pathname === "/v1/execution_sessions") return "execution_sessions:read";
+  if (method === "POST" && pathname === "/v1/execution_sessions") return "execution_sessions:create";
+  if (method === "GET" && /^\/v1\/execution_sessions\/[^/]+$/.test(pathname)) return "execution_sessions:read";
+  if (method === "POST" && /^\/v1\/execution_sessions\/[^/]+\/(activate|pause|complete|revoke|expire)$/.test(pathname)) return "execution_sessions:manage";
   if (method === "GET" && pathname === "/v1/payment_mandates") return "mandates:read";
   if (method === "GET" && pathname === "/v1/receivables") return "receivables:read";
   if (method === "POST" && pathname === "/v1/receivables") return "receivables:create";
@@ -504,6 +508,20 @@ export class AccessController {
     this.ledger?.assertIdentityClaims(this.environment, actor, { accountIds, agentIds });
   }
 
+  assertTenant(actor, tenantId, context = null) {
+    if (!actor || actor.platform_access || actor.tenant_id === tenantId) return;
+    if (context) {
+      this.record({
+        context,
+        permission: permissionForRequest(context.method, context.pathname),
+        actor,
+        outcome: "denied",
+        reasonCode: "tenant_scope_denied",
+      });
+    }
+    throw authError(403, "tenant_scope_denied", "The caller cannot act for another tenant.");
+  }
+
   canAccessView(actor, view) {
     if (!actor || actor.platform_access) return true;
     const intent = view?.payment_intent ?? view;
@@ -548,6 +566,15 @@ export class AccessController {
     if (actor?.platform_access) return mandates;
     return mandates.filter((mandate) =>
       actor.account_ids.includes(mandate.account_id) || actor.agent_ids.includes(mandate.agent_id),
+    );
+  }
+
+  filterExecutionSessions(actor, sessions) {
+    if (actor?.platform_access) return sessions;
+    return sessions.filter((session) =>
+      actor.tenant_id === session.tenant_id ||
+      actor.account_ids.includes(session.account_id) ||
+      actor.agent_ids.includes(session.agent_id),
     );
   }
 

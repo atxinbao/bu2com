@@ -152,6 +152,29 @@
       <h2 id="unreleased">Unreleased</h2>
       <article class="release">
         <div class="release-head">
+          <div><h3>F15a · 有界内部 Sandbox 执行会话</h3><time datetime="2026-09-09">2026-09-09</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">为外部 Agent 的既有工作流增加短时、隔离、可审计的内部 ExecutionSession；环境激活与业务 PaymentMandate 分开批准，Session 支出在预留、结算、取消和重启路径保持有界。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag added">Added</span>新增 <code>ExecutionSession</code> 持久资源、15 分钟最大窗口、Account/Agent/tenant/environment 绑定、独立 activation_id 与 requested/active/paused/completed/expired/revoked 状态机。</li>
+            <li><span class="tag added">Added</span>新增 <code>GET/POST /v1/execution_sessions</code>、详情与状态转换接口及 TypeScript SDK 方法；PaymentIntent 可选引用 <code>execution_session_id</code>。</li>
+            <li><span class="tag changed">Changed</span>会话级预留/已提交支出与 Wallet、Budget Hold、Transaction、LedgerEvent 和幂等终态沿用同一原子事务；取消释放预留，结算提交支出。</li>
+            <li><span class="tag governance">Boundary</span>会话激活不能替代 PaymentMandate；不创建 BU2 Task 平台，不启用 Hosted、Live/Mainnet、托管、生产凭证或真实 Provider 付款。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R2 · 执行会话、支出上限、环境激活与交易预留边界，必须独立人工审查后合并</span></div>
+          <div><b>金融行为影响</b><span>会话不能扩大 PaymentMandate 或 execution_status；超限、过期、暂停、跨主体和跨环境请求失败关闭</span></div>
+          <div><b>兼容性</b><span>复用通用 resources 快照，不新增破坏性 SQLite 表；旧 PaymentIntent、Transaction 和 Receipt 可继续读取</span></div>
+          <div><b>验证</b><span>F15a Domain 3/3、HTTP 1/1、Sandbox 全量、SDK 生成/格式/lint/类型/build 与 Contract 校验记录在 PR 中</span></div>
+          <div><b>恢复</b><span>同键重放返回原结果；重启恢复会话支出与交易状态，未知 Provider 结果仍交给 F09b 查询/对账，不自动重付</span></div>
+        </div>
+      </article>
+      <article class="release">
+        <div class="release-head">
           <div><h3>F14 · Payment / Collection / Refund / Fee Reconciliation</h3><time datetime="2026-09-09">2026-09-09</time></div>
           <span class="status">Unreleased</span>
         </div>

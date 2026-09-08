@@ -299,3 +299,12 @@
 - `npm --prefix prototype run lint && npm --prefix prototype run build`: passed.
 - `git diff --check`: passed.
 - Not run: external Hosted/Testnet reconciliation or Live/Mainnet execution. These remain closed by contract.
+## 2026-09-09 · F15a bounded internal execution sessions
+
+- `node --test sandbox/f15a.test.mjs sandbox/f15a-http.test.mjs`: 4/4 passed; covered independent activation, 15-minute window, session-bound payment reservation/settlement, SQLite restart and HTTP lifecycle.
+- `node docs/03-technical/validate-contract.mjs`: 63 invariants and 6 MCP tools passed after the OpenAPI/access contract update.
+- `npm --prefix packages/typescript-sdk test`: generated contract, format, lint, typecheck, build and 10/10 unit tests passed.
+- `npm --prefix sandbox test`: 151/151 passed, including F07-F14, environment, atomicity, x402 and restart regression.
+- `npm --prefix prototype run lint && npm --prefix prototype run build`: passed.
+- `git diff --check`: passed.
+- Not run: Hosted Sandbox, public DNS/TLS, real Base Sepolia, Live/Mainnet, custody or production credentials.

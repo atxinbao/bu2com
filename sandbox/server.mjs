@@ -308,6 +308,15 @@ export function createBu2Server({
         activeAccess.assertClaims(actor, { accountIds: [body.account_id], agentIds: [body.agent_id] }, accessContext);
         return send(response, 201, await activeSandbox.createPaymentMandate(body, validateIdempotencyKey(key)));
       }
+      if (request.method === "GET" && url.pathname === "/v1/execution_sessions") {
+        return send(response, 200, { data: activeAccess.filterExecutionSessions(actor, activeSandbox.listExecutionSessions()) });
+      }
+      if (request.method === "POST" && url.pathname === "/v1/execution_sessions") {
+        const body = validateBody("createExecutionSession", await readJson(request));
+        activeAccess.assertTenant(actor, body.tenant_id, accessContext);
+        activeAccess.assertClaims(actor, { accountIds: [body.account_id], agentIds: [body.agent_id] }, accessContext);
+        return send(response, 201, await activeSandbox.createExecutionSession(body, validateIdempotencyKey(key)));
+      }
       if (request.method === "GET" && url.pathname === "/v1/receivables") {
         return send(response, 200, { data: activeAccess.filterReceivables(actor, activeSandbox.listReceivables()) });
       }
@@ -661,6 +670,22 @@ export function createBu2Server({
           activeAccess.assertClaims(actor, { accountIds: [mandate.account_id], agentIds: [mandate.agent_id] }, accessContext);
           const body = validateBody("mandateTransition", await readJson(request));
           return send(response, 200, await activeSandbox.transitionPaymentMandate(mandateId, segments[3], body, validateIdempotencyKey(key)));
+        }
+      }
+      if (segments[0] === "v1" && segments[1] === "execution_sessions" && segments[2]) {
+        const sessionId = validateResourceId(segments[2], "ses", "execution_session_id");
+        if (request.method === "GET" && segments.length === 3) {
+          const session = activeSandbox.getExecutionSession(sessionId);
+          activeAccess.assertTenant(actor, session.tenant_id, { ...accessContext, resourceId: sessionId });
+          activeAccess.assertClaims(actor, { accountIds: [session.account_id], agentIds: [session.agent_id] }, { ...accessContext, resourceId: sessionId });
+          return send(response, 200, session);
+        }
+        if (request.method === "POST" && segments.length === 4 && ["activate", "pause", "complete", "revoke", "expire"].includes(segments[3])) {
+          const session = activeSandbox.getExecutionSession(sessionId);
+          activeAccess.assertTenant(actor, session.tenant_id, { ...accessContext, resourceId: sessionId });
+          activeAccess.assertClaims(actor, { accountIds: [session.account_id], agentIds: [session.agent_id] }, { ...accessContext, resourceId: sessionId });
+          const body = validateBody("executionSessionTransition", await readJson(request));
+          return send(response, 200, await activeSandbox.transitionExecutionSession(sessionId, segments[3], body, validateIdempotencyKey(key)));
         }
       }
       if (segments[0] === "v1" && segments[1] === "receivables" && segments[2]) {

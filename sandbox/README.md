@@ -21,7 +21,7 @@ node sandbox/server.mjs
 
 该入口可启动不代表已获部署或支付授权。完整 Candidate、独立 Activation、双向结算与边缘机器鉴权门槛见 [ENV-07 Hosted Sandbox v1](../docs/03-technical/ENVIRONMENT_HOSTED_SANDBOX_V1.md)。
 
-默认数据库：`sandbox/data/bu2-sandbox.sqlite`。SQLite Schema v13 会为新库写入不可变环境 metadata、持久 Principal/Account/Agent 归属、资金来源、收款目标、版本化 PaymentMandate、PolicyDecision、只追加访问决策、租户 credential generation 与 reset 审计；错环境数据库拒绝启动。没有 metadata 的旧库必须先鉴别，再用一次性 `BU2_CLAIM_LEGACY_DB_ENVIRONMENT=true` 明确认领，不能默认解释为 Sandbox 或 Live。重启服务后资源、钱包、幂等结果、账本、Receipt、身份归属、钱包绑定和 Mandate 决策均会恢复。领域写入先登记数据库 `processing` Claim，再以状态版本 CAS 把资源、余额、LedgerEvent、Webhook Outbox 和幂等终态一次提交；遗留 `processing` 会返回结果未知，禁止自动重放。
+默认数据库：`sandbox/data/bu2-sandbox.sqlite`。SQLite Schema v13 会为新库写入不可变环境 metadata、持久 Principal/Account/Agent 归属、资金来源、收款目标、版本化 PaymentMandate、PolicyDecision、ExecutionSession、只追加访问决策、租户 credential generation 与 reset 审计；错环境数据库拒绝启动。没有 metadata 的旧库必须先鉴别，再用一次性 `BU2_CLAIM_LEGACY_DB_ENVIRONMENT=true` 明确认领，不能默认解释为 Sandbox 或 Live。重启服务后资源、钱包、幂等结果、账本、Receipt、身份归属、钱包绑定、Mandate 决策和 ExecutionSession 支出均会恢复。领域写入先登记数据库 `processing` Claim，再以状态版本 CAS 把资源、余额、LedgerEvent、Webhook Outbox 和幂等终态一次提交；遗留 `processing` 会返回结果未知，禁止自动重放。
 
 F13 增加 `funds_reserved` 交易的有界取消，以及 `settled` 交易的部分/全额退款事实。取消会原子释放 Wallet reserved 和 active Budget Hold；退款持久化为 `Refund` 资源并维持 `refunded ≤ settled ≤ reserved ≤ authorized`。Provider unknown 只能通过显式 recovery 查询推进；当前 x402 Adapter 没有标准退款原语，因此不会伪造退款成功或自动重付。
 
@@ -54,6 +54,10 @@ npm run onboarding:inspect -- \
 F06b 将 Agent 交易使用的资金来源和收款目标作为持久、可验证的绑定记录保存。每条绑定都属于一个环境、租户、Account，可选地限定到 Agent，并记录资产、网络、Provider、脱敏引用、生命周期状态、验证状态和 generation。绑定 ID 已写入 Quote 与 PaymentIntent；绑定存在时，交易创建会拒绝跨租户、错资产、错网络、未验证、已停用或引用漂移。
 
 绑定配置仍通过 onboarding 文档显式提供，不保存私钥、原始 token 或支付秘密。Local Simulation 可以使用 `CNY` 与空网络；Sandbox 必须匹配环境注册表批准的 Base Sepolia 资产和 `eip155:84532`。同一个绑定 ID 不能静默改指向，收款地址或引用变化必须创建新的绑定 ID 或 generation。
+
+### F15a 有界内部 ExecutionSession
+
+`ExecutionSession` 为外部 Agent 的既有工作流提供短时内部执行窗口，不要求用户把任务迁移到 BU2。会话绑定 `tenant_id`、Account、Agent 和当前环境，最长 15 分钟，拥有独立的 `activation_id` 与审核人；它不能替代 PaymentMandate，也不能绕过 `execution_status`。PaymentIntent 可携带 `execution_session_id`，其支出在预留、结算、取消和重启后分别保持可查询。Live、Hosted、公网凭证和生产资金不属于该能力范围。
 
 ## 完整 Agent 交易演示
 
