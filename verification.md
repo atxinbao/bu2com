@@ -1027,7 +1027,7 @@ npm --prefix sandbox run test:hosted-deployment
 
 - 目标：核对包含已修复 SQLite 的固定 Node 运行时、WAL、迁移连续性和 Online Backup 隔离恢复。
 - 新增 `deploy/runtime-assurance.mjs` 和 `deploy/runtime-assurance.test.mjs`，输出 `rt01.v1` 证据。
-- 运行时证据：Node v23.11.0 满足 `>=22.16.0`；Docker 两阶段固定 `node:22.16.0-bookworm-slim`；SQLite `journal_mode=wal`、`foreign_keys=1`；Schema migration 1–16 连续；备份恢复 `integrity=ok` 且 Schema 一致。
+- 运行时证据：Node v23.11.0 满足 `>=22.16.0`；Docker 两阶段固定 `node:22.16.0-bookworm-slim`；SQLite `journal_mode=wal`、`foreign_keys=1`；Schema migration 1–17 连续；备份恢复 `integrity=ok` 且 Schema 一致。
 - 资金边界：Provider 未调用、Signer 未加载、付款未执行、Live 未启用。
 - 未执行：Hosted、真实 Base Sepolia 双向收付、LA-06b 外部证据和 G-F 审查。
 
@@ -1048,3 +1048,12 @@ npm --prefix sandbox run test:hosted-deployment
 - 未执行：资金 Posting 接入、实时余额切换、历史迁移、Provider、Hosted、Base Sepolia、Live/Mainnet。
 
 结论：LA-03d Schema 子范围达到 **GO for R2 review**；不构成完整 Ledger Assurance Gate，后续仍需写入原语、投影刷新和迁移切换证据。
+
+## 2026-09-09 · LA-03d Posting 绑定与按账户投影实现
+
+- Schema 17 为 `financial_postings` 增加可空 `ledger_account_id`，新绑定写入必须引用 active 账簿账户；历史未绑定事实不被覆盖。
+- `Bu2Sandbox.rebuildLedgerAccountProjection` 按账簿账户过滤不可变 Posting，输出余额、Journal 平衡和缺口计数；不同账户不会合并到同一账户行。
+- `node --test sandbox/la03d-posting.test.mjs`：3/3 通过，覆盖绑定写入、非 active/未知账户、错环境和多账户隔离。
+- 未执行：运行时钱包余额切换、历史迁移、Provider、Hosted、Base Sepolia、Live/Mainnet、E3.1。
+
+结论：LA-03d Posting/投影子范围达到 **GO for R2 review**；不构成完整 Ledger Assurance Gate，仍需独立实现运行时投影刷新和历史迁移/切换证据。

@@ -436,7 +436,7 @@
 - Scope: LA-06a 合并后推进审计路线 RT-01；LA-06b 真实 Sandbox 双向收付仍需外部 Hosted 条件，未在本 PR 执行。
 - Tool: `rg`, `sed`; result: confirmed Dockerfile pins Node 22.16.0 in both stages, Sandbox requires Node >=22.16.0, SqliteLedger exposes WAL, migration, integrity and Online Backup paths.
 - Tool: `apply_patch`; result: added runtime assurance runner/test, `test:rt01`, RT-01 product/technical/roadmap/README/CHANGELOG and audit records.
-- Tool: `npm`, `node`; result: RT-01 2/2, Node v23.11.0, WAL, foreign keys, Schema 1–16 continuity, backup integrity and isolated restore passed; no Provider/Signer/payment execution.
+- Tool: `npm`, `node`; result: RT-01 2/2, Node v23.11.0, WAL, foreign keys, Schema 1–17 continuity, backup integrity and isolated restore passed; no Provider/Signer/payment execution.
 - Submission verification: `npm --prefix packages/typescript-sdk test`, `npm --prefix prototype run lint`, `npm --prefix prototype run build`, `git diff --check`; result: SDK 10/10 with generated/format/lint/type/build gates, Prototype lint/build and diff check passed; final `rt01.v1` remained `passed`.
 - Boundary: Local-only evidence; no image mutation, Schema migration, Hosted endpoint, Base Sepolia payment, Live/Mainnet or E3.1 activation.
 
@@ -453,3 +453,12 @@
 - Tool: apply_patch; result: added Schema 16 ledger_accounts, unique ownership tuple, environment/tenant/book/owner/asset/network validation and restart-safe persistence.
 - Tool: node --test sandbox/la03d.test.mjs; result: 4/4 passed, covering idempotency, tenant/environment isolation, version conflicts, terminal retirement and SQLite restart.
 - Boundary: local-only schema foundation; no Provider, signer, payment, Hosted, Base Sepolia, Live/Mainnet or E3.1 activation.
+
+## 2026-09-09 · LA-03d Posting 绑定与按账户投影实现
+
+- Scope: 在已合并 Schema 16 基础上增加 Schema 17 `financial_postings.ledger_account_id`、active 账簿账户绑定校验和按账簿账户只读投影重建；不切换运行时钱包余额或历史事实。
+- Tool: `apply_patch`; result: extended SQLite migration/persistence, posting fingerprint/idempotency comparison, domain projection key and scoped projection API; added `sandbox/la03d-posting.test.mjs` and package script.
+- Tool: `node --test sandbox/la03d-posting.test.mjs`; result: targeted LA-03d Posting/投影 tests 3/3 passed, covering binding, inactive/unknown/cross-environment rejection and account isolation.
+- Tool: `npm --prefix sandbox test`; result: 191/191 passed after normalizing legacy `ledger_account_id: null` in replay evidence; `node deploy/runtime-assurance.mjs` passed with Schema 1–17; contract validation 63 invariants/6 MCP tools; SDK 10/10; Prototype lint/build and `git diff --check` passed.
+- Audit boundary: the separately reported refund external-success/local-commit-failure re-occupation issue remains a Release blocker and is intentionally not mixed into this LA-03d PR; it requires the next dedicated R2 repair.
+- Boundary: local-only; no Provider, signer, payment, Hosted, Base Sepolia, Live/Mainnet or E3.1 activation.

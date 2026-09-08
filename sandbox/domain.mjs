@@ -137,13 +137,15 @@ function postingProjection(postings, currency = null) {
   const journals = new Map();
   for (const posting of postings) {
     if (currency !== null && posting.currency !== currency) continue;
-    const key = `${posting.currency}:${posting.account}`;
+    const ledgerAccountId = posting.ledger_account_id ?? null;
+    const key = `${ledgerAccountId ?? "legacy"}:${posting.currency}:${posting.account}`;
     const current = balances.get(key) ?? {
       account: posting.account,
       currency: posting.currency,
       balance_minor: 0,
       posting_count: 0,
     };
+    if (ledgerAccountId !== null) current.ledger_account_id = ledgerAccountId;
     const signedAmount = posting.direction === "debit" ? posting.amount_value : -posting.amount_value;
     const nextBalance = current.balance_minor + signedAmount;
     if (!Number.isSafeInteger(nextBalance)) {
@@ -167,7 +169,11 @@ function postingProjection(postings, currency = null) {
     journal_count: journalRows.length,
     unbalanced_journal_count: journalRows.filter((journal) => !journal.balanced).length,
     accounts: [...balances.values()]
-      .sort((left, right) => left.currency.localeCompare(right.currency) || left.account.localeCompare(right.account))
+      .sort((left, right) =>
+        (left.ledger_account_id ?? "").localeCompare(right.ledger_account_id ?? "")
+        || left.currency.localeCompare(right.currency)
+        || left.account.localeCompare(right.account),
+      )
       .map((account) => clone(account)),
     journals: journalRows.sort((left, right) => left.event_id.localeCompare(right.event_id)).map((journal) => clone(journal)),
   };
@@ -1283,6 +1289,23 @@ export class Bu2Sandbox {
     };
   }
 
+  rebuildLedgerAccountProjection({ ledger_account_id, currency = null } = {}) {
+    validateIdentifier(ledger_account_id, "lga", "ledger_account_id");
+    this.ledger?.assertLedgerAccountBinding(ledger_account_id, {
+      environment: this.environmentConfig.environment,
+    });
+    const postings = [...this.financialPostings.values()].filter(
+      (posting) => posting.ledger_account_id === ledger_account_id,
+    );
+    const projection = postingProjection(postings, currency);
+    return {
+      generated_at: new Date().toISOString(),
+      ledger_account_id,
+      currency,
+      ...projection,
+    };
+  }
+
   exportLedgerReplayEvidence({ as_of = null } = {}) {
     if (as_of !== null) validateDate(as_of, "as_of");
     const cutoff = as_of === null ? null : Date.parse(as_of);
@@ -1294,7 +1317,7 @@ export class Bu2Sandbox {
       .filter((posting) => withinCutoff(posting.created_at))
       .map((posting) => {
         const { journal_id: _journalId, ...immutablePosting } = clone(posting);
-        return immutablePosting;
+        return { ...immutablePosting, ledger_account_id: posting.ledger_account_id ?? null };
       })
       .sort((left, right) => left.created_at.localeCompare(right.created_at) || left.id.localeCompare(right.id));
     const opening_balances = [...this.openingBalances.values()]

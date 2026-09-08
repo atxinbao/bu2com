@@ -21,6 +21,7 @@
     "test:la03": "node --test la03.test.mjs",
     "test:la03b": "node --test la03b.test.mjs",
     "test:la03d": "node --test la03d.test.mjs",
+    "test:la03d-posting": "node --test la03d-posting.test.mjs",
     "test:la04": "node --test la04.test.mjs",
     "test:la05a": "node --test la05a.test.mjs",
     "test:la05b": "node --test la05b.test.mjs",

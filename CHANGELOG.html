@@ -190,6 +190,26 @@
       </article>
       <article class="release">
         <div class="release-head">
+          <div><h3>LA-03d · Financial Posting 账簿账户绑定与隔离投影</h3><time datetime="2026-09-09">2026-09-09</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">为新增账务事实提供显式 <code>ledger_account_id</code> 绑定，并支持按账簿账户从不可变 Posting 重建只读投影，避免不同所有者进入同一余额查询。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag added">Added</span>SQLite Schema 17 Posting 绑定列、活跃账簿账户校验、环境边界校验和绑定索引。</li>
+            <li><span class="tag added">Added</span><code>rebuildLedgerAccountProjection</code>，按账簿账户、币种和 Journal 生成可重复的只读投影。</li>
+            <li><span class="tag governance">Boundary</span>历史未绑定 Posting 保留为兼容事实；不切换运行时钱包余额，不执行历史迁移、Provider、Hosted、Base Sepolia、Live/Mainnet 或 E3.1。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R2 · 账务事实与持久化边界，需独立 Domain / Architecture 审查</span></div>
+          <div><b>验证</b><span>LA-03d Posting 定向测试 3/3；其余结果以 PR 实际本地运行记录为准</span></div>
+          <div><b>恢复</b><span>新增绑定可由不可变 Posting 重建；运行时余额与历史切换仍保持关闭</span></div>
+        </div>
+      </article>
+      <article class="release">
+        <div class="release-head">
           <div><h3>RT-01 · 固定运行时与 SQLite 账本准入</h3><time datetime="2026-09-09">2026-09-09</time></div>
           <span class="status">Unreleased</span>
         </div>
@@ -198,7 +218,7 @@
           <h4>Changes</h4>
           <ul>
             <li><span class="tag added">Added</span><code>node deploy/runtime-assurance.mjs</code> 与 <code>rt01.v1</code> 机器证据。</li>
-            <li><span class="tag added">Added</span>固定 Node `22.16.0`、SQLite WAL/foreign keys、Schema 1–16 连续迁移和 Online Backup/隔离恢复测试。</li>
+            <li><span class="tag added">Added</span>固定 Node `22.16.0`、SQLite WAL/foreign keys、Schema 1–17 连续迁移和 Online Backup/隔离恢复测试。</li>
             <li><span class="tag governance">Boundary</span>不修改运行时制品或 Schema，不调用 Provider、不加载 Signer、不执行 Base Sepolia/Mainnet 付款；LA-06b 仍需独立真实双向证据。</li>
           </ul>
         </div>

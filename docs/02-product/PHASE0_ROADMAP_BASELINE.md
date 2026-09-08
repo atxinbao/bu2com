@@ -76,7 +76,7 @@ D0/D1/D2 文档基线与 F07 代码实现已合并。F08 运行时与 F09a 已�
 
 LA-03d 已冻结多账户所有权、余额投影切换和历史迁移契约，下一实现应按 Schema/归属约束、写入原语/投影刷新、迁移/切换证据拆分。
 
-LA-03d 的第一实现子范围已增加 Schema 16 账簿账户所有权注册表与条件版本状态转换；它不接入 Financial Posting、运行时余额或历史迁移切换，仍需独立 R2 审查。
+LA-03d 的第一实现子范围已增加 Schema 16 账簿账户所有权注册表与条件版本状态转换；第二实现子范围增加 Schema 17 `financial_postings.ledger_account_id`、活跃账户绑定校验和按账户只读投影重建。两者均不切换运行时余额、不执行历史迁移，仍需独立 R2 审查。
 
 D2 只改文档；F08/F09a/F10/F11/F12 代码 PR 不启用真实 Testnet 双向收付、Hosted Sandbox、Live/Mainnet、托管或生产凭证，必须独立完成 Domain 与 Architecture R2 审查。F09b 的历史实现已覆盖持久化 payment attempt、unknown-result 冻结和显式 recovery 查询，本轮不重复引入第二套恢复实现。
 
