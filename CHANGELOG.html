@@ -152,6 +152,25 @@
       <h2 id="unreleased">Unreleased</h2>
       <article class="release">
         <div class="release-head">
+          <div><h3>LA-03d · 多账户账簿所有权与余额投影契约</h3><time datetime="2026-09-09">2026-09-09</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">冻结多账户账簿所有权维度、余额投影切换和历史迁移边界，为后续 Ledger Assurance 实现拆分提供可审查契约。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag added">Added</span><code>LA03D_MULTI_ACCOUNT_OWNERSHIP_CONTRACT.md</code>，明确 environment、tenant、book、owner、asset/network 和版本条件。</li>
+            <li><span class="tag governance">Boundary</span>本 PR 只冻结文档，不修改 Schema、API、运行时余额、交易状态、Provider、Sandbox/Testnet 或 Live/Mainnet。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R0 文档契约；后续实现按 R2 Domain 与 Architecture 审查</span></div>
+          <div><b>验证</b><span>文档交叉引用、路线图状态、Git diff 检查</span></div>
+          <div><b>恢复</b><span>删除本契约及导航引用即可恢复，不影响运行时数据</span></div>
+        </div>
+      </article>
+      <article class="release">
+        <div class="release-head">
           <div><h3>RT-01 · 固定运行时与 SQLite 账本准入</h3><time datetime="2026-09-09">2026-09-09</time></div>
           <span class="status">Unreleased</span>
         </div>

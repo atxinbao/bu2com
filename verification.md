@@ -1032,3 +1032,10 @@ npm --prefix sandbox run test:hosted-deployment
 - 未执行：Hosted、真实 Base Sepolia 双向收付、LA-06b 外部证据和 G-F 审查。
 
 结论：RT-01 达到 **GO for R2 review**，仅证明固定本地运行时与账本恢复证据可重复，不构成完整 Ledger Assurance Gate、真实 Sandbox/Testnet 或生产准入。
+## 2026-09-09 · LA-03d 多账户账簿所有权与余额投影契约
+
+- 范围：冻结多账户所有权维度、投影切换、历史迁移和缺口阻断规则；本 PR 仅修改文档。
+- 未执行：Schema、API、运行时余额、Provider、Hosted、Base Sepolia、Live/Mainnet。
+- 验证：文档导航与路线图交叉引用、工作区 diff 检查。
+
+结论：LA-03d 文档契约达到 **GO for implementation planning**；后续 Schema/归属约束、写入原语/投影刷新、迁移/切换证据必须拆为 R2 实现 PR。LA-06b、E3.1、Live/Mainnet 和生产资金路径继续关闭。

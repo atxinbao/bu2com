@@ -55,6 +55,7 @@ BU2 继续定位为嵌入式 Agent AI 收付平台。外部 Agent 在自己的�
 | LA-03a | `feat(ledger): post settlement refund and provider fee facts` | LA-02、F13、F14 | R2；LA-03 首个子范围；不完成期初、完整历史重建或更正分录 |
 | LA-03b | `feat(ledger): add opening checkpoints and correction journals` | LA-03a | R2；不改变钱包投影，不完成完整余额重建 |
 | LA-03c | `feat(ledger): rebuild account projections from immutable postings` | LA-03b | R2；只读审计投影，不切换运行时余额 |
+| LA-03d | `docs(ledger): freeze multi-account ownership and projection contract` | LA-03c | R0 文档契约；后续 Schema、写入原语与迁移切换按 R2 拆分 |
 | LA-04 | `feat(collections): converge pending inbound evidence and post once` | F11、LA-03 | R2；持续验证、迟到证据和单次过账；不实现外部 Provider 对账 |
 | LA-05a | `feat(reconciliation): compare persisted facts with external observations` | F14、LA-04 | R2；外部观察、未决队列和孤立事实；不实现历史重放或备份追平 |
 | LA-05b | `feat(reconciliation): replay historical facts and catch up backups` | LA-05a | R2；历史重放、备份后追平；不自动回放 Provider 或切换运行时余额 |
@@ -72,6 +73,8 @@ BU2 继续定位为嵌入式 Agent AI 收付平台。外部 Agent 在自己的�
 ## 6. 当前下一步
 
 D0/D1/D2 文档基线与 F07 代码实现已合并。F08 运行时与 F09a 已完成版本化授权、确定性 PolicyDecision、绑定校验、幂等状态转换和 Agent 执行命令；F15a 已增加独立激活、15 分钟窗口和会话级支出边界，当前进入独立 R2 Domain 与 Architecture 审查。
+
+LA-03d 已冻结多账户所有权、余额投影切换和历史迁移契约，下一实现应按 Schema/归属约束、写入原语/投影刷新、迁移/切换证据拆分。
 
 D2 只改文档；F08/F09a/F10/F11/F12 代码 PR 不启用真实 Testnet 双向收付、Hosted Sandbox、Live/Mainnet、托管或生产凭证，必须独立完成 Domain 与 Architecture R2 审查。F09b 的历史实现已覆盖持久化 payment attempt、unknown-result 冻结和显式 recovery 查询，本轮不重复引入第二套恢复实现。
 

@@ -439,3 +439,10 @@
 - Tool: `npm`, `node`; result: RT-01 2/2, Node v23.11.0, WAL, foreign keys, Schema 1–15 continuity, backup integrity and isolated restore passed; no Provider/Signer/payment execution.
 - Submission verification: `npm --prefix packages/typescript-sdk test`, `npm --prefix prototype run lint`, `npm --prefix prototype run build`, `git diff --check`; result: SDK 10/10 with generated/format/lint/type/build gates, Prototype lint/build and diff check passed; final `rt01.v1` remained `passed`.
 - Boundary: Local-only evidence; no image mutation, Schema migration, Hosted endpoint, Base Sepolia payment, Live/Mainnet or E3.1 activation.
+
+## 2026-09-09 · LA-03d 多账户账簿所有权与余额投影契约
+
+- Scope: RT-01 合并后，LA-06b 仍受外部 Hosted/Base Sepolia 条件阻塞；先冻结 LA-03 完整范围的本地实现边界。
+- Tool: graphify query, rg, sed; result: confirmed LA-03c is read-only, current wallet persistence is single-projection, and the audit still lists multi-account ownership, projection cutover and historical migration as incomplete.
+- Tool: apply_patch; result: added LA-03d contract and synchronized product/technical/roadmap/CHANGELOG/verification documentation.
+- Boundary: documentation-only; no Schema, API, runtime balance, Provider, Sandbox/Testnet payment, Hosted, Live/Mainnet or E3.1 activation changed.
