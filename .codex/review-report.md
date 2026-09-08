@@ -630,3 +630,29 @@ F06b 让 Quote 和 PaymentIntent 能够保留可验证的资金来源与收款�
 ## 结论
 
 建议：**通过本地实现，提交 R2 审查**。F08 已完成版本化 PaymentMandate、PolicyDecision 和持久钱包绑定门槛；未扩大 Agent 权限，也未改变环境执行状态。
+# F14 Payment / Collection / Refund / Fee Reconciliation 自主审查报告
+
+日期：2026-09-09
+审查者：Codex（Contributor / Verifier，非 R2 Approver）
+分支：`feat/reconciliation-payment-facts`
+
+## 结果
+
+| 维度 | 得分 | 结论 |
+| --- | ---: | --- |
+| 需求覆盖 | 19/20 | 覆盖支付、收款、退款、手续费事实和逐项状态 |
+| 技术实现 | 19/20 | 复用通用 resources、Snapshot、Idempotency Claim 与既有 Adapter Operation |
+| 金融边界 | 20/20 | 对账只追加快照，不覆盖交易、余额或历史 Posting |
+| 自动化验证 | 20/20 | F14 领域/HTTP 测试和 Sandbox 回归门禁 |
+| 文档与恢复 | 19/20 | 契约、API、SDK、CHANGELOG、testing、verification 已同步；R2 尚待独立审查 |
+| 综合 | **97/100** | 通过本地实现审查，进入 R2 |
+
+## 结论
+
+建议：**通过本地实现，提交 R2 Domain 与 Architecture 审查**。ProviderFee 必须绑定已确认来源和 Provider Reference；任何 pending 或 provider-unknown 事实都保持 `unknown`，不被对账报告伪装为成功。真实 Provider、Hosted、Live/Mainnet、托管和生产凭证仍关闭。
+
+## 残余风险
+
+1. 当前 ProviderFee 由受控 API 录入，尚未连接真实 Provider 对账文件或链上索引。
+2. F14 不自动修正历史金额；费用或外部事实发生更正时必须追加新事实并重新运行对账。
+3. 多币种只按币种分别汇总，不提供跨币种换算；汇率与商业结算留给后续范围。

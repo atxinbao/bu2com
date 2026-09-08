@@ -1,5 +1,13 @@
 # BU2 Product v0.1 验证结论
 
+## 2026-09-09 · F14 Payment / Collection / Refund / Fee Reconciliation
+
+本轮新增不可变 `ProviderFee` 事实和 `ReconciliationRun` 快照。对账按币种汇总 Payment、Collection、Refund 与 Fee，并为每个来源返回 `matched`、`exception` 或 `unknown`；对账不会修改原始交易、收款、退款、钱包或历史 Posting。
+
+当前验证：F14 领域测试 2/2、HTTP 测试 1/1、Sandbox 全量 147/147；SDK/OpenAPI 生成检查、TypeScript 类型/Lint、Prototype lint/build 和本地契约验证均已通过。
+
+边界：F14 仅在 Local / Simulation 验收；真实 Provider、Base Sepolia、Hosted、Live/Mainnet、托管和生产凭证仍保持关闭。
+
 ## 2026-09-09 · F13 有界取消与退款恢复
 
 本轮在 Transaction Core 上实现预留态取消、结算后部分/全额退款和 provider-unknown 显式恢复。取消释放 Wallet reserved 与 active Budget Hold；退款使用持久化 `Refund` 资源，不改变已消费 Budget 历史，F14 继续负责对账。

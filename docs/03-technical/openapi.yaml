@@ -220,6 +220,111 @@ paths:
                   data:
                     type: array
                     items: { $ref: '#/components/schemas/FinancialPosting' }
+  /provider_fees:
+    parameters:
+      - $ref: '#/components/parameters/TraceId'
+    get:
+      operationId: listProviderFees
+      summary: List immutable provider fee facts
+      responses:
+        '200':
+          description: Provider fee facts visible to the current operator
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/ProviderFee' }
+    post:
+      operationId: recordProviderFee
+      summary: Record one observed provider fee fact
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProviderFeeInput' }
+      responses:
+        '201':
+          description: Provider fee fact recorded
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProviderFee' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /provider_fees/{provider_fee_id}:
+    parameters:
+      - $ref: '#/components/parameters/TraceId'
+      - name: provider_fee_id
+        in: path
+        required: true
+        schema: { type: string, pattern: '^fee_[A-Za-z0-9_-]+$' }
+    get:
+      operationId: getProviderFee
+      summary: Read one provider fee fact
+      responses:
+        '200':
+          description: Provider fee fact
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProviderFee' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /reconciliations:
+    parameters:
+      - $ref: '#/components/parameters/TraceId'
+    get:
+      operationId: listReconciliationRuns
+      summary: List immutable reconciliation runs
+      responses:
+        '200':
+          description: Reconciliation runs
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/ReconciliationRun' }
+    post:
+      operationId: createReconciliation
+      summary: Create a deterministic reconciliation run from persisted payment facts
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ReconciliationInput' }
+      responses:
+        '201':
+          description: Reconciliation run
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReconciliationRun' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+  /reconciliations/{reconciliation_run_id}:
+    parameters:
+      - $ref: '#/components/parameters/TraceId'
+      - name: reconciliation_run_id
+        in: path
+        required: true
+        schema: { type: string, pattern: '^rec_[A-Za-z0-9_-]+$' }
+    get:
+      operationId: getReconciliationRun
+      summary: Read one reconciliation run
+      responses:
+        '200':
+          description: Reconciliation run
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReconciliationRun' }
+        '404': { $ref: '#/components/responses/NotFound' }
   /quotes:
     parameters:
       - $ref: '#/components/parameters/TraceId'
@@ -1185,6 +1290,76 @@ components:
         account: { type: string, minLength: 1, maxLength: 120 }
         amount_value: { type: integer, minimum: 0 }
         currency: { type: string, pattern: '^[A-Z]{3}$' }
+        created_at: { type: string, format: date-time }
+    ProviderFeeInput:
+      type: object
+      additionalProperties: false
+      required: [source_type, source_id, provider, provider_reference, amount]
+      properties:
+        id: { type: string, pattern: '^fee_[A-Za-z0-9_-]+$' }
+        source_type: { type: string, enum: [payment, collection, refund] }
+        source_id: { type: string, maxLength: 255 }
+        provider: { type: string, minLength: 1, maxLength: 120 }
+        provider_reference: { type: string, minLength: 1, maxLength: 255 }
+        amount: { $ref: '#/components/schemas/Amount' }
+        observed_at: { type: string, format: date-time }
+        metadata: { type: object, maxProperties: 20, additionalProperties: { type: string, maxLength: 500 } }
+    ProviderFee:
+      allOf:
+        - $ref: '#/components/schemas/ProviderFeeInput'
+        - type: object
+          required: [id, account_id, agent_id, status, created_at]
+          properties:
+            id: { type: string, pattern: '^fee_[A-Za-z0-9_-]+$' }
+            account_id: { type: [string, 'null'], pattern: '^acct_[A-Za-z0-9_-]+$' }
+            agent_id: { type: [string, 'null'], pattern: '^agt_[A-Za-z0-9_-]+$' }
+            status: { type: string, enum: [reported] }
+            created_at: { type: string, format: date-time }
+    ReconciliationInput:
+      type: object
+      additionalProperties: false
+      properties:
+        id: { type: string, pattern: '^rec_[A-Za-z0-9_-]+$' }
+        as_of: { type: string, format: date-time }
+    ReconciliationItem:
+      type: object
+      additionalProperties: false
+      required: [kind, source_id, provider_reference, expected_amount, observed_amount, status, issues]
+      properties:
+        kind: { type: string, enum: [payment, collection, refund, fee] }
+        source_id: { type: string }
+        provider_reference: { type: [string, 'null'] }
+        expected_amount: { $ref: '#/components/schemas/Amount' }
+        observed_amount:
+          anyOf:
+            - { $ref: '#/components/schemas/Amount' }
+            - { type: 'null' }
+        status: { type: string, enum: [matched, exception, unknown] }
+        issues: { type: array, items: { type: string } }
+    ReconciliationRun:
+      type: object
+      additionalProperties: false
+      required: [id, as_of, status, item_count, exception_count, unknown_count, totals, items, created_at]
+      properties:
+        id: { type: string, pattern: '^rec_[A-Za-z0-9_-]+$' }
+        as_of: { type: string, format: date-time }
+        status: { type: string, enum: [matched, exception, unknown] }
+        item_count: { type: integer, minimum: 0 }
+        exception_count: { type: integer, minimum: 0 }
+        unknown_count: { type: integer, minimum: 0 }
+        totals:
+          type: object
+          additionalProperties:
+            type: object
+            required: [payments, collections, refunds, fees]
+            properties:
+              payments: { type: integer, minimum: 0 }
+              collections: { type: integer, minimum: 0 }
+              refunds: { type: integer, minimum: 0 }
+              fees: { type: integer, minimum: 0 }
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/ReconciliationItem' }
         created_at: { type: string, format: date-time }
     EnvironmentInfo:
       type: object

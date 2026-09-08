@@ -152,6 +152,27 @@
       <h2 id="unreleased">Unreleased</h2>
       <article class="release">
         <div class="release-head">
+          <div><h3>F14 · Payment / Collection / Refund / Fee Reconciliation</h3><time datetime="2026-09-09">2026-09-09</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">把支付、收款、退款和 Provider 手续费事实汇总为可重取的 ReconciliationRun，并明确区分 matched、exception 与 unknown。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag added">Added</span>新增 ProviderFee 录入与查询 API，费用必须绑定已确认的 Payment、Collection 或 Refund 及 Provider Reference。</li>
+            <li><span class="tag added">Added</span>新增 ReconciliationRun，对每个事实记录预期/观察金额、币种、引用、问题码和按币种汇总。</li>
+            <li><span class="tag changed">Changed</span>对账只追加快照，不修改 Transaction、Collection、Refund、Wallet 或历史 FinancialPosting。</li>
+            <li><span class="tag governance">Boundary</span>仅在 Local/Simulation 验收；未知 Provider 结果保持 unknown，真实 Provider、Hosted、Live/Mainnet、托管和生产结算继续关闭。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R2 · Provider 费用事实与财务对账</span></div>
+          <div><b>验证</b><span>F14 领域 2/2、HTTP 1/1；Sandbox 全量 147/147；SDK/OpenAPI、契约和 Prototype 门禁记录在 PR 中</span></div>
+          <div><b>恢复</b><span>ProviderFee 与 ReconciliationRun 通过通用 Snapshot/Idempotency 持久化；未知结果不自动重跑 Provider</span></div>
+        </div>
+      </article>
+      <article class="release">
+        <div class="release-head">
           <div><h3>F13 · Bounded Cancellation &amp; Refund Recovery</h3><time datetime="2026-09-09">2026-09-09</time></div>
           <span class="status">Unreleased</span>
         </div>

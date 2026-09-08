@@ -36,6 +36,7 @@ const mandateStatuses = new Set(["draft", "active", "suspended", "revoked", "exp
 const mandateActions = new Set(["activate", "suspend", "revoke", "expire"]);
 const receivableStatuses = new Set(["issued", "pending", "paid", "expired", "cancelled"]);
 const accessGrantStatuses = new Set(["active", "expired", "revoked"]);
+const reconciliationFeeSources = new Set(["payment", "collection", "refund"]);
 const legacyMandatePattern = /^mdt_(research_04|x402_test|doctor_buyer|env05_buyer|mcp_buyer|sdk_buyer|external_local|attacker|atomic_[A-Za-z0-9_-]+)$/;
 
 function validateIdentifier(value, prefixValue, field) {
@@ -127,6 +128,8 @@ export class Bu2Sandbox {
     this.mandates = new Map(restored.resources.mandates ?? []);
     this.policyDecisions = new Map(restored.resources.policy_decisions ?? []);
     this.refunds = new Map(restored.resources.refunds ?? []);
+    this.providerFees = new Map(restored.resources.provider_fees ?? []);
+    this.reconciliationRuns = new Map(restored.resources.reconciliation_runs ?? []);
     this.idempotency = new Map(restored.idempotency ?? []);
     this.events = restored.events ?? [];
     const financial = restored.financial ?? {};
@@ -224,7 +227,9 @@ export class Bu2Sandbox {
         mandates: [...this.mandates.entries()].map(([id, value]) => [id, clone(value)]),
         policy_decisions: [...this.policyDecisions.entries()].map(([id, value]) => [id, clone(value)]),
         refunds: [...this.refunds.entries()].map(([id, value]) => [id, clone(value)]),
-      receipts: [...this.receipts.entries()].map(([id, value]) => [id, clone(value)]),
+        provider_fees: [...this.providerFees.entries()].map(([id, value]) => [id, clone(value)]),
+        reconciliation_runs: [...this.reconciliationRuns.entries()].map(([id, value]) => [id, clone(value)]),
+        receipts: [...this.receipts.entries()].map(([id, value]) => [id, clone(value)]),
       },
       wallet: clone(this.wallet),
       knownPayees: [...this.knownPayees],
@@ -248,6 +253,8 @@ export class Bu2Sandbox {
     this.mandates = new Map(snapshot.resources.mandates ?? []);
     this.policyDecisions = new Map(snapshot.resources.policy_decisions ?? []);
     this.refunds = new Map(snapshot.resources.refunds ?? []);
+    this.providerFees = new Map(snapshot.resources.provider_fees ?? []);
+    this.reconciliationRuns = new Map(snapshot.resources.reconciliation_runs ?? []);
     this.wallet = clone(snapshot.wallet);
     this.knownPayees = new Set(snapshot.knownPayees ?? []);
     const financial = snapshot.financial ?? {};
@@ -1006,6 +1013,253 @@ export class Bu2Sandbox {
       .filter((posting) => transactionId === null || posting.transaction_id === transactionId)
       .sort((left, right) => right.created_at.localeCompare(left.created_at) || right.id.localeCompare(left.id))
       .map((posting) => clone(posting));
+  }
+
+  providerFeeView(fee) {
+    return clone(fee);
+  }
+
+  listProviderFees() {
+    return [...this.providerFees.values()]
+      .sort((left, right) => right.created_at.localeCompare(left.created_at) || right.id.localeCompare(left.id))
+      .map((fee) => this.providerFeeView(fee));
+  }
+
+  getProviderFee(id) {
+    const fee = this.providerFees.get(id);
+    if (!fee) throw new ApiError(404, "resource_not_found", "provider_fee_not_found", "Provider fee was not found.");
+    return this.providerFeeView(fee);
+  }
+
+  reconciliationRunView(run) {
+    return clone(run);
+  }
+
+  listReconciliationRuns() {
+    return [...this.reconciliationRuns.values()]
+      .sort((left, right) => right.created_at.localeCompare(left.created_at) || right.id.localeCompare(left.id))
+      .map((run) => this.reconciliationRunView(run));
+  }
+
+  getReconciliationRun(id) {
+    const run = this.reconciliationRuns.get(id);
+    if (!run) throw new ApiError(404, "resource_not_found", "reconciliation_run_not_found", "Reconciliation run was not found.");
+    return this.reconciliationRunView(run);
+  }
+
+  reconciliationSource(sourceType, sourceId) {
+    if (sourceType === "payment") {
+      const transaction = this.transactions.get(sourceId);
+      if (!transaction) throw new ApiError(404, "resource_not_found", "transaction_not_found", "Payment transaction was not found.");
+      if (!["settled", "refunded"].includes(transaction.status)) {
+        throw new ApiError(409, "invalid_state_transition", "payment_not_reconcilable", "Only a settled payment can record a provider fee.", { current_state: transaction.status });
+      }
+      return {
+        source_id: transaction.id,
+        provider_reference: transaction.settlement_provider_reference ?? null,
+        amount: transaction.settled_amount,
+        account_id: this.intents.get(transaction.payment_intent_id)?.payer_account_id ?? null,
+        agent_id: this.intents.get(transaction.payment_intent_id)?.buyer_agent_id ?? null,
+      };
+    }
+    if (sourceType === "collection") {
+      const collection = this.collections.get(sourceId);
+      if (!collection) throw new ApiError(404, "resource_not_found", "collection_not_found", "Collection was not found.");
+      if (collection.status !== "posted") {
+        throw new ApiError(409, "invalid_state_transition", "collection_not_reconcilable", "Only a posted collection can record a provider fee.", { current_state: collection.status });
+      }
+      return {
+        source_id: collection.id,
+        provider_reference: collection.provider_reference,
+        amount: collection.amount,
+        account_id: collection.account_id,
+        agent_id: collection.agent_id,
+      };
+    }
+    if (sourceType === "refund") {
+      const refund = this.refunds.get(sourceId);
+      if (!refund) throw new ApiError(404, "resource_not_found", "refund_not_found", "Refund was not found.");
+      if (refund.status !== "refunded") {
+        throw new ApiError(409, "invalid_state_transition", "refund_not_reconcilable", "Only a confirmed refund can record a provider fee.", { current_state: refund.status });
+      }
+      const transaction = this.transactions.get(refund.transaction_id);
+      return {
+        source_id: refund.id,
+        provider_reference: refund.provider_reference,
+        amount: refund.amount,
+        account_id: this.intents.get(transaction?.payment_intent_id)?.payer_account_id ?? null,
+        agent_id: this.intents.get(transaction?.payment_intent_id)?.buyer_agent_id ?? null,
+      };
+    }
+    throw new ApiError(400, "validation_error", "invalid_reconciliation_source", "Provider fee source type is invalid.");
+  }
+
+  async recordProviderFee(input, key) {
+    return this.runIdempotentAsync("provider_fees", key, input, async () => {
+      requireFields(input, ["source_type", "source_id", "provider", "provider_reference", "amount"]);
+      if (!reconciliationFeeSources.has(input.source_type)) {
+        throw new ApiError(400, "validation_error", "invalid_reconciliation_source", "Provider fee source type is invalid.");
+      }
+      validateIdentifier(input.source_id, input.source_type === "payment" ? "txn" : input.source_type === "collection" ? "cpay" : "ref", "source_id");
+      validateAmount(input.amount);
+      if (input.amount.value <= 0) {
+        throw new ApiError(400, "validation_error", "invalid_fee_amount", "Provider fee amount must be positive.");
+      }
+      if (typeof input.provider !== "string" || input.provider.length === 0 || input.provider.length > 120) {
+        throw new ApiError(400, "validation_error", "invalid_provider", "Provider must be a non-empty string up to 120 characters.");
+      }
+      if (typeof input.provider_reference !== "string" || input.provider_reference.length === 0 || input.provider_reference.length > 255) {
+        throw new ApiError(400, "validation_error", "invalid_provider_reference", "Provider reference must be a non-empty string up to 255 characters.");
+      }
+      const source = this.reconciliationSource(input.source_type, input.source_id);
+      if (source.provider_reference !== input.provider_reference) {
+        throw new ApiError(409, "provider_error", "provider_reference_mismatch", "Provider fee reference does not match the source fact.", { expected: source.provider_reference });
+      }
+      if (source.amount.currency !== input.amount.currency) {
+        throw new ApiError(409, "provider_error", "fee_currency_mismatch", "Provider fee currency must match the source fact currency.");
+      }
+      if (input.amount.value > source.amount.value) {
+        throw new ApiError(409, "financial_constraint", "fee_amount_exceeded", "Provider fee cannot exceed the source fact amount.", { source_amount: source.amount });
+      }
+      const duplicate = [...this.providerFees.values()].find(
+        (fee) => fee.source_type === input.source_type && fee.source_id === input.source_id && fee.provider_reference === input.provider_reference,
+      );
+      if (duplicate) {
+        if (duplicate.amount.value !== input.amount.value || duplicate.amount.currency !== input.amount.currency || duplicate.provider !== input.provider) {
+          throw new ApiError(409, "conflict", "provider_fee_conflict", "A provider fee already exists for this source with different terms.");
+        }
+        return this.providerFeeView(duplicate);
+      }
+      const now = new Date().toISOString();
+      const fee = {
+        id: input.id ?? prefix("fee"),
+        source_type: input.source_type,
+        source_id: input.source_id,
+        provider: input.provider,
+        provider_reference: input.provider_reference,
+        amount: clone(input.amount),
+        account_id: source.account_id,
+        agent_id: source.agent_id,
+        status: "reported",
+        observed_at: input.observed_at ?? now,
+        metadata: clone(input.metadata ?? {}),
+        created_at: now,
+      };
+      validateIdentifier(fee.id, "fee", "provider_fee_id");
+      if (this.providerFees.has(fee.id)) throw new ApiError(409, "conflict", "provider_fee_id_exists", "Provider fee ID already exists.");
+      validateDate(fee.observed_at, "observed_at");
+      this.providerFees.set(fee.id, fee);
+      this.event("reconciliation.fee_recorded", fee);
+      return this.providerFeeView(fee);
+    });
+  }
+
+  reconciliationItems(asOf = null) {
+    const cutoff = asOf ? Date.parse(asOf) : null;
+    const withinCutoff = (value) => cutoff === null || Date.parse(value) <= cutoff;
+    const items = [];
+    for (const transaction of this.transactions.values()) {
+      if (!["settled", "refunded"].includes(transaction.status)) continue;
+      if (!withinCutoff(transaction.created_at)) continue;
+      const operation = this.ledger?.getAdapterOperation(`settle:${transaction.id}`) ?? null;
+      const expected = transaction.settled_amount;
+      const issues = [];
+      let status = "matched";
+      if (!operation || operation.status !== "settled") {
+        status = "unknown";
+        issues.push("payment_provider_result_unknown");
+      } else if (operation.amount_value !== expected.value || operation.currency !== expected.currency || operation.provider_reference !== transaction.settlement_provider_reference) {
+        status = "exception";
+        issues.push("payment_provider_amount_or_reference_mismatch");
+      }
+      items.push({
+        kind: "payment",
+        source_id: transaction.id,
+        provider_reference: transaction.settlement_provider_reference ?? null,
+        expected_amount: clone(expected),
+        observed_amount: operation ? { value: Number(operation.amount_value), currency: operation.currency } : null,
+        status,
+        issues,
+      });
+    }
+    for (const collection of this.collections.values()) {
+      if (!["posted", "pending"].includes(collection.status)) continue;
+      if (!withinCutoff(collection.created_at)) continue;
+      const status = collection.status === "posted" && collection.provider_reference ? "matched" : "unknown";
+      items.push({
+        kind: "collection",
+        source_id: collection.id,
+        provider_reference: collection.provider_reference ?? null,
+        expected_amount: clone(collection.amount),
+        observed_amount: collection.status === "posted" ? clone(collection.amount) : null,
+        status,
+        issues: status === "matched" ? [] : ["collection_not_posted"],
+      });
+    }
+    for (const refund of this.refunds.values()) {
+      if (!["refunded", "processing", "provider_unknown"].includes(refund.status)) continue;
+      if (!withinCutoff(refund.created_at)) continue;
+      const status = refund.status === "refunded" && refund.provider_reference ? "matched" : "unknown";
+      items.push({
+        kind: "refund",
+        source_id: refund.id,
+        provider_reference: refund.provider_reference ?? null,
+        expected_amount: clone(refund.amount),
+        observed_amount: status === "matched" ? clone(refund.amount) : null,
+        status,
+        issues: status === "matched" ? [] : ["refund_result_unknown"],
+      });
+    }
+    for (const fee of this.providerFees.values()) {
+      if (!withinCutoff(fee.observed_at ?? fee.created_at)) continue;
+      items.push({
+        kind: "fee",
+        source_id: fee.id,
+        provider_reference: fee.provider_reference,
+        expected_amount: clone(fee.amount),
+        observed_amount: clone(fee.amount),
+        status: "matched",
+        issues: [],
+      });
+    }
+    return items.sort((left, right) => left.source_id.localeCompare(right.source_id));
+  }
+
+  async createReconciliation(input, key) {
+    return this.runIdempotentAsync("reconciliations", key, input ?? {}, async () => {
+      const asOf = input?.as_of ?? new Date().toISOString();
+      validateDate(asOf, "as_of");
+      const items = this.reconciliationItems(asOf);
+      const totals = {};
+      for (const item of items) {
+        const currency = item.expected_amount.currency;
+        totals[currency] ??= { payments: 0, collections: 0, refunds: 0, fees: 0 };
+        const bucket = totals[currency];
+        if (item.kind === "payment") bucket.payments += item.expected_amount.value;
+        if (item.kind === "collection") bucket.collections += item.expected_amount.value;
+        if (item.kind === "refund") bucket.refunds += item.expected_amount.value;
+        if (item.kind === "fee") bucket.fees += item.expected_amount.value;
+      }
+      const hasException = items.some((item) => item.status === "exception");
+      const hasUnknown = items.some((item) => item.status === "unknown");
+      const status = hasException ? "exception" : hasUnknown ? "unknown" : "matched";
+      const run = {
+        id: input?.id ?? prefix("rec"),
+        as_of: asOf,
+        status,
+        item_count: items.length,
+        exception_count: items.filter((item) => item.status === "exception").length,
+        unknown_count: items.filter((item) => item.status === "unknown").length,
+        totals,
+        items,
+        created_at: new Date().toISOString(),
+      };
+      validateIdentifier(run.id, "rec", "reconciliation_run_id");
+      if (this.reconciliationRuns.has(run.id)) throw new ApiError(409, "conflict", "reconciliation_run_id_exists", "Reconciliation run ID already exists.");
+      this.reconciliationRuns.set(run.id, run);
+      this.event("reconciliation.completed", run);
+      return this.reconciliationRunView(run);
+    });
   }
 
   getBudgetHold(id) {

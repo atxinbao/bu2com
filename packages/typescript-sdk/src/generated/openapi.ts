@@ -190,6 +190,92 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/provider_fees": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        /** List immutable provider fee facts */
+        get: operations["listProviderFees"];
+        put?: never;
+        /** Record one observed provider fee fact */
+        post: operations["recordProviderFee"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/provider_fees/{provider_fee_id}": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path: {
+                provider_fee_id: string;
+            };
+            cookie?: never;
+        };
+        /** Read one provider fee fact */
+        get: operations["getProviderFee"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reconciliations": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        /** List immutable reconciliation runs */
+        get: operations["listReconciliationRuns"];
+        put?: never;
+        /** Create a deterministic reconciliation run from persisted payment facts */
+        post: operations["createReconciliation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reconciliations/{reconciliation_run_id}": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path: {
+                reconciliation_run_id: string;
+            };
+            cookie?: never;
+        };
+        /** Read one reconciliation run */
+        get: operations["getReconciliationRun"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/quotes": {
         parameters: {
             query?: never;
@@ -985,6 +1071,66 @@ export interface components {
             account: string;
             amount_value: number;
             currency: string;
+            /** Format: date-time */
+            created_at: string;
+        };
+        ProviderFeeInput: {
+            id?: string;
+            /** @enum {string} */
+            source_type: "payment" | "collection" | "refund";
+            source_id: string;
+            provider: string;
+            provider_reference: string;
+            amount: components["schemas"]["Amount"];
+            /** Format: date-time */
+            observed_at?: string;
+            metadata?: {
+                [key: string]: string;
+            };
+        };
+        ProviderFee: components["schemas"]["ProviderFeeInput"] & {
+            id: string;
+            account_id: string | null;
+            agent_id: string | null;
+            /** @enum {string} */
+            status: "reported";
+            /** Format: date-time */
+            created_at: string;
+        };
+        ReconciliationInput: {
+            id?: string;
+            /** Format: date-time */
+            as_of?: string;
+        };
+        ReconciliationItem: {
+            /** @enum {string} */
+            kind: "payment" | "collection" | "refund" | "fee";
+            source_id: string;
+            provider_reference: string | null;
+            expected_amount: components["schemas"]["Amount"];
+            observed_amount: components["schemas"]["Amount"] | null;
+            /** @enum {string} */
+            status: "matched" | "exception" | "unknown";
+            issues: string[];
+        };
+        ReconciliationRun: {
+            id: string;
+            /** Format: date-time */
+            as_of: string;
+            /** @enum {string} */
+            status: "matched" | "exception" | "unknown";
+            item_count: number;
+            exception_count: number;
+            unknown_count: number;
+            totals: {
+                [key: string]: {
+                    payments: number;
+                    collections: number;
+                    refunds: number;
+                    fees: number;
+                };
+            };
+            items: components["schemas"]["ReconciliationItem"][];
             /** Format: date-time */
             created_at: string;
         };
@@ -2139,6 +2285,167 @@ export interface operations {
                     };
                 };
             };
+        };
+    };
+    listProviderFees: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Provider fee facts visible to the current operator */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ProviderFee"][];
+                    };
+                };
+            };
+        };
+    };
+    recordProviderFee: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProviderFeeInput"];
+            };
+        };
+        responses: {
+            /** @description Provider fee fact recorded */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProviderFee"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    getProviderFee: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path: {
+                provider_fee_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Provider fee fact */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProviderFee"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    listReconciliationRuns: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Reconciliation runs */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ReconciliationRun"][];
+                    };
+                };
+            };
+        };
+    };
+    createReconciliation: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReconciliationInput"];
+            };
+        };
+        responses: {
+            /** @description Reconciliation run */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReconciliationRun"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+        };
+    };
+    getReconciliationRun: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path: {
+                reconciliation_run_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Reconciliation run */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReconciliationRun"];
+                };
+            };
+            404: components["responses"]["NotFound"];
         };
     };
     createQuote: {
