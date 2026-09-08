@@ -1,5 +1,19 @@
 # BU2 Product v0.1 验证结论
 
+## 2026-09-09 · LA-04 Collection 持续验证与单次入账
+
+执行者：Codex
+分支：`feat/ledger-assurance-collection-convergence`
+
+- `npm --prefix sandbox run test:la04`：3/3 通过，覆盖 pending→verified 收敛、同 Provider Reference 单次过账、SQLite 重启后的证据恢复，以及迟到收款不可履约边界。
+- `npm --prefix sandbox test`：174/174 通过；F11/F12/F14 受影响回归 9/9 通过。
+- 专项门禁：LA-03a 3/3、LA-03b/LA-03c 4/4、ENV-06/F15b/F16a/LA-01 6/6、4/4、3/3、7/7；Hosted 合约 8/8、2/2、2/2；契约 63 项不变量与 6 个 MCP 工具；TypeScript SDK 10/10；Prototype lint/build 通过。
+- LA-04 将每次入站观察保存为 `CollectionVerificationAttempt`，复用同一 Collection，在首次 verified 收敛时追加唯一一对 Financial Posting；迟到证据标记 `late=true` 与 `fulfillment_eligible=false`。
+
+结论：LA-04 达到 **GO for R2 review**；它不构成完整 Ledger Assurance Gate、独立外部对账或真实资金路径放行。
+
+边界：Local/Simulation；未执行真实 Provider、Base Sepolia、Hosted、Live/Mainnet、托管或生产凭证。E3.1 Pilot Manifest 保持暂停。
+
 ## 2026-09-09 · LA-03c 账务投影重建
 
 执行者：Codex

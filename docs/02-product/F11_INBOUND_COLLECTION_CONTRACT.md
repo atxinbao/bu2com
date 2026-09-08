@@ -31,7 +31,7 @@ Collection 核心字段：
 - `verification_mode`：`simulation | provider`；
 - `verified_at`、`created_at`、`updated_at`。
 
-只有 `verified` 结果才能进入 `posted` 并写入 FinancialPosting；`pending` 结果只记录待处理事实，不移动资金或改变为 `paid`。
+只有 `verified` 结果才能进入 `posted` 并写入 FinancialPosting；`pending` 结果只记录待处理事实，不移动资金或改变为 `paid`。LA-04 允许后续使用新的幂等键重新观察同一 `provider_reference`，追加验证证据并在首次 verified 收敛时单次过账。
 
 ## 3. 验证规则
 
@@ -41,7 +41,7 @@ Collection 核心字段：
 4. 如果 Receivable 有资产或网络约束，Provider 返回值必须精确匹配。
 5. 如果 Receivable 指定预期付款方，Account 和 Agent 必须同时匹配。
 6. `provider_reference` 在所有 Collection 中全局唯一；重复引用只返回已存在事实，不重复入账。
-7. 失败、未知或未验证结果不得创建 FinancialPosting，不得把 Receivable 标记为 `paid`。
+7. 失败、未知或未验证结果不得创建 FinancialPosting，不得把 Receivable 标记为 `paid`；迟到的已验证付款必须保留为可对账事实，但不能自动授予已过期权益。
 
 ## 4. API 与权限
 
@@ -71,6 +71,7 @@ Posting 的 `source_id` 为 Collection ID，`transaction_id` 与 `budget_id` 为
 - [x] 相同 Idempotency-Key 重放返回原结果。
 - [x] 相同 Provider Reference 使用新幂等键不会重复创建 Collection 或 Posting。
 - [x] SQLite 重启后 Receivable、Collection、事件和 Posting 保持一致。
+- [x] pending Collection 可持续验证到 verified，连续观察证据持久化且只产生一对 Posting。
 - [x] HTTP、OpenAPI、TypeScript SDK、访问控制和列表详情契约已对齐。
 - [ ] Base Sepolia 双向收款、Hosted、Live/Mainnet 和真实资金仍未执行。
 

@@ -1,5 +1,24 @@
 # ENV-02 测试记录
 
+## 2026-09-09 · LA-04 Collection 持续验证与单次入账
+
+执行者：Codex
+
+| 范围 | 命令 | 结果 |
+| --- | --- | --- |
+| LA-04 定向 | `npm --prefix sandbox run test:la04` | 3/3 通过 |
+| 受影响回归 | `node --test sandbox/f11.test.mjs sandbox/f11-http.test.mjs sandbox/f12.test.mjs sandbox/f14.test.mjs` | 9/9 通过 |
+| Sandbox 全量 | `npm --prefix sandbox test` | 174/174 通过 |
+| LA-03a/LA-03b/LA-03c | 对应 Sandbox 专项 | 3/3、4/4、4/4 通过 |
+| ENV-06/F15b/F16a/LA-01 | 对应 Sandbox 专项 | 6/6、4/4、3/3、7/7 通过 |
+| API/MCP 契约 | `node docs/03-technical/validate-contract.mjs` | 63 invariants、6 MCP tools 通过 |
+| TypeScript SDK | `npm --prefix packages/typescript-sdk test` | 生成、格式、Lint、类型检查、构建与 10/10 单测通过 |
+| Prototype | `npm --prefix prototype run lint && npm --prefix prototype run build` | 均通过 |
+| Hosted 合约回归 | `test:hosted-sandbox`, `test:hosted-deployment`, `test:hosted-evidence-schema` | 8/8、2/2、2/2 通过 |
+| 差异检查 | `git diff --check` | 通过 |
+
+覆盖 pending→verified 收敛、验证尝试持久化、SQLite 重启、迟到入站证据和 AccessGrant 阻断。只在 Local/Simulation 验证，不调用真实 Provider 或链上网络。
+
 ## 2026-09-09 · LA-03c 账务投影重建
 
 执行者：Codex

@@ -1638,6 +1638,26 @@ export interface components {
             payer_account_id?: string;
             payer_agent_id?: string;
         };
+        CollectionVerificationAttempt: {
+            id: string;
+            collection_id: string;
+            receivable_id: string;
+            provider: string;
+            provider_reference: string;
+            /** @enum {string} */
+            status: "pending" | "verified";
+            amount: components["schemas"]["Amount"];
+            asset?: string | null;
+            network?: string | null;
+            payer_account_id?: string | null;
+            payer_agent_id?: string | null;
+            /** @enum {string} */
+            verification_mode: "simulation" | "provider";
+            /** Format: date-time */
+            observed_at: string;
+            /** Format: date-time */
+            created_at: string;
+        };
         Collection: {
             id: string;
             receivable_id: string;
@@ -1660,6 +1680,11 @@ export interface components {
             verification_mode: "simulation" | "provider";
             /** Format: date-time */
             verified_at: string;
+            /** Format: date-time */
+            last_observed_at?: string;
+            late?: boolean;
+            fulfillment_eligible?: boolean;
+            verification_attempts?: components["schemas"]["CollectionVerificationAttempt"][];
             /** Format: date-time */
             created_at: string;
             /** Format: date-time */

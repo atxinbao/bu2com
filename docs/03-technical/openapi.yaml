@@ -1930,6 +1930,24 @@ components:
         network: { type: string, minLength: 1, maxLength: 120 }
         payer_account_id: { type: string, pattern: '^acct_[A-Za-z0-9_-]+$', maxLength: 255 }
         payer_agent_id: { type: string, pattern: '^agt_[A-Za-z0-9_-]+$', maxLength: 255 }
+    CollectionVerificationAttempt:
+      type: object
+      required: [id, collection_id, receivable_id, provider, provider_reference, status, amount, verification_mode, observed_at, created_at]
+      properties:
+        id: { type: string, pattern: '^cva_[A-Za-z0-9_-]+$' }
+        collection_id: { type: string, pattern: '^cpay_[A-Za-z0-9_-]+$' }
+        receivable_id: { type: string, pattern: '^rcv_[A-Za-z0-9_-]+$' }
+        provider: { type: string, minLength: 1, maxLength: 120 }
+        provider_reference: { type: string, minLength: 1, maxLength: 255 }
+        status: { type: string, enum: [pending, verified] }
+        amount: { $ref: '#/components/schemas/Amount' }
+        asset: { type: [string, 'null'] }
+        network: { type: [string, 'null'] }
+        payer_account_id: { type: [string, 'null'], pattern: '^acct_[A-Za-z0-9_-]+$' }
+        payer_agent_id: { type: [string, 'null'], pattern: '^agt_[A-Za-z0-9_-]+$' }
+        verification_mode: { type: string, enum: [simulation, provider] }
+        observed_at: { type: string, format: date-time }
+        created_at: { type: string, format: date-time }
     Collection:
       type: object
       required: [id, receivable_id, account_id, agent_id, receiving_target_id, collection_reference, provider, provider_reference, amount, verification_status, status, verification_mode, verified_at, created_at, updated_at]
@@ -1951,6 +1969,12 @@ components:
         status: { type: string, enum: [pending, posted] }
         verification_mode: { type: string, enum: [simulation, provider] }
         verified_at: { type: string, format: date-time }
+        last_observed_at: { type: string, format: date-time }
+        late: { type: boolean }
+        fulfillment_eligible: { type: boolean }
+        verification_attempts:
+          type: array
+          items: { $ref: '#/components/schemas/CollectionVerificationAttempt' }
         created_at: { type: string, format: date-time }
         updated_at: { type: string, format: date-time }
     VerifyInboundPaymentResult:

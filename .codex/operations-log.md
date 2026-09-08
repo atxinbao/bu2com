@@ -1,5 +1,13 @@
 # ENV-03 操作日志
 
+## 2026-09-09 · LA-04 Collection 持续验证与单次入账
+
+- Tool: `gh pr view`, `git fetch`, `git switch`, `git pull --ff-only`, `git branch -d`; result: verified PR #49 merged at `4eb3cad`, synchronized `main`, deleted local `feat/ledger-assurance-rebuild-projection`, and created `feat/ledger-assurance-collection-convergence`.
+- Tool: `graphify query`, `rg`, `sed`; result: traced LA-04 to F11 `verifyInboundPayment`, F12 paid-access gating, F14 pending reconciliation and generic SQLite resource persistence; confirmed pending Provider Reference replay was returned without re-verification.
+- Tool: `apply_patch`; result: added persistent CollectionVerificationAttempt evidence, pending-to-verified convergence, single-posting guard, late inbound evidence boundary, LA-04 tests, OpenAPI/SDK fields and synchronized product/technical docs.
+- Tool: `npm`; result: LA-04 3/3, F11/F12/F14 regression 9/9, Sandbox 174/174, LA-03a/LA-03b/LA-03c 3/3/4/4, ENV-06/F15b/F16a/LA-01 6/6/4/4/3/3/7/7, contract 63 invariants / 6 MCP tools, SDK 10/10, Hosted 8/8/2/2 and Prototype lint/build passed.
+- Boundary: Local/Simulation only; no real Provider, Base Sepolia, Hosted, Live/Mainnet, custody or production credential capability was enabled; E3.1 remains paused.
+
 ## 2026-09-09 · LA-03c Draft PR
 
 - Tool: `git commit`, `git push`, `gh pr create`, `gh pr view`; result: committed `d2903a1`, pushed `feat/ledger-assurance-rebuild-projection`, and opened Draft PR #49 at `https://github.com/atxinbao/bu2com/pull/49` using `.github/pull_request_template.md`.
