@@ -1,5 +1,10 @@
 # ENV-03 操作日志
 
+## 2026-09-09 · LA-03c Draft PR
+
+- Tool: `git commit`, `git push`, `gh pr create`, `gh pr view`; result: committed `d2903a1`, pushed `feat/ledger-assurance-rebuild-projection`, and opened Draft PR #49 at `https://github.com/atxinbao/bu2com/pull/49` using `.github/pull_request_template.md`.
+- Review boundary: PR #49 is an R2 review candidate for read-only ledger projection rebuilding; it does not complete the Ledger Assurance Gate and does not reopen E3.1.
+
 ## 2026-09-09 · LA-03c 账务投影重建
 
 - Tool: `gh pr view`, `git fetch`, `git switch`, `git pull --ff-only`, `git branch -d`; result: verified PR #48 merged at `3a31504`, synchronized `main`, deleted local `feat/ledger-assurance-opening-corrections`, and created `feat/ledger-assurance-rebuild-projection`.
