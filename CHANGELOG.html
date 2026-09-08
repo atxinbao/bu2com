@@ -152,6 +152,26 @@
       <h2 id="unreleased">Unreleased</h2>
       <article class="release">
         <div class="release-head">
+          <div><h3>LA-03b · 期初检查点与追加更正分录</h3><time datetime="2026-09-09">2026-09-09</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">为 Ledger Assurance Gate 增加经核对的期初检查点和不可变更正事实，使缺失历史可以从明确检查点开始连续记账，而不伪造旧分录。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag added">Added</span>持久化 <code>OpeningBalanceCheckpoint</code>，记录账簿、所有者、资金来源、环境、资产、网络、有效时点、来源引用和核对理由。</li>
+            <li><span class="tag added">Added</span>持久化 <code>LedgerCorrection</code>，引用原始事件并追加两行平衡 <code>ledger.correction_posted</code> Journal/Posting。</li>
+            <li><span class="tag governance">Boundary</span>期初检查点不直接增加当前钱包投影；原始历史不回填、不更新、不删除，完整余额重建和 LA-04/LA-05 仍未完成。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R2 · 迁移期初、账务事实、不可变更正、幂等与恢复</span></div>
+          <div><b>验证</b><span>LA-03b 专项 3/3；完整 Sandbox、契约、SDK、Prototype 和 Hosted 本地合约门禁在 PR 中记录</span></div>
+          <div><b>恢复</b><span>期初与更正均可重启读取；提交失败回滚，不修改原始 Journal/Posting</span></div>
+        </div>
+      </article>
+      <article class="release">
+        <div class="release-head">
           <div><h3>LA-03a · 结算、退款与 ProviderFee 业务事实分录</h3><time datetime="2026-09-09">2026-09-09</time></div>
           <span class="status">Unreleased</span>
         </div>

@@ -19,6 +19,7 @@
     "test:la01": "node --test f13.test.mjs",
   "test:la02": "node --test la02.test.mjs",
   "test:la03": "node --test la03.test.mjs",
+  "test:la03b": "node --test la03b.test.mjs",
     "test:deployment-contract": "node --test ../deploy/deployment-contract.test.mjs",
     "test:operations": "node --test ../deploy/operations.test.mjs",
     "test:hosted-sandbox": "node --test ../deploy/hosted-sandbox.test.mjs",

@@ -1,5 +1,23 @@
 # ENV-02 测试记录
 
+## 2026-09-09 · LA-03b 期初检查点与追加更正分录
+
+执行者：Codex
+
+| 范围 | 命令 | 结果 |
+| --- | --- | --- |
+| LA-03b 定向 | `npm --prefix sandbox run test:la03b` | 3/3 通过 |
+| LA-03a 回归 | `npm --prefix sandbox run test:la03` | 3/3 通过 |
+| Sandbox 全量 | `npm --prefix sandbox test` | 170/170 通过 |
+| ENV-06/F15b/F16a/LA-01 | 对应 Sandbox 专项 | 6/6、4/4、3/3、7/7 通过 |
+| API/MCP 契约 | `node docs/03-technical/validate-contract.mjs` | 63 invariants、6 MCP tools 通过 |
+| TypeScript SDK | `npm --prefix packages/typescript-sdk test` | 生成、格式、Lint、类型检查、构建与 10/10 单测通过 |
+| Prototype | `npm --prefix prototype run lint && npm --prefix prototype run build` | 均通过 |
+| Hosted 合约回归 | `npm --prefix sandbox run test:hosted-sandbox && npm --prefix sandbox run test:hosted-deployment && npm --prefix sandbox run test:hosted-evidence-schema` | 8/8、2/2、2/2 通过 |
+| 差异检查 | `git diff --check` | 通过 |
+
+覆盖核对期初检查点、两行平衡分录、SQLite 重启、更正原始事件引用、幂等重放和错环境/科目失败关闭。期初事实不改变当前钱包投影；更正不更新或删除历史事实。
+
 ## 2026-09-09 · LA-03a 业务资金事实分录
 
 执行者：Codex

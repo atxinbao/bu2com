@@ -1,5 +1,18 @@
 # BU2 Product v0.1 验证结论
 
+## 2026-09-09 · LA-03b 期初检查点与追加更正分录
+
+执行者：Codex
+分支：`feat/ledger-assurance-opening-corrections`
+
+- `npm --prefix sandbox run test:la03b`：3/3 通过，覆盖期初事实持久化/重启、更正事件引用/幂等和错环境/科目失败关闭。
+- 期初检查点生成两行平衡 Journal，但不改变当前钱包余额；更正只追加新事件，不更新或删除原始事实。
+- Sandbox 全量：170/170；LA-03a：3/3；ENV-06/F15b/F16a/LA-01：6/6、4/4、3/3、7/7；契约 63 项不变量与 6 个 MCP 工具；TypeScript SDK 10/10；Hosted 合约 8/8、2/2、2/2；Prototype lint/build 通过。
+
+结论：LA-03b 达到 **GO for R2 review**；LA-03 完整范围仍未完成，余额重建、多账户投影、完整历史迁移、LA-04 和 LA-05 继续是后续门槛。
+
+边界：Local/Simulation；未执行真实 Provider、Base Sepolia、Hosted、Live/Mainnet、托管或生产凭证。E3.1 Pilot Manifest 保持暂停。
+
 ## 2026-09-09 · LA-03a 结算、退款与 ProviderFee 业务事实分录
 
 执行者：Codex
