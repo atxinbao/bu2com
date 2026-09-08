@@ -1042,3 +1042,11 @@ F06b 让 Quote 和 PaymentIntent 能够保留可验证的资金来源与收款�
 - 战略评分：97/100。该修复直接对应审计矩阵，既阻止重复额度/Provider 调用，又保留合法剩余容量路径，不扩大任何资金环境。
 - 遗留风险：仍需 R2 人工审查；真实 Provider 对账、历史异常数据清理、Hosted 与主网准入未执行。
 - 结论：建议提交 R2 PR；合并前 Release 保持阻塞，LA-06b、Live/Mainnet 和 E3.1 继续关闭。
+
+## 2026-09-09 · LA-01d 退款请求条款持久化绑定审查
+
+- 技术评分：96/100。Schema 18 持久化退款请求指纹，历史 Attempt 可确定性回填；`requestRefund` 在额度计算、状态转换和 Provider 调用前拒绝金额/币种/原因/交易条款漂移。
+- 战略评分：98/100。直接关闭 R60-01 P0 发布阻断，保留 PR #60 的已确认未入账容量保护，不扩大真实资金环境或 Hosted 能力。
+- 证据：定向退款回归 14/14；Sandbox 198/198；Runtime assurance Schema 1–18；契约 63 项不变量/6 个 MCP 工具；SDK 10/10；Prototype lint/build 通过。
+- 遗留风险：真实 Provider、Hosted、Base Sepolia、LA-06b、Live/Mainnet 和 E3.1 未执行；需独立 R2 Domain / Architecture 人工审查。
+- 结论：建议提交 `fix(refunds): bind persisted attempts to immutable request terms` Draft PR；合并前 Release 保持阻塞。

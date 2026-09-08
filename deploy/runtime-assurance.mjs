@@ -5,7 +5,7 @@ import { join, resolve } from "node:path";
 import { SqliteLedger } from "../sandbox/persistence.mjs";
 import { fileURLToPath } from "node:url";
 
-const CURRENT_SCHEMA_VERSION = 17;
+const CURRENT_SCHEMA_VERSION = 18;
 const DOCKERFILE = readFileSync(new URL("./Dockerfile", import.meta.url), "utf8");
 const SANDBOX_PACKAGE = JSON.parse(
   readFileSync(new URL("../sandbox/package.json", import.meta.url), "utf8"),

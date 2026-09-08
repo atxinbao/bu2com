@@ -24,6 +24,10 @@ const canonical = (value) => {
 };
 const requestFingerprint = (value) =>
   createHash("sha256").update(canonical(value)).digest("hex");
+const refundRequestFingerprint = ({ transaction_id, amount_value, currency, reason }) =>
+  createHash("sha256")
+    .update(JSON.stringify({ transaction_id, amount_value, currency, reason: reason ?? null }))
+    .digest("hex");
 
 function immediateTransaction(db, operation) {
   db.exec("BEGIN IMMEDIATE");
@@ -218,6 +222,11 @@ export class SqliteLedger {
         version: 17,
         name: "ledger_account_posting_binding",
         apply: () => this.migrateLedgerAccountPostingBinding(),
+      },
+      {
+        version: 18,
+        name: "refund_request_binding",
+        apply: () => this.migrateRefundRequestBinding(),
       },
     ];
     for (const migration of migrations) {
@@ -791,6 +800,7 @@ export class SqliteLedger {
         transaction_id TEXT NOT NULL,
         amount_value INTEGER NOT NULL CHECK (amount_value >= 0),
         currency TEXT NOT NULL CHECK (currency GLOB '[A-Z][A-Z][A-Z]'),
+        request_fingerprint TEXT,
         status TEXT NOT NULL CHECK (status IN ('prepared', 'submitting', 'provider_unknown', 'refunded', 'failed')),
         provider_reference TEXT,
         reason TEXT,
@@ -804,6 +814,37 @@ export class SqliteLedger {
       CREATE INDEX IF NOT EXISTS idx_refund_attempts_status
         ON refund_attempts(status, created_at);
     `);
+  }
+
+  migrateRefundRequestBinding() {
+    const columns = this.db.prepare("PRAGMA table_info(refund_attempts)").all();
+    if (!columns.some((column) => column.name === "request_fingerprint")) {
+      this.db.exec("ALTER TABLE refund_attempts ADD COLUMN request_fingerprint TEXT");
+    }
+    const legacyAttempts = this.db
+      .prepare(
+        `SELECT id, transaction_id, amount_value, currency, reason
+         FROM refund_attempts
+         WHERE request_fingerprint IS NULL`,
+      )
+      .all();
+    const update = this.db.prepare(
+      "UPDATE refund_attempts SET request_fingerprint=? WHERE id=?",
+    );
+    for (const attempt of legacyAttempts) {
+      update.run(
+        refundRequestFingerprint({
+          transaction_id: attempt.transaction_id,
+          amount_value: Number(attempt.amount_value),
+          currency: attempt.currency,
+          reason: attempt.reason ?? null,
+        }),
+        attempt.id,
+      );
+    }
+    this.db.exec(
+      "CREATE INDEX IF NOT EXISTS idx_refund_attempts_request_fingerprint ON refund_attempts(request_fingerprint)",
+    );
   }
 
   migrateJournalPostingGuards() {
@@ -1566,9 +1607,11 @@ export class SqliteLedger {
       const refundAttemptUpsert = this.db.prepare(`
         INSERT INTO refund_attempts(
           id, operation_key, refund_id, transaction_id, amount_value, currency,
-          status, provider_reference, reason, reason_code, created_at, updated_at, resolved_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          request_fingerprint, status, provider_reference, reason, reason_code,
+          created_at, updated_at, resolved_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
+          request_fingerprint=excluded.request_fingerprint,
           status=excluded.status, provider_reference=excluded.provider_reference,
           reason=excluded.reason, reason_code=excluded.reason_code,
           updated_at=excluded.updated_at, resolved_at=excluded.resolved_at
@@ -1581,6 +1624,12 @@ export class SqliteLedger {
           attempt.transaction_id,
           attempt.amount_value,
           attempt.currency,
+          attempt.request_fingerprint ?? refundRequestFingerprint({
+            transaction_id: attempt.transaction_id,
+            amount_value: attempt.amount_value,
+            currency: attempt.currency,
+            reason: attempt.reason ?? null,
+          }),
           attempt.status,
           attempt.provider_reference ?? null,
           attempt.reason ?? null,
@@ -3122,16 +3171,25 @@ export class SqliteLedger {
     transaction_id,
     amount,
     reason = null,
+    request_fingerprint = null,
     created_at = new Date().toISOString(),
   }) {
     return immediateTransaction(this.db, () => {
       const existing = this.getRefundAttempt(operation_key);
       if (existing) {
+        const expectedFingerprint = request_fingerprint ?? refundRequestFingerprint({
+          transaction_id,
+          amount_value: amount.value,
+          currency: amount.currency,
+          reason: reason ?? null,
+        });
         if (
           existing.refund_id !== refund_id ||
           existing.transaction_id !== transaction_id ||
           existing.amount_value !== amount.value ||
-          existing.currency !== amount.currency
+          existing.currency !== amount.currency ||
+          existing.reason !== reason ||
+          existing.request_fingerprint !== expectedFingerprint
         ) {
           throw new ApiError(
             409,
@@ -3143,24 +3201,31 @@ export class SqliteLedger {
         return existing;
       }
       const id = `rat_${randomUUID().replaceAll("-", "").slice(0, 16)}`;
-      this.db
-        .prepare(`
-          INSERT INTO refund_attempts(
-            id, operation_key, refund_id, transaction_id, amount_value, currency,
-            status, provider_reference, reason, reason_code, created_at, updated_at, resolved_at
-          ) VALUES (?, ?, ?, ?, ?, ?, 'prepared', NULL, ?, NULL, ?, ?, NULL)
-        `)
-        .run(
-          id,
-          operation_key,
-          refund_id,
+    this.db
+      .prepare(`
+        INSERT INTO refund_attempts(
+          id, operation_key, refund_id, transaction_id, amount_value, currency,
+          request_fingerprint, status, provider_reference, reason, reason_code,
+          created_at, updated_at, resolved_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, 'prepared', NULL, ?, NULL, ?, ?, NULL)
+      `)
+      .run(
+        id,
+        operation_key,
+        refund_id,
+        transaction_id,
+        amount.value,
+        amount.currency,
+        request_fingerprint ?? refundRequestFingerprint({
           transaction_id,
-          amount.value,
-          amount.currency,
-          reason,
-          created_at,
-          created_at,
-        );
+          amount_value: amount.value,
+          currency: amount.currency,
+          reason: reason ?? null,
+        }),
+        reason,
+        created_at,
+        created_at,
+      );
       return this.getRefundAttempt(operation_key);
     });
   }

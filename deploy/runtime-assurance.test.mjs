@@ -20,7 +20,7 @@ test("RT-01 evidence cannot authorize payment or pretend to be bilateral Sandbox
     sqlite: {
       journal_mode: "wal",
       foreign_keys: 1,
-      schema_version: 17,
+      schema_version: 18,
       migration_versions: Array.from({ length: 17 }, (_, index) => index + 1),
     },
     backup_restore: { integrity: "ok", same_schema: true },
