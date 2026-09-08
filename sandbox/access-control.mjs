@@ -187,6 +187,10 @@ export function permissionForRequest(method, pathname) {
   if (method === "GET" && pathname === "/v1/collections") return "collections:read";
   if (method === "GET" && /^\/v1\/collections\/[^/]+$/.test(pathname)) return "collections:read";
   if (method === "POST" && /^\/v1\/receivables\/[^/]+\/collections$/.test(pathname)) return "collections:create";
+  if (method === "GET" && pathname === "/v1/access_grants") return "access_grants:read";
+  if (method === "GET" && /^\/v1\/access_grants\/[^/]+$/.test(pathname)) return "access_grants:read";
+  if (method === "POST" && /^\/v1\/collections\/[^/]+\/access_grants$/.test(pathname)) return "access_grants:create";
+  if (method === "POST" && /^\/v1\/access_grants\/[^/]+\/recover$/.test(pathname)) return "access_grants:create";
   if (method === "POST" && pathname === "/v1/payment_mandates") return "mandates:manage";
   if (method === "GET" && /^\/v1\/payment_mandates\/[^/]+$/.test(pathname)) return "mandates:read";
   if (method === "POST" && /^\/v1\/payment_mandates\/[^/]+\/(activate|suspend|revoke|expire)$/.test(pathname)) return "mandates:manage";
@@ -545,6 +549,13 @@ export class AccessController {
     if (actor?.platform_access) return collections;
     return collections.filter((collection) =>
       actor.account_ids.includes(collection.account_id) || actor.agent_ids.includes(collection.agent_id),
+    );
+  }
+
+  filterAccessGrants(actor, grants) {
+    if (actor?.platform_access) return grants;
+    return grants.filter((grant) =>
+      actor.account_ids.includes(grant.account_id) || actor.agent_ids.includes(grant.agent_id),
     );
   }
 }

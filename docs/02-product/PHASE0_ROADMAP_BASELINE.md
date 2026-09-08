@@ -42,8 +42,8 @@ BU2 继续定位为嵌入式 Agent AI 收付平台。外部 Agent 在自己的�
 | F09a | `feat(execution): run authorized payment commands without operator approval` | F08 | R2 |
 | F09b | `feat(recovery): schedule evidence-based recovery for existing attempts` | F09a | 历史实现已存在，需按当前路线补齐状态与审查记录 |
 | F10 | `feat(collections): create account-owned receivables` | F07 | 已实现，待 R2 |
-| F11 | `feat(collections): verify inbound payments and post funds once` | F10 | 进行中 |
-| F12 | `feat(fulfillment): make paid access recoverable and separate delivery facts` | F09a、F11 | R2 |
+| F11 | `feat(collections): verify inbound payments and post funds once` | F10 | 已实现，待 R2 |
+| F12 | `feat(fulfillment): make paid access recoverable and separate delivery facts` | F09a、F11 | 运行时已实现，待 R2 |
 | F13 | `feat(refunds): implement bounded cancellation and refund recovery` | F12、F09b | R2；实际资金执行另行受控 |
 | F14 | `feat(reconciliation): reconcile payments collections refunds and fees` | F13 | R2 |
 | F15a | `feat(sandbox): add isolated bounded internal execution sessions` | F08、F09a | R2；环境激活与业务 Mandate 分开批准 |
@@ -62,4 +62,6 @@ BU2 继续定位为嵌入式 Agent AI 收付平台。外部 Agent 在自己的�
 
 D0/D1/D2 文档基线与 F07 代码实现已合并。F08 运行时与 F09a 已完成版本化授权、确定性 PolicyDecision、绑定校验、幂等状态转换和 Agent 执行命令，当前进入独立 R2 Domain 与 Architecture 审查。
 
-D2 只改文档；F08/F09a/F10/F11 代码 PR 不启用真实 Testnet 双向收付、Hosted Sandbox、Live/Mainnet、托管或生产凭证，必须独立完成 Domain 与 Architecture R2 审查。F09b 的历史实现已覆盖持久化 payment attempt、unknown-result 冻结和显式 recovery 查询，本轮不重复引入第二套恢复实现。
+D2 只改文档；F08/F09a/F10/F11/F12 代码 PR 不启用真实 Testnet 双向收付、Hosted Sandbox、Live/Mainnet、托管或生产凭证，必须独立完成 Domain 与 Architecture R2 审查。F09b 的历史实现已覆盖持久化 payment attempt、unknown-result 冻结和显式 recovery 查询，本轮不重复引入第二套恢复实现。
+
+F12 本地实现已完成，下一步是 F13：在不突破当前环境边界的前提下，实现有界取消、退款事实与显式恢复；F13 之前不得把 AccessGrant 解释为已完成退款或财务对账。

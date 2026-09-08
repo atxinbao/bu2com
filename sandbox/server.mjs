@@ -318,6 +318,9 @@ export function createBu2Server({
       if (request.method === "GET" && url.pathname === "/v1/collections") {
         return send(response, 200, { data: activeAccess.filterCollections(actor, activeSandbox.listCollections()) });
       }
+      if (request.method === "GET" && url.pathname === "/v1/access_grants") {
+        return send(response, 200, { data: activeAccess.filterAccessGrants(actor, activeSandbox.listAccessGrants()) });
+      }
       if (executionMutation(request.method, url.pathname)) {
         assertExecutionEnabled(environmentConfig, `${request.method} ${url.pathname}`);
       }
@@ -666,6 +669,54 @@ export function createBu2Server({
             { ...accessContext, resourceId: collectionId },
           );
           return send(response, 200, collection);
+        }
+        if (request.method === "POST" && segments.length === 4 && segments[3] === "access_grants") {
+          const collection = activeSandbox.getCollection(collectionId);
+          activeAccess.assertClaims(
+            actor,
+            { accountIds: [collection.account_id], agentIds: [collection.agent_id] },
+            { ...accessContext, resourceId: collectionId },
+          );
+          const body = validateBody("createAccessGrant", await readJson(request));
+          return send(
+            response,
+            201,
+            await activeSandbox.createAccessGrant(
+              collectionId,
+              body,
+              validateIdempotencyKey(key),
+            ),
+          );
+        }
+      }
+      if (segments[0] === "v1" && segments[1] === "access_grants" && segments[2]) {
+        const accessGrantId = validateResourceId(segments[2], "agr", "access_grant_id");
+        if (request.method === "GET" && segments.length === 3) {
+          const grant = activeSandbox.getAccessGrant(accessGrantId);
+          activeAccess.assertClaims(
+            actor,
+            { accountIds: [grant.account_id], agentIds: [grant.agent_id] },
+            { ...accessContext, resourceId: accessGrantId },
+          );
+          return send(response, 200, grant);
+        }
+        if (request.method === "POST" && segments.length === 4 && segments[3] === "recover") {
+          const grant = activeSandbox.getAccessGrant(accessGrantId);
+          activeAccess.assertClaims(
+            actor,
+            { accountIds: [grant.account_id], agentIds: [grant.agent_id] },
+            { ...accessContext, resourceId: accessGrantId },
+          );
+          const body = validateBody("recoverAccessGrant", await readJson(request));
+          return send(
+            response,
+            200,
+            await activeSandbox.recoverAccessGrant(
+              accessGrantId,
+              body,
+              validateIdempotencyKey(key),
+            ),
+          );
         }
       }
       if (segments[0] === "v1" && segments[1] === "budgets" && segments[2]) {

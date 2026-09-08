@@ -135,6 +135,23 @@ const schemas = {
       payer_agent_id: identifier("agt"),
     },
   },
+  createAccessGrant: {
+    type: "object",
+    additionalProperties: false,
+    required: ["access_type", "access_reference"],
+    properties: {
+      id: identifier("agr"),
+      access_type: { type: "string", minLength: 1, maxLength: 100 },
+      access_reference: { type: "string", minLength: 1, maxLength: 255 },
+      expires_at: { type: ["string", "null"], format: "date-time" },
+      metadata: { type: "object", maxProperties: 20, additionalProperties: { type: "string", maxLength: 500 } },
+    },
+  },
+  recoverAccessGrant: {
+    type: "object",
+    additionalProperties: false,
+    properties: {},
+  },
   createPaymentIntent: {
     type: "object",
     additionalProperties: false,

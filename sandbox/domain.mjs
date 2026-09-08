@@ -35,6 +35,7 @@ const budgetPeriods = new Set(["lifetime", "calendar_month", "rolling_24h"]);
 const mandateStatuses = new Set(["draft", "active", "suspended", "revoked", "expired"]);
 const mandateActions = new Set(["activate", "suspend", "revoke", "expire"]);
 const receivableStatuses = new Set(["issued", "pending", "paid", "expired", "cancelled"]);
+const accessGrantStatuses = new Set(["active", "expired", "revoked"]);
 const legacyMandatePattern = /^mdt_(research_04|x402_test|doctor_buyer|env05_buyer|mcp_buyer|sdk_buyer|external_local|attacker|atomic_[A-Za-z0-9_-]+)$/;
 
 function validateIdentifier(value, prefixValue, field) {
@@ -118,6 +119,7 @@ export class Bu2Sandbox {
     this.quotes = new Map(restored.resources.quotes ?? []);
     this.receivables = new Map(restored.resources.receivables ?? []);
     this.collections = new Map(restored.resources.collections ?? []);
+    this.accessGrants = new Map(restored.resources.access_grants ?? []);
     this.intents = new Map(restored.resources.intents ?? []);
     this.transactions = new Map(restored.resources.transactions ?? []);
     this.deliveries = new Map(restored.resources.deliveries ?? []);
@@ -214,6 +216,7 @@ export class Bu2Sandbox {
         quotes: [...this.quotes.entries()].map(([id, value]) => [id, clone(value)]),
         receivables: [...this.receivables.entries()].map(([id, value]) => [id, clone(value)]),
         collections: [...this.collections.entries()].map(([id, value]) => [id, clone(value)]),
+        access_grants: [...this.accessGrants.entries()].map(([id, value]) => [id, clone(value)]),
         intents: [...this.intents.entries()].map(([id, value]) => [id, clone(value)]),
         transactions: [...this.transactions.entries()].map(([id, value]) => [id, clone(value)]),
         deliveries: [...this.deliveries.entries()].map(([id, value]) => [id, clone(value)]),
@@ -235,6 +238,7 @@ export class Bu2Sandbox {
     this.quotes = new Map(snapshot.resources.quotes ?? []);
     this.receivables = new Map(snapshot.resources.receivables ?? []);
     this.collections = new Map(snapshot.resources.collections ?? []);
+    this.accessGrants = new Map(snapshot.resources.access_grants ?? []);
     this.intents = new Map(snapshot.resources.intents ?? []);
     this.transactions = new Map(snapshot.resources.transactions ?? []);
     this.deliveries = new Map(snapshot.resources.deliveries ?? []);
@@ -542,6 +546,140 @@ export class Bu2Sandbox {
       throw new ApiError(404, "resource_not_found", "collection_not_found", "Collection was not found.");
     }
     return clone(collection);
+  }
+
+  listAccessGrants() {
+    return [...this.accessGrants.values()]
+      .sort((left, right) => right.created_at.localeCompare(left.created_at) || right.id.localeCompare(left.id))
+      .map((grant) => this.accessGrantView(grant));
+  }
+
+  getAccessGrant(id) {
+    const grant = this.accessGrants.get(id);
+    if (!grant) {
+      throw new ApiError(404, "resource_not_found", "access_grant_not_found", "Access grant was not found.");
+    }
+    return this.accessGrantView(grant);
+  }
+
+  accessGrantView(grant) {
+    const collection = this.collections.get(grant.collection_id) ?? null;
+    return {
+      ...clone(grant),
+      collection_status: collection?.status ?? null,
+      collection_verification_status: collection?.verification_status ?? null,
+    };
+  }
+
+  assertPostedCollection(collectionId) {
+    const collection = this.collections.get(collectionId);
+    if (!collection) {
+      throw new ApiError(404, "resource_not_found", "collection_not_found", "Collection was not found.");
+    }
+    if (collection.status !== "posted" || collection.verification_status !== "verified") {
+      throw new ApiError(
+        409,
+        "invalid_state_transition",
+        "collection_not_paid",
+        "Access can only be granted from a verified posted Collection.",
+        { current_state: collection.status, verification_status: collection.verification_status },
+      );
+    }
+    return collection;
+  }
+
+  async createAccessGrant(collectionId, input, key) {
+    return this.runIdempotentAsync(
+      `collections/${collectionId}/access_grants`,
+      key,
+      input,
+      async () => {
+        validateIdentifier(collectionId, "cpay", "collection_id");
+        requireFields(input, ["access_type", "access_reference"]);
+        const collection = this.assertPostedCollection(collectionId);
+        if (typeof input.access_type !== "string" || input.access_type.length > 100) {
+          throw new ApiError(400, "validation_error", "invalid_access_type", "access_type must be a short string.");
+        }
+        if (typeof input.access_reference !== "string" || input.access_reference.length > 255) {
+          throw new ApiError(400, "validation_error", "invalid_access_reference", "access_reference must be a string up to 255 characters.");
+        }
+        validateDate(input.expires_at ?? null, "expires_at", { allowNull: true });
+        if (input.expires_at && Date.parse(input.expires_at) <= Date.now()) {
+          throw new ApiError(400, "validation_error", "access_grant_expired_at_creation", "expires_at must be in the future.");
+        }
+        const prior = [...this.accessGrants.values()].find(
+          (grant) => grant.collection_id === collection.id && grant.access_reference === input.access_reference,
+        );
+        if (prior) {
+          if (prior.access_type !== input.access_type || prior.expires_at !== (input.expires_at ?? null)) {
+            throw new ApiError(
+              409,
+              "conflict",
+              "access_grant_source_conflict",
+              "The Collection already has an access grant with different terms.",
+            );
+          }
+          return this.accessGrantView(prior);
+        }
+        const now = new Date().toISOString();
+        const grant = {
+          id: input.id ?? prefix("agr"),
+          collection_id: collection.id,
+          receivable_id: collection.receivable_id,
+          account_id: collection.account_id,
+          agent_id: collection.agent_id,
+          access_type: input.access_type,
+          access_reference: input.access_reference,
+          status: "active",
+          source_type: "collection",
+          source_id: collection.id,
+          expires_at: input.expires_at ?? null,
+          metadata: clone(input.metadata ?? {}),
+          version: 1,
+          granted_at: now,
+          recovered_at: null,
+          created_at: now,
+          updated_at: now,
+        };
+        validateIdentifier(grant.id, "agr", "access_grant_id");
+        if (!accessGrantStatuses.has(grant.status)) {
+          throw new ApiError(500, "internal_error", "invalid_access_grant_status", "Access grant status is invalid.");
+        }
+        if (this.accessGrants.has(grant.id)) {
+          throw new ApiError(409, "conflict", "access_grant_id_exists", "Access grant ID already exists.");
+        }
+        this.accessGrants.set(grant.id, grant);
+        this.event("access_grant.created", grant);
+        return this.accessGrantView(grant);
+      },
+    );
+  }
+
+  async recoverAccessGrant(id, input, key) {
+    return this.runIdempotentAsync(`access_grants/${id}/recoveries`, key, input, async () => {
+      validateIdentifier(id, "agr", "access_grant_id");
+      const grant = this.accessGrants.get(id);
+      if (!grant) {
+        throw new ApiError(404, "resource_not_found", "access_grant_not_found", "Access grant was not found.");
+      }
+      this.assertPostedCollection(grant.collection_id);
+      if (grant.status === "revoked") {
+        throw new ApiError(409, "invalid_state_transition", "access_grant_revoked", "A revoked access grant cannot be recovered.");
+      }
+      if (grant.status === "active") return this.accessGrantView(grant);
+      if (grant.status !== "expired") {
+        throw new ApiError(409, "invalid_state_transition", "access_grant_not_recoverable", "Only an expired access grant can be recovered.", { current_state: grant.status });
+      }
+      if (grant.expires_at && Date.parse(grant.expires_at) <= Date.now()) {
+        throw new ApiError(409, "invalid_state_transition", "access_grant_expired", "An expired access grant cannot be recovered after its expiry.");
+      }
+      grant.status = "active";
+      grant.recovered_at = new Date().toISOString();
+      grant.version += 1;
+      grant.updated_at = grant.recovered_at;
+      this.event("access_grant.recovered", grant);
+      return this.accessGrantView(grant);
+    });
   }
 
   addCollectionPostings(event, collection) {

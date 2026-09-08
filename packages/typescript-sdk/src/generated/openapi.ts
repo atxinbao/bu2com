@@ -315,6 +315,92 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/collections/{collection_id}/access_grants": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path: {
+                collection_id: components["parameters"]["CollectionId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Grant recoverable paid access from a posted Collection */
+        post: operations["createAccessGrant"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/access_grants": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        /** List recoverable paid access grants */
+        get: operations["listAccessGrants"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/access_grants/{access_grant_id}": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path: {
+                access_grant_id: components["parameters"]["AccessGrantId"];
+            };
+            cookie?: never;
+        };
+        /** Read one recoverable paid access grant */
+        get: operations["getAccessGrant"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/access_grants/{access_grant_id}/recover": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path: {
+                access_grant_id: components["parameters"]["AccessGrantId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Re-read and reactivate a paid access grant from its posted Collection */
+        post: operations["recoverAccessGrant"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/payment_intents": {
         parameters: {
             query?: never;
@@ -1229,6 +1315,49 @@ export interface components {
             collection: components["schemas"]["Collection"];
             receivable: components["schemas"]["Receivable"];
         };
+        CreateAccessGrant: {
+            id?: string;
+            access_type: string;
+            access_reference: string;
+            /** Format: date-time */
+            expires_at?: string | null;
+            metadata?: {
+                [key: string]: string;
+            };
+        };
+        RecoverAccessGrant: Record<string, never>;
+        AccessGrant: {
+            id: string;
+            collection_id: string;
+            receivable_id: string;
+            account_id: string;
+            agent_id: string;
+            access_type: string;
+            access_reference: string;
+            /** @enum {string} */
+            status: "active" | "expired" | "revoked";
+            /** @enum {string} */
+            source_type: "collection";
+            source_id: string;
+            /** Format: date-time */
+            expires_at: string | null;
+            metadata: {
+                [key: string]: string;
+            };
+            version: number;
+            /** Format: date-time */
+            granted_at: string;
+            /** Format: date-time */
+            recovered_at: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+            /** @enum {string|null} */
+            collection_status?: "pending" | "posted" | null;
+            /** @enum {string|null} */
+            collection_verification_status?: "pending" | "verified" | null;
+        };
         ExternalContext: {
             /** @enum {string} */
             type: "chatgpt_conversation" | "codex_task" | "agent_run" | "automation" | "other";
@@ -1549,6 +1678,7 @@ export interface components {
         ReceiptId: string;
         ReceivableId: string;
         CollectionId: string;
+        AccessGrantId: string;
         TenantId: string;
         WebhookSubscriptionId: string;
         WebhookOutboxId: string;
@@ -2070,6 +2200,122 @@ export interface operations {
             };
             400: components["responses"]["BadRequest"];
             404: components["responses"]["NotFound"];
+        };
+    };
+    createAccessGrant: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                collection_id: components["parameters"]["CollectionId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateAccessGrant"];
+            };
+        };
+        responses: {
+            /** @description Access grant created or replayed */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessGrant"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    listAccessGrants: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Access grants visible to the current account or Agent */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AccessGrant"][];
+                    };
+                };
+            };
+        };
+    };
+    getAccessGrant: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path: {
+                access_grant_id: components["parameters"]["AccessGrantId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Access grant */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessGrant"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    recoverAccessGrant: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                access_grant_id: components["parameters"]["AccessGrantId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecoverAccessGrant"];
+            };
+        };
+        responses: {
+            /** @description Recovered access grant */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessGrant"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
         };
     };
     createPaymentIntent: {

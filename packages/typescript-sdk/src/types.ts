@@ -21,6 +21,9 @@ export type Receivable = components["schemas"]["Receivable"];
 export type VerifyInboundPayment = components["schemas"]["VerifyInboundPayment"];
 export type Collection = components["schemas"]["Collection"];
 export type VerifyInboundPaymentResult = components["schemas"]["VerifyInboundPaymentResult"];
+export type AccessGrant = components["schemas"]["AccessGrant"];
+export type CreateAccessGrant = components["schemas"]["CreateAccessGrant"];
+export type RecoverAccessGrant = components["schemas"]["RecoverAccessGrant"];
 export type DeliveryEvidence = components["schemas"]["DeliveryEvidence"];
 export type DeliveryRecord = components["schemas"]["DeliveryRecord"];
 export type PaymentIntent = components["schemas"]["PaymentIntent"];
@@ -38,6 +41,9 @@ export type AuthorizationDecision = NonNullable<
 
 export type DeliveryResult =
   paths["/transactions/{transaction_id}/deliveries"]["post"]["responses"][201]["content"]["application/json"];
+
+export type AccessGrantResult =
+  paths["/collections/{collection_id}/access_grants"]["post"]["responses"][201]["content"]["application/json"];
 
 export type SettlementResult =
   paths["/transactions/{transaction_id}/settlements"]["post"]["responses"][201]["content"]["application/json"];

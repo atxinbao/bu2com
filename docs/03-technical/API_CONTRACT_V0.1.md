@@ -32,6 +32,9 @@
 | Authorization | `auth_` | Mandate 或人工授权的判断记录 |
 | Transaction | `txn_` | 获得授权后的资金与交付容器 |
 | DeliveryEvidence | `dlv_` | 卖方提交的交付证明 |
+| Receivable | `rcv_` | 卖方 Account 的可持久化应收款事实 |
+| Collection | `cpay_` | Provider 验证并一次性入账的入站收款事实 |
+| AccessGrant | `agr_` | 从已入账 Collection 派生、可恢复的付费访问权益 |
 | Settlement | `stl_` | 资金结算事件 |
 | Receipt | `rcpt_` | 双方可验证的交易凭证 |
 | WebhookSubscription | `whsub_` | 外部系统的事件接收地址与 Secret 版本元数据 |
@@ -105,7 +108,7 @@ requires_authorization
 
 ## 6. 幂等契约
 
-- `POST /quotes`、`POST /payment_intents`、授权、交付、结算、退款、Webhook 订阅、Secret 轮换和死信重放均要求 `Idempotency-Key`。
+- `POST /quotes`、`POST /payment_intents`、授权、交付、结算、收款、AccessGrant、退款、Webhook 订阅、Secret 轮换和死信重放均要求 `Idempotency-Key`。
 - 同一 Account、同一路径、同一 Key 和相同请求体返回第一次结果。
 - 同一 Key 配合不同请求体返回 `409 idempotency_conflict`。
 - Key 至少保留 24 小时；资金动作建议永久绑定到业务记录。

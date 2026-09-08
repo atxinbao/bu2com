@@ -1,3 +1,36 @@
+# F12 Recoverable Paid Access 自主审查报告
+
+日期：2026-09-08
+审查者：Codex（Contributor / Verifier，非 R2 Approver）
+任务：从已验证入账的 Collection 授予可恢复 AccessGrant，并保持 DeliveryRecord、Receipt 与 FinancialPosting 独立
+分支：`feat/recoverable-paid-access`
+
+## 评分
+
+| 维度 | 得分 | 依据 |
+| --- | ---: | --- |
+| 需求完整性 | 19/20 | 覆盖 posted Collection 前置条件、AccessGrant 生命周期、查询/恢复、幂等和 F11/F13/F14 边界 |
+| 技术实现 | 19/20 | 复用 generic resources、runIdempotentAsync、SQLite 原子提交、既有 Collection 与 DeliveryRecord；未新增第二套账本 |
+| 金融不变量 | 20/20 | AccessGrant 不改变金额、余额或 FinancialPosting，重复来源不重复授予 |
+| 自动化验证 | 20/20 | F12 定向 4/4、Sandbox 139/139、Contract 63 + MCP 6、SDK 10/10、Prototype lint/build 和 diff 检查通过 |
+| 文档与边界 | 19/20 | F12 契约、README、Roadmap、Changelog、验证和操作日志已同步；R2 独立审查尚未完成 |
+
+综合评分：97/100
+
+## 结论
+
+建议：**通过本地实现，进入 R2 独立 Domain 与 Architecture 审查**。
+
+F12 只从 `Collection(status=posted, verification_status=verified)` 派生 AccessGrant。AccessGrant 是独立的付费访问事实，可通过持久化详情和恢复接口重新取得；DeliveryRecord 仍只记录交易交付事实，Receipt 只签名引用交付证据，FinancialPosting 只表达 F11 入账事实。
+
+## 残余风险
+
+1. F12 尚未接入真实 Base Sepolia 交付或外部资源授权；Simulation 结果不能作为 Testnet 或生产访问证据。
+2. AccessGrant 的资源引用由业务方提供，当前不负责资源服务、密钥托管或撤销后的外部资源回收。
+3. 退款、取消和财务对账留给 F13/F14；Hosted、Live/Mainnet、托管和生产凭证继续关闭。
+
+---
+
 # F11 Inbound Collection Verification 自主审查报告
 
 日期：2026-09-08
