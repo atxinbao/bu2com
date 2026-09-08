@@ -152,6 +152,27 @@
       <h2 id="unreleased">Unreleased</h2>
       <article class="release">
         <div class="release-head">
+          <div><h3>F10 · Account-Owned Receivable</h3><time datetime="2026-09-08">2026-09-08</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">为卖方 Account 建立从 active Quote 派生的可持久化应收款事实，为 F11 入站支付验证提供唯一收款对象。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag added">Added</span>新增 <code>POST/GET /v1/receivables</code> 与 <code>GET /v1/receivables/{id}</code>，以及 TypeScript SDK 对应方法。</li>
+            <li><span class="tag added">Added</span>Receivable 绑定 Quote、Account、Seller Agent、Receiving Target、付款方约束和稳定收款引用。</li>
+            <li><span class="tag changed">Changed</span>金额与币种从 active Quote 派生；创建只追加 Receivable 事件，不移动余额、不创建 Transaction 或 Financial Posting。</li>
+            <li><span class="tag governance">Boundary</span>F11 才负责入站支付验证与一次性入账；本 PR 不启用 Hosted、Live/Mainnet、托管或生产凭证。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R2 · 收款对象、权限与持久化事实</span></div>
+          <div><b>验证</b><span>F10 定向领域/HTTP、SQLite 重启、契约与 SDK 回归记录在 PR 中</span></div>
+          <div><b>恢复</b><span>幂等键保护创建，F11 复用 Receivable 引用，不创建第二套收款账本</span></div>
+        </div>
+      </article>
+      <article class="release">
+        <div class="release-head">
           <div><h3>F09a · 自主支付执行</h3><time datetime="2026-09-08">2026-09-08</time></div>
           <span class="status">Unreleased</span>
         </div>

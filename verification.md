@@ -1,5 +1,20 @@
 # BU2 Product v0.1 验证结论
 
+## 2026-09-08 · F10 Account-Owned Receivable 验证
+
+执行者：Codex
+
+- `node --test sandbox/f10.test.mjs sandbox/f10-http.test.mjs`：4/4 通过，覆盖 Quote 派生金额、Account/Agent/Receiving Target 绑定、幂等冲突、到期窗口、HTTP 列表/详情和 SQLite 重启。
+- `npm --prefix sandbox test`：131/131 通过，包含既有支付、恢复、访问控制、重启和 F09a 回归。
+- `node docs/03-technical/validate-contract.mjs`：63 项不变量、6 个 MCP 工具通过。
+- `npm --prefix packages/typescript-sdk test`：生成检查、格式、Lint、TypeScript 类型检查、构建和 10/10 单元测试通过。
+- `npm --prefix prototype run lint && npm --prefix prototype run build`：通过。
+- `git diff --check`：通过。
+
+边界：F10 只创建 account-owned Receivable，不移动钱包余额、不创建 Transaction、不追加 Financial Posting；F11 入站支付验证与一次性入账、真实 Testnet/Hosted/Mainnet 仍未执行。
+
+结论：本地实现达到 **GO for R2 Domain + Architecture review**；尚未构成 F11 入站收款或真实资金授权。
+
 ## 2026-09-08 · F09a 自主支付执行验证
 
 执行者：Codex

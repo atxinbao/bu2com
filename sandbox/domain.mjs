@@ -34,6 +34,7 @@ const budgetScopeTypes = new Set(["workspace", "project", "account", "agent"]);
 const budgetPeriods = new Set(["lifetime", "calendar_month", "rolling_24h"]);
 const mandateStatuses = new Set(["draft", "active", "suspended", "revoked", "expired"]);
 const mandateActions = new Set(["activate", "suspend", "revoke", "expire"]);
+const receivableStatuses = new Set(["issued", "pending", "paid", "expired", "cancelled"]);
 const legacyMandatePattern = /^mdt_(research_04|x402_test|doctor_buyer|env05_buyer|mcp_buyer|sdk_buyer|external_local|attacker|atomic_[A-Za-z0-9_-]+)$/;
 
 function validateIdentifier(value, prefixValue, field) {
@@ -115,6 +116,7 @@ export class Bu2Sandbox {
       events: [],
     };
     this.quotes = new Map(restored.resources.quotes ?? []);
+    this.receivables = new Map(restored.resources.receivables ?? []);
     this.intents = new Map(restored.resources.intents ?? []);
     this.transactions = new Map(restored.resources.transactions ?? []);
     this.deliveries = new Map(restored.resources.deliveries ?? []);
@@ -209,6 +211,7 @@ export class Bu2Sandbox {
     return {
       resources: {
         quotes: [...this.quotes.entries()].map(([id, value]) => [id, clone(value)]),
+        receivables: [...this.receivables.entries()].map(([id, value]) => [id, clone(value)]),
         intents: [...this.intents.entries()].map(([id, value]) => [id, clone(value)]),
         transactions: [...this.transactions.entries()].map(([id, value]) => [id, clone(value)]),
         deliveries: [...this.deliveries.entries()].map(([id, value]) => [id, clone(value)]),
@@ -228,6 +231,7 @@ export class Bu2Sandbox {
 
   restoreState(snapshot) {
     this.quotes = new Map(snapshot.resources.quotes ?? []);
+    this.receivables = new Map(snapshot.resources.receivables ?? []);
     this.intents = new Map(snapshot.resources.intents ?? []);
     this.transactions = new Map(snapshot.resources.transactions ?? []);
     this.deliveries = new Map(snapshot.resources.deliveries ?? []);
@@ -424,6 +428,103 @@ export class Bu2Sandbox {
       this.event("quote.created", quote);
       return quote;
     });
+  }
+
+  async createReceivable(input, key) {
+    return this.runIdempotentAsync("receivables", key, input, async () => {
+      requireFields(input, [
+        "quote_id",
+        "account_id",
+        "agent_id",
+        "receiving_target_id",
+        "expires_at",
+        "purpose",
+      ]);
+      validateIdentifier(input.quote_id, "quo", "quote_id");
+      validateIdentifier(input.account_id, "acct", "account_id");
+      validateIdentifier(input.agent_id, "agt", "agent_id");
+      validateIdentifier(input.receiving_target_id, "tgt", "receiving_target_id");
+      const quote = this.quotes.get(input.quote_id);
+      if (!quote) {
+        throw new ApiError(404, "resource_not_found", "quote_not_found", "Quote was not found.");
+      }
+      if (quote.status !== "active") {
+        throw new ApiError(409, "invalid_state_transition", "quote_not_collectible", "Only an active quote can create a receivable.", { current_state: quote.status });
+      }
+      if (quote.payee_account_id !== input.account_id || quote.seller_agent_id !== input.agent_id) {
+        throw new ApiError(409, "authorization_error", "receivable_owner_mismatch", "Receivable owner must match the quote payee account and seller Agent.");
+      }
+      if (quote.receiving_target_id && quote.receiving_target_id !== input.receiving_target_id) {
+        throw new ApiError(409, "authorization_error", "receiving_target_mismatch", "Receivable target must match the quote receiving target.");
+      }
+      validateDate(input.expires_at, "expires_at");
+      const expiresAt = Date.parse(input.expires_at);
+      const now = Date.now();
+      if (expiresAt <= now) {
+        throw new ApiError(400, "validation_error", "receivable_expired_at_creation", "Receivable expiry must be in the future.");
+      }
+      if (Date.parse(quote.expires_at) < expiresAt) {
+        throw new ApiError(400, "validation_error", "receivable_expiry_after_quote", "Receivable expiry cannot exceed quote expiry.");
+      }
+      for (const [field, prefixValue] of [["expected_payer_account_id", "acct"], ["expected_buyer_agent_id", "agt"]]) {
+        if (input[field] !== undefined && input[field] !== null) validateIdentifier(input[field], prefixValue, field);
+      }
+      if ((input.expected_payer_account_id === undefined) !== (input.expected_buyer_agent_id === undefined)) {
+        throw new ApiError(400, "validation_error", "incomplete_payer_binding", "Expected payer account and buyer Agent must be provided together.");
+      }
+      const targetBinding = this.ledger?.assertWalletBinding(this.environmentConfig.environment, {
+        kind: "receiving_target",
+        accountId: input.account_id,
+        agentId: input.agent_id,
+        asset: quote.asset ?? this.environmentConfig.asset ?? quote.amount.currency,
+        network: quote.network ?? this.environmentConfig.network ?? null,
+        reference: input.receiving_target_id,
+      });
+      const receivable = {
+        id: input.id ?? prefix("rcv"),
+        quote_id: quote.id,
+        account_id: input.account_id,
+        agent_id: input.agent_id,
+        receiving_target_id: input.receiving_target_id,
+        receiving_target_binding_id: targetBinding?.binding?.id ?? quote.receiving_target_binding_id ?? null,
+        amount: clone(quote.amount),
+        asset: quote.asset ?? null,
+        network: quote.network ?? null,
+        purpose: input.purpose,
+        expected_payer_account_id: input.expected_payer_account_id ?? null,
+        expected_buyer_agent_id: input.expected_buyer_agent_id ?? null,
+        metadata: clone(input.metadata ?? {}),
+        collection_reference: prefix("col"),
+        status: "issued",
+        version: 1,
+        expires_at: input.expires_at,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      if (!receivableStatuses.has(receivable.status)) {
+        throw new ApiError(500, "internal_error", "invalid_receivable_status", "Receivable status is invalid.");
+      }
+      if (this.receivables.has(receivable.id)) {
+        throw new ApiError(409, "conflict", "receivable_id_exists", "Receivable ID already exists.");
+      }
+      this.receivables.set(receivable.id, receivable);
+      this.event("receivable.created", receivable);
+      return clone(receivable);
+    });
+  }
+
+  listReceivables() {
+    return [...this.receivables.values()]
+      .sort((left, right) => right.created_at.localeCompare(left.created_at) || right.id.localeCompare(left.id))
+      .map((receivable) => clone(receivable));
+  }
+
+  getReceivable(id) {
+    const receivable = this.receivables.get(id);
+    if (!receivable) {
+      throw new ApiError(404, "resource_not_found", "receivable_not_found", "Receivable was not found.");
+    }
+    return clone(receivable);
   }
 
   async createBudget(input, key) {

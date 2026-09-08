@@ -19,6 +19,7 @@ import type {
   CreatePaymentIntent,
   CreateBudget,
   CreateQuote,
+  CreateReceivable,
   DeliveryEvidence,
   DeliveryResult,
   EnvironmentInfo,
@@ -28,6 +29,7 @@ import type {
   MandateTransition,
   PaymentIntent,
   Quote,
+  Receivable,
   Receipt,
   ReceiptVerification,
   SettlementRecoveryResult,
@@ -399,6 +401,31 @@ export class Bu2Client {
       this.api.POST("/payment_mandates", {
         params: { header: mutationHeaders(options) },
         body,
+        signal,
+      }),
+    );
+  }
+
+  listReceivables(options: Bu2RequestOptions = {}): Promise<{ data: Receivable[] }> {
+    return this.execute({ name: "listReceivables", mutation: false }, options, (signal) =>
+      this.api.GET("/receivables", { params: { header: traceHeaders(options) }, signal }),
+    );
+  }
+
+  createReceivable(body: CreateReceivable, options: Bu2MutationOptions): Promise<Receivable> {
+    return this.execute({ name: "createReceivable", mutation: true }, options, (signal) =>
+      this.api.POST("/receivables", {
+        params: { header: mutationHeaders(options) },
+        body,
+        signal,
+      }),
+    );
+  }
+
+  getReceivable(receivableId: string, options: Bu2RequestOptions = {}): Promise<Receivable> {
+    return this.execute({ name: "getReceivable", mutation: false }, options, (signal) =>
+      this.api.GET("/receivables/{receivable_id}", {
+        params: { path: { receivable_id: receivableId }, header: traceHeaders(options) },
         signal,
       }),
     );

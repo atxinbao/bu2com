@@ -246,6 +246,62 @@ paths:
         '409': { $ref: '#/components/responses/Conflict' }
         '413': { $ref: '#/components/responses/RequestTooLarge' }
         '415': { $ref: '#/components/responses/UnsupportedMediaType' }
+  /receivables:
+    parameters:
+      - $ref: '#/components/parameters/TraceId'
+    get:
+      operationId: listReceivables
+      summary: List account-owned receivables
+      responses:
+        '200':
+          description: Receivables visible to the current account or Agent
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Receivable' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+    post:
+      operationId: createReceivable
+      summary: Create an account-owned receivable from an active quote
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateReceivable' }
+      responses:
+        '201':
+          description: Receivable created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Receivable' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '413': { $ref: '#/components/responses/RequestTooLarge' }
+        '415': { $ref: '#/components/responses/UnsupportedMediaType' }
+  /receivables/{receivable_id}:
+    parameters:
+      - $ref: '#/components/parameters/TraceId'
+    get:
+      operationId: getReceivable
+      summary: Read one account-owned receivable
+      parameters:
+        - $ref: '#/components/parameters/ReceivableId'
+      responses:
+        '200':
+          description: Current receivable
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Receivable' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
   /payment_intents:
     parameters:
       - $ref: '#/components/parameters/TraceId'
@@ -739,6 +795,11 @@ components:
       in: path
       required: true
       schema: { type: string, pattern: '^rcpt_[A-Za-z0-9_-]+$', maxLength: 255 }
+    ReceivableId:
+      name: receivable_id
+      in: path
+      required: true
+      schema: { type: string, pattern: '^rcv_[A-Za-z0-9_-]+$', maxLength: 255 }
     TenantId:
       name: tenant_id
       in: path
@@ -1272,6 +1333,40 @@ components:
         status: { type: string, enum: [active, accepted, expired, canceled] }
         receiving_target_binding_id: { type: [string, 'null'], pattern: '^tgt_[A-Za-z0-9_-]+$' }
         created_at: { type: string, format: date-time }
+    CreateReceivable:
+      type: object
+      additionalProperties: false
+      required: [quote_id, account_id, agent_id, receiving_target_id, expires_at, purpose]
+      properties:
+        id: { type: string, pattern: '^rcv_[A-Za-z0-9_-]+$' }
+        quote_id: { type: string, pattern: '^quo_[A-Za-z0-9_-]+$' }
+        account_id: { type: string, pattern: '^acct_[A-Za-z0-9_-]+$' }
+        agent_id: { type: string, pattern: '^agt_[A-Za-z0-9_-]+$' }
+        receiving_target_id: { type: string, pattern: '^tgt_[A-Za-z0-9_-]+$' }
+        expires_at: { type: string, format: date-time }
+        purpose: { type: string, minLength: 1, maxLength: 500 }
+        expected_payer_account_id: { type: string, pattern: '^acct_[A-Za-z0-9_-]+$' }
+        expected_buyer_agent_id: { type: string, pattern: '^agt_[A-Za-z0-9_-]+$' }
+        metadata:
+          type: object
+          maxProperties: 20
+          additionalProperties: { type: string, maxLength: 500 }
+    Receivable:
+      allOf:
+        - $ref: '#/components/schemas/CreateReceivable'
+        - type: object
+          required: [id, amount, collection_reference, status, version, created_at, updated_at]
+          properties:
+            id: { type: string, pattern: '^rcv_[A-Za-z0-9_-]+$' }
+            receiving_target_binding_id: { type: [string, 'null'], pattern: '^tgt_[A-Za-z0-9_-]+$' }
+            amount: { $ref: '#/components/schemas/Amount' }
+            asset: { type: [string, 'null'] }
+            network: { type: [string, 'null'] }
+            collection_reference: { type: string, pattern: '^col_[A-Za-z0-9_-]+$' }
+            status: { type: string, enum: [issued, pending, paid, expired, cancelled] }
+            version: { type: integer, minimum: 1 }
+            created_at: { type: string, format: date-time }
+            updated_at: { type: string, format: date-time }
     ExternalContext:
       type: object
       additionalProperties: false

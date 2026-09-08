@@ -100,6 +100,27 @@ const schemas = {
       receiving_target_id: identifier("tgt"),
     },
   },
+  createReceivable: {
+    type: "object",
+    additionalProperties: false,
+    required: ["quote_id", "account_id", "agent_id", "receiving_target_id", "expires_at", "purpose"],
+    properties: {
+      id: identifier("rcv"),
+      quote_id: identifier("quo"),
+      account_id: identifier("acct"),
+      agent_id: identifier("agt"),
+      receiving_target_id: identifier("tgt"),
+      expires_at: { type: "string", format: "date-time" },
+      purpose: { type: "string", minLength: 1, maxLength: 500 },
+      expected_payer_account_id: identifier("acct"),
+      expected_buyer_agent_id: identifier("agt"),
+      metadata: {
+        type: "object",
+        maxProperties: 20,
+        additionalProperties: { type: "string", maxLength: 500 },
+      },
+    },
+  },
   createPaymentIntent: {
     type: "object",
     additionalProperties: false,
