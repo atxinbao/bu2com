@@ -1290,7 +1290,7 @@ export class SqliteLedger {
     }
   }
 
-  writeBalancedJournals(postings, events = []) {
+  writeBalancedJournals(postings, events = [], { environment = null } = {}) {
     const groups = new Map();
     for (const posting of postings ?? []) {
       if (!posting.event_id || !posting.source_id || !posting.event_type) {
@@ -1306,7 +1306,7 @@ export class SqliteLedger {
         throw new ApiError(422, "financial_constraint", "journal_account_invalid", "Financial posting account names must use a stable namespaced format.");
       }
       if (posting.ledger_account_id !== undefined && posting.ledger_account_id !== null) {
-        this.assertLedgerAccountBinding(posting.ledger_account_id);
+        this.assertLedgerAccountBinding(posting.ledger_account_id, { environment });
       }
       const group = groups.get(posting.event_id) ?? [];
       group.push(posting);
@@ -1561,6 +1561,7 @@ export class SqliteLedger {
       this.writeBalancedJournals(
         (financial.financial_postings ?? []).map(([, posting]) => posting),
         events,
+        { environment: this.environmentMetadata()?.environment ?? null },
       );
       const refundAttemptUpsert = this.db.prepare(`
         INSERT INTO refund_attempts(
