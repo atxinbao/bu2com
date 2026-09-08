@@ -1,5 +1,10 @@
 # ENV-03 操作日志
 
+## 2026-09-09 · LA-05b Draft PR
+
+- Tool: `git commit`, `git push`, `gh pr create`, `gh pr view`; result: committed `8dcf5f6`, pushed `feat/ledger-assurance-history-replay-catchup`, and opened Draft PR #52 at `https://github.com/atxinbao/bu2com/pull/52` using `.github/pull_request_template.md`.
+- Review boundary: PR #52 is an R2 review candidate for historical ledger replay and backup catch-up evidence; it does not complete LA-06, Hosted/Testnet acceptance, real Provider reconciliation, or E3.1.
+
 ## 2026-09-09 · LA-05b 历史账务重放与备份追平
 
 - Tool: `gh pr view`, `git fetch`, `git switch`, `git pull --ff-only`, `git branch -d`; result: verified PR #51 merged at `b79eb8c`, synchronized `main`, deleted `feat/ledger-assurance-independent-reconciliation`, and created `feat/ledger-assurance-history-replay-catchup`.
