@@ -92,6 +92,22 @@ test("F13 records bounded partial and full refunds without exceeding settled val
   ledger.close();
 });
 
+test("F13 serializes concurrent refunds against the remaining settled amount", async () => {
+  const ledger = new SqliteLedger(":memory:");
+  const sandbox = new Bu2Sandbox({ ledger, adapter: new SimulatedPaymentAdapter({ ledger }) });
+  const flow = await settledTransaction(sandbox, "concurrent");
+  const results = await Promise.allSettled([
+    sandbox.requestRefund(flow.transactionId, { amount: { value: 200, currency: "CNY" } }, "f13-refund-concurrent-a"),
+    sandbox.requestRefund(flow.transactionId, { amount: { value: 200, currency: "CNY" } }, "f13-refund-concurrent-b"),
+  ]);
+  assert.equal(results.filter(({ status }) => status === "fulfilled").length, 1);
+  assert.equal(results.filter(({ status }) => status === "rejected").length, 1);
+  assert.equal(results.find(({ status }) => status === "rejected").reason.code, "refund_amount_exceeded");
+  assert.equal(sandbox.getTransaction(flow.transactionId).transaction.refunded_amount.value, 200);
+  assert.equal(sandbox.listRefunds(flow.transactionId).length, 1);
+  ledger.close();
+});
+
 test("F13 persists provider-unknown refund and recovers it explicitly", async () => {
   class UnknownRefundAdapter extends SimulatedPaymentAdapter {
     refund() {

@@ -13,7 +13,7 @@
 | 需求覆盖 | 19/20 | 覆盖取消、部分/全额退款、恢复、状态和 F14 边界 |
 | 技术实现 | 19/20 | 复用现有快照、Claim、Wallet CAS、Adapter Operation 与事件 Outbox |
 | 金融边界 | 20/20 | 退款金额受 settled 剩余值约束；Budget 历史不被 F13 擅自重写 |
-| 自动化验证 | 20/20 | F13 4/4、Sandbox 143/143、SDK 10/10 |
+| 自动化验证 | 20/20 | F13 5/5、Sandbox 144/144、SDK 10/10 |
 | 文档与恢复 | 19/20 | 契约、API、SDK、README、CHANGELOG、testing、verification 已同步；R2 尚待独立审查 |
 | 综合 | **97/100** | 通过本地实现审查，进入 R2 |
 
