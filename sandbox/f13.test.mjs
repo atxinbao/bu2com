@@ -83,6 +83,8 @@ test("F13 records bounded partial and full refunds without exceeding settled val
   const full = await sandbox.requestRefund(flow.transactionId, { amount: { value: 200, currency: "CNY" }, reason: "full" }, "f13-refund-full");
   assert.equal(full.transaction.status, "refunded");
   assert.deepEqual(full.transaction.refunded_amount, { value: 300, currency: "CNY" });
+  assert.equal(sandbox.listFinancialPostings(flow.transactionId).length, 6);
+  assert.equal(sandbox.listFinancialPostings(flow.transactionId).filter((posting) => posting.event_type === "transaction.refunded").length, 4);
   assert.equal(sandbox.wallet.available, 100_000);
   assert.equal(sandbox.verifyReceipt(sandbox.getTransaction(flow.transactionId).transaction.receipt_id).valid, true);
   await assert.rejects(

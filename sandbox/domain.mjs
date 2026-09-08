@@ -29,6 +29,7 @@ export class ApiError extends Error {
 const prefix = (value) => `${value}_${randomUUID().replaceAll("-", "").slice(0, 16)}`;
 const clone = (value) => structuredClone(value);
 const hash = (value) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
+const accountToken = (value) => String(value ?? "unknown").replace(/[^A-Za-z0-9_-]/g, "_").slice(0, 120) || "unknown";
 
 const budgetScopeTypes = new Set(["workspace", "project", "account", "agent"]);
 const budgetPeriods = new Set(["lifetime", "calendar_month", "rolling_24h"]);
@@ -733,6 +734,105 @@ export class Bu2Sandbox {
     return postings;
   }
 
+  addSettlementPostings(event, transaction, intent) {
+    const postings = [
+      {
+        id: prefix("pst"),
+        event_id: event.id,
+        event_type: event.type,
+        transaction_id: transaction.id,
+        budget_id: null,
+        source_id: transaction.id,
+        direction: "debit",
+        account: `payable.payee:${accountToken(intent.payee_account_id)}`,
+        amount_value: transaction.settled_amount.value,
+        currency: transaction.settled_amount.currency,
+        created_at: event.created_at,
+      },
+      {
+        id: prefix("pst"),
+        event_id: event.id,
+        event_type: event.type,
+        transaction_id: transaction.id,
+        budget_id: null,
+        source_id: transaction.id,
+        direction: "credit",
+        account: `cash.wallet:${accountToken(intent.payer_account_id)}`,
+        amount_value: transaction.settled_amount.value,
+        currency: transaction.settled_amount.currency,
+        created_at: event.created_at,
+      },
+    ];
+    for (const posting of postings) this.financialPostings.set(posting.id, posting);
+    return postings;
+  }
+
+  addRefundPostings(event, transaction, refund, intent) {
+    const postings = [
+      {
+        id: prefix("pst"),
+        event_id: event.id,
+        event_type: event.type,
+        transaction_id: transaction.id,
+        budget_id: null,
+        source_id: refund.id,
+        direction: "debit",
+        account: `cash.wallet:${accountToken(intent.payer_account_id)}`,
+        amount_value: refund.amount.value,
+        currency: refund.amount.currency,
+        created_at: event.created_at,
+      },
+      {
+        id: prefix("pst"),
+        event_id: event.id,
+        event_type: event.type,
+        transaction_id: transaction.id,
+        budget_id: null,
+        source_id: refund.id,
+        direction: "credit",
+        account: `payable.payee:${accountToken(intent.payee_account_id)}`,
+        amount_value: refund.amount.value,
+        currency: refund.amount.currency,
+        created_at: event.created_at,
+      },
+    ];
+    for (const posting of postings) this.financialPostings.set(posting.id, posting);
+    return postings;
+  }
+
+  addProviderFeePostings(event, fee) {
+    const postings = [
+      {
+        id: prefix("pst"),
+        event_id: event.id,
+        event_type: event.type,
+        transaction_id: fee.source_type === "payment" || fee.source_type === "refund" ? fee.source_id : null,
+        budget_id: null,
+        source_id: fee.id,
+        direction: "debit",
+        account: `expense.provider_fee:${accountToken(fee.provider)}`,
+        amount_value: fee.amount.value,
+        currency: fee.amount.currency,
+        created_at: event.created_at,
+      },
+      {
+        id: prefix("pst"),
+        event_id: event.id,
+        event_type: event.type,
+        transaction_id: fee.source_type === "payment" || fee.source_type === "refund" ? fee.source_id : null,
+        budget_id: null,
+        source_id: fee.id,
+        direction: "credit",
+        account: `cash.account:${accountToken(fee.account_id)}`,
+        amount_value: fee.amount.value,
+        currency: fee.amount.currency,
+        created_at: event.created_at,
+      },
+    ];
+    for (const posting of postings) this.financialPostings.set(posting.id, posting);
+    return postings;
+  }
+
   async verifyInboundPayment(receivableId, input, key) {
     return this.runIdempotentAsync(
       `receivables/${receivableId}/collections`,
@@ -1157,7 +1257,8 @@ export class Bu2Sandbox {
       if (this.providerFees.has(fee.id)) throw new ApiError(409, "conflict", "provider_fee_id_exists", "Provider fee ID already exists.");
       validateDate(fee.observed_at, "observed_at");
       this.providerFees.set(fee.id, fee);
-      this.event("reconciliation.fee_recorded", fee);
+      const event = this.event("reconciliation.fee_recorded", fee);
+      this.addProviderFeePostings(event, fee);
       return this.providerFeeView(fee);
     });
   }
@@ -2525,7 +2626,8 @@ export class Bu2Sandbox {
     refund.refunded_at = transaction.last_refunded_at;
     const intent = this.intents.get(transaction.payment_intent_id);
     if (intent && transaction.status === "refunded") intent.status = "refunded";
-    this.event("transaction.refunded", { ...transaction, refund_id: refund.id, refund_amount: refund.amount });
+    const event = this.event("transaction.refunded", { ...transaction, refund_id: refund.id, refund_amount: refund.amount });
+    this.addRefundPostings(event, transaction, refund, intent);
   }
 
   async requestRefund(transactionId, input, key) {
@@ -2696,7 +2798,8 @@ export class Bu2Sandbox {
     intent.status = "settled";
     const quote = this.quotes.get(intent.quote_id);
     quote.status = "accepted";
-    this.event("transaction.settled", transaction);
+    const settlementEvent = this.event("transaction.settled", transaction);
+    this.addSettlementPostings(settlementEvent, transaction, intent);
     const signedAt = new Date().toISOString();
     const receiptIssuerId = `bu2-reference-server:${this.environmentConfig.environment}`;
     const receiptPayload = {

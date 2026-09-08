@@ -106,6 +106,8 @@ test("F14 records provider fees and creates a matched reconciliation run", async
   assert.equal(run.unknown_count, 0);
   assert.deepEqual(run.totals.CNY, { payments: 300, collections: 200, refunds: 100, fees: 10 });
   assert.equal(paymentFee.status, "reported");
+  assert.equal(sandbox.listFinancialPostings().length, 12);
+  assert.equal(sandbox.listFinancialPostings().filter((posting) => posting.event_type === "reconciliation.fee_recorded").length, 6);
   assert.equal(sandbox.getReconciliationRun(run.id).id, run.id);
   ledger.close();
 });

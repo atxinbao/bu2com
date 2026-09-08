@@ -60,11 +60,12 @@ test("F07 creates a budget hold and consumes it with immutable financial posting
   assert.equal(settled.budget_hold.status, "consumed");
   assert.equal(settled.budget.active_hold_total, 0);
   assert.equal(settled.budget.consumed_total, 3900);
-  assert.equal(settled.financial_postings.length, 4);
+  assert.equal(settled.financial_postings.length, 6);
   assert.deepEqual(
     settled.financial_postings.map((posting) => posting.direction),
-    ["debit", "credit", "debit", "credit"],
+    ["debit", "credit", "debit", "credit", "debit", "credit"],
   );
+  assert.equal(settled.financial_postings.filter((posting) => posting.event_type === "transaction.settled").length, 2);
   assert.equal(sandbox.listBudgets()[0].available_minor, 1100);
   ledger.close();
 });
