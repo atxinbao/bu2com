@@ -136,7 +136,7 @@
         <p class="eyebrow">BU2.COM · AUDITABLE CHANGE HISTORY</p>
         <h1>系统变更日志</h1>
         <p class="lead">记录 BU2 从代码到金融业务行为的每一次可观察变化，使人类与 Agent 都能回答：改了什么、为什么改、影响什么、如何验证、如何恢复。</p>
-        <div class="meta"><span>格式版本 1.0</span><span>最新更新 2026-09-08</span><span>维护者 BU2 Engineering / Codex</span></div>
+        <div class="meta"><span>格式版本 1.0</span><span>最新更新 2026-09-09</span><span>维护者 BU2 Engineering / Codex</span></div>
       </header>
 
       <section class="contract" id="contract">
@@ -150,6 +150,27 @@
       </section>
 
       <h2 id="unreleased">Unreleased</h2>
+      <article class="release">
+        <div class="release-head">
+          <div><h3>F13 · Bounded Cancellation &amp; Refund Recovery</h3><time datetime="2026-09-09">2026-09-09</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">为 Transaction Core 增加预留态取消、结算后部分/全额退款和 provider-unknown 显式恢复，保持退款事实与 F14 对账分离。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag added">Added</span>新增取消、退款、退款查询与恢复 API，并同步 OpenAPI、Access Contract 和 TypeScript SDK。</li>
+            <li><span class="tag added">Added</span>取消释放 Wallet reserved 与 active Budget Hold；退款使用持久化 <code>Refund</code> 事实，支持部分/全额金额边界和幂等重放。</li>
+            <li><span class="tag added">Added</span>provider-unknown 退款先持久化恢复要求，恢复接口只查询 Adapter 状态，不自动重新提交退款。</li>
+            <li><span class="tag governance">Boundary</span>Simulated Adapter 仅用于本地验收；x402 没有标准退款原语时失败关闭，F14 负责财务对账，Live/Mainnet、Hosted、托管和真实 Provider 退款继续关闭。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R2 · 取消、退款状态和恢复行为</span></div>
+          <div><b>验证</b><span>F13 定向 5/5（含并发退款）；Sandbox 全量 144/144；SDK 10/10；契约与 Prototype 门禁记录在 PR 中</span></div>
+          <div><b>恢复</b><span>重复请求复用 Idempotency Claim；未知 Provider 结果只能通过显式恢复推进，禁止自动重付</span></div>
+        </div>
+      </article>
       <article class="release">
         <div class="release-head">
           <div><h3>F12 · Recoverable Paid Access</h3><time datetime="2026-09-08">2026-09-08</time></div>

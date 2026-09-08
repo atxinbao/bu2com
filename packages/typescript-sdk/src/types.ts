@@ -34,6 +34,11 @@ export type SettlementRecoveryResult = components["schemas"]["SettlementRecovery
 export type Transaction = components["schemas"]["Transaction"];
 export type TransactionPage = components["schemas"]["TransactionPage"];
 export type TransactionView = components["schemas"]["TransactionView"];
+export type Cancellation = components["schemas"]["Cancellation"];
+export type CancellationResult = components["schemas"]["CancellationResult"];
+export type Refund = components["schemas"]["Refund"];
+export type RefundRequest = components["schemas"]["RefundRequest"];
+export type RefundResult = components["schemas"]["RefundResult"];
 
 export type AuthorizationDecision = NonNullable<
   paths["/payment_intents/{payment_intent_id}/authorization"]["post"]["requestBody"]

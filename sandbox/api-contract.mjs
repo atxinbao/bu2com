@@ -222,6 +222,29 @@ const schemas = {
   },
   settlement: { type: "object", additionalProperties: false },
   settlementRecovery: { type: "object", additionalProperties: false },
+  cancellation: {
+    type: "object",
+    additionalProperties: false,
+    properties: { reason: { type: "string", maxLength: 500 } },
+  },
+  refund: {
+    type: "object",
+    additionalProperties: false,
+    required: ["amount"],
+    properties: {
+      amount: {
+        type: "object",
+        additionalProperties: false,
+        required: ["value", "currency"],
+        properties: {
+          value: { type: "integer", minimum: 1 },
+          currency: { type: "string", pattern: "^[A-Z]{3}$" },
+        },
+      },
+      reason: { type: "string", maxLength: 500 },
+    },
+  },
+  refundRecovery: { type: "object", additionalProperties: false },
   webhookSubscription: {
     type: "object",
     additionalProperties: false,

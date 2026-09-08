@@ -222,6 +222,13 @@ export function permissionForRequest(method, pathname) {
   ) {
     return "settlements:recover";
   }
+  if (method === "POST" && /^\/v1\/transactions\/[^/]+\/cancellations$/.test(pathname)) {
+    return "transactions:cancel";
+  }
+  if (method === "GET" && pathname === "/v1/refunds") return "refunds:read";
+  if (method === "GET" && /^\/v1\/refunds\/[^/]+$/.test(pathname)) return "refunds:read";
+  if (method === "POST" && /^\/v1\/transactions\/[^/]+\/refunds$/.test(pathname)) return "refunds:create";
+  if (method === "POST" && /^\/v1\/refunds\/[^/]+\/recoveries$/.test(pathname)) return "refunds:recover";
   if (method === "GET" && /^\/v1\/receipts\/[^/]+$/.test(pathname)) {
     return "receipts:read";
   }

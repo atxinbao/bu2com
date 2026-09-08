@@ -1,5 +1,26 @@
 # F12 Recoverable Paid Access 自主审查报告
 
+# F13 有界取消与退款恢复自主审查报告
+
+日期：2026-09-09
+审查者：Codex（Contributor / Verifier，非 R2 Approver）
+分支：`feat/bounded-refunds-recovery`
+
+## 结果
+
+| 维度 | 得分 | 结论 |
+| --- | ---: | --- |
+| 需求覆盖 | 19/20 | 覆盖取消、部分/全额退款、恢复、状态和 F14 边界 |
+| 技术实现 | 19/20 | 复用现有快照、Claim、Wallet CAS、Adapter Operation 与事件 Outbox |
+| 金融边界 | 20/20 | 退款金额受 settled 剩余值约束；Budget 历史不被 F13 擅自重写 |
+| 自动化验证 | 20/20 | F13 5/5、Sandbox 144/144、SDK 10/10 |
+| 文档与恢复 | 19/20 | 契约、API、SDK、README、CHANGELOG、testing、verification 已同步；R2 尚待独立审查 |
+| 综合 | **97/100** | 通过本地实现审查，进入 R2 |
+
+## 结论
+
+建议：**通过本地实现，提交 R2 审查**。x402 当前没有标准退款原语，不能把本地 Simulated refund 解释为 Testnet 或生产退款证据；F14 负责后续财务对账。
+
 日期：2026-09-08
 审查者：Codex（Contributor / Verifier，非 R2 Approver）
 任务：从已验证入账的 Collection 授予可恢复 AccessGrant，并保持 DeliveryRecord、Receipt 与 FinancialPosting 独立

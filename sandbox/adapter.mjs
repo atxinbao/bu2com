@@ -39,7 +39,14 @@ export class SimulatedPaymentAdapter {
       provider_reference: `sim_${randomUUID().replaceAll("-", "").slice(0, 16)}`,
       amount_value: amount.value,
       currency: amount.currency,
-      status: operation === "reserve" ? "reserved" : "settled",
+      status:
+        operation === "reserve"
+          ? "reserved"
+          : operation === "cancel"
+            ? "canceled"
+            : operation === "refund"
+              ? "refunded"
+              : "settled",
       created_at: new Date().toISOString(),
     });
     this.observer?.record("adapter", "adapter.operation.completed", {
@@ -68,6 +75,25 @@ export class SimulatedPaymentAdapter {
       transactionId,
       amount,
     );
+  }
+
+  cancel(transactionId, amount) {
+    return this.execute("cancel", `cancel:${transactionId}`, transactionId, amount);
+  }
+
+  refund(transactionId, amount, context = {}) {
+    if (!context.refund_id) throw new ApiError(400, "validation_error", "refund_id_missing", "A refund id is required for provider idempotency.");
+    return this.execute("refund", `refund:${context.refund_id}`, transactionId, amount);
+  }
+
+  recoverRefund(transactionId, amount, context = {}) {
+    if (!context.refund_id) throw new ApiError(400, "validation_error", "refund_id_missing", "A refund id is required for provider recovery.");
+    const existing = this.ledger.getAdapterOperation(`refund:${context.refund_id}`);
+    if (!existing) {
+      return { status: "provider_unknown", reason_code: "refund_operation_missing" };
+    }
+    if (existing.status === "refunded") return existing;
+    return { status: "provider_unknown", reason_code: existing.last_error ?? "refund_recovery_result_unknown" };
   }
 
   verifyInboundPayment({ receivable, input }) {

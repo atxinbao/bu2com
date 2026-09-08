@@ -51,7 +51,8 @@ const executionMutation = (method, pathname) =>
     /^\/v1\/payment_intents\/[^/]+\/authorization$/.test(pathname) ||
     /^\/v1\/payment_intents\/[^/]+\/execution$/.test(pathname) ||
     /^\/v1\/transactions\/[^/]+\/deliveries$/.test(pathname) ||
-    /^\/v1\/transactions\/[^/]+\/settlements$/.test(pathname));
+    /^\/v1\/transactions\/[^/]+\/settlements$/.test(pathname) ||
+    /^\/v1\/transactions\/[^/]+\/(cancellations|refunds)$/.test(pathname));
 
 function environmentDocument(config, sandbox, accessController) {
   const executionEnabled = config.execution_status === "execution_enabled";
@@ -357,6 +358,18 @@ export function createBu2Server({
           200,
           paginateTransactions(visible, url.searchParams),
         );
+      }
+      if (request.method === "GET" && url.pathname === "/v1/refunds") {
+        const visible = activeSandbox.listRefunds().filter((refund) => {
+          try {
+            activeAccess.assertView(actor, activeSandbox.getTransaction(refund.transaction_id), accessContext);
+            return true;
+          } catch (error) {
+            if (error?.code === "resource_not_found") return false;
+            throw error;
+          }
+        });
+        return send(response, 200, { data: visible });
       }
       if (request.method === "GET" && url.pathname === "/v1/webhook_outbox") {
         return send(response, 200, { data: activeLedger.outboxRows() });
@@ -805,6 +818,31 @@ export function createBu2Server({
               validateIdempotencyKey(key),
             ),
           );
+        }
+        if (request.method === "POST" && segments.length === 4 && segments[3] === "cancellations") {
+          const transactionId = validateResourceId(segments[2], "txn", "transaction_id");
+          const view = activeSandbox.getTransaction(transactionId);
+          activeAccess.assertView(actor, view, { ...accessContext, resourceId: transactionId });
+          const body = validateBody("cancellation", await readJson(request));
+          return send(response, 200, await activeSandbox.cancelTransaction(transactionId, body, validateIdempotencyKey(key)));
+        }
+        if (request.method === "POST" && segments.length === 4 && segments[3] === "refunds") {
+          const transactionId = validateResourceId(segments[2], "txn", "transaction_id");
+          const view = activeSandbox.getTransaction(transactionId);
+          activeAccess.assertView(actor, view, { ...accessContext, resourceId: transactionId });
+          const body = validateBody("refund", await readJson(request));
+          return send(response, 200, await activeSandbox.requestRefund(transactionId, body, validateIdempotencyKey(key)));
+        }
+      }
+      if (segments[0] === "v1" && segments[1] === "refunds" && segments[2]) {
+        const refundId = validateResourceId(segments[2], "ref", "refund_id");
+        const refund = activeSandbox.getRefund(refundId);
+        const view = activeSandbox.getTransaction(refund.transaction_id);
+        activeAccess.assertView(actor, view, { ...accessContext, resourceId: refundId });
+        if (request.method === "GET" && segments.length === 3) return send(response, 200, refund);
+        if (request.method === "POST" && segments.length === 4 && segments[3] === "recoveries") {
+          const body = validateBody("refundRecovery", await readJson(request));
+          return send(response, 200, await activeSandbox.recoverRefund(refundId, body, validateIdempotencyKey(key)));
         }
       }
       if (

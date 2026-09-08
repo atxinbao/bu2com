@@ -23,6 +23,8 @@ node sandbox/server.mjs
 
 默认数据库：`sandbox/data/bu2-sandbox.sqlite`。SQLite Schema v13 会为新库写入不可变环境 metadata、持久 Principal/Account/Agent 归属、资金来源、收款目标、版本化 PaymentMandate、PolicyDecision、只追加访问决策、租户 credential generation 与 reset 审计；错环境数据库拒绝启动。没有 metadata 的旧库必须先鉴别，再用一次性 `BU2_CLAIM_LEGACY_DB_ENVIRONMENT=true` 明确认领，不能默认解释为 Sandbox 或 Live。重启服务后资源、钱包、幂等结果、账本、Receipt、身份归属、钱包绑定和 Mandate 决策均会恢复。领域写入先登记数据库 `processing` Claim，再以状态版本 CAS 把资源、余额、LedgerEvent、Webhook Outbox 和幂等终态一次提交；遗留 `processing` 会返回结果未知，禁止自动重放。
 
+F13 增加 `funds_reserved` 交易的有界取消，以及 `settled` 交易的部分/全额退款事实。取消会原子释放 Wallet reserved 和 active Budget Hold；退款持久化为 `Refund` 资源并维持 `refunded ≤ settled ≤ reserved ≤ authorized`。Provider unknown 只能通过显式 recovery 查询推进；当前 x402 Adapter 没有标准退款原语，因此不会伪造退款成功或自动重付。
+
 ## 受控访问
 
 `local` 默认是显式开发开放模式；`sandbox/live` 默认是 `authenticated`。公开接口只有 health、environment 和 Receipt verify。外部凭据元数据通过 `BU2_API_CREDENTIALS_JSON` 注入，必须只包含 token SHA-256 摘要，不得包含原始 key；SDK/MCP 从独立的 `BU2_API_KEY` 读取原始 key。角色、字段和生成辅助函数见 [`ENVIRONMENT_CONTROLLED_ACCESS_V1.md`](../docs/03-technical/ENVIRONMENT_CONTROLLED_ACCESS_V1.md) 与 [`access-control.mjs`](access-control.mjs)。

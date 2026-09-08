@@ -126,6 +126,7 @@ export class Bu2Sandbox {
     this.receipts = new Map(restored.resources.receipts ?? []);
     this.mandates = new Map(restored.resources.mandates ?? []);
     this.policyDecisions = new Map(restored.resources.policy_decisions ?? []);
+    this.refunds = new Map(restored.resources.refunds ?? []);
     this.idempotency = new Map(restored.idempotency ?? []);
     this.events = restored.events ?? [];
     const financial = restored.financial ?? {};
@@ -222,6 +223,7 @@ export class Bu2Sandbox {
         deliveries: [...this.deliveries.entries()].map(([id, value]) => [id, clone(value)]),
         mandates: [...this.mandates.entries()].map(([id, value]) => [id, clone(value)]),
         policy_decisions: [...this.policyDecisions.entries()].map(([id, value]) => [id, clone(value)]),
+        refunds: [...this.refunds.entries()].map(([id, value]) => [id, clone(value)]),
       receipts: [...this.receipts.entries()].map(([id, value]) => [id, clone(value)]),
       },
       wallet: clone(this.wallet),
@@ -245,6 +247,7 @@ export class Bu2Sandbox {
     this.receipts = new Map(snapshot.resources.receipts ?? []);
     this.mandates = new Map(snapshot.resources.mandates ?? []);
     this.policyDecisions = new Map(snapshot.resources.policy_decisions ?? []);
+    this.refunds = new Map(snapshot.resources.refunds ?? []);
     this.wallet = clone(snapshot.wallet);
     this.knownPayees = new Set(snapshot.knownPayees ?? []);
     const financial = snapshot.financial ?? {};
@@ -1305,6 +1308,23 @@ export class Bu2Sandbox {
     this.addBudgetPosting(event, hold, "credit", "budget.spent");
   }
 
+  releaseBudgetHold(transaction) {
+    if (!transaction.budget_hold_id) return;
+    const hold = this.budgetHolds.get(transaction.budget_hold_id);
+    if (!hold) {
+      throw new ApiError(409, "financial_constraint", "budget_hold_not_found", "Transaction budget hold was not found.");
+    }
+    if (hold.status === "released") return;
+    if (hold.status !== "active") {
+      throw new ApiError(409, "invalid_state_transition", "budget_hold_not_releasable", "Only an active budget hold can be released.", { current_state: hold.status });
+    }
+    hold.status = "released";
+    hold.released_at = new Date().toISOString();
+    const event = this.event("budget_hold_released", hold);
+    this.addBudgetPosting(event, hold, "debit", "budget.reserved");
+    this.addBudgetPosting(event, hold, "credit", "budget.available");
+  }
+
   async createPaymentIntent(input, key) {
     return this.runIdempotentAsync("payment_intents", key, input, async () => {
       requireFields(input, [
@@ -1512,6 +1532,15 @@ export class Bu2Sandbox {
       quote: quote ? clone(quote) : null,
       delivery: delivery ? clone(delivery) : null,
       receipt: receiptView,
+      refunds: this.listRefunds(transaction.id),
+      cancellation: transaction.status === "canceled"
+        ? {
+            status: transaction.status,
+            reason: transaction.cancel_reason ?? null,
+            provider_reference: transaction.cancel_provider_reference ?? null,
+            canceled_at: transaction.canceled_at ?? null,
+          }
+        : null,
       payment_channel: this.adapter?.name ?? "none",
       settlement_control: settlementOperation
         ? {
@@ -1824,6 +1853,168 @@ export class Bu2Sandbox {
     );
   }
 
+  async cancelTransaction(transactionId, input, key) {
+    return this.runIdempotentAsync(
+      `transactions/${transactionId}/cancellations`,
+      key,
+      input,
+      async () => {
+        const transaction = this.transactions.get(transactionId);
+        if (!transaction) {
+          throw new ApiError(404, "resource_not_found", "transaction_not_found", "Transaction was not found.");
+        }
+        if (transaction.status !== "funds_reserved") {
+          throw new ApiError(
+            409,
+            "invalid_state_transition",
+            "transaction_not_cancellable",
+            "Only a funds_reserved transaction can be canceled.",
+            { current_state: transaction.status },
+          );
+        }
+        if (typeof this.adapter?.cancel !== "function") {
+          throw new ApiError(
+            409,
+            "invalid_state_transition",
+            "cancellation_unsupported",
+            "The active payment adapter does not support cancellation.",
+          );
+        }
+        const provider = await this.executeAdapter("cancel", transaction.id, transaction.reserved_amount);
+        transaction.status = "canceled";
+        transaction.canceled_at = new Date().toISOString();
+        transaction.cancel_reason = input?.reason ?? null;
+        transaction.cancel_provider_reference = provider?.provider_reference ?? null;
+        this.wallet.reserved -= transaction.reserved_amount.value;
+        this.wallet.available += transaction.reserved_amount.value;
+        this.releaseBudgetHold(transaction);
+        const intent = this.intents.get(transaction.payment_intent_id);
+        if (intent) intent.status = "canceled";
+        this.event("transaction.canceled", transaction);
+        return { transaction: clone(transaction), cancellation: {
+          status: "canceled",
+          provider_reference: transaction.cancel_provider_reference,
+          reason: transaction.cancel_reason,
+        } };
+      },
+    );
+  }
+
+  refundView(refund) {
+    return clone(refund);
+  }
+
+  listRefunds(transactionId = null) {
+    return [...this.refunds.values()]
+      .filter((refund) => transactionId === null || refund.transaction_id === transactionId)
+      .sort((left, right) => right.created_at.localeCompare(left.created_at) || right.id.localeCompare(left.id))
+      .map((refund) => this.refundView(refund));
+  }
+
+  getRefund(id) {
+    const refund = this.refunds.get(id);
+    if (!refund) throw new ApiError(404, "resource_not_found", "refund_not_found", "Refund was not found.");
+    return this.refundView(refund);
+  }
+
+  applyRefund(transaction, refund, provider) {
+    if (refund.status === "refunded") return;
+    const remaining = transaction.settled_amount.value - transaction.refunded_amount.value;
+    if (refund.amount.value > remaining) {
+      throw new ApiError(409, "financial_constraint", "refund_amount_exceeded", "Refund amount exceeds the remaining refundable amount.", { remaining_amount: { value: remaining, currency: transaction.settled_amount.currency } });
+    }
+    transaction.refunded_amount = {
+      value: transaction.refunded_amount.value + refund.amount.value,
+      currency: transaction.settled_amount.currency,
+    };
+    transaction.status = transaction.refunded_amount.value === transaction.settled_amount.value ? "refunded" : "settled";
+    transaction.last_refunded_at = new Date().toISOString();
+    transaction.last_refund_provider_reference = provider?.provider_reference ?? refund.provider_reference ?? null;
+    this.wallet.available += refund.amount.value;
+    refund.status = "refunded";
+    refund.provider_reference = transaction.last_refund_provider_reference;
+    refund.refunded_at = transaction.last_refunded_at;
+    const intent = this.intents.get(transaction.payment_intent_id);
+    if (intent && transaction.status === "refunded") intent.status = "refunded";
+    this.event("transaction.refunded", { ...transaction, refund_id: refund.id, refund_amount: refund.amount });
+  }
+
+  async requestRefund(transactionId, input, key) {
+    return this.runIdempotentAsync(
+      `transactions/${transactionId}/refunds`,
+      key,
+      input,
+      async () => {
+        const transaction = this.transactions.get(transactionId);
+        if (!transaction) throw new ApiError(404, "resource_not_found", "transaction_not_found", "Transaction was not found.");
+        if (!['settled', 'refunded'].includes(transaction.status)) {
+          throw new ApiError(409, "invalid_state_transition", "transaction_not_refundable", "Only a settled transaction can be refunded.", { current_state: transaction.status });
+        }
+        validateAmount(input?.amount);
+        if (input.amount.currency !== transaction.settled_amount.currency || input.amount.value <= 0) {
+          throw new ApiError(400, "validation_error", "invalid_refund_amount", "Refund amount must be positive and use the settlement currency.");
+        }
+        const remaining = transaction.settled_amount.value - transaction.refunded_amount.value;
+        if (input.amount.value > remaining) {
+          throw new ApiError(409, "financial_constraint", "refund_amount_exceeded", "Refund amount exceeds the remaining refundable amount.", { remaining_amount: { value: remaining, currency: transaction.settled_amount.currency } });
+        }
+        if (typeof this.adapter?.refund !== "function") {
+          throw new ApiError(409, "invalid_state_transition", "refund_unsupported", "The active payment adapter does not support refunds.");
+        }
+        const refund = {
+          id: prefix("ref"),
+          transaction_id: transaction.id,
+          payment_intent_id: transaction.payment_intent_id,
+          amount: clone(input.amount),
+          status: "processing",
+          reason: input.reason ?? null,
+          provider_reference: null,
+          created_at: new Date().toISOString(),
+          refunded_at: null,
+          recovery_required: false,
+        };
+        this.refunds.set(refund.id, refund);
+        try {
+          const provider = await this.executeAdapter("refund", transaction.id, refund.amount, { refund_id: refund.id, settlement_provider_reference: transaction.settlement_provider_reference ?? null });
+          this.applyRefund(transaction, refund, provider);
+          return { transaction: clone(transaction), refund: clone(refund) };
+        } catch (error) {
+          if (error?.type !== "provider_unknown" && error?.code !== "refund_result_unknown") throw error;
+          refund.status = "provider_unknown";
+          refund.recovery_required = true;
+          refund.failure_reason = error.code ?? "refund_result_unknown";
+          this.event("refund.provider_unknown", refund);
+          return { transaction: clone(transaction), refund: clone(refund) };
+        }
+      },
+    );
+  }
+
+  async recoverRefund(refundId, input, key) {
+    return this.runIdempotentAsync(
+      `refunds/${refundId}/recoveries`,
+      key,
+      input,
+      async () => {
+        const refund = this.refunds.get(refundId);
+        if (!refund) throw new ApiError(404, "resource_not_found", "refund_not_found", "Refund was not found.");
+        if (refund.status === "refunded") return { transaction: clone(this.transactions.get(refund.transaction_id)), refund: clone(refund), recovery: { status: "refunded" } };
+        if (refund.status !== "provider_unknown") throw new ApiError(409, "invalid_state_transition", "refund_not_recoverable", "Only a provider_unknown refund can be recovered.", { current_state: refund.status });
+        if (typeof this.adapter?.recoverRefund !== "function") throw new ApiError(409, "invalid_state_transition", "refund_recovery_unsupported", "The active payment adapter does not support refund recovery.");
+        const transaction = this.transactions.get(refund.transaction_id);
+        const provider = await this.executeAdapter("recoverRefund", transaction.id, refund.amount, { refund_id: refund.id });
+        if (provider?.status !== "refunded") {
+          refund.recovery_required = true;
+          refund.failure_reason = provider?.reason_code ?? "refund_recovery_result_unknown";
+          this.event("refund.recovery_unknown", refund);
+          return { transaction: clone(transaction), refund: clone(refund), recovery: { status: "provider_unknown", reason_code: refund.failure_reason } };
+        }
+        this.applyRefund(transaction, refund, provider);
+        return { transaction: clone(transaction), refund: clone(refund), recovery: { status: "refunded" } };
+      },
+    );
+  }
+
   completeSettlement(transaction, settledAmount, provider) {
     transaction.status = "settled";
     transaction.settled_amount = settledAmount;
@@ -1912,7 +2103,7 @@ export class Bu2Sandbox {
     const transaction = this.transactions.get(receipt.transaction_id);
     const settlementConfirmed = Boolean(
       transaction &&
-        transaction.status === "settled" &&
+        ["settled", "refunded"].includes(transaction.status) &&
         transaction.receipt_id === receipt.id &&
         transaction.settlement_id === receipt.settlement_id &&
         (transaction.settlement_provider_reference ?? null) === receipt.provider_reference &&

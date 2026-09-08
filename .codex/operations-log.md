@@ -1,5 +1,15 @@
 # ENV-03 操作日志
 
+## 2026-09-09 · F13 Bounded Cancellation & Refund Recovery
+
+- Tool: `git fetch --prune`, `git merge --ff-only`, `git branch -d`; result: confirmed PR #38 merged at `dcc9c2d`, synchronized `main`, deleted local F12 branch and created `feat/bounded-refunds-recovery`.
+- Tool: `graphify query`; result: traced F13 to existing Transaction state machine, Wallet/Budget Hold postings, Adapter idempotency and explicit recovery boundaries; F14 remains owner of reconciliation.
+- Tool: `apply_patch`; result: added atomic reserved cancellation, persistent Refund resources, partial/full refund invariant, provider-unknown recovery, HTTP/OpenAPI/Access Contract/SDK surfaces and F13 tests.
+- Tool: `node --test sandbox/f13.test.mjs sandbox/f13-http.test.mjs`; result: 5/5 passed, including serialized concurrent refunds.
+- Tool: `npm --prefix sandbox test`; result: 144/144 passed.
+- Tool: `npm --prefix packages/typescript-sdk run generate && npm --prefix packages/typescript-sdk run format && npm --prefix packages/typescript-sdk test`; result: generated contract, format, lint, typecheck, build and 10/10 tests passed.
+- Boundary: F13 remains Local/Simulation and existing Sandbox/Testnet contract only; x402 refund is unsupported and fails closed; no automatic refund replay, F14 reconciliation, Hosted, Live/Mainnet or custody capability was enabled.
+
 ## 2026-09-08 · F12 Recoverable Paid Access implementation
 
 - Tool: `git fetch --prune`, `git switch`, `git pull`, `git branch -d`; result: verified F11 PR #37 merged at `67679f5`, synchronized `main`, confirmed no remaining local feature branch, and created `feat/recoverable-paid-access`.

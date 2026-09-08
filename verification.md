@@ -1,5 +1,13 @@
 # BU2 Product v0.1 验证结论
 
+## 2026-09-09 · F13 有界取消与退款恢复
+
+本轮在 Transaction Core 上实现预留态取消、结算后部分/全额退款和 provider-unknown 显式恢复。取消释放 Wallet reserved 与 active Budget Hold；退款使用持久化 `Refund` 资源，不改变已消费 Budget 历史，F14 继续负责对账。
+
+验证结果：F13 定向 5/5（含并发退款）、Sandbox 全量 144/144、SDK 全量 10/10 通过；契约验证、Prototype lint/build 和 diff 检查通过。
+
+边界：F13 不提供真实 Provider 退款，不自动重试 provider-unknown，不实现 F14 财务对账，不启用 Hosted、Live/Mainnet、托管或生产凭证。
+
 ## 2026-09-08 · F12 Recoverable Paid Access
 
 执行者：Codex
