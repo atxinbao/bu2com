@@ -899,6 +899,7 @@ export class Bu2Sandbox {
       const intent = {
         id: prefix("pi"),
         ...clone(input),
+        execution_mode: input.execution_mode ?? "immediate",
         payee_account_id: quote.payee_account_id,
         seller_agent_id: quote.seller_agent_id,
         funding_source_binding_id: fundingBinding?.binding?.id ?? null,
@@ -930,8 +931,66 @@ export class Bu2Sandbox {
           : `payment_intent.${status}`,
         intent,
       );
-      if (decision === "allowed") await this.reserve(intent);
+      if (decision === "allowed" && intent.execution_mode === "immediate") await this.reserve(intent);
       return this.getPaymentIntent(intent.id);
+    });
+  }
+
+  async executePaymentIntent(id, input, key) {
+    return this.runIdempotentAsync(`payment_intents/${id}/execution`, key, input, async () => {
+      const intent = this.intents.get(id);
+      if (!intent) {
+        throw new ApiError(404, "resource_not_found", "payment_intent_not_found", "Payment intent was not found.");
+      }
+      if (intent.status === "funds_reserved") return clone(intent);
+      if (intent.status !== "authorized") {
+        if (intent.status === "requires_authorization") {
+          throw new ApiError(
+            409,
+            "authorization_required",
+            "operator_approval_required",
+            "This payment intent requires explicit approval and cannot be executed autonomously.",
+          );
+        }
+        throw new ApiError(
+          409,
+          "invalid_state_transition",
+          "intent_not_executable",
+          "Only an authorized payment intent can be executed.",
+          { current_state: intent.status },
+        );
+      }
+      if (intent.authorization?.decision !== "allowed" || intent.policy_decision?.decision !== "approved") {
+        throw new ApiError(
+          403,
+          "authorization_error",
+          "policy_decision_not_approved",
+          "Autonomous execution requires an approved PaymentMandate decision.",
+        );
+      }
+      const mandate = this.mandates.get(intent.payment_mandate_id);
+      if (mandate && !mandate.legacy) {
+        if (mandate.status !== "active") {
+          throw new ApiError(
+            409,
+            "authorization_error",
+            "mandate_not_active",
+            "The PaymentMandate is no longer active.",
+            { mandate_id: mandate.id, mandate_version: intent.authorization.mandate_version },
+          );
+        }
+        if (mandate.version !== intent.authorization.mandate_version) {
+          throw new ApiError(
+            409,
+            "concurrency_conflict",
+            "mandate_version_conflict",
+            "PaymentMandate version changed before execution.",
+            { current_version: mandate.version, expected_version: intent.authorization.mandate_version },
+          );
+        }
+      }
+      this.event("payment_intent.execution_requested", intent);
+      return this.reserve(intent);
     });
   }
 

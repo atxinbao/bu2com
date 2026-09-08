@@ -270,6 +270,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/payment_intents/{payment_intent_id}/execution": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Execute an already approved payment intent without operator approval */
+        post: operations["executePaymentIntent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/transactions": {
         parameters: {
             query?: never;
@@ -1043,6 +1063,11 @@ export interface components {
             payment_mandate_id: string;
             amount: components["schemas"]["Amount"];
             purpose: string;
+            /**
+             * @description 可选；未提供时默认为 immediate。
+             * @enum {string}
+             */
+            execution_mode?: "immediate" | "deferred";
             asset?: string;
             network?: string;
             funding_source_id?: string;
@@ -1093,6 +1118,8 @@ export interface components {
             payment_mandate_id: string;
             amount: components["schemas"]["Amount"];
             purpose: string;
+            /** @enum {string} */
+            execution_mode?: "immediate" | "deferred";
             external_context?: components["schemas"]["ExternalContext"];
             metadata?: {
                 [key: string]: string;
@@ -1760,6 +1787,40 @@ export interface operations {
                 headers: {
                     "X-Request-Id": components["headers"]["RequestId"];
                     "X-Trace-Id": components["headers"]["TraceId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentIntent"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            409: components["responses"]["Conflict"];
+            413: components["responses"]["RequestTooLarge"];
+            415: components["responses"]["UnsupportedMediaType"];
+        };
+    };
+    executePaymentIntent: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                payment_intent_id: components["parameters"]["PaymentIntentId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": Record<string, never>;
+            };
+        };
+        responses: {
+            /** @description Executed or previously reserved payment intent */
+            200: {
+                headers: {
                     [name: string]: unknown;
                 };
                 content: {

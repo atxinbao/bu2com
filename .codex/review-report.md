@@ -1,3 +1,46 @@
+# F09a 自主支付执行自主审查报告
+
+日期：2026-09-08
+审查者：Codex（Contributor / Verifier，非 R2 Approver）
+任务：在 F08 已批准 PaymentIntent 上提供 Agent 自主执行命令
+分支：`feat/autonomous-payment-execution`
+
+## 评分
+
+| 维度 | 得分 | 依据 |
+| --- | ---: | --- |
+| 需求完整性 | 19/20 | 覆盖 immediate/deferred 模式、显式执行端点、幂等、人工审批边界和 Mandate 版本复核；未知 Provider 结果恢复留给 F09b |
+| 技术实现 | 19/20 | 复用现有 `reserve()`、Wallet CAS、Budget Hold、LedgerEvent、Webhook Outbox 与 SQLite 原子提交；新增权限、OpenAPI、SDK 和 HTTP 路由 |
+| 金融不变量 | 20/20 | review-required/denied 不可绕过；暂停、撤销、过期和版本漂移失败关闭；执行重放不重复预留 |
+| 自动化验证 | 20/20 | 定向领域/HTTP 4/4、Sandbox 127/127、Contract 63 + MCP 6、SDK 10/10、Prototype lint/build 和 diff 检查通过 |
+| 文档与边界 | 19/20 | 产品/技术 README、OpenAPI、SDK、Changelog、验证、测试和操作日志已同步；R2 独立 Domain + Architecture 审查尚未完成 |
+
+综合评分：97/100
+
+## 结论
+
+建议：**通过本地实现，进入 R2 独立 Domain 与 Architecture 审查**。
+
+F09a 只让 Agent 执行已经由 F08 `PolicyDecision=approved` 授权的 deferred PaymentIntent。它不把执行命令当作新的授权，不替 review-required 任务提供旁路，并将 Adapter 超时/未知结果恢复留给 F09b。默认 `immediate` 行为保持现有调用兼容；真实 Testnet、Hosted、Live/Mainnet、生产凭证和托管继续关闭。
+
+## 核对
+
+- [x] `execution_mode` 可选，未提供时默认为 `immediate`。
+- [x] deferred Intent 在已批准时进入 `authorized`，随后由 Agent 调用 `/execution`。
+- [x] `funds_reserved` 重放返回现有结果，避免重复余额预留。
+- [x] `review_required`、denied、非 active Mandate 和 Mandate 版本冲突均失败关闭。
+- [x] HTTP 路由、权限、OpenAPI 和 TypeScript SDK 已对齐。
+- [x] 定向领域、HTTP、全量 Sandbox、契约、SDK 和 Prototype 验证通过。
+- [ ] R2 独立 Domain + Architecture 审查尚未完成。
+
+## 残余风险
+
+1. F09a 不处理 Adapter unknown result；F09b 必须在不重复付款的前提下查询并恢复现有 attempt。
+2. 本地测试覆盖的是 Local/Simulation；Sandbox/Testnet 双向真实收付仍需 F15/F16 证据门禁。
+3. `createPaymentMandate()` 的真实 Funding Source / Receiving Target 持久绑定校验沿用 F08 现状，后续仍需独立审查其生产化边界。
+
+---
+
 # ENV-06 自主审查报告
 
 日期：2026-09-06  

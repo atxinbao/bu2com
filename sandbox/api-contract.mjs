@@ -118,6 +118,7 @@ const schemas = {
       payment_mandate_id: identifier("mdt"),
       amount,
       purpose: { type: "string", minLength: 1, maxLength: 500 },
+      execution_mode: { type: "string", enum: ["immediate", "deferred"] },
       merchant: { type: "string", minLength: 1, maxLength: 255 },
       category: { type: "string", minLength: 1, maxLength: 120 },
       asset: { type: "string", minLength: 1, maxLength: 120 },
@@ -152,6 +153,10 @@ const schemas = {
       decision: { type: "string", enum: ["authorize", "decline"] },
       reason: { type: "string", maxLength: 500 },
     },
+  },
+  executePaymentIntent: {
+    type: "object",
+    additionalProperties: false,
   },
   deliveryEvidence: {
     type: "object",

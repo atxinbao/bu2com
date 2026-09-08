@@ -9,7 +9,7 @@ BU2.com 是 Agent 的 AI 收付平台。它嵌入 ChatGPT、Codex、Claude 和�
 | 项目 | 当前基线 |
 | --- | --- |
 | 项目阶段 | Phase 0 · local execution / Sandbox architecture |
-| 当前工程关卡 | F08 · 版本化 Payment Mandate 运行时实现，待 R2 审查 |
+| 当前工程关卡 | F09a · 自主支付执行运行时实现，待 R2 审查 |
 | 产品定义 | Product v0.3 · Transaction-first |
 | API 契约 | Agent Payment API v0.3.0 |
 | Reference Server | v0.17 · Node.js + SQLite WAL + 持久身份、钱包绑定与版本化 Mandate |
@@ -77,6 +77,7 @@ BU2 将授权、资金预留、交付、结算和退款保存为不同事实。�
 - HTTP、SDK tarball 和 MCP stdio 三条全新临时项目接入证据；均在 15 分钟内生成有效 Local Simulation Receipt。
 - Receipt v0.3：Ed25519、RFC 8785 JCS、环境/链/后端/issuer 签名绑定，以及签名、签发方、结算和环境四项独立验证；v0.2 历史签名字节保持可验证。
 - 版本化 PaymentMandate：draft/active/suspended/revoked/expired 状态机、Funding Source/Receiving Target 绑定、确定性 PolicyDecision、版本冲突和幂等状态转换；持久化环境激活时强制使用 active verified 钱包绑定。
+- F09a 自主支付执行：即时或延迟执行模式；已批准的 deferred PaymentIntent 可由 Agent 通过幂等执行命令预留资金，review_required 与 Mandate 失效均失败关闭。
 - 中英文 Transaction-first 产品界面，可展示真实 Reference API 数据并在离线时降级到演示数据。
 - OpenAPI 3.1、Agent 原生 MCP 工具和完整交易示例。
 - 同一不可变制品候选提升清单、配置漂移阻断、SQLite Online Backup、同环境隔离恢复演练与脱敏运营快照。

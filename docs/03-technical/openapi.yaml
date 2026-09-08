@@ -324,6 +324,32 @@ paths:
         '409': { $ref: '#/components/responses/Conflict' }
         '413': { $ref: '#/components/responses/RequestTooLarge' }
         '415': { $ref: '#/components/responses/UnsupportedMediaType' }
+  /payment_intents/{payment_intent_id}/execution:
+    parameters:
+      - $ref: '#/components/parameters/TraceId'
+    post:
+      operationId: executePaymentIntent
+      summary: Execute an already approved payment intent without operator approval
+      parameters:
+        - $ref: '#/components/parameters/PaymentIntentId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+      responses:
+        '200':
+          description: Executed or previously reserved payment intent
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaymentIntent' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '413': { $ref: '#/components/responses/RequestTooLarge' }
+        '415': { $ref: '#/components/responses/UnsupportedMediaType' }
   /transactions:
     parameters:
       - $ref: '#/components/parameters/TraceId'
@@ -1264,6 +1290,7 @@ components:
         payment_mandate_id: { type: string, pattern: '^mdt_[A-Za-z0-9_-]+$', maxLength: 255 }
         amount: { $ref: '#/components/schemas/Amount' }
         purpose: { type: string, minLength: 1, maxLength: 500 }
+        execution_mode: { type: string, enum: [immediate, deferred], description: '可选；未提供时默认为 immediate。' }
         asset: { type: string, minLength: 1, maxLength: 120 }
         network: { type: string, minLength: 1, maxLength: 120 }
         funding_source_id: { type: string, pattern: '^fund_[A-Za-z0-9_-]+$', maxLength: 255 }
@@ -1316,6 +1343,7 @@ components:
         payment_mandate_id: { type: string, pattern: '^mdt_[A-Za-z0-9_-]+$', maxLength: 255 }
         amount: { $ref: '#/components/schemas/Amount' }
         purpose: { type: string, minLength: 1, maxLength: 500 }
+        execution_mode: { type: string, enum: [immediate, deferred] }
         external_context: { $ref: '#/components/schemas/ExternalContext' }
         metadata:
           type: object

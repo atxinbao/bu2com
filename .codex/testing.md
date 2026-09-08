@@ -1,5 +1,21 @@
 # ENV-02 测试记录
 
+## 2026-09-08 · F09a 自主支付执行
+
+执行者：Codex
+
+| 范围 | 命令 | 结果 |
+| --- | --- | --- |
+| F09a 定向领域与 HTTP | `node --test sandbox/f09a.test.mjs sandbox/f09a-http.test.mjs` | 4/4 通过 |
+| Reference Server 全量 | `npm --prefix sandbox test` | 127/127 通过 |
+| API/MCP Contract | `node docs/03-technical/validate-contract.mjs` | 63 invariants、6 MCP tools 通过 |
+| TypeScript SDK | `npm --prefix packages/typescript-sdk test` | generated/format/lint/typecheck/build、10/10 通过 |
+| Prototype | `npm --prefix prototype run lint && npm --prefix prototype run build` | 通过 |
+| Diff | `git diff --check` | 通过 |
+
+未运行真实 Hosted、Base Sepolia 双向付款、Mainnet、生产凭证或托管；这些不属于 F09a 本地准入范围。
+
+
 日期：2026-09-06  
 执行者：Codex
 
@@ -213,3 +229,7 @@
 - `npm --prefix prototype run lint && npm --prefix prototype run build`：通过。
 - `git diff --check`：通过。
 - 未执行：真实 Sandbox/Testnet 双向收付、Hosted E2E、Live/Mainnet、托管或生产凭证验证；F08 明确不开放这些能力。
+## 2026-09-08 · F09a 自主支付执行
+
+- `node --test sandbox/f09a.test.mjs`：3/3 通过，覆盖 approved deferred 执行、幂等重放、review_required 绕过阻断和 Mandate 暂停失败关闭。
+- 全量 Sandbox、SDK、契约、Prototype 与 diff 验证待本轮文档同步后执行。

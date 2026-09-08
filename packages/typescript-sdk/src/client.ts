@@ -483,6 +483,22 @@ export class Bu2Client {
     );
   }
 
+  executePaymentIntent(
+    paymentIntentId: string,
+    options: Bu2MutationOptions,
+  ): Promise<PaymentIntent> {
+    return this.execute({ name: "executePaymentIntent", mutation: true }, options, (signal) =>
+      this.api.POST("/payment_intents/{payment_intent_id}/execution", {
+        params: {
+          path: { payment_intent_id: paymentIntentId },
+          header: mutationHeaders(options),
+        },
+        body: {},
+        signal,
+      }),
+    );
+  }
+
   listTransactions(
     query: TransactionListQuery = {},
     options: Bu2RequestOptions = {},
