@@ -1,5 +1,32 @@
 # F16a 内部 Sandbox 自主双向收付 Beta 候选自主审查报告
 
+# F16b Hosted Sandbox 外部集成基础准入自主审查报告
+
+日期：2026-09-09
+审查者：Codex（Contributor / Verifier，非 R2 Approver）
+分支：`test/hosted-sandbox-foundation-gate`
+
+## 结果
+
+| 维度 | 得分 | 结论 |
+| --- | ---: | --- |
+| 需求覆盖 | 19/20 | 覆盖 Candidate、Activation、Evidence 组合资格与 Hosted/Live 边界 |
+| 技术实现 | 19/20 | 组合既有验证器，不新增交易核心、Schema、Provider 或 Secret Manager |
+| 环境边界 | 20/20 | 本地结果不授权公网部署、Testnet 付款或 Live/Mainnet |
+| 自动化验证 | 20/20 | F16b 定向资格测试 3/3，通过正常与负向矩阵 |
+| 文档与恢复 | 19/20 | 产品、技术、路线、README、CHANGELOG、testing、verification 和 operations 已同步 |
+| 综合 | **97/100** | 通过本地资格审查，进入 R2 |
+
+## 结论
+
+建议：**通过本地 Hosted foundation qualification，提交 R2 审查**。`env07b_accepted=false` 是强制结果；公网 HTTPS/DNS/TLS、托管 Secret、独立 Activation、外部机器 E2E 和真实 Base Sepolia 双向结算仍需独立执行和取证。
+
+## 残余风险
+
+1. 本地 Candidate/Activation/Evidence fixture 不能证明外部 endpoint、边缘鉴权或真实链上结算。
+2. F16b 不创建云资源、不注入 Secret、不调用真实 Provider，不能作为 Hosted 或 Live 放行依据。
+3. 下一阶段应由具备部署权限的独立审查人决定是否进入 ENV-07B E-T13/E-T14/E-T15。
+
 日期：2026-09-09
 审查者：Codex（Contributor / Verifier，非 R2 Approver）
 分支：`test/internal-sandbox-pay-collect-beta`

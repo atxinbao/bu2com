@@ -49,7 +49,7 @@ BU2 继续定位为嵌入式 Agent AI 收付平台。外部 Agent 在自己的�
 | F15a | `feat(sandbox): add isolated bounded internal execution sessions` | F08、F09a | 已实现；R2；环境激活与业务 Mandate 分开批准 |
 | F15b | `test(operations): verify business load shutdown and financial recovery` | F14、F15a | 已实现；R2 |
 | F16a | `test(sandbox): accept autonomous internal pay-and-collect beta` | F09b、F11、F12、F13、F14、F15b、F02-CI | 本地候选已实现；R2；真实 Sandbox 另行取证 |
-| F16b-ENV07B | `test(hosted): qualify external sandbox integrations for foundation gate` | F16a | R2；部署授权独立 |
+| F16b-ENV07B | `test(hosted): qualify external sandbox integrations for foundation gate` | F16a | 本地基础资格已实现；R2；公网部署授权与真实外部证据独立 |
 
 ## 5. 文档提交规则
 
@@ -64,4 +64,4 @@ D0/D1/D2 文档基线与 F07 代码实现已合并。F08 运行时与 F09a 已�
 
 D2 只改文档；F08/F09a/F10/F11/F12 代码 PR 不启用真实 Testnet 双向收付、Hosted Sandbox、Live/Mainnet、托管或生产凭证，必须独立完成 Domain 与 Architecture R2 审查。F09b 的历史实现已覆盖持久化 payment attempt、unknown-result 冻结和显式 recovery 查询，本轮不重复引入第二套恢复实现。
 
-F12 本地实现已完成，F13 已在不突破当前环境边界的前提下实现有界取消、退款事实与显式恢复；F14 已增加 ProviderFee 与 ReconciliationRun，对账只生成追加快照，不改写支付、收款、退款或 Ledger 历史事实；F15b 已在固定候选上完成有限业务负载、停机、重启、无重复结算和对账恢复演练；F16a 已完成本地预授权 Agent 双向收付、故障、退款与对账候选验收。F14/F15b/F16a 仍不得被解释为真实 Provider / Base Sepolia 对账、生产财务结算、Hosted 准入或外部 Beta 放行。
+F12 本地实现已完成，F13 已在不突破当前环境边界的前提下实现有界取消、退款事实与显式恢复；F14 已增加 ProviderFee 与 ReconciliationRun，对账只生成追加快照，不改写支付、收款、退款或 Ledger 历史事实；F15b 已在固定候选上完成有限业务负载、停机、重启、无重复结算和对账恢复演练；F16a 已完成本地预授权 Agent 双向收付、故障、退款与对账候选验收；F16b 已完成 Candidate、Activation、Evidence 和部署边界的本地基础资格检查。F14/F15b/F16a/F16b 仍不得被解释为真实 Provider / Base Sepolia 对账、生产财务结算、Hosted 准入或外部 Beta 放行；ENV-07B 仍要求公网 HTTPS/DNS/TLS、托管 Secret、独立 Activation、外部机器鉴权和真实双向 Testnet 证据。

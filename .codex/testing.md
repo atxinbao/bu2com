@@ -1,5 +1,25 @@
 # ENV-02 测试记录
 
+## 2026-09-09 · F16b Hosted Sandbox 外部集成基础准入
+
+执行者：Codex
+
+| 范围 | 命令 | 结果 |
+| --- | --- | --- |
+| F16b foundation qualification | `npm --prefix sandbox run test:f16b-hosted` | 3/3 通过 |
+| Hosted Runtime 回归 | `npm --prefix sandbox run test:hosted-sandbox` | 8/8 通过 |
+| Hosted 部署契约 | `npm --prefix sandbox run test:hosted-deployment` | 2/2 通过 |
+| Hosted Evidence Schema | `npm --prefix sandbox run test:hosted-evidence-schema` | 2/2 通过 |
+| Sandbox 全量 | `npm --prefix sandbox test` | 158/158 通过 |
+| API/MCP Contract | `node docs/03-technical/validate-contract.mjs` | 63 invariants、6 MCP tools 通过 |
+| TypeScript SDK | `npm --prefix packages/typescript-sdk test` | 生成、格式、Lint、类型检查、构建与 10/10 单测通过 |
+| Prototype | `npm --prefix prototype run lint && npm --prefix prototype run build` | 通过 |
+| Diff | `git diff --check` | 通过 |
+
+覆盖 Candidate、Activation、Evidence 的组合资格、制品漂移与候选自授权拒绝、Activation 不匹配、边缘机器鉴权失败和 Live 证据拒绝。结果固定为本地契约资格，`env07b_accepted=false`。
+
+未执行公网 HTTPS/DNS/TLS、托管 Secret、独立外部 Activation、外部机器 E2E、真实 Base Sepolia 双向支付、Live/Mainnet 或托管钱包；这些仍属于 ENV-07B 外部验收。
+
 ## 2026-09-09 · F16a 内部 Sandbox 自主双向收付 Beta 候选
 
 执行者：Codex

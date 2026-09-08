@@ -33,6 +33,7 @@
 | [F15a 内部 Sandbox 执行会话契约](F15A_SANDBOX_EXECUTION_SESSION_CONTRACT.md) | 为外部 Agent 既有工作流提供独立激活、短时、有界的内部执行会话 |
 | [F15b 业务负载、停机与财务恢复验收契约](F15B_OPERATIONS_ACCEPTANCE.md) | 验证有限业务闭环、SQLite 重启、优雅停机、无重复事实与 Sandbox/Testnet 失败关闭 |
 | [F16a 内部 Sandbox 自主双向收付 Beta 验收契约](F16A_INTERNAL_BETA_ACCEPTANCE.md) | 验证预授权 Agent 无逐笔批准完成付款、收款、权益恢复、退款、故障恢复与对账 |
+| [F16b Hosted Sandbox 外部集成基础准入](F16B_HOSTED_QUALIFICATION.md) | 验证 Candidate、Activation、Evidence 和部署边界；不代表公网 ENV-07B 已验收 |
 | [页面与交互规格](INTERACTION_SPEC.md) | Transaction-first P0 的页面、状态、操作和验收标准 |
 | [Transaction-first P0 产品基线](P0_TRANSACTION_FIRST_BASELINE.md) | 当前正式定位、交易契约和原型验收路径 |
 | [Transaction-first P0 验收方案](TRANSACTION_P0_ACCEPTANCE.md) | 当前主路径、辅助路径和 GO/ITERATE/STOP 门槛 |
@@ -55,7 +56,7 @@ Agent 商业账户、信誉与服务网络
 
 ## 当前状态
 
-- 产品阶段：Phase 0 开发（Simulation / Testnet）；F07 已合并，F08～F15b 运行时/验收已实现，F16a 本地 Beta 候选已实现，待各自 R2 Domain 与 Architecture 审查
+- 产品阶段：Phase 0 开发（Simulation / Testnet）；F07 已合并，F08～F15b 运行时/验收已实现，F16a 本地 Beta 候选与 F16b Hosted 基础资格已实现，均待各自 R2 Domain 与 Architecture 审查
 - 产品版本：Product v0.3 Transaction-first
 - 对应商业计划：BP v0.1
 - 更新日期：2026-09-09
