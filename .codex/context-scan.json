@@ -1,0 +1,71 @@
+{
+  "task": "LA-06a local ledger assurance foundation gate",
+  "date": "2026-09-09",
+  "actor": "Codex",
+  "location": {
+    "domain": "sandbox and deploy acceptance evidence",
+    "files": [
+      "sandbox/*.test.mjs",
+      "deploy/*.test.mjs",
+      "deploy/operations-acceptance.mjs",
+      "sandbox/access-control.test.mjs",
+      "sandbox/atomicity.test.mjs",
+      "docs/02-product/PHASE0_ROADMAP_BASELINE.md"
+    ]
+  },
+  "current_state": {
+    "merged_baseline": "1b67a7935867c7018507d5e1024fb9dd10786967",
+    "existing_evidence": [
+      "Sandbox full suite",
+      "cross-tenant access-control tests",
+      "atomicity and unknown-outcome recovery tests",
+      "operations backup/restore tests",
+      "Hosted Sandbox contract tests"
+    ],
+    "missing": "A single reproducible local LA-06 evidence entry with an explicit non-claim for real bilateral Sandbox/Testnet settlement."
+  },
+  "technical_stack": [
+    "Node.js built-in test runner",
+    "npm scripts",
+    "SQLite persistence",
+    "Docker/OrbStack only for existing local deployment acceptance"
+  ],
+  "key_questions": [
+    {
+      "priority": "high",
+      "question": "Can the repository-wide local checks be run from one deterministic command without enabling payment execution?",
+      "answer": "Yes, by composing existing local test and validation commands in a fail-fast acceptance runner."
+    },
+    {
+      "priority": "high",
+      "question": "Can local evidence be mistaken for real Sandbox bilateral settlement?",
+      "answer": "Yes, so the evidence schema must carry separate local_gate and external_sandbox_bilateral fields, with the latter fixed to not_executed."
+    },
+    {
+      "priority": "medium",
+      "question": "Are new transaction or schema changes required?",
+      "answer": "No; LA-06a reuses existing tests and adds only evidence orchestration and documentation."
+    }
+  ],
+  "acceptance_contract": {
+    "inputs": "clean committed checkout and local dependencies",
+    "outputs": "machine-readable LA-06a evidence JSON",
+    "failure": "any local command failure exits non-zero and no pass claim is emitted",
+    "boundaries": [
+      "no Provider call",
+      "no signer or production credential",
+      "no Mainnet or Live execution",
+      "no claim of Base Sepolia bilateral settlement",
+      "E3.1 remains paused"
+    ]
+  },
+  "verification_plan": [
+    "git diff --check",
+    "node deploy/la06a-local-gate.mjs",
+    "node --test deploy/la06a-local-gate.test.mjs",
+    "node docs/03-technical/validate-contract.mjs",
+    "npm --prefix packages/typescript-sdk test",
+    "npm --prefix prototype run lint",
+    "npm --prefix prototype run build"
+  ]
+}

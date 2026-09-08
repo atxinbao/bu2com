@@ -967,3 +967,24 @@ F06b 让 Quote 和 PaymentIntent 能够保留可验证的资金来源与收款�
 1. R2 审查必须由独立人类完成，Codex 不作为批准者。
 2. F15a 尚不等于 Sandbox/Testnet 双向支付验收；F15b/F16a 仍需固定候选上的业务、故障、退款和对账证据。
 3. Live/Mainnet、Hosted、托管钱包和生产凭证继续关闭；ExecutionSession 激活不能绕过环境或 Mandate 门禁。
+## LA-06a 本地全量与隔离准入自主审查
+
+日期：2026-09-09
+审查者：Codex
+风险等级：R2
+
+### 审查结论
+
+建议 **通过 LA-06a 本地实现，提交 R2 审查**。本 PR 只编排已有本地回归并补充确定性金额矩阵与跨租户声明负向测试；不改变交易状态机、Schema、Provider、Signer、Hosted 或 Live 能力。
+
+### 审查清单
+
+- [x] 本地全量 Sandbox、部署/Hosted 契约、API/MCP、SDK 和 Prototype 检查有单一入口。
+- [x] 故障注入、确定性属性检查和跨租户负向测试有独立定向覆盖。
+- [x] 证据输出固定区分本地门禁与外部 Sandbox 双向收付。
+- [x] 失败时 fail-closed，不输出本地通过结论。
+- [x] E3.1、Live/Mainnet、Provider、Signer 和生产凭证保持关闭。
+
+### 风险与未覆盖项
+
+真实公网 Hosted、独立 Activation、Base Sepolia 双向收付和 G-F 独立审查属于 LA-06b，当前未执行。LA-06a 不能作为外部 Beta、完整 Ledger Assurance Gate 或生产财务准入证据。

@@ -42,6 +42,7 @@
 | [LA-04 Collection 持续验证与单次入账](LA04_COLLECTION_CONVERGENCE_CONTRACT.md) | Ledger Assurance Gate 第四项整改：pending 收款持续验证、迟到证据保留与单次过账 |
 | [LA-05a 外部观察对账](LA05A_EXTERNAL_RECONCILIATION_CONTRACT.md) | Ledger Assurance Gate 第五项整改的首个子范围：独立观察、未决队列、外部孤立事实与确定性异常 |
 | [LA-05b 历史账务重放与备份追平](LA05B_HISTORY_REPLAY_CATCHUP_CONTRACT.md) | Ledger Assurance Gate 第五项整改的第二个子范围：期初检查点重放、历史缺口与备份追加事实追平 |
+| [LA-06a 本地全量与隔离准入](LA06A_LOCAL_FOUNDATION_GATE_CONTRACT.md) | Ledger Assurance Gate 第六项整改的本地子范围：全量回归、故障/属性/跨租户证据；不接受真实 Sandbox 双向结算 |
 | [页面与交互规格](INTERACTION_SPEC.md) | Transaction-first P0 的页面、状态、操作和验收标准 |
 | [Transaction-first P0 产品基线](P0_TRANSACTION_FIRST_BASELINE.md) | 当前正式定位、交易契约和原型验收路径 |
 | [Transaction-first P0 验收方案](TRANSACTION_P0_ACCEPTANCE.md) | 当前主路径、辅助路径和 GO/ITERATE/STOP 门槛 |
@@ -64,7 +65,7 @@ Agent 商业账户、信誉与服务网络
 
 ## 当前状态
 
-- 产品阶段：Phase 0 开发（Simulation / Testnet）；F07 已合并，F08～F15b 运行时/验收已实现，F16a 本地 Beta 候选、F16b Hosted 基础资格、LA-01 退款安全整改、LA-02 Journal/Posting 保护、LA-03a 业务事实分录、LA-03b 期初/更正事实、LA-03c 账务投影重建、LA-04 Collection 持续验证、LA-05a 外部观察对账与 LA-05b 历史重放/备份追平已实现，均待各自 R2 Domain 与 Architecture 审查；LA-03 完整范围未完成；E3.1 暂停
+- 产品阶段：Phase 0 开发（Simulation / Testnet）；F07 已合并，F08～F15b 运行时/验收已实现，F16a 本地 Beta 候选、F16b Hosted 基础资格、LA-01 退款安全整改、LA-02 Journal/Posting 保护、LA-03a 业务事实分录、LA-03b 期初/更正事实、LA-03c 账务投影重建、LA-04 Collection 持续验证、LA-05a 外部观察对账、LA-05b 历史重放/备份追平与 LA-06a 本地全量/隔离准入已实现，均待各自 R2 Domain 与 Architecture 审查；LA-03 完整范围未完成；LA-06b 真实 Sandbox 双向证据未执行；E3.1 暂停
 - 产品版本：Product v0.3 Transaction-first
 - 对应商业计划：BP v0.1
 - 更新日期：2026-09-09

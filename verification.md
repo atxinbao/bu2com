@@ -1014,3 +1014,12 @@ npm --prefix sandbox run test:hosted-deployment
 - 其余全量验证将在本 PR 收口后记录。
 
 边界：F09a 不负责 Provider unknown 恢复（F09b），不启用真实 Sandbox/Testnet 双向付款、Hosted、Live/Mainnet、托管或生产凭证。
+## 2026-09-09 · LA-06a 本地全量与隔离准入
+
+- 目标：把 Ledger Assurance Gate 的原仓库全量回归、故障/属性/跨租户边界收敛为可重复的本地证据命令。
+- 新增 `sandbox/la06a.test.mjs`：确定性金额矩阵保持 Journal 借贷平衡，并在身份持久化前拒绝跨租户声明。
+- 新增 `deploy/la06a-local-gate.mjs`：编排 Sandbox、部署/Hosted 契约、API/MCP、TypeScript SDK 和 Prototype 质量门禁，输出 `la06a.v1`。
+- 证据边界：本地命令固定 `execution_status=execution_disabled`、未加载 Signer、未调用 Provider；`external_sandbox_bilateral.accepted=false`。
+- 未执行：公网 Hosted、真实 Base Sepolia 双向收付、独立 Activation、外部团队证据和 G-F 审查。
+
+结论：LA-06a 达到 **GO for R2 review**，仅表示本地全量与隔离证据可重复；不构成完整 Ledger Assurance Gate、真实 Sandbox/Testnet、Hosted 或生产准入。LA-06b 保留真实双向 Sandbox 证据和 G-F 审查。
