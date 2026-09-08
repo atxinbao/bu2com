@@ -14,6 +14,7 @@
     "start": "node server.mjs",
     "start:hosted-sandbox": "node hosted-sandbox.mjs",
     "test": "node --test *.test.mjs",
+    "test:f15b": "node --test f15b.test.mjs",
     "test:deployment-contract": "node --test ../deploy/deployment-contract.test.mjs",
     "test:operations": "node --test ../deploy/operations.test.mjs",
     "test:hosted-sandbox": "node --test ../deploy/hosted-sandbox.test.mjs",

@@ -1,3 +1,24 @@
+# F15b 业务负载、停机与财务恢复自主审查报告
+
+日期：2026-09-09
+审查者：Codex（Contributor / Verifier，非 R2 Approver）
+分支：`test/operations-recovery-evidence`
+
+## 结果
+
+| 维度 | 得分 | 结论 |
+| --- | ---: | --- |
+| 需求覆盖 | 19/20 | 覆盖有限业务负载、收款、退款、手续费、对账、重启和停机 |
+| 技术实现 | 19/20 | 复用现有 Transaction Core、SQLite、幂等和 ReconciliationRun，无第二账本 |
+| 金融边界 | 20/20 | 重启和幂等重放不重复创建事实；Sandbox/Testnet 仍失败关闭 |
+| 自动化验证 | 20/20 | F15b 定向验收 4/4，通过业务、恢复和停机场景 |
+| 文档与恢复 | 19/20 | 契约、路线、README、CHANGELOG、testing、verification 和 operations 已同步；R2 尚待独立审查 |
+| 综合 | **97/100** | 通过本地实现审查，进入 R2 |
+
+## 结论
+
+建议：**通过本地实现，提交 R2 审查**。F15b 只提供固定候选上的 Local/Simulation 运营证据，不能解释为吞吐量 SLO、Hosted 可用性、真实 Base Sepolia 对账或内部 Beta 放行。F16a 仍需独立验收无人值守双向收付、故障、退款与对账。
+
 # F12 Recoverable Paid Access 自主审查报告
 
 # F13 有界取消与退款恢复自主审查报告

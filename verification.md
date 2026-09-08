@@ -1,5 +1,14 @@
 # BU2 Product v0.1 验证结论
 
+# 2026-09-09 · F15b 业务负载、停机与财务恢复验收
+
+执行者：Codex
+分支：`test/operations-recovery-evidence`
+
+- `node --test sandbox/f15b.test.mjs`：4/4 通过，覆盖有限业务负载与 matched 对账、SQLite 重启无重复结算、Sandbox/Testnet `execution_disabled`、持久业务状态下 Reference Server 优雅停机。
+- F15b 仅使用 Local/Simulation；未加载 Signer 或生产凭证，未调用真实 Provider、Base Sepolia、Live/Mainnet、Hosted 或托管能力。
+- 后续完整门禁将在提交前执行：Sandbox 全量、契约验证、SDK 生成/格式/Lint/类型/build、Prototype lint/build 与 `git diff --check`。
+
 ## 2026-09-09 · F15a 有界内部 Sandbox 执行会话
 
 执行者：Codex

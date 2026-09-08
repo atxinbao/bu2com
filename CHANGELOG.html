@@ -152,6 +152,26 @@
       <h2 id="unreleased">Unreleased</h2>
       <article class="release">
         <div class="release-head">
+          <div><h3>F15b · 业务负载、停机与财务恢复验收</h3><time datetime="2026-09-09">2026-09-09</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">将 F12、F13、F14 与 F15a 组合为固定候选上的本地运营演练，验证有限业务负载、优雅停机、SQLite 重启、无重复结算与可重建对账。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag added">Added</span>新增 F15b 定向验收，覆盖 6 笔有界支付、入站收款、部分退款、ProviderFee 与 matched ReconciliationRun。</li>
+            <li><span class="tag changed">Changed</span>将支付预留后的 SQLite 重启、幂等结算重放、服务 SIGTERM 与业务 Quote 持久化纳入同一运营证据。</li>
+            <li><span class="tag governance">Boundary</span>Sandbox/Testnet 保持 <code>execution_disabled</code>；不启用真实 Provider、Hosted、Live/Mainnet、托管或生产凭证。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R2 · 业务负载、停机恢复、财务事实与对账边界，必须独立人工审查后合并</span></div>
+          <div><b>验证</b><span>F15b 定向验收 4/4；完整 Sandbox、契约、SDK、Prototype 与 diff 门禁记录在 PR 中</span></div>
+          <div><b>恢复</b><span>重启后不重复创建 Transaction 或结算事实；对账只生成追加快照，异常停止后保持关闭</span></div>
+        </div>
+      </article>
+      <article class="release">
+        <div class="release-head">
           <div><h3>F15a · 有界内部 Sandbox 执行会话</h3><time datetime="2026-09-09">2026-09-09</time></div>
           <span class="status">Unreleased</span>
         </div>
