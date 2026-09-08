@@ -263,6 +263,9 @@ const databaseEvidence = (path) => {
       "adapter_operations",
       "webhook_outbox",
       "access_decisions",
+      "budgets",
+      "budget_holds",
+      "financial_postings",
     ];
     const factCounts = Object.fromEntries(
       tables.map((table) => [

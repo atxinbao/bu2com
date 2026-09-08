@@ -3,7 +3,7 @@
 日期：2026-09-07
 执行者：Codex
 
-本目录实现 Phase 0 Frozen `/v1` Contract 的本地 SQLite Reference Server。它具备追加账本、Webhook Outbox、模拟支付 Adapter、签名 Receipt、稳定分页与运行时请求校验、基于官方 MCP SDK 的外部 Agent 接入样例，以及基于官方 x402 SDK 的 Base Sepolia `exact` 支付通道；ENV-02–06 已建立环境、客户端、Receipt、隔离容器、受控访问与恢复边界，ENV-07A 增加 Hosted Sandbox 的专用启动和证据门槛。它不持有真实资金，不可用于生产。
+本目录实现 Phase 0 Frozen `/v1` Contract 的本地 SQLite Reference Server。它具备追加账本、Webhook Outbox、模拟支付 Adapter、签名 Receipt、稳定分页与运行时请求校验、基于官方 MCP SDK 的外部 Agent 接入样例，以及基于官方 x402 SDK 的 Base Sepolia `exact` 支付通道；ENV-02–06 已建立环境、客户端、Receipt、隔离容器、受控访问与恢复边界，ENV-07A 增加 Hosted Sandbox 的专用启动和证据门槛。LA-03a 进一步把结算、确认退款和 ProviderFee 事实接入受保护的 Journal/Posting。它不持有真实资金，不可用于生产。
 
 ## 启动
 

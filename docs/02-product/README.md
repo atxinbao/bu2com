@@ -36,6 +36,7 @@
 | [F16b Hosted Sandbox 外部集成基础准入](F16B_HOSTED_QUALIFICATION.md) | 验证 Candidate、Activation、Evidence 和部署边界；不代表公网 ENV-07B 已验收 |
 | [LA-01 持久化退款尝试与未决额度占用](LA01_REFUND_ATTEMPT_CONTRACT.md) | Ledger Assurance Gate 第一项整改：退款前持久化、未知结果占用和同键恢复 |
 | [LA-02 成组 Journal / Posting 保护](LA02_JOURNAL_POSTING_CONTRACT.md) | Ledger Assurance Gate 第二项整改：严格金额、来源引用、借贷平衡和已过账不可变 |
+| [LA-03a 业务资金事实分录](LA03_BUSINESS_POSTINGS_CONTRACT.md) | Ledger Assurance Gate 第三项整改的首个子范围：结算、确认退款与 ProviderFee 接入受保护 Journal/Posting |
 | [页面与交互规格](INTERACTION_SPEC.md) | Transaction-first P0 的页面、状态、操作和验收标准 |
 | [Transaction-first P0 产品基线](P0_TRANSACTION_FIRST_BASELINE.md) | 当前正式定位、交易契约和原型验收路径 |
 | [Transaction-first P0 验收方案](TRANSACTION_P0_ACCEPTANCE.md) | 当前主路径、辅助路径和 GO/ITERATE/STOP 门槛 |
@@ -58,7 +59,7 @@ Agent 商业账户、信誉与服务网络
 
 ## 当前状态
 
-- 产品阶段：Phase 0 开发（Simulation / Testnet）；F07 已合并，F08～F15b 运行时/验收已实现，F16a 本地 Beta 候选、F16b Hosted 基础资格、LA-01 退款安全整改与 LA-02 Journal/Posting 保护已实现，均待各自 R2 Domain 与 Architecture 审查；E3.1 暂停
+- 产品阶段：Phase 0 开发（Simulation / Testnet）；F07 已合并，F08～F15b 运行时/验收已实现，F16a 本地 Beta 候选、F16b Hosted 基础资格、LA-01 退款安全整改、LA-02 Journal/Posting 保护与 LA-03a 业务事实分录已实现，均待各自 R2 Domain 与 Architecture 审查；LA-03 完整范围、LA-04、LA-05 未完成；E3.1 暂停
 - 产品版本：Product v0.3 Transaction-first
 - 对应商业计划：BP v0.1
 - 更新日期：2026-09-09

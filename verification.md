@@ -1,5 +1,19 @@
 # BU2 Product v0.1 验证结论
 
+## 2026-09-09 · LA-03a 结算、退款与 ProviderFee 业务事实分录
+
+执行者：Codex
+分支：`feat/ledger-assurance-business-postings`
+
+- `npm --prefix sandbox run test:la03`：3/3 通过，覆盖结算分录持久化与重启恢复、确认退款/Provider-unknown 边界、ProviderFee 交易关联与幂等重放。
+- F07/F13/F14 回归断言已更新：预算结算、部分/全额退款和手续费事实均生成平衡 Journal/Posting，未知退款不生成退款分录。
+- Sandbox 全量：167/167；ENV-06 运营恢复：6/6；F15b/F16a/LA-01：4/4、3/3、7/7；契约 63 项不变量与 6 个 MCP 工具；TypeScript SDK 10/10；Hosted 合约 8/8、2/2、2/2；Prototype lint/build 通过。
+- 业务事实分录复用 LA-02 成组写入与 SQLite 原子提交；未新增第二账本或 Provider/Signer 调用。
+
+结论：LA-03a 达到 **GO for R2 review**；这是 LA-03 的首个子范围，不代表期初余额、完整历史重建、pending 收款收敛或更正分录已完成。
+
+边界：Local/Simulation；未执行真实 Provider、Base Sepolia、Hosted、Live/Mainnet、托管或生产凭证。E3.1 Pilot Manifest 保持暂停。
+
 ## 2026-09-09 · LA-02 Ledger Assurance Gate：成组 Journal / Posting 保护
 
 执行者：Codex

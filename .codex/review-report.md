@@ -2,6 +2,33 @@
 
 # LA-02 成组 Journal / Posting 保护自主审查报告
 
+# LA-03a 结算、退款与 ProviderFee 业务事实分录自主审查报告
+
+日期：2026-09-09
+审查者：Codex（Contributor / Verifier，非 R2 Approver）
+分支：`feat/ledger-assurance-business-postings`
+
+## 初步结果
+
+| 维度 | 得分 | 结论 |
+| --- | ---: | --- |
+| 需求覆盖 | 19/20 | 覆盖结算、确认退款、ProviderFee、交易关联与幂等重放 |
+| 技术实现 | 19/20 | 复用 LA-02 成组写入、SQLite 原子提交和既有 Transaction Core |
+| 金融边界 | 20/20 | Provider-unknown/pending 不生成已确认业务分录；不启用真实资金路径 |
+| 自动化验证 | 20/20 | LA-03a 3/3、受影响回归 13/13、Sandbox 167/167、运营 6/6、契约/SDK/Prototype/Hosted 门禁通过 |
+| 文档与恢复 | 19/20 | 契约、路线、README、CHANGELOG、testing、verification 与 operations 已同步 |
+| 综合 | **97/100** | 达到本地实现审查门槛，待独立 R2 |
+
+## 结论
+
+建议：**通过 LA-03a 本地业务事实分录实现，提交 R2 审查**。该 PR 只覆盖 LA-03 的首个子范围；期初余额、完整历史重建、pending 收款收敛、独立对账重放和更正分录仍需后续 PR。
+
+## 残余风险
+
+1. LA-03 完整范围、LA-04、LA-05 尚未完成，不能将局部业务分录解释为完整 Ledger Assurance Gate 通过。
+2. 账户科目由已绑定业务主体 ID 确定性生成，但不引入余额投影或资金所有权变更。
+3. E3.1 Pilot Manifest 保持暂停，Live/Mainnet、Hosted 和真实 Provider 仍关闭。
+
 日期：2026-09-09
 审查者：Codex（Contributor / Verifier，非 R2 Approver）
 分支：`feat/ledger-assurance-journal-guards`

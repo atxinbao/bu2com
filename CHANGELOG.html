@@ -152,6 +152,27 @@
       <h2 id="unreleased">Unreleased</h2>
       <article class="release">
         <div class="release-head">
+          <div><h3>LA-03a · 结算、退款与 ProviderFee 业务事实分录</h3><time datetime="2026-09-09">2026-09-09</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">在 LA-02 受保护 Journal/Posting 原语之上，补齐已确认结算、退款和 Provider 手续费的业务事实分录；这是 LA-03 的首个子范围，不代表完整账本准入已完成。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag added">Added</span><code>transaction.settled</code>、<code>transaction.refunded</code> 与 <code>reconciliation.fee_recorded</code> 各自产生两行借贷平衡 Journal/Posting，并保留业务来源与交易关联。</li>
+            <li><span class="tag changed">Changed</span>结算、确认退款和 ProviderFee 复用现有 SQLite 原子提交、幂等 Claim 与 LA-02 来源/金额/不可变校验；重复幂等键不追加第二组分录。</li>
+            <li><span class="tag changed">Fixed</span>ENV-06 备份证据与恢复校验统一统计预算、预算预留和 Financial Posting，避免合法备份因事实计数口径不同而被误判失败。</li>
+            <li><span class="tag governance">Boundary</span>期初余额、完整历史重建、pending 收款收敛、更正分录、真实 Provider/Testnet、Hosted、Live/Mainnet、托管钱包和 E3.1 外部试点仍未开放。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R2 · 业务金额、账务事实、幂等与恢复，必须独立人工审查</span></div>
+          <div><b>验证</b><span>LA-03a 专项 3/3；F07、F13、F14 回归与完整 Sandbox 门禁在 PR 中记录</span></div>
+          <div><b>恢复</b><span>不修改既有历史事实；失败事务由 SQLite 原子边界回滚，后续更正只能追加新 Journal</span></div>
+        </div>
+      </article>
+      <article class="release">
+        <div class="release-head">
           <div><h3>LA-02 · 成组 Journal / Posting 保护</h3><time datetime="2026-09-09">2026-09-09</time></div>
           <span class="status">Unreleased</span>
         </div>

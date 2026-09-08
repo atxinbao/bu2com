@@ -1,5 +1,25 @@
 # ENV-02 测试记录
 
+## 2026-09-09 · LA-03a 业务资金事实分录
+
+执行者：Codex
+
+| 范围 | 命令 | 结果 |
+| --- | --- | --- |
+| LA-03a 定向 | `npm --prefix sandbox run test:la03` | 3/3 通过 |
+| 回归 | `node --test sandbox/f07.test.mjs sandbox/f13.test.mjs sandbox/f14.test.mjs` | 13/13 通过 |
+| LA-03a 专项 | `npm --prefix sandbox run test:la03` | 3/3 通过 |
+| Sandbox 全量 | `npm --prefix sandbox test` | 167/167 通过 |
+| ENV-06 运营恢复 | `npm --prefix sandbox run test:operations` | 6/6 通过；统一备份与恢复事实计数 |
+| F15b/F16a/LA-01 | `npm --prefix sandbox run test:f15b && npm --prefix sandbox run test:f16a && npm --prefix sandbox run test:la01` | 4/4、3/3、7/7 通过 |
+| API/MCP 契约 | `node docs/03-technical/validate-contract.mjs` | 63 invariants、6 MCP tools 通过 |
+| TypeScript SDK | `npm --prefix packages/typescript-sdk test` | 生成、格式、Lint、类型检查、构建与 10/10 单测通过 |
+| Prototype | `npm --prefix prototype run lint && npm --prefix prototype run build` | 均通过 |
+| Hosted 合约回归 | `npm --prefix sandbox run test:hosted-sandbox && npm --prefix sandbox run test:hosted-deployment && npm --prefix sandbox run test:hosted-evidence-schema` | 8/8、2/2、2/2 通过 |
+| 差异检查 | `git diff --check` | 通过 |
+
+覆盖结算、确认退款、ProviderFee 的双行平衡分录、来源/交易关联、SQLite 重启恢复和同幂等键重放不重复过账。当前仍只验证 Local/Simulation；真实 Provider、Base Sepolia、Hosted、Live/Mainnet、托管钱包和 E3.1 外部试点保持关闭。
+
 ## 2026-09-09 · LA-02 成组 Journal / Posting 保护
 
 执行者：Codex
