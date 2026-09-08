@@ -1,5 +1,20 @@
 # BU2 Product v0.1 验证结论
 
+## 2026-09-09 · LA-05a 外部观察对账
+
+执行者：Codex
+分支：`feat/ledger-assurance-independent-reconciliation`
+
+- LA-05a 专项覆盖外部金额不匹配、`delivery_submitted` Payment 未决、外部孤立事实，以及 SQLite 重启后的 `mode` 与观察证据保留。
+- 本轮目标是先完成独立外部观察与确定性异常快照；历史重放、备份后追平和完整迁移保留给 LA-05b。
+- `npm --prefix sandbox run test:la05a`：4/4 通过；`npm --prefix sandbox test`：178/178 通过。
+- LA-04/Operations/F15b/F16a 专项：3/3、6/6、4/4、3/3；契约 63 项不变量与 6 个 MCP 工具；TypeScript SDK 10/10；Prototype lint/build；Hosted 合约 8/8、2/2、2/2；`git diff --check` 均通过。
+- 新增 OpenAPI、API Contract、SDK 生成类型、HTTP/领域测试与产品/技术/路线/CHANGELOG 文档同步。
+
+结论：LA-05a 达到 **GO for R2 review**；不构成完整 Ledger Assurance Gate、真实 Provider 对账、Hosted/Testnet 准入或 E3.1 放行。
+
+边界：Local/Simulation；不执行真实 Provider、Base Sepolia、Hosted、Live/Mainnet、托管或生产凭证。
+
 ## 2026-09-09 · LA-04 Collection 持续验证与单次入账
 
 执行者：Codex

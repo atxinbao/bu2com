@@ -1,5 +1,17 @@
 # ENV-03 操作日志
 
+## 2026-09-09 · LA-05a Draft PR
+
+- Tool: `git commit`, `git push`, `gh pr create`, `gh pr view`; result: committed `4ef4439`, pushed `feat/ledger-assurance-independent-reconciliation`, and opened Draft PR #51 at `https://github.com/atxinbao/bu2com/pull/51` using `.github/pull_request_template.md`.
+- Review boundary: PR #51 is an R2 review candidate for independent external observation reconciliation; it does not complete LA-05b historical replay/backup catch-up, Hosted/Testnet acceptance, real Provider reconciliation, or E3.1.
+
+## 2026-09-09 · LA-05a 外部观察对账
+
+- Tool: `git switch`, `graphify query`, `rg`, `sed`; result: verified PR #50 merge baseline at `86a1268`, created `feat/ledger-assurance-independent-reconciliation`, and traced LA-05a to F14 ReconciliationRun plus existing transaction/collection/persistence modules.
+- Tool: `apply_patch`; result: added external observation validation, deterministic matching, unresolved `delivery_submitted` Payment coverage, external orphan queue items, OpenAPI/API contract fields, LA-05a tests, and synchronized product/technical/roadmap/README/CHANGELOG/evidence docs.
+- Tool: `npm`, `git diff --check`; result: LA-05a 4/4, Sandbox 178/178, LA-04/Operations/F15b/F16a 3/3/6/6/4/4/3/3, contract 63 invariants / 6 MCP tools, SDK 10/10, Prototype lint/build, Hosted 8/8/2/2 and diff check passed.
+- Boundary: Local/Simulation only; LA-05b historical replay and backup catch-up remain out of scope; E3.1 remains paused; no real Provider, Base Sepolia, Hosted, Live/Mainnet, custody or production credential capability is enabled.
+
 ## 2026-09-09 · LA-04 Draft PR
 
 - Tool: `git commit`, `git push`, `gh pr create`, `gh pr view`; result: committed `bff565f`, pushed `feat/ledger-assurance-collection-convergence`, and opened Draft PR #50 at `https://github.com/atxinbao/bu2com/pull/50` using `.github/pull_request_template.md`.

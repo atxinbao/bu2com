@@ -1205,10 +1205,23 @@ export interface components {
             id?: string;
             /** Format: date-time */
             as_of?: string;
+            observations?: components["schemas"]["ReconciliationObservation"][];
+        };
+        ReconciliationObservation: {
+            /** @enum {string} */
+            kind: "payment" | "collection" | "refund" | "fee";
+            source_id?: string;
+            provider: string;
+            provider_reference: string;
+            amount: components["schemas"]["Amount"];
+            /** @enum {string} */
+            status?: "verified" | "pending" | "unknown";
+            /** Format: date-time */
+            observed_at?: string;
         };
         ReconciliationItem: {
             /** @enum {string} */
-            kind: "payment" | "collection" | "refund" | "fee";
+            kind: "payment" | "collection" | "refund" | "fee" | "external";
             source_id: string;
             provider_reference: string | null;
             expected_amount: components["schemas"]["Amount"];
@@ -1216,11 +1229,14 @@ export interface components {
             /** @enum {string} */
             status: "matched" | "exception" | "unknown";
             issues: string[];
+            observation?: components["schemas"]["ReconciliationObservation"];
         };
         ReconciliationRun: {
             id: string;
             /** Format: date-time */
             as_of: string;
+            /** @enum {string} */
+            mode?: "internal" | "external";
             /** @enum {string} */
             status: "matched" | "exception" | "unknown";
             item_count: number;

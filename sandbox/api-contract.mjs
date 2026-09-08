@@ -294,6 +294,24 @@ const schemas = {
     properties: {
       id: identifier("rec"),
       as_of: { type: "string", format: "date-time" },
+      observations: {
+        type: "array",
+        maxItems: 1000,
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: ["kind", "provider", "provider_reference", "amount"],
+          properties: {
+            kind: { type: "string", enum: ["payment", "collection", "refund", "fee"] },
+            source_id: { type: "string", minLength: 1, maxLength: 255 },
+            provider: { type: "string", minLength: 1, maxLength: 120 },
+            provider_reference: { type: "string", minLength: 1, maxLength: 255 },
+            amount,
+            status: { type: "string", enum: ["verified", "pending", "unknown"] },
+            observed_at: { type: "string", format: "date-time" },
+          },
+        },
+      },
     },
   },
   webhookSubscription: {

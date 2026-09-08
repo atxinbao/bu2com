@@ -152,6 +152,26 @@
       <h2 id="unreleased">Unreleased</h2>
       <article class="release">
         <div class="release-head">
+          <div><h3>LA-05a · 外部观察对账</h3><time datetime="2026-09-09">2026-09-09</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">在 F14 内部事实快照之上增加独立外部观察对账，保留未完成交付的未决队列、金额/币种/引用异常和无法归属的外部事实。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag added">Added</span><code>ReconciliationObservation</code> 输入、<code>mode=external</code> 运行标识和逐项观察证据。</li>
+            <li><span class="tag changed">Changed</span><code>delivery_submitted</code> Payment 在外部对账中以预留金额进入未决队列；缺失观察、未知观察、金额漂移和外部孤立事实使用稳定问题码。</li>
+            <li><span class="tag governance">Boundary</span>只生成追加对账快照，不查询或重试 Provider，不改变交易、收款、退款、钱包或历史 Posting；LA-05b 历史重放与备份追平另行实施。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R2 · 独立外部事实、未决队列与异常解释，必须独立人工审查</span></div>
+          <div><b>验证</b><span>LA-05a 专项覆盖金额不匹配、未完成交付、外部孤立事实与 SQLite 重启</span></div>
+          <div><b>恢复</b><span>观察证据与对账快照原子持久化；失败保持 unknown/exception，不执行资金动作</span></div>
+        </div>
+      </article>
+      <article class="release">
+        <div class="release-head">
           <div><h3>LA-04 · Collection 持续验证与单次入账</h3><time datetime="2026-09-09">2026-09-09</time></div>
           <span class="status">Unreleased</span>
         </div>
