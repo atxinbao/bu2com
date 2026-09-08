@@ -3,6 +3,10 @@
 日期：2026-09-07
 维护者：Codex
 
+## LA-03d 当前契约状态
+
+LA-03d 已冻结多账户账簿所有权、余额投影切换和历史迁移契约；后续实现必须拆分 Schema/归属约束、写入原语/投影刷新和迁移/切换证据，并按 R2 审查。该契约不改变当前运行时、Schema、交易状态或资金环境。
+
 - [Agent Payment API 契约 v0.3.0](API_CONTRACT_V0.1.md)
 - [OpenAPI v0.3.0](openapi.yaml)
 - [MCP 工具定义](mcp-tools.json)
@@ -63,6 +67,7 @@
 - [LA-03a 业务资金事实分录](../02-product/LA03_BUSINESS_POSTINGS_CONTRACT.md)
 - [LA-03b 期初检查点与追加更正](../02-product/LA03B_OPENING_CORRECTION_CONTRACT.md)
 - [LA-03c 账务投影重建](../02-product/LA03C_LEDGER_PROJECTION_CONTRACT.md)
+- [LA-03d 多账户账簿所有权与余额投影](../02-product/LA03D_MULTI_ACCOUNT_OWNERSHIP_CONTRACT.md)
 - [LA-05a 外部观察对账](../02-product/LA05A_EXTERNAL_RECONCILIATION_CONTRACT.md)
 - [LA-05b 历史账务重放与备份追平](../02-product/LA05B_HISTORY_REPLAY_CATCHUP_CONTRACT.md)
 - [LA-06a 本地全量与隔离准入](../02-product/LA06A_LOCAL_FOUNDATION_GATE_CONTRACT.md)
