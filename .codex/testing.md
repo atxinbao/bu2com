@@ -1,5 +1,23 @@
 # ENV-02 测试记录
 
+## 2026-09-09 · LA-03c 账务投影重建
+
+执行者：Codex
+
+| 范围 | 命令 | 结果 |
+| --- | --- | --- |
+| LA-03b/LA-03c 定向 | `npm --prefix sandbox run test:la03b` | 4/4 通过 |
+| LA-03a 回归 | `npm --prefix sandbox run test:la03` | 3/3 通过 |
+| Sandbox 全量 | `npm --prefix sandbox test` | 171/171 通过 |
+| ENV-06/F15b/F16a/LA-01 | 对应 Sandbox 专项 | 6/6、4/4、3/3、7/7 通过 |
+| API/MCP 契约 | `node docs/03-technical/validate-contract.mjs` | 63 invariants、6 MCP tools 通过 |
+| TypeScript SDK | `npm --prefix packages/typescript-sdk test` | 生成、格式、Lint、类型检查、构建与 10/10 单测通过 |
+| Prototype | `npm --prefix prototype run lint && npm --prefix prototype run build` | 均通过 |
+| Hosted 合约回归 | `npm --prefix sandbox run test:hosted-sandbox && npm --prefix sandbox run test:hosted-deployment && npm --prefix sandbox run test:hosted-evidence-schema` | 8/8、2/2、2/2 通过 |
+| 差异检查 | `git diff --check` | 通过 |
+
+覆盖期初、业务和更正 Posting 的账户余额聚合、Journal 平衡计数、安全整数和 SQLite 重启一致性。重建只读，不改变当前钱包投影或任何资金状态。
+
 ## 2026-09-09 · LA-03b 期初检查点与追加更正分录
 
 执行者：Codex

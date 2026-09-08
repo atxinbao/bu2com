@@ -1134,6 +1134,49 @@ export class Bu2Sandbox {
       .map((posting) => clone(posting));
   }
 
+  rebuildLedgerProjection({ currency = null } = {}) {
+    const balances = new Map();
+    const journals = new Map();
+    for (const posting of this.financialPostings.values()) {
+      if (currency !== null && posting.currency !== currency) continue;
+      const key = `${posting.currency}:${posting.account}`;
+      const current = balances.get(key) ?? {
+        account: posting.account,
+        currency: posting.currency,
+        balance_minor: 0,
+        posting_count: 0,
+      };
+      const signedAmount = posting.direction === "debit" ? posting.amount_value : -posting.amount_value;
+      const nextBalance = current.balance_minor + signedAmount;
+      if (!Number.isSafeInteger(nextBalance)) {
+        throw new ApiError(422, "financial_constraint", "projection_amount_overflow", "Ledger projection exceeds the safe integer boundary.", { account: posting.account, currency: posting.currency });
+      }
+      current.balance_minor = nextBalance;
+      current.posting_count += 1;
+      balances.set(key, current);
+      const journal = journals.get(posting.event_id) ?? { event_id: posting.event_id, currency: posting.currency, debit_minor: 0, credit_minor: 0, posting_count: 0 };
+      if (posting.direction === "debit") journal.debit_minor += posting.amount_value;
+      if (posting.direction === "credit") journal.credit_minor += posting.amount_value;
+      journal.posting_count += 1;
+      journals.set(posting.event_id, journal);
+    }
+    const journalRows = [...journals.values()].map((journal) => ({
+      ...journal,
+      balanced: journal.debit_minor === journal.credit_minor,
+    }));
+    return {
+      generated_at: new Date().toISOString(),
+      currency,
+      posting_count: [...balances.values()].reduce((total, account) => total + account.posting_count, 0),
+      journal_count: journalRows.length,
+      unbalanced_journal_count: journalRows.filter((journal) => !journal.balanced).length,
+      accounts: [...balances.values()]
+        .sort((left, right) => left.currency.localeCompare(right.currency) || left.account.localeCompare(right.account))
+        .map((account) => clone(account)),
+      journals: journalRows.sort((left, right) => left.event_id.localeCompare(right.event_id)).map((journal) => clone(journal)),
+    };
+  }
+
   listOpeningBalances() {
     return [...this.openingBalances.values()]
       .sort((left, right) => right.effective_at.localeCompare(left.effective_at) || right.id.localeCompare(left.id))

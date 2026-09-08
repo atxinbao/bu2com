@@ -1,5 +1,12 @@
 # ENV-03 操作日志
 
+## 2026-09-09 · LA-03c 账务投影重建
+
+- Tool: `gh pr view`, `git fetch`, `git switch`, `git pull --ff-only`, `git branch -d`; result: verified PR #48 merged at `3a31504`, synchronized `main`, deleted local `feat/ledger-assurance-opening-corrections`, and created `feat/ledger-assurance-rebuild-projection`.
+- Tool: `apply_patch`; result: added read-only `rebuildLedgerProjection`, LA-03c restart/projection assertions, package-facing documentation, CHANGELOG and evidence records.
+- Tool: `npm`; result: LA-03b/LA-03c 4/4, LA-03a 3/3, Sandbox 171/171, ENV-06/F15b/F16a/LA-01 6/6/4/4/3/3/7/7, contract 63 invariants / 6 MCP tools, SDK 10/10, Hosted 8/8/2/2 and Prototype lint/build passed.
+- Boundary: Local/Simulation only; no real Provider, Base Sepolia, Hosted, Live/Mainnet, custody or production credential capability was enabled; E3.1 remains paused.
+
 ## 2026-09-09 · LA-03b 期初检查点与追加更正分录
 
 - Tool: `gh pr view`, `git fetch`, `git switch`, `git pull --ff-only`, `git branch -d`; result: verified PR #47 merged at `1eeee1e`, synchronized `main`, deleted local `feat/ledger-assurance-business-postings`, and created `feat/ledger-assurance-opening-corrections`.

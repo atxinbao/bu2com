@@ -2,6 +2,33 @@
 
 # LA-02 成组 Journal / Posting 保护自主审查报告
 
+# LA-03c 账务投影重建自主审查报告
+
+日期：2026-09-09
+审查者：Codex（Contributor / Verifier，非 R2 Approver）
+分支：`feat/ledger-assurance-rebuild-projection`
+
+## 初步结果
+
+| 维度 | 得分 | 结论 |
+| --- | ---: | --- |
+| 需求覆盖 | 19/20 | 覆盖账户聚合、Journal 平衡、币种过滤、溢出和重启一致性 |
+| 技术实现 | 19/20 | 只读遍历不可变 Posting，不新增第二账本或资金写入路径 |
+| 金融边界 | 20/20 | 不替换钱包投影、不触发 Provider/Signer、不开放真实资金 |
+| 自动化验证 | 20/20 | LA-03b/LA-03c 4/4、LA-03a 3/3、Sandbox 171/171、运营/契约/SDK/Prototype/Hosted 门禁通过 |
+| 文档与恢复 | 19/20 | 契约、路线、README、CHANGELOG、testing、verification 与 operations 已同步 |
+| 综合 | **97/100** | 达到本地实现审查门槛，待独立 R2 |
+
+## 结论
+
+建议：**通过 LA-03c 本地账务投影重建实现，提交 R2 审查**。该报告是审计投影，不是实时钱包余额切换或完整 Ledger Assurance Gate 完成声明。
+
+## 残余风险
+
+1. 多账簿/多资产所有权、实时余额切换和完整历史迁移仍需后续 PR。
+2. LA-04 pending Collection 收敛、LA-05 独立对账/备份追平和 E3.1 外部试点仍未放行。
+3. Live/Mainnet、Hosted 和真实 Provider 仍关闭。
+
 # LA-03b 期初检查点与追加更正分录自主审查报告
 
 日期：2026-09-09

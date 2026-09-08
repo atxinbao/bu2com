@@ -152,6 +152,26 @@
       <h2 id="unreleased">Unreleased</h2>
       <article class="release">
         <div class="release-head">
+          <div><h3>LA-03c · 从不可变 Posting 重建账务投影</h3><time datetime="2026-09-09">2026-09-09</time></div>
+          <span class="status">Unreleased</span>
+        </div>
+        <p class="summary">增加只读账务投影重建路径，从期初、业务和更正分录计算账户余额，并逐 Journal 报告借贷平衡，供重启和审计验证。</p>
+        <div class="change-group">
+          <h4>Changes</h4>
+          <ul>
+            <li><span class="tag added">Added</span>新增 <code>rebuildLedgerProjection()</code>，支持按币种过滤、账户余额汇总、Posting/Journal 计数及不平衡报告。</li>
+            <li><span class="tag changed">Changed</span>期初检查点、结算、收款、退款、ProviderFee 和更正事实统一进入只读重建路径；重启后结果可重复比较。</li>
+            <li><span class="tag governance">Boundary</span>不切换当前钱包余额、不执行资金动作、不代表多账簿/主网/Hosted 准入；LA-04/LA-05 仍未完成。</li>
+          </ul>
+        </div>
+        <div class="evidence">
+          <div><b>风险等级</b><span>R2 · 账务重建、金额聚合、历史解释</span></div>
+          <div><b>验证</b><span>LA-03b/LA-03c 专项 4/4；完整 Sandbox 和本地合约门禁在 PR 中记录</span></div>
+          <div><b>恢复</b><span>只读计算失败关闭，不修改资源、钱包、事件、Posting 或 Outbox</span></div>
+        </div>
+      </article>
+      <article class="release">
+        <div class="release-head">
           <div><h3>LA-03b · 期初检查点与追加更正分录</h3><time datetime="2026-09-09">2026-09-09</time></div>
           <span class="status">Unreleased</span>
         </div>

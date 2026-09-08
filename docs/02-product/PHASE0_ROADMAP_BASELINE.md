@@ -54,6 +54,7 @@ BU2 继续定位为嵌入式 Agent AI 收付平台。外部 Agent 在自己的�
 | LA-02 | `fix(ledger): enforce balanced immutable journal postings` | LA-01、F07 | R2；Ledger Assurance Gate；不完成完整业务分录覆盖 |
 | LA-03a | `feat(ledger): post settlement refund and provider fee facts` | LA-02、F13、F14 | R2；LA-03 首个子范围；不完成期初、完整历史重建或更正分录 |
 | LA-03b | `feat(ledger): add opening checkpoints and correction journals` | LA-03a | R2；不改变钱包投影，不完成完整余额重建 |
+| LA-03c | `feat(ledger): rebuild account projections from immutable postings` | LA-03b | R2；只读审计投影，不切换运行时余额 |
 
 ## 5. 文档提交规则
 
@@ -68,4 +69,4 @@ D0/D1/D2 文档基线与 F07 代码实现已合并。F08 运行时与 F09a 已�
 
 D2 只改文档；F08/F09a/F10/F11/F12 代码 PR 不启用真实 Testnet 双向收付、Hosted Sandbox、Live/Mainnet、托管或生产凭证，必须独立完成 Domain 与 Architecture R2 审查。F09b 的历史实现已覆盖持久化 payment attempt、unknown-result 冻结和显式 recovery 查询，本轮不重复引入第二套恢复实现。
 
-F12 本地实现已完成，F13 已在不突破当前环境边界的前提下实现有界取消、退款事实与显式恢复；F14 已增加 ProviderFee 与 ReconciliationRun，对账只生成追加快照，不改写支付、收款、退款或 Ledger 历史事实；F15b 已在固定候选上完成有限业务负载、停机、重启、无重复结算和对账恢复演练；F16a 已完成本地预授权 Agent 双向收付、故障、退款与对账候选验收；F16b 已完成 Candidate、Activation、Evidence 和部署边界的本地基础资格检查。审计后先执行 Ledger Assurance Gate：LA-01 已修复未决退款占用、持久化 RefundAttempt 和 Provider 结果校验；LA-02 已建立成组平衡 Journal/Posting、严格金额、来源引用和已过账不可变边界；LA-03a 已把结算、确认退款和 ProviderFee 接入两行平衡 Journal；LA-03b 已增加可核对期初检查点与追加更正事实，但 LA-03 完整范围仍缺余额重建、多账户投影与完整历史迁移，LA-04/LA-05 尚未开始。E3.1 保持暂停，不扩大资金功能或把本地资格解释为 Hosted 准入。F14/F15b/F16a/F16b/LA-01/LA-02/LA-03a/LA-03b 仍不得被解释为真实 Provider / Base Sepolia 对账、生产财务结算、Hosted 准入或外部 Beta 放行；ENV-07B 仍要求公网 HTTPS/DNS/TLS、托管 Secret、独立 Activation、外部机器鉴权和真实双向 Testnet 证据。
+F12 本地实现已完成，F13 已在不突破当前环境边界的前提下实现有界取消、退款事实与显式恢复；F14 已增加 ProviderFee 与 ReconciliationRun，对账只生成追加快照，不改写支付、收款、退款或 Ledger 历史事实；F15b 已在固定候选上完成有限业务负载、停机、重启、无重复结算和对账恢复演练；F16a 已完成本地预授权 Agent 双向收付、故障、退款与对账候选验收；F16b 已完成 Candidate、Activation、Evidence 和部署边界的本地基础资格检查。审计后先执行 Ledger Assurance Gate：LA-01 已修复未决退款占用、持久化 RefundAttempt 和 Provider 结果校验；LA-02 已建立成组平衡 Journal/Posting、严格金额、来源引用和已过账不可变边界；LA-03a 已把结算、确认退款和 ProviderFee 接入两行平衡 Journal；LA-03b 已增加可核对期初检查点与追加更正事实；LA-03c 已增加从不可变 Posting 重建账户余额与 Journal 平衡的只读报告，但 LA-03 完整范围仍缺多账户所有权模型、实时余额切换与完整历史迁移，LA-04/LA-05 尚未开始。E3.1 保持暂停，不扩大资金功能或把本地资格解释为 Hosted 准入。F14/F15b/F16a/F16b/LA-01/LA-02/LA-03a/LA-03b/LA-03c 仍不得被解释为真实 Provider / Base Sepolia 对账、生产财务结算、Hosted 准入或外部 Beta 放行；ENV-07B 仍要求公网 HTTPS/DNS/TLS、托管 Secret、独立 Activation、外部机器鉴权和真实双向 Testnet 证据。

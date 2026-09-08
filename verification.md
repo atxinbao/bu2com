@@ -1,5 +1,18 @@
 # BU2 Product v0.1 验证结论
 
+## 2026-09-09 · LA-03c 账务投影重建
+
+执行者：Codex
+分支：`feat/ledger-assurance-rebuild-projection`
+
+- `npm --prefix sandbox run test:la03b`：4/4 通过，新增从不可变 Posting 重建账户余额与 Journal 平衡报告，并验证 SQLite 重启后结果一致。
+- 重建为只读路径：Debit 为正、Credit 为负，按账户/币种聚合，安全整数溢出失败关闭，不替换当前钱包投影。
+- Sandbox 全量：171/171；LA-03a：3/3；ENV-06/F15b/F16a/LA-01：6/6、4/4、3/3、7/7；契约 63 项不变量与 6 个 MCP 工具；TypeScript SDK 10/10；Hosted 合约 8/8、2/2、2/2；Prototype lint/build 通过。
+
+结论：LA-03c 达到 **GO for R2 review**；LA-03 完整范围仍缺多账户所有权模型、实时余额切换和完整历史迁移，LA-04/LA-05 仍未完成。
+
+边界：Local/Simulation；未执行真实 Provider、Base Sepolia、Hosted、Live/Mainnet、托管或生产凭证。E3.1 Pilot Manifest 保持暂停。
+
 ## 2026-09-09 · LA-03b 期初检查点与追加更正分录
 
 执行者：Codex
