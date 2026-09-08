@@ -1,5 +1,14 @@
 # ENV-03 操作日志
 
+## 2026-09-09 · F15b 业务负载、停机与财务恢复验收
+
+- Tool: `gh pr view`, `git switch`, `git pull --ff-only`, `git branch -d`; result: verified PR #41 merged at `6082cd3`, synchronized `main`, deleted local `feat/bounded-sandbox-execution-sessions`, and created `test/operations-recovery-evidence`.
+- Tool: `graphify query`; result: traced F15b to the existing Transaction, Collection, Refund, ProviderFee, ReconciliationRun, SQLite restart and graceful shutdown paths; no second ledger or operations runtime was required.
+- Tool: `apply_patch`; result: added the F15b bounded operations acceptance suite, product contract, package script and synchronized root/product/technical/CHANGELOG/verification evidence.
+- Tool: `node --test sandbox/f15b.test.mjs`; result: 4/4 passed, covering bounded business load, matched reconciliation, restart without duplicate settlement, disarmed Sandbox/Testnet and SIGTERM shutdown.
+- Tool: `node`, `npm`; result: Contract 63 invariants / 6 MCP tools, Sandbox 155/155, SDK 10/10, Prototype lint/build and `git diff --check` passed.
+- Boundary: F15b remains Local/Simulation and internal Sandbox-Testnet evidence only; no real Provider, Base Sepolia, Hosted, Live/Mainnet, custody or production credential capability was enabled.
+
 ## 2026-09-09 · F13 Bounded Cancellation & Refund Recovery
 
 - Tool: `git fetch --prune`, `git merge --ff-only`, `git branch -d`; result: confirmed PR #38 merged at `dcc9c2d`, synchronized `main`, deleted local F12 branch and created `feat/bounded-refunds-recovery`.

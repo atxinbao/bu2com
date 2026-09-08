@@ -31,6 +31,7 @@
 | [F13 有界取消与退款恢复契约](F13_REFUND_RECOVERY_CONTRACT.md) | 预留态取消、结算后部分/全额退款与 provider-unknown 显式恢复 |
 | [F14 支付、收款、退款与手续费对账契约](F14_RECONCILIATION_CONTRACT.md) | 记录 ProviderFee 并生成可重建、可解释的 ReconciliationRun |
 | [F15a 内部 Sandbox 执行会话契约](F15A_SANDBOX_EXECUTION_SESSION_CONTRACT.md) | 为外部 Agent 既有工作流提供独立激活、短时、有界的内部执行会话 |
+| [F15b 业务负载、停机与财务恢复验收契约](F15B_OPERATIONS_ACCEPTANCE.md) | 验证有限业务闭环、SQLite 重启、优雅停机、无重复事实与 Sandbox/Testnet 失败关闭 |
 | [页面与交互规格](INTERACTION_SPEC.md) | Transaction-first P0 的页面、状态、操作和验收标准 |
 | [Transaction-first P0 产品基线](P0_TRANSACTION_FIRST_BASELINE.md) | 当前正式定位、交易契约和原型验收路径 |
 | [Transaction-first P0 验收方案](TRANSACTION_P0_ACCEPTANCE.md) | 当前主路径、辅助路径和 GO/ITERATE/STOP 门槛 |
@@ -53,7 +54,7 @@ Agent 商业账户、信誉与服务网络
 
 ## 当前状态
 
-- 产品阶段：Phase 0 开发（Simulation / Testnet）；F07 已合并，F08～F15a 运行时已实现，待各自 R2 Domain 与 Architecture 审查
+- 产品阶段：Phase 0 开发（Simulation / Testnet）；F07 已合并，F08～F15b 运行时/验收已实现，待各自 R2 Domain 与 Architecture 审查
 - 产品版本：Product v0.3 Transaction-first
 - 对应商业计划：BP v0.1
 - 更新日期：2026-09-09

@@ -1,5 +1,20 @@
 # ENV-02 测试记录
 
+# 2026-09-09 · F15b 业务负载、停机与财务恢复验收
+
+执行者：Codex
+
+| 范围 | 命令 | 结果 |
+| --- | --- | --- |
+| F15b 定向运营验收 | `node --test sandbox/f15b.test.mjs` | 4/4 通过 |
+| Sandbox 全量 | `npm --prefix sandbox test` | 155/155 通过 |
+| API/MCP Contract | `node docs/03-technical/validate-contract.mjs` | 63 invariants、6 MCP tools 通过 |
+| TypeScript SDK | `npm --prefix packages/typescript-sdk test` | 生成、格式、Lint、类型检查、构建与 10/10 单测通过 |
+| Prototype | `npm --prefix prototype run lint && npm --prefix prototype run build` | 通过 |
+| Diff | `git diff --check` | 通过 |
+
+覆盖有限业务负载与 matched 对账、SQLite 重启后的无重复结算、Sandbox/Testnet `execution_disabled` 失败关闭，以及持久业务状态下 Reference Server 的 SIGTERM 优雅停机。未执行真实 Provider、Base Sepolia、Hosted、Live/Mainnet、托管或生产凭证路径。
+
 ## 2026-09-09 · F13 Bounded Cancellation & Refund Recovery
 
 | 范围 | 命令 | 结果 |

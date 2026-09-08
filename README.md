@@ -9,7 +9,7 @@ BU2.com 是 Agent 的 AI 收付平台。它嵌入 ChatGPT、Codex、Claude 和�
 | 项目 | 当前基线 |
 | --- | --- |
 | 项目阶段 | Phase 0 · local execution / Sandbox architecture |
-| 当前工程关卡 | F15a · Bounded internal Sandbox Execution Sessions 运行时实现，待 R2 审查 |
+| 当前工程关卡 | F15b · Bounded business load, shutdown and financial recovery 验收实现，待 R2 审查 |
 | 产品定义 | Product v0.3 · Transaction-first |
 | API 契约 | Agent Payment API v0.3.0 |
 | Reference Server | v0.17 · Node.js + SQLite WAL + 持久身份、钱包绑定、版本化 Mandate 与有界 ExecutionSession |
@@ -24,7 +24,7 @@ BU2.com 是 Agent 的 AI 收付平台。它嵌入 ChatGPT、Codex、Claude 和�
 
 当前代码已经形成可运行的 Agent 收付闭环，但仍是本地与 Base Sepolia 测试网证据，不是生产支付系统或法律合规结论。ENV-02–06 已由 PR #19–#23 合并；ENV-07A 为 Hosted Sandbox 增加专用启动门槛、文件型 Secret、不可变候选、独立激活与证据验证器，但尚未创建托管 Sandbox 或 Live。
 
-F06a 已把受控访问中的 Principal、Account 和 Agent 声明落到 SQLite Schema v10 的持久业务主体记录；F06b 在其上增加 Schema v11 的资金来源与收款目标绑定；F07 在 Schema v12 增加 Budget、Budget Hold 与 Financial Posting；F08 在 Schema v13 增加版本化 PaymentMandate、PolicyDecision 及确定性授权判断，并接入 PaymentIntent；F12 增加可恢复 AccessGrant；F13 增加预留态取消、部分/全额退款与 provider-unknown 显式恢复；F14 增加 ProviderFee 与 ReconciliationRun，在不改写原始事实的前提下汇总支付、收款、退款和手续费；F15a 增加独立激活、15 分钟窗口和会话级支出边界。上述能力都只在 Local / Sandbox / Testnet 边界内运行，不启用 Live/Mainnet、托管或生产凭证。F08～F15a 当前等待独立 R2 Domain 与 Architecture 审查。
+F06a 已把受控访问中的 Principal、Account 和 Agent 声明落到 SQLite Schema v10 的持久业务主体记录；F06b 在其上增加 Schema v11 的资金来源与收款目标绑定；F07 在 Schema v12 增加 Budget、Budget Hold 与 Financial Posting；F08 在 Schema v13 增加版本化 PaymentMandate、PolicyDecision 及确定性授权判断，并接入 PaymentIntent；F12 增加可恢复 AccessGrant；F13 增加预留态取消、部分/全额退款与 provider-unknown 显式恢复；F14 增加 ProviderFee 与 ReconciliationRun，在不改写原始事实的前提下汇总支付、收款、退款和手续费；F15a 增加独立激活、15 分钟窗口和会话级支出边界；F15b 增加有限业务负载、停机、SQLite 重启、无重复结算和对账恢复证据。上述能力都只在 Local / Sandbox / Testnet 边界内运行，不启用 Live/Mainnet、托管或生产凭证。F08～F15b 当前等待独立 R2 Domain 与 Architecture 审查。
 
 [Phase 0 Epic 1：External Agent Transaction Integration & Reliability](docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md) 与 [Phase 0 Epic 2：Developer Integration Scale](docs/03-technical/PHASE0_EPIC2_DEVELOPER_INTEGRATION_SCALE.md) 已完成。Transaction Trust Gate 1–3 已经 PR #15–#17 合并，F01/ENV-01 至 ENV-06 分别由 PR #18–#23 批准。当前进入 ENV-07：ENV-07A 本地准入与证据契约已实现，ENV-07B 的部署单元、外部验收 Schema 与 Runbook 已准备，但公网部署、真实 Base Sepolia 双向收付和边缘 E2E 仍未执行。[Phase 0 Epic 3](docs/03-technical/PHASE0_EPIC3_EXTERNAL_PILOT_EVIDENCE.md) 保持 Ready，不能以 Local Simulation 代替正式外部证据。
 
@@ -83,6 +83,7 @@ BU2 将授权、资金预留、交付、结算和退款保存为不同事实。�
 - 版本化 PaymentMandate：draft/active/suspended/revoked/expired 状态机、Funding Source/Receiving Target 绑定、确定性 PolicyDecision、版本冲突和幂等状态转换；持久化环境激活时强制使用 active verified 钱包绑定。
 - F09a 自主支付执行：即时或延迟执行模式；已批准的 deferred PaymentIntent 可由 Agent 通过幂等执行命令预留资金，review_required 与 Mandate 失效均失败关闭。
 - F15a 有界内部执行会话：ExecutionSession 独立于 PaymentMandate 激活，限制环境、Account/Agent、15 分钟窗口和会话支出，并在预留、结算、取消与重启路径保持可审计。
+- F15b 运营验收：固定候选上完成 6 笔有界支付、入站收款、部分退款、ProviderFee 与 ReconciliationRun，对 SQLite 重启、无重复事实、优雅停机和 Sandbox/Testnet `execution_disabled` 进行验证。
 - 中英文 Transaction-first 产品界面，可展示真实 Reference API 数据并在离线时降级到演示数据。
 - OpenAPI 3.1、Agent 原生 MCP 工具和完整交易示例。
 - 同一不可变制品候选提升清单、配置漂移阻断、SQLite Online Backup、同环境隔离恢复演练与脱敏运营快照。
@@ -109,6 +110,7 @@ npm ci --prefix packages/typescript-sdk
 node docs/03-technical/validate-contract.mjs
 npm --prefix sandbox test
 npm --prefix sandbox run test:operations
+npm --prefix sandbox run test:f15b
 npm --prefix sandbox run test:hosted-sandbox
 npm --prefix prototype run lint
 npm --prefix prototype run build
@@ -116,7 +118,7 @@ npm --prefix packages/typescript-sdk test
 npm --prefix sandbox run acceptance:clean-room
 ```
 
-当前基线应得到：Contract 63 项不变量通过、6 个 MCP 工具有效、Reference Server 151/151 通过、TypeScript SDK 10/10 通过、ENV-06 运营专项 6/6 通过、ENV-07A 准入专项 8/8 通过、两环境部署与恢复验收通过、三条 clean-room 路径全部生成有效 Local Receipt、Prototype lint 与 build 通过。
+当前基线应得到：Contract 63 项不变量通过、6 个 MCP 工具有效、Reference Server 155/155 通过、F15b 运营专项 4/4 通过、TypeScript SDK 10/10 通过、ENV-06 运营专项 6/6 通过、ENV-07A 准入专项 8/8 通过、两环境部署与恢复验收通过、三条 clean-room 路径全部生成有效 Local Receipt、Prototype lint 与 build 通过。
 
 ### 运行接入诊断
 
