@@ -80,6 +80,11 @@ const testSummary = (output) => {
 
 const tail = (value, max = 600) => value.trim().slice(-max);
 
+const rawCheckLog = (id, stdout, stderr) =>
+  `\n===== BU2 LA-06a CHECK ${id} STDOUT =====\n${stdout ?? ""}` +
+  `\n===== BU2 LA-06a CHECK ${id} STDERR =====\n${stderr ?? ""}` +
+  `\n===== BU2 LA-06a CHECK ${id} END =====\n`;
+
 const currentCommit = (cwd) => {
   try {
     return execFileSync("git", ["rev-parse", "HEAD"], { cwd, encoding: "utf8" }).trim();
@@ -105,7 +110,7 @@ export function validateLa06aEvidence(evidence) {
   );
 }
 
-export function runLa06aLocalGate({ cwd = root, env = process.env } = {}) {
+export function runLa06aLocalGate({ cwd = root, env = process.env, writeLog = null } = {}) {
   const checks = [];
   for (const check of CHECKS) {
     const startedAt = Date.now();
@@ -116,6 +121,7 @@ export function runLa06aLocalGate({ cwd = root, env = process.env } = {}) {
       maxBuffer: 16 * 1024 * 1024,
     });
     const output = `${result.stdout ?? ""}\n${result.stderr ?? ""}`;
+    if (writeLog) writeLog(rawCheckLog(check.id, result.stdout, result.stderr));
     const entry = {
       id: check.id,
       command: check.command,
@@ -139,6 +145,11 @@ export function runLa06aLocalGate({ cwd = root, env = process.env } = {}) {
     gate: "ledger_assurance_local_foundation",
     status: "passed",
     source_commit: process.env.BU2_SOURCE_COMMIT ?? currentCommit(cwd),
+    workflow_run: {
+      id: env.GITHUB_RUN_ID ?? null,
+      attempt: env.GITHUB_RUN_ATTEMPT ?? null,
+      job: env.GITHUB_JOB ?? null,
+    },
     environment: "local",
     execution_status: "execution_disabled",
     checks,
@@ -166,7 +177,7 @@ export function runLa06aLocalGate({ cwd = root, env = process.env } = {}) {
 
 if (resolve(process.argv[1] ?? "") === fileURLToPath(import.meta.url)) {
   try {
-    const evidence = runLa06aLocalGate();
+    const evidence = runLa06aLocalGate({ writeLog: (value) => process.stderr.write(value) });
     process.stdout.write(`${JSON.stringify(evidence, null, 2)}\n`);
   } catch (error) {
     process.stderr.write(`${error.message}\n`);

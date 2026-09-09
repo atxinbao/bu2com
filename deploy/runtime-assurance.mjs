@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -13,6 +14,9 @@ const SANDBOX_PACKAGE = JSON.parse(
 const RUNTIME_POLICY = JSON.parse(
   readFileSync(new URL("./runtime-policy.json", import.meta.url), "utf8"),
 );
+
+const currentCommit = (cwd = process.cwd()) =>
+  execFileSync("git", ["rev-parse", "HEAD"], { cwd, encoding: "utf8" }).trim();
 
 const parseNodeVersion = (version) => {
   const match = version.match(/^v?(\d+)\.(\d+)\.(\d+)/);
@@ -77,6 +81,12 @@ export async function runRuntimeAssurance({ workRoot = null } = {}) {
       schema_version: "rt01.v1",
       gate: "fixed_sqlite_runtime",
       status: "passed",
+      source_commit: process.env.BU2_SOURCE_COMMIT ?? process.env.GITHUB_SHA ?? currentCommit(),
+      workflow_run: {
+        id: process.env.GITHUB_RUN_ID ?? null,
+        attempt: process.env.GITHUB_RUN_ATTEMPT ?? null,
+        job: process.env.GITHUB_JOB ?? null,
+      },
       runtime: {
         node_version: process.version,
         node_floor: SANDBOX_PACKAGE.engines.node,

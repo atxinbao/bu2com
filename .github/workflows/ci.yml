@@ -28,6 +28,8 @@ jobs:
           npm --prefix packages/typescript-sdk ci
           npm --prefix prototype ci
       - name: Run foundation gate
+        env:
+          BU2_SOURCE_COMMIT: ${{ github.sha }}
         run: node deploy/la06a-local-gate.mjs > foundation.json 2> foundation.stderr
       - name: Upload foundation evidence
         if: always()
@@ -51,6 +53,8 @@ jobs:
       - name: Test CI and runtime evidence contracts
         run: node --test scripts/ci/*.test.mjs deploy/runtime-assurance.test.mjs deploy/runtime-image-assurance.test.mjs
       - name: Run runtime assurance
+        env:
+          BU2_SOURCE_COMMIT: ${{ github.sha }}
         run: node deploy/runtime-assurance.mjs > runtime-assurance.json 2> runtime-assurance.stderr
       - name: Upload runtime evidence
         if: always()
