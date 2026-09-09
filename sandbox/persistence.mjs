@@ -7,6 +7,10 @@ import {
   credentialOnboardingBundle,
   normalizeOnboardingDocument,
 } from "./identity.mjs";
+import {
+  summarizeJournalGroup,
+  validateFinancialPosting,
+} from "./ledger-calculations.mjs";
 
 const parse = (value, fallback) => (value ? JSON.parse(value) : fallback);
 const nowIso = (now) => new Date(now).toISOString();
@@ -1623,17 +1627,9 @@ export class SqliteLedger {
   writeBalancedJournals(postings, events = [], { environment = null } = {}) {
     const groups = new Map();
     for (const posting of postings ?? []) {
-      if (!posting.event_id || !posting.source_id || !posting.event_type) {
-        throw new ApiError(422, "financial_constraint", "journal_reference_missing", "Every financial posting must reference an event, source, and event type.");
-      }
-      if (!Number.isSafeInteger(posting.amount_value) || posting.amount_value < 0) {
-        throw new ApiError(422, "financial_constraint", "journal_amount_invalid", "Financial posting amounts must be safe non-negative integers.");
-      }
-      if (typeof posting.currency !== "string" || !/^[A-Z]{3}$/.test(posting.currency)) {
-        throw new ApiError(422, "financial_constraint", "journal_currency_invalid", "Financial postings must use an uppercase three-letter currency.");
-      }
-      if (!/^[a-z][a-z0-9_.:-]{1,255}$/.test(posting.account ?? "")) {
-        throw new ApiError(422, "financial_constraint", "journal_account_invalid", "Financial posting account names must use a stable namespaced format.");
+      const validation = validateFinancialPosting(posting);
+      if (validation) {
+        throw new ApiError(422, "financial_constraint", validation.code, validation.message, validation.details);
       }
       if (posting.ledger_account_id !== undefined && posting.ledger_account_id !== null) {
         this.assertLedgerAccountBinding(posting.ledger_account_id, { environment });
@@ -1665,26 +1661,9 @@ export class SqliteLedger {
     `);
     const postHeader = this.db.prepare("UPDATE journal_headers SET status='posted', posted_at=? WHERE id=? AND status='draft'");
     for (const [eventId, group] of groups) {
-      const debit = group.filter((posting) => posting.direction === "debit");
-      const credit = group.filter((posting) => posting.direction === "credit");
-      if (debit.length === 0 || credit.length === 0) {
-        throw new ApiError(422, "financial_constraint", "journal_unbalanced", "A posted journal must contain both debit and credit postings.", { event_id: eventId });
-      }
-      const currencies = new Set(group.map((posting) => posting.currency));
-      const eventTypes = new Set(group.map((posting) => posting.event_type));
-      const sourceIds = new Set(group.map((posting) => posting.source_id));
-      if (currencies.size !== 1 || eventTypes.size !== 1 || sourceIds.size !== 1) {
-        throw new ApiError(422, "financial_constraint", "journal_group_mismatch", "A journal must use one currency, event type, and source.", { event_id: eventId });
-      }
-      const sum = (entries) => entries.reduce((total, entry) => {
-        const next = total + entry.amount_value;
-        if (!Number.isSafeInteger(next)) {
-          throw new ApiError(422, "financial_constraint", "journal_amount_overflow", "A journal amount exceeds the safe integer boundary.", { event_id: eventId });
-        }
-        return next;
-      }, 0);
-      if (sum(debit) !== sum(credit)) {
-        throw new ApiError(422, "financial_constraint", "journal_unbalanced", "Debit and credit postings must balance for every currency.", { event_id: eventId, debit_minor: sum(debit), credit_minor: sum(credit) });
+      const summary = summarizeJournalGroup(eventId, group);
+      if (summary.violation) {
+        throw new ApiError(422, "financial_constraint", summary.violation.code, summary.violation.message, summary.violation.details);
       }
       if (sourceExists.get(group[0].source_id, group[0].source_id, group[0].source_id) === undefined) {
         throw new ApiError(422, "financial_constraint", "journal_source_not_found", "A journal source must reference a persisted BU2 resource or hold.", { event_id: eventId, source_id: group[0].source_id });
