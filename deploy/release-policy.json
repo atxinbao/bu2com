@@ -35,7 +35,7 @@
   },
   "capabilities": [
     "local_ledger_integration",
-    "sqlite_schema_18",
+    "sqlite_schema_19",
     "wal_and_online_backup_restore",
     "immutable_docker_archive",
     "source_and_evidence_bound_manifest"

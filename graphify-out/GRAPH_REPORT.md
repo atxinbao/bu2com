@@ -1,16 +1,16 @@
 # Graph Report - bu2com  (2026-09-10)
 
 ## Corpus Check
-- 309 files · ~209,390 words
+- 310 files · ~211,918 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 3785 nodes · 6188 edges · 251 communities (230 shown, 16 thin omitted)
-- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 90 edges (avg confidence: 0.8)
+- 3799 nodes · 6218 edges · 257 communities (239 shown, 12 thin omitted)
+- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 92 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `09109067`
+- Built from commit: `5120e575`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -32,7 +32,7 @@
 - components.json
 - x402-wallet.mjs
 - BU2 MVP 产品需求文档 v0.3（Transaction-first）
-- utils.ts
+- toggle-group.tsx
 - combobox.tsx
 - rules
 - BU2 指标与验证计划 v0.1
@@ -47,7 +47,7 @@
 - BU2 P0 页面与交互规格 v0.3（Transaction-first）
 - alert.tsx
 - chart.tsx
-- item.tsx
+- utils.ts
 - BU2 Agent Payment API 契约 v0.3.0
 - attachment.tsx
 - react
@@ -61,7 +61,7 @@
 - ignorePatterns
 - BU2 信息架构 v0.2（Transaction-first）
 - ENV-03 操作日志
-- alert-dialog.tsx
+- button.tsx
 - BU2 Reference Server v0.17 / x402 Sandbox v0.5
 - 1. 首发客户画像
 - SqliteLedger
@@ -113,10 +113,10 @@
 - BU2 MCP Host 配置 / Host Configuration
 - ADR-0001：Sandbox 与 Live 环境隔离
 - E2.4 外部 clean-room 接入证据
-- mcp.test.mjs
+- persistence.mjs
 - prototype/AGENTS.md
 - step
-- pagination.tsx
+- alert-dialog.tsx
 - null
 - domain.mjs
 - 2. 顺序与完成门槛
@@ -149,15 +149,15 @@
 - scripts
 - operations.mjs
 - deploy/hosted-sandbox.mjs
-- .settle
+- .event
 - BU2 ENV-04/05/06 Deployment and Operations Reference
 - docs/README 当前目录对齐验证
 - D0 Phase 0 业务路线与文档基线审查报告
 - prototype/package.json
 - supply-chain.mjs
-- persistence.mjs
+- immediateTransaction
 - duplicate_submission
-- http.test.mjs
+- adapter.mjs
 - react-resizable-panels
 - f15b.test.mjs
 - ledger-resilience.mjs
@@ -183,7 +183,7 @@
 - BU2 Pull Request
 - BU2 Pull Request
 - F16b Hosted Sandbox 外部集成基础准入自主审查报告
-- .commitDomainMutation
+- observability.mjs
 - 02-product/README.md
 - properties
 - f16a.test.mjs
@@ -226,12 +226,12 @@
 - transactions
 - receipt_verification
 - PaymentIntent
-- domain.test.mjs
+- .createPaymentIntent
 - review-report.md
 - CI-04 定时账本韧性与供应链检查自主审查报告
-- LA-05a 外部观察对账契约 v1
+- navigation-menu.tsx
 - D2 F08 Payment Mandate 契约自主审查报告
-- popover.tsx
+- INTERACTION_SPEC.md
 - ENV-06 自主审查报告
 - hosted-sandbox-evidence-schema.test.mjs
 - release-candidate.mjs
@@ -249,11 +249,11 @@
 - Internal Sandbox Product Baseline 自主审查报告
 - F06b 资金来源与收款目标绑定自主审查报告
 - ENV-07B Hosted Sandbox 外部验收包自主审查报告
-- LA-01 持久化退款尝试与未决额度占用自主审查报告
-- LA-05b 历史账务重放与备份追平契约 v1
+- BU2 Task-first P0 产品基线（已废止）
+- 5. 正式测试任务
 - LA-03c 账务投影重建自主审查报告
 - LA-05b 历史账务重放与备份追平自主审查报告
-- f15a.test.mjs
+- CI-04 定时账本韧性与供应链契约
 - verification.md
 - identity.test.mjs
 - F14 Payment / Collection / Refund / Fee Reconciliation 自主审查报告
@@ -261,13 +261,18 @@
 - react-dom
 - recharts
 - @vitejs/plugin-rsc
+- LA-01 持久化退款尝试与未决额度占用契约
+- x402.test.mjs
+- LA-04 Collection 持续验证与单次入账自主审查报告
+- LA-05a 外部观察对账自主审查报告
+- 8. 产品验收标准
 
 ## God Nodes (most connected - your core abstractions)
 1. `cn()` - 343 edges
-2. `Bu2Sandbox` - 147 edges
-3. `ApiError` - 140 edges
-4. `SqliteLedger` - 137 edges
-5. `ENV-03 操作日志` - 65 edges
+2. `Bu2Sandbox` - 150 edges
+3. `ApiError` - 142 edges
+4. `SqliteLedger` - 142 edges
+5. `ENV-03 操作日志` - 66 edges
 6. `Bu2Client` - 58 edges
 7. `clone()` - 53 edges
 8. `scripts` - 47 edges
@@ -294,7 +299,7 @@
 - **BU2 商业验证计划** — concept_validation, customer_interviews, product_prototype, paid_demand_validation [EXTRACTED 1.00]
 - **Agent 商业基础设施** — agent_identity, budget_governance, payment_permissions, auditability, agent_reputation [INFERRED 0.85]
 
-## Communities (251 total, 16 thin omitted)
+## Communities (257 total, 12 thin omitted)
 
 ### Community 0 - "付费需求验证"
 Cohesion: 0.38
@@ -306,15 +311,15 @@ Nodes (13): Agent Wallet, AP2, Agent 预算与费用治理, 确定性消费规�
 
 ### Community 2 - "ApiError"
 Cohesion: 0.17
-Nodes (10): ApiError, prefix(), requireFields(), validateAmount(), validateDate(), validateIdentifier(), validateLedgerAccount(), validateNonNegativeInteger() (+2 more)
+Nodes (11): ApiError, requireFields(), quoteInput, reserve(), settle(), validateAmount(), validateDate(), validateIdentifier() (+3 more)
 
 ### Community 3 - "Agent 信誉"
 Cohesion: 0.18
 Nodes (11): AI Agent 财务与支付治理平台, Agent 身份, Agent 市场, Agent Passport, Agent 信誉, Audit Ledger, 可审计交易, Budget for agents. Control for humans. (+3 more)
 
 ### Community 4 - "cn"
-Cohesion: 0.05
-Nodes (67): Accordion(), AccordionContent(), AccordionItem(), AccordionTrigger(), Avatar(), AvatarBadge(), AvatarFallback(), AvatarGroup() (+59 more)
+Cohesion: 0.04
+Nodes (69): Accordion(), AccordionContent(), AccordionItem(), AccordionTrigger(), Avatar(), AvatarBadge(), AvatarFallback(), AvatarGroup() (+61 more)
 
 ### Community 5 - "sidebar.tsx"
 Cohesion: 0.06
@@ -349,8 +354,8 @@ Cohesion: 0.09
 Nodes (23): ajv, ajv-formats, canonicalize, express, @modelcontextprotocol/client, @modelcontextprotocol/server, dependencies, ajv (+15 more)
 
 ### Community 13 - "BU2 Task-first P0 正式用户测试方案（已废止）"
-Cohesion: 0.09
-Nodes (22): 10. 测试结论分级, 11. 测试完成后的交付物, 1. 测试目标, 2. 目标参与者, 3. 测试设置, 4. 主持人开场脚本, 5. 正式测试任务, 6. 结束访谈问题 (+14 more)
+Cohesion: 0.20
+Nodes (10): 10. 测试结论分级, 11. 测试完成后的交付物, 1. 测试目标, 2. 目标参与者, 3. 测试设置, 4. 主持人开场脚本, 6. 结束访谈问题, 7. 单场记录表 (+2 more)
 
 ### Community 14 - "components.json"
 Cohesion: 0.09
@@ -364,9 +369,9 @@ Nodes (20): createX402Merchant(), defaultPayTo(), listenX402Merchant(), X402_FAC
 Cohesion: 0.10
 Nodes (20): 1. 目标, 2. 目标用户, 3. P0 成功标准, 4. 核心对象, 5.1 Agent 付款, 5.2 Agent 收款, 5. 核心流程, 6. P0 功能需求 (+12 more)
 
-### Community 17 - "utils.ts"
-Cohesion: 0.08
-Nodes (16): AspectRatio(), Badge(), badgeVariants, Checkbox(), HoverCardContent(), ResizableHandle(), ResizablePanelGroup(), ScrollArea() (+8 more)
+### Community 17 - "toggle-group.tsx"
+Cohesion: 0.43
+Nodes (5): ToggleGroup(), ToggleGroupContext, ToggleGroupItem(), Toggle(), toggleVariants
 
 ### Community 18 - "combobox.tsx"
 Cohesion: 0.09
@@ -381,12 +386,12 @@ Cohesion: 0.10
 Nodes (19): 1. 验证目标, 2. 北极星指标, 3. 漏斗指标, 4. 价值指标, 5. 可靠性指标, 6. 客户访谈计划, 7. 原型实验, 8. Go / Iterate / Stop 门槛 (+11 more)
 
 ### Community 21 - "page.tsx"
-Cohesion: 0.10
-Nodes (16): copy, demoTxs, Detail(), formatAmount(), formatApiTime(), hasReached(), Home(), Language (+8 more)
+Cohesion: 0.09
+Nodes (18): copy, demoTxs, Detail(), formatAmount(), formatApiTime(), hasReached(), Home(), Language (+10 more)
 
 ### Community 22 - "doctor.mjs"
-Cohesion: 0.07
-Nodes (51): blockRemaining(), check(), compareVersions(), correlation(), DOCTOR_SCHEMA_VERSION, DOCTOR_STAGES, doctorHelp(), errorCode() (+43 more)
+Cohesion: 0.05
+Nodes (60): blockRemaining(), check(), compareVersions(), correlation(), DOCTOR_SCHEMA_VERSION, DOCTOR_STAGES, doctorHelp(), errorCode() (+52 more)
 
 ### Community 23 - "BU2 Pull Request"
 Cohesion: 0.09
@@ -424,9 +429,9 @@ Nodes (5): Alert(), AlertAction(), AlertDescription(), AlertTitle(), alertVarian
 Cohesion: 0.21
 Nodes (11): ChartConfig, ChartContainer(), ChartContext, ChartContextProps, ChartLegendContent(), ChartTooltipContent(), getPayloadConfigFromPayload(), INITIAL_DIMENSION (+3 more)
 
-### Community 32 - "item.tsx"
-Cohesion: 0.13
-Nodes (17): ButtonGroup(), ButtonGroupSeparator(), ButtonGroupText(), buttonGroupVariants, Item(), ItemActions(), ItemContent(), ItemDescription() (+9 more)
+### Community 32 - "utils.ts"
+Cohesion: 0.06
+Nodes (24): AspectRatio(), ButtonGroup(), ButtonGroupSeparator(), ButtonGroupText(), buttonGroupVariants, Checkbox(), HoverCardContent(), Item() (+16 more)
 
 ### Community 33 - "BU2 Agent Payment API 契约 v0.3.0"
 Cohesion: 0.10
@@ -437,8 +442,8 @@ Cohesion: 0.20
 Nodes (11): Attachment(), AttachmentAction(), AttachmentActions(), AttachmentContent(), AttachmentDescription(), AttachmentGroup(), AttachmentMedia(), attachmentMediaVariants (+3 more)
 
 ### Community 35 - "react"
-Cohesion: 0.08
-Nodes (24): Field(), FieldContent(), FieldDescription(), FieldError(), FieldGroup(), FieldLabel(), FieldLegend(), FieldSeparator() (+16 more)
+Cohesion: 0.10
+Nodes (19): Field(), FieldContent(), FieldDescription(), FieldError(), FieldGroup(), FieldLabel(), FieldLegend(), FieldSeparator() (+11 more)
 
 ### Community 36 - "ignorePatterns"
 Cohesion: 0.18
@@ -457,8 +462,8 @@ Cohesion: 0.09
 Nodes (28): apiError(), apiRecovery(), isRecord(), normalizeBaseUrl(), OpenApiResult, Operation, publicRequest(), stringValue() (+20 more)
 
 ### Community 40 - "BU2 Transaction-first P0 产品基线"
-Cohesion: 0.10
-Nodes (19): 1. 产品定位, 2. 连续交付顺序, 3. 核心对象, 4. 不可破坏契约, 5. 事件流程, 6. 治理模式边界, 7. 原型验收路径, 8. 衡量与边界 (+11 more)
+Cohesion: 0.20
+Nodes (10): 1. 产品定位, 2. P0 核心闭环, 3. 核心对象, 4. 不可破坏契约, 5. 状态机, 6. P0 产品页面, 7. P0 演示验收, 8. P0 非目标 (+2 more)
 
 ### Community 41 - "BU2 产品战略 v0.1"
 Cohesion: 0.12
@@ -478,11 +483,11 @@ Nodes (9): 1. 导航结构, 2. 页面职责, 3. 对象关系, 4. 交易详情信
 
 ### Community 45 - "ENV-03 操作日志"
 Cohesion: 0.03
-Nodes (65): 2026-09-06 21:26 CST · ENV-04 start, 2026-09-06 21:41 CST · ENV-04 implementation and verification, 2026-09-06 22:07 CST · ENV-05 start, 2026-09-06 22:39 CST · ENV-05 implementation and verification, 2026-09-06 23:04 CST · ENV-06 start, 2026-09-06 23:35 CST · ENV-06 implementation and verification, 2026-09-06 · Base Sepolia x402 bounded retry, 2026-09-06 · Base Sepolia x402 preflight (+57 more)
+Nodes (66): 2026-09-06 21:26 CST · ENV-04 start, 2026-09-06 21:41 CST · ENV-04 implementation and verification, 2026-09-06 22:07 CST · ENV-05 start, 2026-09-06 22:39 CST · ENV-05 implementation and verification, 2026-09-06 23:04 CST · ENV-06 start, 2026-09-06 23:35 CST · ENV-06 implementation and verification, 2026-09-06 · Base Sepolia x402 bounded retry, 2026-09-06 · Base Sepolia x402 preflight (+58 more)
 
-### Community 46 - "alert-dialog.tsx"
-Cohesion: 0.06
-Nodes (25): AlertDialogAction(), AlertDialogCancel(), AlertDialogContent(), AlertDialogDescription(), AlertDialogFooter(), AlertDialogHeader(), AlertDialogMedia(), AlertDialogOverlay() (+17 more)
+### Community 46 - "button.tsx"
+Cohesion: 0.07
+Nodes (23): Button(), buttonVariants, Calendar(), CalendarDayButton(), MessageScroller(), MessageScrollerButton(), MessageScrollerContent(), MessageScrollerItem() (+15 more)
 
 ### Community 47 - "BU2 Reference Server v0.17 / x402 Sandbox v0.5"
 Cohesion: 0.12
@@ -491,6 +496,10 @@ Nodes (17): BU2 Reference Server v0.17 / x402 Sandbox v0.5, F06a 持久身份与
 ### Community 48 - "1. 首发客户画像"
 Cohesion: 0.15
 Nodes (12): 1. 首发客户画像, 2. 优先场景, 3. 端到端使用故事, 4. 首批访谈筛选条件, BU2 用户与核心任务 v0.1, Persona A：AI 产品负责人, Persona B：Agent 开发者, Persona C：财务或 FinOps 管理者 (+4 more)
+
+### Community 49 - "SqliteLedger"
+Cohesion: 0.06
+Nodes (3): refundRequestFingerprint(), SqliteLedger, persistAuthorization()
 
 ### Community 50 - "layout.tsx"
 Cohesion: 0.25
@@ -506,11 +515,11 @@ Nodes (8): plugins, eslint, import, jsx-a11y, nextjs, oxc, typescript, unicorn
 
 ### Community 53 - "F15a 内部 Sandbox 执行会话自主审查报告"
 Cohesion: 0.10
-Nodes (20): 2026-09-09 · CI-RT01 发布镜像内运行时验收审查, 2026-09-09 · LA-01b 已确认退款事实恢复与新请求防重复审查, 2026-09-09 · LA-01c 已确认但未入账退款继续占用剩余容量审查, 2026-09-09 · LA-01d 退款请求条款持久化绑定审查, 2026-09-09 · LA-03d Posting 绑定与按账户投影实现审查, 2026-09-09 · LA-03d Schema 与所有权约束实现审查, 2026-09-09 · LA-03d 文档契约审查, 2026-09-10 · CI-03 有边界账本 Release Candidate 自主审查 (+12 more)
+Nodes (21): 2026-09-09 · CI-RT01 发布镜像内运行时验收审查, 2026-09-09 · LA-01b 已确认退款事实恢复与新请求防重复审查, 2026-09-09 · LA-01c 已确认但未入账退款继续占用剩余容量审查, 2026-09-09 · LA-01d 退款请求条款持久化绑定审查, 2026-09-09 · LA-03d Posting 绑定与按账户投影实现审查, 2026-09-09 · LA-03d Schema 与所有权约束实现审查, 2026-09-09 · LA-03d 文档契约审查, 2026-09-10 · CI-03 有边界账本 Release Candidate 自主审查 (+13 more)
 
 ### Community 54 - "server.mjs"
 Cohesion: 0.14
-Nodes (24): ajv, amount, decodeCursor(), encodeCursor(), paginateTransactions(), schemas, validateBody(), validateIdempotencyKey() (+16 more)
+Nodes (22): clone(), sanitizedAccessContract(), ajv, amount, decodeCursor(), encodeCursor(), paginateTransactions(), schemas (+14 more)
 
 ### Community 55 - "BU2 x402 Base Sepolia 测试钱包"
 Cohesion: 0.25
@@ -578,15 +587,15 @@ Nodes (11): type, type, type, type, api_contract, mcp_contract, minimum_node, no
 
 ### Community 71 - "SimulatedPaymentAdapter"
 Cohesion: 0.05
-Nodes (28): SimulatedPaymentAdapter, stack(), budgetInput, quoteInput, createReceivable(), quoteInput(), paidCollection(), CountingAdapter (+20 more)
+Nodes (18): SimulatedPaymentAdapter, stack(), createReceivable(), quoteInput(), CountingAdapter, EffectThenFailAdapter, RecoveryAdapter, UnknownObjectAdapter (+10 more)
 
 ### Community 72 - "properties"
 Cohesion: 0.12
 Nodes (16): type, properties, code, recovery, request_id, retry, trace_id, type (+8 more)
 
 ### Community 73 - "listen"
-Cohesion: 0.08
-Nodes (4): sdkServer(), createReserved(), request(), listen()
+Cohesion: 0.10
+Nodes (6): sdkServer(), assertSignerBinding(), createReserved(), request(), buildPaymentAdapter(), listen()
 
 ### Community 74 - "required"
 Cohesion: 0.09
@@ -609,8 +618,8 @@ Cohesion: 0.18
 Nodes (11): maximum, minimum, type, maximum, minimum, type, failed, passed (+3 more)
 
 ### Community 79 - "operations-acceptance.mjs"
-Cohesion: 0.15
-Nodes (10): composeFile, config(), here, iidFile, openLedgers, recordFact(), root, runId (+2 more)
+Cohesion: 0.11
+Nodes (19): composeFile, config(), here, iidFile, openLedgers, recordFact(), root, runId (+11 more)
 
 ### Community 80 - "compilerOptions"
 Cohesion: 0.14
@@ -626,7 +635,7 @@ Nodes (13): 1. Purpose and boundaries, 1. 目标与边界, 2. Run, 2. 运行, 3.
 
 ### Community 83 - "Bu2Sandbox"
 Cohesion: 0.07
-Nodes (3): Bu2Sandbox, clone(), postingProjection()
+Nodes (4): Bu2Sandbox, clone(), postingProjection(), openRuntime()
 
 ### Community 84 - "error_code"
 Cohesion: 0.17
@@ -684,25 +693,25 @@ Nodes (13): A. 单进程加 `environment` 列, ADR-0001：Sandbox 与 Live 环�
 Cohesion: 0.25
 Nodes (8): 1. 结论, 2. 执行方式, 3. 实测结果, 4. 失败与恢复记录, 5. 机器证据边界, 6. 金融与产品边界, 7. 恢复方式, E2.4 外部 clean-room 接入证据
 
-### Community 99 - "mcp.test.mjs"
-Cohesion: 0.16
-Nodes (9): Bu2HttpError, bu2Request(), BuyerAgent, closeReferenceServer(), runExternalAgentDemo(), Bu2McpToolError, connectBu2McpClient(), SellerAgent (+1 more)
+### Community 99 - "persistence.mjs"
+Cohesion: 0.08
+Nodes (9): now, openingInput, checkpointInput, createCheckpoint(), parse(), backupPath, directory, policy (+1 more)
 
 ### Community 104 - "step"
 Cohesion: 0.13
 Nodes (15): step, minimum, type, duration_ms, status, minLength, type, duration_ms (+7 more)
 
-### Community 105 - "pagination.tsx"
-Cohesion: 0.22
-Nodes (7): Pagination(), PaginationContent(), PaginationEllipsis(), PaginationLink(), PaginationLinkProps, PaginationNext(), PaginationPrevious()
+### Community 105 - "alert-dialog.tsx"
+Cohesion: 0.15
+Nodes (9): AlertDialogAction(), AlertDialogCancel(), AlertDialogContent(), AlertDialogDescription(), AlertDialogFooter(), AlertDialogHeader(), AlertDialogMedia(), AlertDialogOverlay() (+1 more)
 
 ### Community 106 - "null"
 Cohesion: 0.13
 Nodes (18): type, enum, type, type, live, null, string, enum (+10 more)
 
 ### Community 107 - "domain.mjs"
-Cohesion: 0.08
-Nodes (25): accessGrantStatuses, budgetPeriods, budgetScopeTypes, executionSessionActions, mandateActions, mandateStatuses, receivableStatuses, reconciliationFeeSources (+17 more)
+Cohesion: 0.10
+Nodes (22): accessGrantStatuses, budgetPeriods, budgetScopeTypes, executionSessionActions, mandateActions, mandateStatuses, receivableStatuses, reconciliationFeeSources (+14 more)
 
 ### Community 108 - "2. 顺序与完成门槛"
 Cohesion: 0.25
@@ -714,7 +723,7 @@ Nodes (4): client, startedAt, steps, transport
 
 ### Community 110 - "environment-config.mjs"
 Cohesion: 0.12
-Nodes (18): environmentConfig(), assertSignerBinding(), configurationError(), configured(), ENVIRONMENT_CONTRACT, ENVIRONMENT_CONTRACT_VERSION, EXECUTION_DISABLED, EXECUTION_ENABLED (+10 more)
+Nodes (17): environmentConfig(), configurationError(), configured(), ENVIRONMENT_CONTRACT, ENVIRONMENT_CONTRACT_VERSION, ENVIRONMENT_REGISTRY, EXECUTION_DISABLED, EXECUTION_ENABLED (+9 more)
 
 ### Community 111 - "LA-03a 结算、退款与 ProviderFee 业务事实分录自主审查报告"
 Cohesion: 0.29
@@ -722,7 +731,7 @@ Nodes (7): LA-03a 结算、退款与 ProviderFee 业务事实分录自主审查�
 
 ### Community 112 - "access-control.mjs"
 Cohesion: 0.10
-Nodes (21): ACCESS_CONTRACT, AccessController, authError(), bearerToken(), clone(), configurationError(), credentialMetadata(), identifierList() (+13 more)
+Nodes (19): ACCESS_CONTRACT, AccessController, authError(), bearerToken(), configurationError(), credentialMetadata(), identifierList(), loadAccessController() (+11 more)
 
 ### Community 113 - "failure"
 Cohesion: 0.29
@@ -773,8 +782,8 @@ Cohesion: 0.20
 Nodes (10): node, versions, additionalProperties, required, type, api_contract, environment_contract, mcp_contract (+2 more)
 
 ### Community 126 - "2026-09-09 · F15b 业务负载、停机与财务恢复验收"
-Cohesion: 0.05
-Nodes (43): 2026-09-06 · Base Sepolia x402 preflight, 2026-09-06 · Bounded Base Sepolia x402 settlement, 2026-09-06 · ENV-04, 2026-09-06 · ENV-05, 2026-09-06 · ENV-06, 2026-09-06 · ENV-07B Candidate preparation, 2026-09-06 · ENV-07B deployment preparation, 2026-09-06 · ENV-07B external acceptance pack (+35 more)
+Cohesion: 0.04
+Nodes (44): 2026-09-06 · Base Sepolia x402 preflight, 2026-09-06 · Bounded Base Sepolia x402 settlement, 2026-09-06 · ENV-04, 2026-09-06 · ENV-05, 2026-09-06 · ENV-06, 2026-09-06 · ENV-07B Candidate preparation, 2026-09-06 · ENV-07B deployment preparation, 2026-09-06 · ENV-07B external acceptance pack (+36 more)
 
 ### Community 127 - "2026-09-09 · F15b 业务负载、停机与财务恢复验收"
 Cohesion: 0.12
@@ -813,12 +822,16 @@ Cohesion: 0.22
 Nodes (9): scripts, build, dev, format, lint, sandbox, sandbox:demo, sandbox:test (+1 more)
 
 ### Community 136 - "operations.mjs"
-Cohesion: 0.19
-Nodes (25): assertConfigurationHash(), assertDisabledEnvironment(), canonical(), createEnvironmentBackup(), createOperationalSnapshot(), createPromotionManifest(), databaseEvidence(), deploymentConfigurationSha256() (+17 more)
+Cohesion: 0.23
+Nodes (16): assertConfigurationHash(), assertDisabledEnvironment(), canonical(), createEnvironmentBackup(), createOperationalSnapshot(), databaseEvidence(), environmentUnit(), fail() (+8 more)
 
 ### Community 137 - "deploy/hosted-sandbox.mjs"
 Cohesion: 0.16
 Nodes (25): activation, candidate, evidence(), gates, now, sourceCommit, transaction(), candidateSha256() (+17 more)
+
+### Community 138 - ".event"
+Cohesion: 0.14
+Nodes (4): accountToken(), prefix(), paidCollection(), canonicalReceiptPayload()
 
 ### Community 139 - "BU2 ENV-04/05/06 Deployment and Operations Reference"
 Cohesion: 0.29
@@ -840,21 +853,21 @@ Nodes (8): engines, node, name, overrides, sharp, private, type, version
 Cohesion: 0.18
 Nodes (16): advisoryId(), BLOCKING_SEVERITIES, blockingAuditIssues(), evaluateAuditIssues(), gitValue(), here, installedVersions(), root (+8 more)
 
-### Community 145 - "persistence.mjs"
-Cohesion: 0.08
-Nodes (11): credentialOnboardingBundle(), canonical(), immediateTransaction(), nowIso(), parse(), requestFingerprint(), secretFingerprint(), backupPath (+3 more)
+### Community 145 - "immediateTransaction"
+Cohesion: 0.09
+Nodes (6): credentialOnboardingBundle(), canonical(), immediateTransaction(), nowIso(), requestFingerprint(), secretFingerprint()
 
 ### Community 146 - "duplicate_submission"
 Cohesion: 0.07
 Nodes (29): const, const, additionalProperties, properties, required, type, additionalProperties, properties (+21 more)
 
-### Community 147 - "http.test.mjs"
-Cohesion: 0.18
-Nodes (3): Observability, sanitize(), WebhookDispatcher
+### Community 147 - "adapter.mjs"
+Cohesion: 0.19
+Nodes (4): budgetInput, quoteInput, quoteInput, WebhookDispatcher
 
 ### Community 149 - "f15b.test.mjs"
-Cohesion: 0.23
-Nodes (8): activeMandate(), mandateInput(), now, activateSessionAndMandate(), mandateInput(), now, sessionInput(), settledPayment()
+Cohesion: 0.24
+Nodes (7): activeMandate(), mandateInput(), now, activateSessionAndMandate(), mandateInput(), now, sessionInput()
 
 ### Community 150 - "ledger-resilience.mjs"
 Cohesion: 0.33
@@ -877,12 +890,12 @@ Cohesion: 0.15
 Nodes (10): baseLiveVariables, command(), composeFile, createdContainers, here, iidFile, root, runFaultContainer() (+2 more)
 
 ### Community 157 - "identity.mjs"
-Cohesion: 0.20
-Nodes (18): now, BINDING_STATUSES, ID, identifier(), invalid(), normalizeAccount(), normalizeAgent(), normalizeBinding() (+10 more)
+Cohesion: 0.26
+Nodes (17): BINDING_STATUSES, ID, identifier(), invalid(), normalizeAccount(), normalizeAgent(), normalizeBinding(), normalizeCredential() (+9 more)
 
 ### Community 158 - "hosted-sandbox.test.mjs"
 Cohesion: 0.12
-Nodes (18): resolvedCompose(), activationFor(), cliPath, digest(), evidenceFor(), gates, now, secretFixture() (+10 more)
+Nodes (18): resolvedCompose(), resolvedCompose(), activationFor(), cliPath, digest(), evidenceFor(), gates, now (+10 more)
 
 ### Community 159 - "D1 F07 财务边界契约自主审查报告"
 Cohesion: 0.33
@@ -905,7 +918,7 @@ Cohesion: 0.20
 Nodes (10): 1. 目标与边界, 2. 两阶段准入, 3. Hosted Sandbox 专用启动入口, 4.1 Candidate, 4.2 Activation, 4.3 Evidence, 4. 三类不可混淆的证据, 5. 停止与恢复 (+2 more)
 
 ### Community 165 - "operations-cli.mjs"
-Cohesion: 0.42
+Cohesion: 0.50
 Nodes (7): assertNewEvidencePath(), environmentConfig(), parseArguments(), required(), run(), withLedger(), writeEvidence()
 
 ### Community 166 - "F13 有界取消与退款恢复自主审查报告"
@@ -936,9 +949,13 @@ Nodes (20): 10. 可观测性与运营, 11. 发布计划, 12. 文档与变更日�
 Cohesion: 0.33
 Nodes (6): F16b Hosted Sandbox 外部集成基础准入自主审查报告, 残余风险, 结果, 结果, 结论, 结论
 
+### Community 173 - "observability.mjs"
+Cohesion: 0.26
+Nodes (6): CATEGORIES, classifyOperationalError(), createTraceId(), isTraceId(), Observability, sanitize()
+
 ### Community 174 - "02-product/README.md"
-Cohesion: 0.06
-Nodes (23): CI-04 定时账本韧性与供应链契约, 产品与发布边界, 恢复, 目标, 验收对象, LA-01 持久化退款尝试与未决额度占用契约, 持久化, 状态与规则 (+15 more)
+Cohesion: 0.07
+Nodes (21): 1. 目的与范围, 2. 重建规则, 3. 验收与非目标, LA-03c 账务投影重建契约, 1. 目标与边界, 2. 外部观察事实, 3. 确定性判定, 4. API 与持久化 (+13 more)
 
 ### Community 175 - "properties"
 Cohesion: 0.12
@@ -949,11 +966,11 @@ Cohesion: 0.24
 Nodes (6): bindingDocument(), createBetaContext(), mandateInput(), now, sessionInput(), UnknownSettlementAdapter
 
 ### Community 177 - "F07 财务边界契约 v1"
-Cohesion: 0.12
+Cohesion: 0.13
 Nodes (15): 10. 验收门槛, 11. 明确不变的边界, 1. 目的与非目标, 2.1 Budget Scope, 2.2 Budget Hold, 2.3 Ledger Entry / Financial Posting, 2. 核心对象, 3. 金额与不变量 (+7 more)
 
 ### Community 178 - "F08 版本化 Payment Mandate 契约 v1"
-Cohesion: 0.12
+Cohesion: 0.13
 Nodes (15): 10. 验收门槛, 11. 明确不变的边界, 1. 目的与非目标, 2.1 PaymentMandate, 2.2 PolicyDecision, 2.3 Authorization 引用, 2. 核心对象, 3. Mandate 状态机 (+7 more)
 
 ### Community 179 - "required"
@@ -973,20 +990,20 @@ Cohesion: 0.13
 Nodes (15): 2026-09-09 · F16a 内部 Sandbox 自主双向收付 Beta 候选, 2026-09-09 · F16b Hosted Sandbox 外部集成基础准入, 2026-09-09 · LA-01 Ledger Assurance Gate：持久化退款尝试, 2026-09-09 · LA-01b 已确认退款事实恢复与新请求防重复, 2026-09-09 · LA-01c 已确认但未入账退款继续占用剩余容量, 2026-09-09 · LA-01d 退款请求条款持久化绑定, 2026-09-09 · LA-02 Ledger Assurance Gate：成组 Journal / Posting 保护, 2026-09-09 · LA-03a 结算、退款与 ProviderFee 业务事实分录 (+7 more)
 
 ### Community 183 - "hosted-sandbox-deployment.mjs"
-Cohesion: 0.23
-Nodes (11): asEnvironment(), here, HOSTED_SANDBOX_DEPLOYMENT, immutableImage(), networkEntries(), normalizeCommand(), secretEntries(), composePath (+3 more)
+Cohesion: 0.26
+Nodes (10): asEnvironment(), here, HOSTED_SANDBOX_DEPLOYMENT, immutableImage(), networkEntries(), normalizeCommand(), secretEntries(), composePath (+2 more)
 
 ### Community 184 - "properties"
 Cohesion: 0.15
 Nodes (13): const, additionalProperties, properties, type, const, const, access_mode, environment_document (+5 more)
 
 ### Community 185 - "onboarding.mjs"
-Cohesion: 0.29
+Cohesion: 0.26
 Nodes (6): argumentValue(), configFor(), databasePath(), hasFlag(), readDocument(), run()
 
 ### Community 186 - "F09a 自主支付执行验证"
-Cohesion: 0.15
-Nodes (13): 2026-09-09 · CI-02 evidence binding, 2026-09-09 · CI-RT01 runtime image assurance, 2026-09-09 · LA-03d Posting 绑定与按账户投影实现, 2026-09-09 · LA-03d Schema 与所有权约束实现, 2026-09-09 · LA-03d 多账户账簿所有权与余额投影契约, 2026-09-09 · LA-05b replay baseline, 2026-09-09 · LA-06a 本地全量与隔离准入, 2026-09-09 · Ledger Release Candidate local gate (+5 more)
+Cohesion: 0.14
+Nodes (14): 2026-09-09 · CI-02 evidence binding, 2026-09-09 · CI-RT01 runtime image assurance, 2026-09-09 · LA-03d Posting 绑定与按账户投影实现, 2026-09-09 · LA-03d Schema 与所有权约束实现, 2026-09-09 · LA-03d 多账户账簿所有权与余额投影契约, 2026-09-09 · LA-05b replay baseline, 2026-09-09 · LA-06a 本地全量与隔离准入, 2026-09-09 · Ledger Release Candidate local gate (+6 more)
 
 ### Community 187 - "la06a-local-gate.mjs"
 Cohesion: 0.25
@@ -1035,6 +1052,10 @@ Nodes (8): 1. 目的, 2. 账簿所有权维度, 3. 余额投影规则, 4. 历史
 ### Community 198 - "F16b Hosted Sandbox 外部集成基础准入"
 Cohesion: 0.33
 Nodes (5): F16b Hosted Sandbox 外部集成基础准入, 不能由本地资格替代的关卡, 停止条件, 本地覆盖范围, 目标
+
+### Community 199 - "la03d-posting.test.mjs"
+Cohesion: 0.17
+Nodes (3): registerAccount(), postJournal(), registerAccount()
 
 ### Community 200 - "validate-evidence.mjs"
 Cohesion: 0.31
@@ -1100,29 +1121,29 @@ Nodes (7): issuer_trusted, receipt_verification, settlement_confirmed, signature
 Cohesion: 0.29
 Nodes (3): AuthorizationDecision, CreatePaymentIntent, PaymentIntent
 
-### Community 216 - "domain.test.mjs"
-Cohesion: 0.40
-Nodes (4): createReviewIntent(), quoteInput, reserve(), settle()
+### Community 216 - ".createPaymentIntent"
+Cohesion: 0.36
+Nodes (9): createReviewIntent(), reservedTransaction(), settledTransaction(), settledPayment(), settledPayment(), settledTransaction(), settledPayment(), completePayment() (+1 more)
 
 ### Community 217 - "review-report.md"
-Cohesion: 0.13
-Nodes (14): F12 Recoverable Paid Access 自主审查报告, F15b 业务负载、停机与财务恢复自主审查报告, F16a 内部 Sandbox 自主双向收付 Beta 候选自主审查报告, LA-02 成组 Journal / Posting 保护自主审查报告, LA-04 Collection 持续验证与单次入账自主审查报告, LA-05a 外部观察对账自主审查报告, 初步结果, 初步结果 (+6 more)
+Cohesion: 0.18
+Nodes (10): F12 Recoverable Paid Access 自主审查报告, F15b 业务负载、停机与财务恢复自主审查报告, F16a 内部 Sandbox 自主双向收付 Beta 候选自主审查报告, LA-01 持久化退款尝试与未决额度占用自主审查报告, LA-02 成组 Journal / Posting 保护自主审查报告, 残余风险, 结果, 结果 (+2 more)
 
 ### Community 218 - "CI-04 定时账本韧性与供应链检查自主审查报告"
 Cohesion: 0.50
 Nodes (4): CI-04 定时账本韧性与供应链检查自主审查报告, 审查清单, 残余风险, 评分与结论
 
-### Community 219 - "LA-05a 外部观察对账契约 v1"
-Cohesion: 0.33
-Nodes (6): 1. 目标与边界, 2. 外部观察事实, 3. 确定性判定, 4. API 与持久化, 5. 验收标准, LA-05a 外部观察对账契约 v1
+### Community 219 - "navigation-menu.tsx"
+Cohesion: 0.22
+Nodes (9): NavigationMenu(), NavigationMenuContent(), NavigationMenuIndicator(), NavigationMenuItem(), NavigationMenuLink(), NavigationMenuList(), NavigationMenuPositioner(), NavigationMenuTrigger() (+1 more)
 
 ### Community 220 - "D2 F08 Payment Mandate 契约自主审查报告"
 Cohesion: 0.40
 Nodes (5): D2 F08 Payment Mandate 契约自主审查报告, 审查范围, 结论, 评分, 遗留风险
 
-### Community 221 - "popover.tsx"
-Cohesion: 0.29
-Nodes (4): PopoverContent(), PopoverDescription(), PopoverHeader(), PopoverTitle()
+### Community 221 - "INTERACTION_SPEC.md"
+Cohesion: 0.22
+Nodes (4): BU2 Transaction-first P0 验收方案, 主路径, 结论规则, 辅助路径
 
 ### Community 222 - "ENV-06 自主审查报告"
 Cohesion: 0.40
@@ -1192,13 +1213,13 @@ Nodes (4): F06b 资金来源与收款目标绑定自主审查报告, 残余风�
 Cohesion: 0.50
 Nodes (4): ENV-07B Hosted Sandbox 外部验收包自主审查报告, 残余风险, 结论, 评分
 
-### Community 239 - "LA-01 持久化退款尝试与未决额度占用自主审查报告"
-Cohesion: 0.50
-Nodes (4): LA-01 持久化退款尝试与未决额度占用自主审查报告, 残余风险, 结果, 结论
+### Community 239 - "BU2 Task-first P0 产品基线（已废止）"
+Cohesion: 0.22
+Nodes (9): 1. 产品定位, 2. 连续交付顺序, 3. 核心对象, 4. 不可破坏契约, 5. 事件流程, 6. 治理模式边界, 7. 原型验收路径, 8. 衡量与边界 (+1 more)
 
-### Community 240 - "LA-05b 历史账务重放与备份追平契约 v1"
-Cohesion: 0.33
-Nodes (6): 1. 目标与边界, 2. 历史重放, 3. 备份后追平, 4. 持久化与恢复, 5. 验收标准, LA-05b 历史账务重放与备份追平契约 v1
+### Community 240 - "5. 正式测试任务"
+Cohesion: 0.25
+Nodes (8): 5. 正式测试任务, UT-01 识别工作重点, UT-02 解释任务费用, UT-03 理解治理模式, UT-04 处理异常, UT-05 验证决策结果, UT-06 检查另一项异常, UT-07 语言切换
 
 ### Community 241 - "LA-03c 账务投影重建自主审查报告"
 Cohesion: 0.50
@@ -1208,32 +1229,52 @@ Nodes (4): LA-03c 账务投影重建自主审查报告, 初步结果, 残余风�
 Cohesion: 0.50
 Nodes (4): LA-05b 历史账务重放与备份追平自主审查报告, 初步结果, 残余风险, 结论
 
-### Community 243 - "f15a.test.mjs"
-Cohesion: 0.40
-Nodes (3): activeMandate(), mandateInput(), now
+### Community 243 - "CI-04 定时账本韧性与供应链契约"
+Cohesion: 0.33
+Nodes (5): CI-04 定时账本韧性与供应链契约, 产品与发布边界, 恢复, 目标, 验收对象
 
 ### Community 246 - "F14 Payment / Collection / Refund / Fee Reconciliation 自主审查报告"
 Cohesion: 0.50
 Nodes (4): F14 Payment / Collection / Refund / Fee Reconciliation 自主审查报告, 残余风险, 结果, 结论
 
+### Community 251 - "LA-01 持久化退款尝试与未决额度占用契约"
+Cohesion: 0.33
+Nodes (5): LA-01 持久化退款尝试与未决额度占用契约, 持久化, 状态与规则, 目标, 验收
+
+### Community 253 - "x402.test.mjs"
+Cohesion: 0.40
+Nodes (3): facilitatorClient, paymentRequired(), rotatingChallengeServer()
+
+### Community 254 - "LA-04 Collection 持续验证与单次入账自主审查报告"
+Cohesion: 0.50
+Nodes (4): LA-04 Collection 持续验证与单次入账自主审查报告, 初步结果, 残余风险, 结论
+
+### Community 255 - "LA-05a 外部观察对账自主审查报告"
+Cohesion: 0.50
+Nodes (4): LA-05a 外部观察对账自主审查报告, 初步结果, 残余风险, 结论
+
+### Community 256 - "8. 产品验收标准"
+Cohesion: 0.50
+Nodes (4): 8.1 核心可用性门槛, 8.2 产品价值门槛, 8.3 语言门槛, 8. 产品验收标准
+
 ## Knowledge Gaps
-- **1755 isolated node(s):** `here`, `root`, `composeFile`, `runId`, `work` (+1750 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1954 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **16 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **1759 isolated node(s):** `here`, `root`, `composeFile`, `runId`, `work` (+1754 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1960 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **12 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `cn()` connect `cn` to `sidebar.tsx`, `menubar.tsx`, `utils.ts`, `combobox.tsx`, `context-menu.tsx`, `drawer.tsx`, `carousel.tsx`, `alert.tsx`, `chart.tsx`, `item.tsx`, `attachment.tsx`, `react`, `alert-dialog.tsx`, `empty.tsx`, `bubble.tsx`, `command.tsx`, `tabs.tsx`, `popover.tsx`, `pagination.tsx`?**
+- **Why does `cn()` connect `cn` to `sidebar.tsx`, `menubar.tsx`, `toggle-group.tsx`, `combobox.tsx`, `page.tsx`, `context-menu.tsx`, `drawer.tsx`, `carousel.tsx`, `alert.tsx`, `chart.tsx`, `utils.ts`, `attachment.tsx`, `react`, `button.tsx`, `empty.tsx`, `bubble.tsx`, `command.tsx`, `tabs.tsx`, `navigation-menu.tsx`, `alert-dialog.tsx`?**
   _High betweenness centrality (0.015) - this node is a cross-community bridge._
-- **Why does `SqliteLedger` connect `SqliteLedger` to `operations.mjs`, `persistence.mjs`, `http.test.mjs`, `f15b.test.mjs`, `ledger-nightly.test.mjs`, `identity.mjs`, `operations-cli.mjs`, `.commitDomainMutation`, `f16a.test.mjs`, `server.mjs`, `onboarding.mjs`, `runtime-assurance.mjs`, `SimulatedPaymentAdapter`, `la03d-posting.test.mjs`, `listen`, `operations-acceptance.mjs`, `domain.mjs`, `environment-config.mjs`, `f15a.test.mjs`, `identity.test.mjs`?**
+- **Why does `SqliteLedger` connect `SqliteLedger` to `operations.mjs`, `immediateTransaction`, `adapter.mjs`, `f15b.test.mjs`, `ledger-nightly.test.mjs`, `identity.mjs`, `operations-cli.mjs`, `f16a.test.mjs`, `server.mjs`, `onboarding.mjs`, `runtime-assurance.mjs`, `SimulatedPaymentAdapter`, `la03d-posting.test.mjs`, `listen`, `operations-acceptance.mjs`, `Bu2Sandbox`, `.createPaymentIntent`, `persistence.mjs`, `environment-config.mjs`, `identity.test.mjs`, `x402.test.mjs`?**
   _High betweenness centrality (0.011) - this node is a cross-community bridge._
-- **Why does `Bu2Sandbox` connect `Bu2Sandbox` to `ApiError`, `.requestRefund`, `SimulatedPaymentAdapter`, `la03d-posting.test.mjs`, `listen`, `.settle`, `domain.mjs`, `environment-config.mjs`, `f16a.test.mjs`, `persistence.mjs`, `f15a.test.mjs`, `http.test.mjs`, `f15b.test.mjs`, `server.mjs`, `domain.test.mjs`, `identity.mjs`?**
-  _High betweenness centrality (0.007) - this node is a cross-community bridge._
+- **Why does `Bu2Sandbox` connect `Bu2Sandbox` to `ApiError`, `persistence.mjs`, `.requestRefund`, `SimulatedPaymentAdapter`, `la03d-posting.test.mjs`, `.event`, `domain.mjs`, `environment-config.mjs`, `f16a.test.mjs`, `adapter.mjs`, `f15b.test.mjs`, `server.mjs`, `.createPaymentIntent`, `la05a.test.mjs`, `x402.test.mjs`?**
+  _High betweenness centrality (0.008) - this node is a cross-community bridge._
 - **What connects `here`, `root`, `composeFile` to the rest of the system?**
-  _1755 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _1759 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `cn` be split into smaller, more focused modules?**
-  _Cohesion score 0.04673807205452775 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.04186046511627907 - nodes in this community are weakly interconnected._
 - **Should `sidebar.tsx` be split into smaller, more focused modules?**
   _Cohesion score 0.05585106382978723 - nodes in this community are weakly interconnected._
 - **Should `devDependencies` be split into smaller, more focused modules?**

@@ -544,3 +544,17 @@
 - Tool: `node deploy/la06a-local-gate.mjs`; result: passed with Sandbox 202/202, LA-06a 4/4, deployment/Hosted 23/23, SDK 10/10, contract validation and Prototype lint/build.
 - Tool: Ruby YAML, Node JSON/syntax and `git diff --check`; result: all local syntax and patch checks passed.
 - Boundary: candidate status is always `prepared_not_released`; tag, GitHub Release, registry, Hosted, Sandbox/Testnet bilateral settlement, Live/Mainnet, Signer, Provider and payment execution remain unauthorized. E3.1 remains paused and LA-06b remains not executed.
+
+## 2026-09-10 · LA-03d 版本化账户投影刷新
+
+- Scope: 从 PR #71 合并提交 `5120e57` 创建 `feat/ledger-projection-refresh`；实现 Schema 19 派生投影版本、确定性重建和条件激活，不切换运行时钱包余额。
+- Tool: `graphify query`; result: 定位 `SqliteLedger`、`Bu2Sandbox.rebuildLedgerAccountProjection`、LA-03d 契约、运行时 Schema 策略和 LA-06a 门禁依赖。
+- Tool: `rg` / `sed` / `git`; result: 确认 main/分支干净、Schema 18、现有 BEGIN IMMEDIATE/CAS/内容哈希模式和未完成的投影刷新范围。
+- Boundary: Local/Simulation implementation only; no historical migration, Provider, Signer, Hosted, Testnet settlement, Live/Mainnet or real funds. E3.1 remains paused.
+- Tool: `apply_patch`; result: 新增 Schema 19 投影版本/余额表、显式 expected version、确定性内容哈希、条件激活、损坏派生行重建和领域读写入口。
+- Tool: `node --test`; result: 首次因夹具 LedgerEvent 计数假设错误出现 19/20，修正证据断言后专项 20/20 通过。
+- Tool: `npm --prefix sandbox test`; result: 213/213 passed。
+- Tool: `node deploy/runtime-assurance.mjs`; result: Schema 1–19、WAL、foreign keys、Online Backup/restore passed。
+- Tool: `node deploy/la06a-local-gate.mjs`; result: Sandbox 213/213、边界 4/4、部署/Hosted 23/23、SDK 10/10、契约校验、Prototype lint/build passed；外部双向 Sandbox `accepted=false`。
+- Tool: `graphify update .`; result: 知识图更新为 3799 nodes / 6218 edges；社区集合变化提示保留，不影响代码图生成。
+- Tool: `git diff --check` / `git commit`; result: patch 检查通过，创建本地提交 `1d626cd`，随后仅为补齐本条操作日志 amend；未 push、未创建 PR。

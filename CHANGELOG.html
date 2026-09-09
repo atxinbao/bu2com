@@ -151,6 +151,12 @@
 
       <h2 id="unreleased">Unreleased</h2>
       <article class="release">
+        <div class="release-head"><div><h3>LA-03d · 版本化账簿账户投影刷新</h3><time datetime="2026-09-10">2026-09-10</time></div><span class="status">Unreleased</span></div>
+        <p class="summary">在不可变 Financial Posting 之上增加可删除、可重建的账户/币种派生投影，以确定性内容哈希和条件版本激活保证重复刷新、并发与失败恢复不会改变资金事实。</p>
+        <div class="change-group"><h4>Changes</h4><ul><li><span class="tag added">Added</span>SQLite Schema 19 新增投影版本和余额表；按账簿账户、环境、租户、账簿、资产/网络和币种保存版本边界。</li><li><span class="tag changed">Changed</span>刷新在单一 <code>BEGIN IMMEDIATE</code> 事务内读取 Posting、构建新版本并按显式 <code>expected_active_version</code> 激活；相同内容幂等复用，陈旧版本、未绑定事实、非 active 账户和不平衡结果失败关闭。</li><li><span class="tag added">Added</span>损坏或被删除的派生余额行可从不可变 Posting 重建；刷新不追加 LedgerEvent、不改写 Journal/Posting，也不读取或修改运行时 <code>wallet.available</code>。</li><li><span class="tag governance">Boundary</span>不执行历史归属迁移、运行时余额切换、Provider、Signer、Hosted、Sandbox/Testnet 双向结算、Live/Mainnet、真实资金或 E3.1。</li></ul></div>
+        <div class="evidence"><div><b>风险等级</b><span>R2 · SQLite Schema、账务派生数据与并发激活，需独立 Domain / Architecture 审查</span></div><div><b>验证</b><span>LA-03d/Runtime/CI 专项 20/20；LA-06a：Sandbox 213/213、边界 4/4、部署/Hosted 契约 23/23、SDK 10/10、契约校验和 Prototype lint/build 通过</span></div><div><b>金融不变量</b><span>Journal/Posting 仍是唯一资金事实；刷新失败整体回滚，最多一个活动版本，运行时钱包余额不变</span></div><div><b>恢复</b><span>revert 代码与策略后停止生成 Schema 19 新投影；新增表是纯派生数据，可保留或从不可变 Posting 重建，旧运行时余额路径未切换</span></div></div>
+      </article>
+      <article class="release">
         <div class="release-head"><div><h3>CI-04 · 定时账本韧性与供应链检查</h3><time datetime="2026-09-10">2026-09-10</time></div><span class="status">Unreleased</span></div>
         <p class="summary">新增只读 nightly 工作流，对真实账本模块执行故障、固定 seed 属性/容量、迁移/恢复矩阵，并对三个 workspace 的精确锁定依赖和 high/critical advisory 失败关闭。</p>
         <div class="change-group"><h4>Changes</h4><ul><li><span class="tag added">Added</span>新增 <code>ci04.ledger-resilience.v1</code> 与 <code>ci04.supply-chain.v1</code> 证据，保存源码 commit/tree、seed、完整步骤/日志、测试计数、耗时、audit JSON 与 SHA-256。</li><li><span class="tag changed">Dependencies</span>SDK 将 Redocly/js-yaml 锁定到修复版本；Prototype 升级 React 19.2 补丁和 vinext/Vite/Cloudflare 工具链，并精确 override <code>sharp@0.35.4</code>；未执行自动 <code>npm audit fix</code>。</li><li><span class="tag governance">Boundary</span>例外必须绑定 workspace、包、advisory、实际版本、Owner 和到期日；当前例外为空。工作流不自动发布、不加载资金凭证且保持 LA-06b 未执行。</li></ul></div>

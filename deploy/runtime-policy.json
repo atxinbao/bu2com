@@ -3,6 +3,6 @@
   "node_version": "v22.16.0",
   "npm_version": "10.9.2",
   "sqlite_version": "3.49.1",
-  "ledger_schema_version": 18,
+  "ledger_schema_version": 19,
   "node_image": "node:22.16.0-bookworm-slim@sha256:048ed02c5fd52e86fda6fbd2f6a76cf0d4492fd6c6fee9e2c463ed5108da0e34"
 }

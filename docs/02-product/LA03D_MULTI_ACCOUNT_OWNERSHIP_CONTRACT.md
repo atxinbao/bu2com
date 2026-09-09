@@ -52,8 +52,12 @@ LA-03a～LA-03c 已经把业务资金事实写入受保护的 Journal/Posting，
 
 ## 6. 非目标与顺序
 
-本 PR 只冻结契约，不改变 Schema、API、运行时余额或交易状态。下一实现 PR 应按“Schema/归属约束 → 写入原语与投影刷新 → 隔离历史迁移与切换证据”拆分，并分别通过 R2 Domain 与 Architecture 审查。LA-06b 的真实 Hosted/Base Sepolia 双向证据、E3.1、Live/Mainnet、托管和生产资金路径继续关闭。
+本契约的实现按“Schema/归属约束 → 写入原语与投影刷新 → 隔离历史迁移与运行时切换证据”拆分，并分别通过 R2 Domain 与 Architecture 审查。LA-06b 的真实 Hosted/Base Sepolia 双向证据、E3.1、Live/Mainnet、托管和生产资金路径继续关闭。
 
 ### 实现状态
 
-Schema/归属约束子范围已增加 `ledger_accounts` Schema 16、唯一所有权元组、幂等注册、隔离查询和条件版本状态转换。第二实现子范围增加 Schema 17 `financial_postings.ledger_account_id`、活跃账簿账户绑定校验和按账簿账户重建只读投影；未绑定的历史 Posting 仍保留为兼容状态。两项实现均不切换运行时钱包余额、不执行历史迁移或投影 cutover；以上剩余范围必须继续独立取证。
+Schema/归属约束子范围已增加 `ledger_accounts` Schema 16、唯一所有权元组、幂等注册、隔离查询和条件版本状态转换。第二实现子范围增加 Schema 17 `financial_postings.ledger_account_id`、活跃账簿账户绑定校验和按账簿账户重建只读投影；未绑定的历史 Posting 仍保留为兼容状态。
+
+第三实现子范围增加 Schema 19 `ledger_projection_versions` 与 `ledger_projection_balances`。刷新以账簿账户、资产/网络和币种为边界，在同一个 `BEGIN IMMEDIATE` 事务内读取不可变 Posting、生成确定性内容哈希、写入新版本并按 `expected_active_version` 条件激活；相同内容幂等复用活动版本，失败或并发冲突整体回滚。未绑定 Posting、非 active 账户、错环境或不平衡结果阻止激活。投影表仍是可删除、可重建的派生数据，不产生新的资金事实。
+
+以上实现不切换运行时 `wallet.available`，不执行历史归属迁移或运行时 cutover。剩余的隔离历史迁移与切换证据必须继续独立取证。

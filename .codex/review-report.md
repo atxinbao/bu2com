@@ -1102,3 +1102,12 @@ F06b 让 Quote 和 PaymentIntent 能够保留可验证的资金来源与收款�
 - 验证评分：96/100。CI/运行时专项 13/13；LA-06a 总门禁中 Sandbox 202/202、边界 4/4、部署/Hosted 23/23、SDK 10/10，契约验证与 Prototype lint/build 通过；YAML/JSON/语法/diff 检查通过。
 - 遗留风险：当前私有仓库套餐无法启用所需 `main` 分支保护，因此真实 workflow 必须失败关闭，尚无 GitHub-hosted 候选 artifact 证据。作者自审不能替代独立 R2 审查，PR 合并也不构成发布批准。
 - 综合评分：96/100。建议提交 R2 Draft PR；启用分支保护后才可对合并后的确定 `main` SHA 运行 CI-03。LA-06b、Hosted、Sandbox/Testnet 双向结算、Live/Mainnet 和真实资金保持关闭。
+
+## 2026-09-10 · LA-03d 版本化账户投影刷新自主审查
+
+- 审查者：Codex（Contributor / Verifier，非 R2 Approver）。
+- 技术评分：95/100。Schema 19 仅存放可删除派生数据；单一 BEGIN IMMEDIATE 快照内完成 Posting 读取、确定性构建、显式版本 CAS 和活动版本切换，陈旧写入、未绑定事实、非 active/错环境账户与故障注入均失败关闭。
+- 战略评分：97/100。补齐 LA-03d 已冻结的第三实现子范围，不提前切换运行时钱包、不迁移历史事实，也不扩大 Hosted/Testnet/Live 或真实资金边界。
+- 验证评分：96/100。专项 20/20；LA-06a 完整门禁中 Sandbox 213/213、边界 4/4、部署/Hosted 23/23、SDK 10/10、契约校验和 Prototype lint/build 通过；Runtime assurance 证明 Schema 1–19 连续及备份恢复。
+- 遗留风险：历史未绑定 Posting 当前阻止刷新，需后续隔离迁移解决；运行时余额 cutover 尚未实施；SQLite 单写者并发语义仍需独立 R2 Domain / Architecture 人工审查。LA-06b 未执行。
+- 综合评分：96/100，建议提交 R2 Draft PR。作者自审不能替代独立 Approver；E3.1、Provider、Signer、Hosted、Sandbox/Testnet 双向结算、Live/Mainnet 和真实资金保持关闭。

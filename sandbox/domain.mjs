@@ -1315,6 +1315,33 @@ export class Bu2Sandbox {
     };
   }
 
+  refreshLedgerAccountProjection({
+    ledger_account_id,
+    currency,
+    expected_active_version = undefined,
+  } = {}) {
+    validateIdentifier(ledger_account_id, "lga", "ledger_account_id");
+    if (!this.ledger) {
+      throw new ApiError(503, "service_unavailable", "ledger_persistence_required", "A persistent ledger is required to refresh an account projection.");
+    }
+    return this.ledger.refreshLedgerAccountProjection({
+      ledger_account_id,
+      currency,
+      expected_active_version,
+      environment: this.environmentConfig.environment,
+      buildProjection: (postings) => postingProjection(postings, currency),
+    });
+  }
+
+  getActiveLedgerAccountProjection({ ledger_account_id, currency } = {}) {
+    validateIdentifier(ledger_account_id, "lga", "ledger_account_id");
+    if (!this.ledger) return null;
+    this.ledger.assertLedgerAccountBinding(ledger_account_id, {
+      environment: this.environmentConfig.environment,
+    });
+    return this.ledger.getActiveLedgerAccountProjection({ ledger_account_id, currency });
+  }
+
   exportLedgerReplayEvidence({ as_of = null } = {}) {
     if (as_of !== null) validateDate(as_of, "as_of");
     const cutoff = as_of === null ? null : Date.parse(as_of);
