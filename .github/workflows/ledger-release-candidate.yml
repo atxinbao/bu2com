@@ -30,6 +30,10 @@ jobs:
           fetch-depth: 0
           fetch-tags: true
           persist-credentials: false
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: 24.20.0
+          package-manager-cache: false
       - name: Admit protected main request
         env:
           BU2_CANDIDATE_VERSION: ${{ inputs.candidate_version }}

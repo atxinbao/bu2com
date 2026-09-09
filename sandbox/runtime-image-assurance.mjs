@@ -8,6 +8,14 @@ const directory = mkdtempSync(join(tmpdir(), "bu2-runtime-image-"));
 const policy = JSON.parse(readFileSync(new URL("../deploy/runtime-policy.json", import.meta.url), "utf8"));
 const sourcePath = join(directory, "source.sqlite");
 const backupPath = join(directory, "backup.sqlite");
+const parseVersion = (version) => {
+  const match = String(version ?? "").match(/^(\d+)\.(\d+)\.(\d+)/);
+  return match ? match.slice(1).map(Number) : null;
+};
+const atLeast = (actual, expected) =>
+  actual[0] > expected[0] ||
+  (actual[0] === expected[0] &&
+    (actual[1] > expected[1] || (actual[1] === expected[1] && actual[2] >= expected[2])));
 let source;
 let restored;
 try {
@@ -35,6 +43,11 @@ try {
     evidence.sqlite_version !== policy.sqlite_version
   ) {
     throw new Error("Image runtime differs from the approved runtime policy");
+  }
+  const sqliteVersion = parseVersion(evidence.sqlite_version);
+  const sqliteFixFloor = parseVersion(policy.sqlite_wal_reset_fixed_min_version);
+  if (!sqliteVersion || !sqliteFixFloor || !atLeast(sqliteVersion, sqliteFixFloor)) {
+    throw new Error("Image SQLite runtime is below the approved WAL-reset fix floor");
   }
   if (evidence.runtime_identity.uid !== 10001 || evidence.runtime_identity.gid !== 10001) {
     throw new Error("Image probe is not running as the approved Sandbox identity");

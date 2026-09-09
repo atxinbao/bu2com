@@ -19,9 +19,9 @@ test("CI-RT01 rejects image evidence with runtime or source drift", () => {
     status: "passed",
     image_id: imageId,
     source_commit: sourceCommit,
-    node_version: "v22.16.0",
-    npm_version: "10.9.2",
-    sqlite_version: "3.49.1",
+    node_version: "v24.20.0",
+    npm_version: "11.19.0",
+    sqlite_version: "3.53.4",
     runtime_identity: { uid: 10001, gid: 10001 },
     schema_version_number: 19,
     migration_versions: Array.from({ length: 19 }, (_, index) => index + 1),
@@ -32,7 +32,7 @@ test("CI-RT01 rejects image evidence with runtime or source drift", () => {
   };
   const expected = { expectedCommit: sourceCommit, expectedImageId: imageId };
   assert.equal(validateRuntimeImageEvidence(evidence, expected), true);
-  assert.equal(validateRuntimeImageEvidence({ ...evidence, sqlite_version: "3.48.0" }, expected), false);
+  assert.equal(validateRuntimeImageEvidence({ ...evidence, sqlite_version: "3.51.2" }, expected), false);
   assert.equal(validateRuntimeImageEvidence(evidence, { ...expected, expectedCommit: "c".repeat(40) }), false);
   assert.equal(validateRuntimeImageEvidence(evidence, { ...expected, expectedImageId: `sha256:${"d".repeat(64)}` }), false);
   assert.equal(validateRuntimeImageEvidence({ ...evidence, runtime_identity: { uid: 0, gid: 0 } }, expected), false);

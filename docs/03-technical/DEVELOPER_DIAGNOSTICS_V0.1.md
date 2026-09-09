@@ -47,7 +47,7 @@ npm --prefix sandbox run doctor -- --receipt-id rcpt_...
 
 | 阶段 | 检查内容 | 是否产生资金动作 |
 | --- | --- | --- |
-| `node_runtime` | Node.js 满足 `>=22.16.0` | 否 |
+| `node_runtime` | Node.js 满足 `>=24.20.0` | 否 |
 | `configuration` | endpoint 合法，环境为 `local/sandbox/live`；Local 明确确认 | 否 |
 | `endpoint` | `/v1/environment` 可达且属于 BU2 Reference Server | 否 |
 | `environment` | 环境、链、执行后端、execution status 与 Receipt issuer 一致 | 否 |
@@ -121,7 +121,7 @@ Without `--receipt-id`, the doctor only confirms that MCP exposes and can call `
 
 | Stage | Check | Payment mutation |
 | --- | --- | --- |
-| `node_runtime` | Node.js satisfies `>=22.16.0` | No |
+| `node_runtime` | Node.js satisfies `>=24.20.0` | No |
 | `configuration` | Endpoint is valid; environment is `local/sandbox/live`; Local is explicit | No |
 | `endpoint` | `/v1/environment` identifies a BU2 Reference Server | No |
 | `environment` | Environment, chain, backend, execution status, and Receipt issuer match | No |

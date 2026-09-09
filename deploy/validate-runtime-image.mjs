@@ -4,11 +4,23 @@ import { fileURLToPath } from "node:url";
 
 const policy = JSON.parse(readFileSync(new URL("./runtime-policy.json", import.meta.url), "utf8"));
 
+const parseVersion = (version) => {
+  const match = String(version ?? "").match(/^(\d+)\.(\d+)\.(\d+)/);
+  return match ? match.slice(1).map(Number) : null;
+};
+
+const atLeast = (actual, expected) =>
+  actual[0] > expected[0] ||
+  (actual[0] === expected[0] &&
+    (actual[1] > expected[1] || (actual[1] === expected[1] && actual[2] >= expected[2])));
+
 export function validateRuntimeImageEvidence(
   evidence,
   { expectedCommit = null, expectedImageId = null } = {},
 ) {
   const migrations = evidence?.migration_versions ?? [];
+  const sqliteVersion = parseVersion(evidence?.sqlite_version);
+  const sqliteFixFloor = parseVersion(policy.sqlite_wal_reset_fixed_min_version);
   return (
     policy.schema_version === "rt01.policy.v1" &&
     evidence?.schema_version === "rt01.image.v1" &&
@@ -22,6 +34,9 @@ export function validateRuntimeImageEvidence(
     evidence.runtime_identity?.uid === 10001 &&
     evidence.runtime_identity?.gid === 10001 &&
     evidence.sqlite_version === policy.sqlite_version &&
+    sqliteVersion !== null &&
+    sqliteFixFloor !== null &&
+    atLeast(sqliteVersion, sqliteFixFloor) &&
     evidence.schema_version_number === policy.ledger_schema_version &&
     migrations.length === policy.ledger_schema_version &&
     migrations.every((version, index) => version === index + 1) &&

@@ -23,6 +23,11 @@ const parseNodeVersion = (version) => {
   return match ? match.slice(1).map(Number) : null;
 };
 
+const parseVersion = (version) => {
+  const match = String(version ?? "").match(/^(\d+)\.(\d+)\.(\d+)/);
+  return match ? match.slice(1).map(Number) : null;
+};
+
 const atLeast = (actual, expected) =>
   actual[0] > expected[0] ||
   (actual[0] === expected[0] &&
@@ -32,12 +37,20 @@ const schemaMigrations = (ledger) =>
   ledger.schemaMigrations().map((migration) => migration.version);
 
 export function validateRuntimeEvidence(evidence) {
+  const sqliteVersion = parseVersion(evidence?.sqlite?.engine_version);
+  const sqliteFixFloor = parseVersion(RUNTIME_POLICY.sqlite_wal_reset_fixed_min_version);
   return (
     evidence?.schema_version === "rt01.v1" &&
     evidence.gate === "fixed_sqlite_runtime" &&
     evidence.status === "passed" &&
-    evidence.runtime?.node_version?.startsWith("v") &&
+    evidence.runtime?.node_version === RUNTIME_POLICY.node_version &&
+    evidence.runtime?.npm_version === RUNTIME_POLICY.npm_version &&
     evidence.runtime?.node_floor === SANDBOX_PACKAGE.engines?.node &&
+    evidence.runtime?.docker_base === RUNTIME_POLICY.node_image &&
+    evidence.sqlite?.engine_version === RUNTIME_POLICY.sqlite_version &&
+    sqliteVersion !== null &&
+    sqliteFixFloor !== null &&
+    atLeast(sqliteVersion, sqliteFixFloor) &&
     evidence.sqlite?.journal_mode === "wal" &&
     evidence.sqlite?.foreign_keys === 1 &&
     evidence.sqlite?.schema_version === CURRENT_SCHEMA_VERSION &&
@@ -51,8 +64,11 @@ export function validateRuntimeEvidence(evidence) {
 
 export async function runRuntimeAssurance({ workRoot = null } = {}) {
   const nodeVersion = parseNodeVersion(process.version);
-  assert.ok(nodeVersion && atLeast(nodeVersion, [22, 16, 0]), "Node.js runtime must be >=22.16.0");
-  assert.equal(SANDBOX_PACKAGE.engines?.node, ">=22.16.0");
+  const npmVersion = execFileSync("npm", ["--version"], { encoding: "utf8" }).trim();
+  assert.ok(nodeVersion, "Node.js runtime version is invalid");
+  assert.equal(process.version, RUNTIME_POLICY.node_version);
+  assert.equal(npmVersion, RUNTIME_POLICY.npm_version);
+  assert.equal(SANDBOX_PACKAGE.engines?.node, ">=24.20.0");
   assert.equal(RUNTIME_POLICY.ledger_schema_version, CURRENT_SCHEMA_VERSION);
   assert.equal((DOCKERFILE.match(new RegExp(`FROM ${RUNTIME_POLICY.node_image.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`, "g")) ?? []).length, 2);
 
@@ -77,6 +93,11 @@ export async function runRuntimeAssurance({ workRoot = null } = {}) {
     restored = new SqliteLedger(backupPath);
     assert.deepEqual(restored.databaseIntegrity(), ["ok"]);
     assert.equal(restored.schemaVersion(), CURRENT_SCHEMA_VERSION);
+    const sqliteVersion = restored.db.prepare("SELECT sqlite_version() AS version").get().version;
+    const parsedSqliteVersion = parseVersion(sqliteVersion);
+    const sqliteFixFloor = parseVersion(RUNTIME_POLICY.sqlite_wal_reset_fixed_min_version);
+    assert.equal(sqliteVersion, RUNTIME_POLICY.sqlite_version);
+    assert.ok(parsedSqliteVersion && sqliteFixFloor && atLeast(parsedSqliteVersion, sqliteFixFloor));
     const evidence = {
       schema_version: "rt01.v1",
       gate: "fixed_sqlite_runtime",
@@ -89,11 +110,12 @@ export async function runRuntimeAssurance({ workRoot = null } = {}) {
       },
       runtime: {
         node_version: process.version,
+        npm_version: npmVersion,
         node_floor: SANDBOX_PACKAGE.engines.node,
         docker_base: RUNTIME_POLICY.node_image,
       },
       sqlite: {
-        engine_version: restored.db.prepare("SELECT sqlite_version() AS version").get().version,
+        engine_version: sqliteVersion,
         journal_mode: "wal",
         foreign_keys: 1,
         schema_version: source?.schemaVersion?.() ?? restored.schemaVersion(),
