@@ -26,6 +26,7 @@
     "test:la05a": "node --test la05a.test.mjs",
     "test:la05b": "node --test la05b.test.mjs",
     "test:la06a": "node --test la06a.test.mjs ../deploy/la06a-local-gate.test.mjs",
+    "test:ledger-nightly": "node --test ledger-nightly.test.mjs",
     "test:rt01": "node --test ../deploy/runtime-assurance.test.mjs",
     "test:deployment-contract": "node --test ../deploy/deployment-contract.test.mjs",
     "test:operations": "node --test ../deploy/operations.test.mjs",

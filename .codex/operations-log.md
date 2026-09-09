@@ -1,5 +1,20 @@
 # ENV-03 操作日志
 
+## 2026-09-10 · CI-04 定时账本韧性与供应链检查
+
+- Scope: PR #70 合并后同步 `main` 到 `0910906`，清理 CI-03 本地/远端分支，创建 `ci/ledger-resilience-supply-chain`；新增定时韧性与供应链证据，不改变交易状态机或资金能力。
+- Tool: `gh pr view`, `git fetch`, `git switch`, `git pull --ff-only`, `git branch -d`; result: confirmed PR #70 merged and removed the merged local branch.
+- Tool: Graphify `reflect` / `query`, `rg`, `sed`, `npm audit`; result: traced CI-04 to real fault, migration, backup/recovery and SQLite modules; initial audit found upgradeable high advisories in the SDK toolchain and Prototype dependencies.
+- Decision: reuse existing real-module tests, add fixed-seed property/capacity coverage, preserve complete logs, and upgrade affected dependencies instead of creating an initial permanent exception baseline.
+- Tool: `apply_patch`, `npm install --package-lock-only`; result: added the nightly workflow/runners/contracts, upgraded SDK Redocly/js-yaml and Prototype React/vinext/Vite/Cloudflare dependencies, and pinned `sharp@0.35.4` with an exact override. No automatic audit fix was used.
+- Tool: `node`, `npm`, Ruby YAML parser; result: CI tests 18/18, property/capacity 5/5, nightly real-module matrix 68/68, LA-06a Sandbox 207/207 plus all seven checks, three workspace audits 0 vulnerabilities, SDK 10/10 and Prototype lint/build passed.
+- Tool: `apply_patch`; result: fixed the property test to assert Journal/Posting persistence rather than unrelated LedgerEvent rows, and made malformed workspace manifests/lockfiles preserve failure evidence before failing closed.
+- Tool: `node --test`, `npm`, `jq`, Ruby YAML/link checks, `git diff --check`; result: final CI script tests 18/18, property/capacity 5/5, three workspace audits 0 vulnerabilities, and all syntax/link/whitespace checks passed.
+- Decision: pin both nightly jobs to the approved `Node 22.16.0` through the reviewed full SHA of official `actions/setup-node`; do not inherit a moving runner default.
+- Tool: `npm audit`; result: removed `--package-lock-only` after its retiring quick endpoint produced intermittent TLS/400 failures; installed-tree `npm audit --json` uses the official bulk advisory endpoint and is protected by a command-level regression test.
+- Tool: `graphify update .`; result: refreshed the repository AST graph to 3,785 nodes, 6,188 edges and 251 communities after the CI-04 code changes.
+- Boundary: scheduled Local/Simulation evidence only; no Signer, Provider, Hosted, Sandbox/Testnet bilateral settlement, Live/Mainnet, release publication or real funds.
+
 ## 2026-09-09 · LA-05b Draft PR
 
 - Tool: `git commit`, `git push`, `gh pr create`, `gh pr view`; result: committed `8dcf5f6`, pushed `feat/ledger-assurance-history-replay-catchup`, and opened Draft PR #52 at `https://github.com/atxinbao/bu2com/pull/52` using `.github/pull_request_template.md`.

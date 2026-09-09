@@ -1,42 +1,66 @@
 {
   "date": "2026-09-10",
   "executor": "Codex",
-  "task": "CI-03",
+  "task": "CI-04",
   "locations": [
     ".github/workflows/ci.yml",
     ".github/workflows/ledger-release-candidate.yml",
-    "scripts/ci/validate-evidence.mjs",
-    "scripts/ci/validate-release-request.mjs",
-    "scripts/ci/release-candidate.mjs",
-    "deploy/release-policy.json",
-    "deploy/runtime-policy.json",
-    "deploy/la06a-local-gate.mjs"
+    "deploy/la06a-local-gate.mjs",
+    "deploy/runtime-assurance.mjs",
+    "sandbox/la06a.test.mjs",
+    "sandbox/atomicity.test.mjs",
+    "sandbox/la05b.test.mjs",
+    "scripts/ci",
+    "sandbox/package-lock.json",
+    "packages/typescript-sdk/package-lock.json",
+    "prototype/package-lock.json"
   ],
   "existing_patterns": [
-    "CI-01 通过 GitHub-hosted runner 执行 LA-06a",
-    "CI-02 将七项门禁证据绑定 checkout commit/tree 与 run attempt",
-    "CI-RT01 将实际镜像运行时绑定构建器 image ID 与源码 SHA"
+    "CI-01 使用只读权限、固定 Action SHA、锁定依赖和 always 上传证据",
+    "LA-06a 将七项本地门禁编排为机器可读证据并保持 LA-06b 未执行",
+    "CI-02 对检查集合、源码 commit/tree、run attempt、日志哈希和零测试失败关闭",
+    "CI-03 将候选准备与 Tag、Release、registry、部署和资金执行分离"
   ],
-  "stack": ["GitHub Actions", "Docker/OrbStack", "Node.js ESM", "SHA-256 manifest"],
+  "stack": ["GitHub Actions", "Node.js ESM", "node:test", "SQLite WAL", "npm lockfile v3"],
   "tests": [
-    "scripts/ci/validate-release-request.test.mjs",
-    "scripts/ci/release-candidate.test.mjs",
-    "scripts/ci/validate-evidence.test.mjs",
+    "sandbox/atomicity.test.mjs",
+    "sandbox/la01-confirmed-unposted-refunds.test.mjs",
+    "sandbox/la01-refund-request-binding.test.mjs",
+    "sandbox/x402.test.mjs",
+    "sandbox/persistence.test.mjs",
+    "sandbox/la05b.test.mjs",
     "deploy/runtime-assurance.test.mjs",
-    "deploy/runtime-image-assurance.test.mjs",
-    "deploy/la06a-local-gate.mjs"
+    "deploy/operations.test.mjs"
   ],
   "observations": [
-    "候选准备必须与 tag/Release/registry 晋级分离",
-    "request 与 CI evidence 必须交叉验证同一 workflow run/attempt，而不是只记录字段",
-    "依赖安装和门禁执行后需要再次确认受版本控制源码未漂移",
-    "当前私有仓库套餐无法启用 main 分支保护，真实 workflow 必须失败关闭"
+    "现有 LA-06a 已覆盖确定性金额矩阵，但缺少保存 seed/步骤序列的更大属性矩阵和显式容量基线",
+    "现有运行时与历史测试已覆盖 Schema 连续迁移、Online Backup、时间点回放和恢复边界，可由 nightly 复用",
+    "三个 package.json 的直接版本均已精确锁定，lockfileVersion 均为 3",
+    "初始 npm audit 发现 SDK 1 个叶子高危 advisory、Prototype 多个可升级高危 advisory；应先升级，不建立永久忽略",
+    "nightly 不需要业务秘密，也不得接触 OrbStack 开发机或外部 Provider"
   ],
   "questions": [
-    {"priority": "high", "question": "候选是否同时绑定源码、运行批次、镜像和归档字节？", "resolved": true},
-    {"priority": "high", "question": "未保护 main 或跨运行证据能否被拒绝？", "resolved": true},
-    {"priority": "high", "question": "候选准备会不会隐式授权发布或支付？", "resolved": true},
-    {"priority": "medium", "question": "GitHub 上能否实际成功生成候选 artifact？", "resolved": false, "reason": "当前私有仓库套餐不提供 main 分支保护；按契约失败关闭"}
+    {
+      "priority": "high",
+      "question": "nightly 失败是否仍保存完整日志、seed 和源码绑定？",
+      "resolved": true
+    },
+    {
+      "priority": "high",
+      "question": "已知依赖风险能否与新风险、过期例外严格区分？",
+      "resolved": true
+    },
+    {
+      "priority": "high",
+      "question": "韧性测试是否调用真实仓库模块而非方法摘录或模拟结果？",
+      "resolved": true
+    },
+    {
+      "priority": "medium",
+      "question": "容量门槛是否会因共享 runner 性能波动产生误报？",
+      "resolved": true,
+      "reason": "以固定事实规模、数据库大小和宽松上界作为回归基线，并把耗时作为证据记录"
+    }
   ],
   "sufficiency": {
     "interface_contract": true,

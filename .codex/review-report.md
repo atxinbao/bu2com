@@ -1,5 +1,39 @@
 # F16a 内部 Sandbox 自主双向收付 Beta 候选自主审查报告
 
+# CI-04 定时账本韧性与供应链检查自主审查报告
+
+日期：2026-09-10
+审查者：Codex（Contributor / Verifier，非 R2 Approver）
+分支：`ci/ledger-resilience-supply-chain`
+
+## 审查清单
+
+- [x] 故障、属性/容量、迁移/恢复均调用真实仓库模块并保存完整日志。
+- [x] seed、步骤序列、源码 commit/tree、测试计数和日志哈希可复核。
+- [x] 精确版本、lockfile、一致性、漏洞阈值和例外过期策略失败关闭。
+- [x] 当前已知高危依赖通过受控升级解决，不执行自动 `npm audit fix`。
+- [x] 工作流不获得写权限、资金秘密、Provider、Signer 或部署能力。
+- [x] 完整本地门禁通过，残余边界与恢复方式明确。
+
+## 评分与结论
+
+| 维度 | 得分 | 结论 |
+| --- | ---: | --- |
+| 需求覆盖 | 20/20 | 覆盖 nightly 故障、属性/容量、迁移恢复与供应链例外生命周期 |
+| 技术实现 | 19/20 | 复用 node:test、真实 SQLite 模块、npm lock/audit 和现有证据模式 |
+| 金融边界 | 20/20 | 只读 Local/Simulation，不获得发布、部署或资金权限 |
+| 自动化验证 | 20/20 | CI 专项 18/18、nightly 68/68、Sandbox 207/207、三处 audit 0 |
+| 文档与恢复 | 18/20 | 产品/技术/索引/Changelog/证据已同步；远程 schedule 尚待合并后首跑 |
+| 综合 | **97/100** | 达到 GO for independent R2 review |
+
+建议提交 R2 审查。Codex 是 Contributor / Verifier，不是独立 Approver；本结论不授权合并、发布、Hosted/Testnet 或真实资金执行。
+
+## 残余风险
+
+1. GitHub-hosted schedule 尚未在本分支合并后的默认分支运行；本地证据不能替代首个远程 artifact。
+2. 容量基线只承诺 SQLite 单实例/单写者和宽松回归上界，不证明多写者高可用或生产 SLA。
+3. npm advisory 数据依赖扫描当时的 registry 响应；新的 high/critical 会在后续 nightly 失败关闭。
+
 # LA-05b 历史账务重放与备份追平自主审查报告
 
 日期：2026-09-09

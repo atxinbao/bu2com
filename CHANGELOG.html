@@ -136,7 +136,7 @@
         <p class="eyebrow">BU2.COM · AUDITABLE CHANGE HISTORY</p>
         <h1>系统变更日志</h1>
         <p class="lead">记录 BU2 从代码到金融业务行为的每一次可观察变化，使人类与 Agent 都能回答：改了什么、为什么改、影响什么、如何验证、如何恢复。</p>
-        <div class="meta"><span>格式版本 1.0</span><span>最新更新 2026-09-09</span><span>维护者 BU2 Engineering / Codex</span></div>
+        <div class="meta"><span>格式版本 1.0</span><span>最新更新 2026-09-10</span><span>维护者 BU2 Engineering / Codex</span></div>
       </header>
 
       <section class="contract" id="contract">
@@ -150,6 +150,12 @@
       </section>
 
       <h2 id="unreleased">Unreleased</h2>
+      <article class="release">
+        <div class="release-head"><div><h3>CI-04 · 定时账本韧性与供应链检查</h3><time datetime="2026-09-10">2026-09-10</time></div><span class="status">Unreleased</span></div>
+        <p class="summary">新增只读 nightly 工作流，对真实账本模块执行故障、固定 seed 属性/容量、迁移/恢复矩阵，并对三个 workspace 的精确锁定依赖和 high/critical advisory 失败关闭。</p>
+        <div class="change-group"><h4>Changes</h4><ul><li><span class="tag added">Added</span>新增 <code>ci04.ledger-resilience.v1</code> 与 <code>ci04.supply-chain.v1</code> 证据，保存源码 commit/tree、seed、完整步骤/日志、测试计数、耗时、audit JSON 与 SHA-256。</li><li><span class="tag changed">Dependencies</span>SDK 将 Redocly/js-yaml 锁定到修复版本；Prototype 升级 React 19.2 补丁和 vinext/Vite/Cloudflare 工具链，并精确 override <code>sharp@0.35.4</code>；未执行自动 <code>npm audit fix</code>。</li><li><span class="tag governance">Boundary</span>例外必须绑定 workspace、包、advisory、实际版本、Owner 和到期日；当前例外为空。工作流不自动发布、不加载资金凭证且保持 LA-06b 未执行。</li></ul></div>
+        <div class="evidence"><div><b>风险等级</b><span>R2 · 影响账本持续准入和依赖版本，需独立审查</span></div><div><b>验证</b><span>CI 脚本 18/18；nightly 故障/属性容量/迁移恢复 68/68；Sandbox 207/207；三个 workspace audit 0 漏洞；SDK 10/10、Prototype lint/build 通过</span></div><div><b>金融不变量</b><span>只读 Local/Simulation 测试；不改变 Schema、余额、交易、授权、Outbox 或 Provider 状态</span></div><div><b>恢复</b><span>revert 工作流/脚本/依赖锁恢复 CI-03 基线；保留失败 seed 与日志，不以永久忽略或自动修复绕过</span></div></div>
+      </article>
       <article class="release">
         <div class="release-head"><div><h3>CI-03 · 有边界账本 Release Candidate</h3><time datetime="2026-09-10">2026-09-10</time></div><span class="status">Unreleased</span></div>
         <p class="summary">新增只接受受保护 main 完整 SHA 的手工候选工作流，将同一源码、七项本地门禁、固定镜像运行时、Docker archive 与证据哈希绑定为 Local/Integration Ledger RC，且不自动发布或执行资金操作。</p>
