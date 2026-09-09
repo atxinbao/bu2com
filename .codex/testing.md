@@ -1,5 +1,18 @@
 # ENV-02 测试记录
 
+## 2026-09-10 · CI-04 定时账本韧性与供应链检查
+
+执行者：Codex
+分支：`ci/ledger-resilience-supply-chain`
+
+- `node --test scripts/ci/*.test.mjs`：18/18 通过；包含 CI-04 日志保留、精确检查集合、固定运行时 workflow、锁定版本、bulk advisory 命令、advisory、过期/漂移/未使用例外和损坏 lockfile 证据回归。
+- `npm --prefix sandbox run test:ledger-nightly`：5/5 通过；四个固定 seed 各 64 步，容量基线 1,000 Journal / 2,000 Posting，备份恢复完整。
+- `node scripts/ci/ledger-resilience.mjs ...`：三类真实模块矩阵 39/39、5/5、24/24，共 68/68 通过，0 skip/todo。
+- `node scripts/ci/supply-chain.mjs ...`：Sandbox、SDK、Prototype 均为 0 vulnerability，0 例外。
+- `node deploy/la06a-local-gate.mjs`：Sandbox 207/207、LA-06a 4/4、部署/Hosted 23/23、SDK 10/10、Contract 与 Prototype lint/build 全部通过。
+- 更新后执行三个 workspace `npm ci` 均成功；YAML/JSON/Node 语法、Markdown 链接与 `git diff --check` 通过。
+- 边界：Local/Simulation；LA-06b 为 `not_executed`，E3.1 保持暂停，不触发 Provider、Signer、Hosted、Testnet、Live/Mainnet 或真实资金。
+
 ## 2026-09-09 · LA-05b 历史账务重放与备份追平
 
 执行者：Codex

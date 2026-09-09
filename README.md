@@ -9,7 +9,7 @@ BU2.com 是 Agent 的 AI 收付平台。它嵌入 ChatGPT、Codex、Claude 和�
 | 项目 | 当前基线 |
 | --- | --- |
 | 项目阶段 | Phase 0 · local execution / Sandbox architecture |
-| 当前工程关卡 | CI-03 · 有边界账本 Local/Integration Release Candidate；当前受私有仓库分支保护套餐阻塞 |
+| 当前工程关卡 | CI-04 · 定时账本韧性与供应链检查；CI-03 候选仍受私有仓库分支保护套餐阻塞 |
 | 产品定义 | Product v0.3 · Transaction-first |
 | API 契约 | Agent Payment API v0.3.0 |
 | Reference Server | v0.17 · Node.js + SQLite WAL + 持久身份、钱包绑定、版本化 Mandate 与有界 ExecutionSession |
@@ -26,7 +26,7 @@ BU2.com 是 Agent 的 AI 收付平台。它嵌入 ChatGPT、Codex、Claude 和�
 
 F06a 已把受控访问中的 Principal、Account 和 Agent 声明落到 SQLite Schema v10 的持久业务主体记录；F06b 在其上增加 Schema v11 的资金来源与收款目标绑定；F07 在 Schema v12 增加 Budget、Budget Hold 与 Financial Posting；F08 在 Schema v13 增加版本化 PaymentMandate、PolicyDecision 及确定性授权判断，并接入 PaymentIntent；LA-01 在 Schema v14 增加持久化 RefundAttempt；LA-02 在 Schema v15 增加成组平衡 Journal/Posting、严格安全整数和已过账不可变保护；LA-03a 将结算、确认退款和 ProviderFee 事实接入两行平衡 Journal；LA-03b 增加可核对期初检查点和追加更正事实；LA-03c 增加从不可变 Posting 重建账户余额与 Journal 平衡的只读报告；LA-04 增加 pending Collection 持续验证、迟到证据和单次过账；LA-05a 增加独立外部观察、未决队列和孤立事实对账；LA-05b 增加期初检查点历史重放、历史缺口报告和备份后追加事实追平；LA-06a 增加本地全量回归、故障/属性/跨租户测试的机器化准入输出；RT-01 增加固定 Node/SQLite 运行时、WAL、迁移连续性和隔离备份恢复证据；F12 增加可恢复 AccessGrant；F13 增加预留态取消、部分/全额退款与 provider-unknown 显式恢复；F14 增加 ProviderFee 与 ReconciliationRun，在不改写原始事实的前提下汇总支付、收款、退款和手续费；F15a 增加独立激活、15 分钟窗口和会话级支出边界；F15b 增加有限业务负载、停机、SQLite 重启、无重复结算和对账恢复证据；F16a 增加买方 Agent 自主付款、卖方 Agent 收款、权益恢复、退款、故障恢复和对账的本地 Beta 候选证据；F16b 增加 Hosted Candidate、Activation、Evidence 的本地基础资格检查。上述能力都只在 Local / Sandbox / Testnet 边界内运行，不启用 Live/Mainnet、托管或生产凭证。LA-03 完整范围、LA-06b 外部双向证据与 E3.1 仍需独立 R2/外部准入，E3.1 Pilot Manifest 保持暂停。
 
-[Phase 0 Epic 1：External Agent Transaction Integration & Reliability](docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md) 与 [Phase 0 Epic 2：Developer Integration Scale](docs/03-technical/PHASE0_EPIC2_DEVELOPER_INTEGRATION_SCALE.md) 已完成。Transaction Trust Gate 1–3 已经 PR #15–#17 合并，F01/ENV-01 至 ENV-06 分别由 PR #18–#23 批准。当前进入 ENV-07：ENV-07A 本地准入与证据契约、F16b Hosted foundation qualification 已实现，ENV-07B 的部署单元、外部验收 Schema 与 Runbook 已准备，但公网部署、真实 Base Sepolia 双向收付和边缘 E2E 仍未执行。CI-01、CI-02 与 CI-RT01 已建立本地门禁、源码证据绑定和镜像运行时验收；CI-03 正在增加受保护 `main` 的有边界候选准备入口。当前私有仓库套餐尚不能提供所需分支保护，因此 CI-03 按契约失败关闭。[Phase 0 Epic 3](docs/03-technical/PHASE0_EPIC3_EXTERNAL_PILOT_EVIDENCE.md) 的 E3.1 Pilot Manifest 继续暂停，LA-06b 仍需独立的真实 Sandbox/Testnet 双向证据。
+[Phase 0 Epic 1：External Agent Transaction Integration & Reliability](docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md) 与 [Phase 0 Epic 2：Developer Integration Scale](docs/03-technical/PHASE0_EPIC2_DEVELOPER_INTEGRATION_SCALE.md) 已完成。Transaction Trust Gate 1–3 已经 PR #15–#17 合并，F01/ENV-01 至 ENV-06 分别由 PR #18–#23 批准。当前进入 ENV-07：ENV-07A 本地准入与证据契约、F16b Hosted foundation qualification 已实现，ENV-07B 的部署单元、外部验收 Schema 与 Runbook 已准备，但公网部署、真实 Base Sepolia 双向收付和边缘 E2E 仍未执行。CI-01、CI-02、CI-RT01 与 CI-03 已建立本地门禁、源码证据绑定、镜像运行时验收和有边界候选准备；CI-04 增加定时真实模块韧性、容量、迁移恢复和锁定依赖检查。当前私有仓库套餐尚不能提供所需分支保护，因此 CI-03 按契约失败关闭。[Phase 0 Epic 3](docs/03-technical/PHASE0_EPIC3_EXTERNAL_PILOT_EVIDENCE.md) 的 E3.1 Pilot Manifest 继续暂停，LA-06b 仍需独立的真实 Sandbox/Testnet 双向证据。
 
 ## 环境定义
 
@@ -117,6 +117,7 @@ npm --prefix sandbox run test:f15b
 npm --prefix sandbox run test:f16a
 npm --prefix sandbox run test:la01
 npm --prefix sandbox run test:la04
+npm --prefix sandbox run test:ledger-nightly
 npm --prefix sandbox run test:hosted-sandbox
 npm --prefix sandbox run test:f16b-hosted
 npm --prefix prototype run lint
@@ -125,7 +126,7 @@ npm --prefix packages/typescript-sdk test
 npm --prefix sandbox run acceptance:clean-room
 ```
 
-当前基线应得到：Contract 63 项不变量通过、6 个 MCP 工具有效、Reference Server 预计 174/174 通过、LA-03a 专项 3/3、LA-03b/LA-03c 专项 4/4、LA-04 专项 3/3、F15b 运营专项 4/4、F16a Beta 专项 3/3、LA-01/F13 专项 7/7、LA-02 专项 3/3、F16b Hosted foundation 专项 3/3 通过、TypeScript SDK 10/10 通过、ENV-06 运营专项 6/6 通过、ENV-07A 准入专项 8/8 通过、两环境部署与恢复验收通过、三条 clean-room 路径全部生成有效 Local Receipt、Prototype lint 与 build 通过。LA-03 完整范围、LA-05 与 E3.1 仍未完成/暂停。
+当前基线应得到：Contract 63 项不变量通过、6 个 MCP 工具有效、Reference Server 207/207、CI 脚本专项 18/18 与 nightly 三类矩阵 68/68、TypeScript SDK 10/10、三个 workspace audit 0 漏洞、ENV-06 与 Hosted 本地契约、Prototype lint/build 和三条 clean-room Local Receipt 均通过。LA-03 完整迁移/切换、LA-06b 与 E3.1 仍未完成或暂停；Local 结果不代表 Hosted/Testnet/Live 验收。
 
 ### 运行接入诊断
 

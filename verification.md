@@ -1,5 +1,18 @@
 # BU2 Product v0.1 验证结论
 
+## 2026-09-10 · CI-04 定时账本韧性与供应链检查
+
+执行者：Codex
+分支：`ci/ledger-resilience-supply-chain`
+
+- CI 脚本测试：18/18；固定 seed 属性/容量：5/5；nightly 真实模块故障/属性容量/迁移恢复：39/39、5/5、24/24，共 68/68，0 skip/todo。
+- LA-06a 完整门禁：Sandbox 207/207、边界 4/4、部署/Hosted 23/23、SDK 10/10、Contract、Prototype lint/build 全部通过。
+- Sandbox、TypeScript SDK、Prototype 均重新 `npm ci`；`npm audit --json` 均为 0 vulnerability，当前例外策略为空。
+- Workflow YAML、JSON、Node 语法、Markdown 链接和 patch whitespace 检查通过。
+- 本轮只取得 Local/Simulation 本地证据；合并后的 GitHub-hosted schedule 尚未执行，LA-06b 保持 `not_executed`，E3.1、Hosted/Testnet、Live/Mainnet、Provider、Signer 和真实资金保持关闭。
+
+结论：CI-04 达到 **GO for independent R2 review**；不是发布、外部 Sandbox 或生产资金批准。
+
 ## 2026-09-09 · LA-05b 历史账务重放与备份追平
 
 执行者：Codex

@@ -1,0 +1,109 @@
+name: BU2 Ledger Nightly
+
+on:
+  schedule:
+    - cron: "17 18 * * *"
+  workflow_dispatch:
+    inputs:
+      property_seeds:
+        description: Comma-separated reproducible property seeds
+        required: false
+        default: ci04-alpha,ci04-beta,ci04-gamma,ci04-delta
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bu2-ledger-nightly-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  resilience:
+    name: ledger resilience
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      BU2_NIGHTLY_SEEDS: ${{ inputs.property_seeds || 'ci04-alpha,ci04-beta,ci04-gamma,ci04-delta' }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: 22.16.0
+          package-manager-cache: false
+      - name: Install locked Sandbox dependencies
+        run: npm --prefix sandbox ci
+      - name: Verify clean checkout before tests
+        run: |
+          git diff --exit-code
+          git diff --cached --exit-code
+      - name: Run ledger resilience matrix
+        run: >-
+          node scripts/ci/ledger-resilience.mjs
+          ledger-resilience-evidence.json nightly-logs
+      - name: Verify tests did not modify tracked source
+        if: always()
+        run: |
+          git diff --exit-code
+          git diff --cached --exit-code
+      - name: Upload resilience evidence and complete logs
+        if: always()
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808
+        with:
+          name: bu2-ledger-resilience-${{ github.run_id }}-${{ github.run_attempt }}
+          retention-days: 30
+          path: |
+            ledger-resilience-evidence.json
+            nightly-logs/*.log
+          if-no-files-found: error
+
+  supply-chain:
+    name: supply chain
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: 22.16.0
+          package-manager-cache: false
+      - name: Install exact locked dependencies
+        run: |
+          npm --prefix sandbox ci
+          npm --prefix packages/typescript-sdk ci
+          npm --prefix prototype ci
+      - name: Run lockfile and advisory policy checks
+        run: >-
+          node scripts/ci/supply-chain.mjs
+          supply-chain-evidence.json supply-chain-logs
+      - name: Verify scan did not rewrite tracked dependencies
+        if: always()
+        run: |
+          git diff --exit-code
+          git diff --cached --exit-code
+      - name: Upload supply-chain evidence and raw audit reports
+        if: always()
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808
+        with:
+          name: bu2-supply-chain-${{ github.run_id }}-${{ github.run_attempt }}
+          retention-days: 30
+          path: |
+            supply-chain-evidence.json
+            supply-chain-logs/*.json
+            supply-chain-logs/*.log
+          if-no-files-found: error
+
+  gate:
+    name: BU2 / Ledger Nightly Gate
+    if: always()
+    needs: [resilience, supply-chain]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Require resilience and supply-chain success
+        run: |
+          test "${{ needs.resilience.result }}" = success
+          test "${{ needs.supply-chain.result }}" = success

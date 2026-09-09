@@ -46,6 +46,7 @@
 | [LA-06a 本地全量与隔离准入](LA06A_LOCAL_FOUNDATION_GATE_CONTRACT.md) | Ledger Assurance Gate 第六项整改的本地子范围：全量回归、故障/属性/跨租户证据；不接受真实 Sandbox 双向结算 |
 | [RT-01 固定运行时与 SQLite 账本准入](RT01_RUNTIME_ASSURANCE_CONTRACT.md) | 核对固定 Node/SQLite 运行时、WAL、迁移连续性与隔离备份恢复；不改变生产运行时 |
 | [CI-03 有边界账本 Release Candidate 契约](CI03_LEDGER_RELEASE_CANDIDATE_CONTRACT.md) | 从受保护 main 的确定 SHA 准备源码、镜像和证据绑定的 Local/Integration RC；不自动发布 |
+| [CI-04 定时账本韧性与供应链契约](CI04_LEDGER_RESILIENCE_CONTRACT.md) | 定时验证真实模块故障/属性/容量/迁移恢复与锁定依赖风险；不执行资金或自动发布 |
 | [页面与交互规格](INTERACTION_SPEC.md) | Transaction-first P0 的页面、状态、操作和验收标准 |
 | [Transaction-first P0 产品基线](P0_TRANSACTION_FIRST_BASELINE.md) | 当前正式定位、交易契约和原型验收路径 |
 | [Transaction-first P0 验收方案](TRANSACTION_P0_ACCEPTANCE.md) | 当前主路径、辅助路径和 GO/ITERATE/STOP 门槛 |
@@ -68,7 +69,7 @@ Agent 商业账户、信誉与服务网络
 
 ## 当前状态
 
-- 产品阶段：Phase 0 开发（Local / Sandbox / Testnet 边界）；首个 `ledger-rc-local-v0.1` 仅批准为 Local/Simulation 内部账本基线，既有 Release 名称中的 Sandbox 不表示 Testnet 已验收。退款审计阻断与 R63-01 历史回放时间窗口已经后续 PR 关闭；CI-01、CI-02、CI-RT01 已实现，CI-03 正在准备受保护 `main` 的 Local/Integration RC。当前私有仓库套餐不能证明分支保护，CI-03 必须失败关闭；LA-03 完整迁移/切换、LA-06b 真实 Sandbox 双向证据与 E3.1 仍未放行。
+- 产品阶段：Phase 0 开发（Local / Sandbox / Testnet 边界）；首个 `ledger-rc-local-v0.1` 仅批准为 Local/Simulation 内部账本基线，既有 Release 名称中的 Sandbox 不表示 Testnet 已验收。退款审计阻断与 R63-01 历史回放时间窗口已经后续 PR 关闭；CI-01、CI-02、CI-RT01、CI-03 已实现，CI-04 增加定时账本韧性与供应链检查。当前私有仓库套餐不能证明分支保护，CI-03 必须失败关闭；LA-03 完整迁移/切换、LA-06b 真实 Sandbox 双向证据与 E3.1 仍未放行。
 - 产品版本：Product v0.3 Transaction-first
 - 对应商业计划：BP v0.1
 - 更新日期：2026-09-10

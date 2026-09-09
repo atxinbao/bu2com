@@ -95,6 +95,7 @@
 - [`PHASE0_EPIC2_DEVELOPER_INTEGRATION_SCALE.md`](03-technical/PHASE0_EPIC2_DEVELOPER_INTEGRATION_SCALE.md)：开发者接入规模化 Epic 的 SDK、MCP 分发、诊断、试点证据与阶段边界。
 - [`PHASE0_EPIC3_EXTERNAL_PILOT_EVIDENCE.md`](03-technical/PHASE0_EPIC3_EXTERNAL_PILOT_EVIDENCE.md)：外部试点的 Manifest、最小证据、失败支持、三团队验证和阶段决策边界。
 - [`CI_RELEASE_CANDIDATE.md`](03-technical/CI_RELEASE_CANDIDATE.md)：CI-03 从受保护 `main` 准备有边界、尚未发布的账本 Local/Integration RC。
+- [`CI_LEDGER_NIGHTLY.md`](03-technical/CI_LEDGER_NIGHTLY.md)：CI-04 定时运行真实模块韧性矩阵、锁定依赖和有期限例外检查。
 
 ## 可运行实现
 
