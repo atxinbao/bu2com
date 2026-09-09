@@ -507,3 +507,14 @@
 - Tool: `apply_patch`; result: 新增 `scripts/ci/validate-evidence.mjs`、负向测试、CI-02 文档，并让 workflow 保存原始 JSON/日志和验证 manifest。
 - Tool: `node --test scripts/ci/validate-evidence.test.mjs`; result: 2/2 passed；workflow YAML 解析通过。
 - Boundary: no financial credentials, Provider calls, Hosted, Testnet, Mainnet or automatic release.
+
+## 2026-09-09 · CI-RT01 发布镜像内运行时验收
+
+- Scope: 固定 Node image digest，并在实际制品内验证 Node/npm/SQLite、Schema、WAL 和备份恢复。
+- Tool: `docker build` / `docker run`; result: OrbStack candidate image passed as UID/GID 10001 with Node v22.16.0, SQLite 3.49.1 and Schema 1–18; its per-build image ID is preserved in the generated evidence artifact.
+- Tool: `apply_patch`; result: added runtime policy, image probe/validator/tests and required CI runtime-image job; bound the JSON image ID to the builder's separate ID artifact.
+- Tool: `node --test`; result: RT-01/CI-RT01 targeted tests 4/4 passed, including runtime, source commit, image ID and execution-boundary drift rejection.
+- Tool: `node deploy/la06a-local-gate.mjs`; result: passed with Sandbox 202/202, LA-06a 4/4, deployment/Hosted contracts 23/23, SDK 10/10, contract validation, Prototype lint and build.
+- Tool: `ruby` / `git diff --check`; result: workflow YAML parsed and patch whitespace validation passed.
+- Tool: `graphify update .`; result: code knowledge graph updated after implementation; the final incremental pass reported no further topology drift.
+- Boundary: container runs as UID/GID 10001 with network disabled and root filesystem read-only; no Signer, Provider, Hosted, Testnet, Mainnet or payment execution.

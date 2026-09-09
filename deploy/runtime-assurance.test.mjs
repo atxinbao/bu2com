@@ -7,7 +7,7 @@ test("RT-01 proves the fixed Node, WAL, migration and backup runtime contract", 
   assert.equal(validateRuntimeEvidence(evidence), true);
   assert.equal(evidence.sqlite.journal_mode, "wal");
   assert.equal(evidence.sqlite.foreign_keys, 1);
-    assert.deepEqual(evidence.sqlite.migration_versions, Array.from({ length: 17 }, (_, index) => index + 1));
+  assert.deepEqual(evidence.sqlite.migration_versions, Array.from({ length: 18 }, (_, index) => index + 1));
   assert.equal(evidence.backup_restore.integrity, "ok");
 });
 
@@ -21,7 +21,7 @@ test("RT-01 evidence cannot authorize payment or pretend to be bilateral Sandbox
       journal_mode: "wal",
       foreign_keys: 1,
       schema_version: 18,
-      migration_versions: Array.from({ length: 17 }, (_, index) => index + 1),
+      migration_versions: Array.from({ length: 18 }, (_, index) => index + 1),
     },
     backup_restore: { integrity: "ok", same_schema: true },
     authorization: { payment_execution_attempted: false, signer_loaded: false },
