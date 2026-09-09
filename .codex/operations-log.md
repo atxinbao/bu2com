@@ -493,3 +493,10 @@
 - Tool: `apply_patch`; result: 更新 `sandbox/domain.mjs`，补充 F13 回归测试覆盖外部效果后异常、新键额度保护和确认恢复不查询 Provider。
 - Tool: `node --test sandbox/f13.test.mjs sandbox/la01-refund-request-binding.test.mjs sandbox/la01-confirmed-unposted-refunds.test.mjs`; result: 16/16 passed。
 - Boundary: Local/Simulation only; no real Provider, Hosted, Base Sepolia, Live/Mainnet or custody.
+
+## 2026-09-09 · LA-05b 历史回放基线修复
+
+- Scope: 历史 `as_of` 回放按 checkpoint 生效时间纳入开账事件及其不可变分录，避免迁移写入时间晚于回放时点时误报缺口。
+- Tool: `apply_patch`; result: 更新 `exportLedgerReplayEvidence`，不生成或改写历史分录。
+- Tool: `node --test sandbox/la05b.test.mjs`; result: 4/4 passed。
+- Boundary: Local/Simulation only; no provider or financial execution.

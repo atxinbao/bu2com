@@ -1100,3 +1100,7 @@ npm --prefix sandbox run test:hosted-deployment
 - `node --test sandbox/f13.test.mjs sandbox/la01-refund-request-binding.test.mjs sandbox/la01-confirmed-unposted-refunds.test.mjs`: 16/16 passed.
 - `npm --prefix sandbox test`: existing suite has 196/200 passed; 4 unrelated LA-05b baseline failures remain (historical replay fixtures), while refund regressions pass.
 - Boundary: local Simulation only; no external provider, Hosted, Testnet, Mainnet or custody execution.
+
+## 2026-09-09 · LA-05b replay baseline
+
+- `node --test sandbox/la05b.test.mjs`: 4/4 passed after including checkpoint-effective opening events/postings in historical replay.
