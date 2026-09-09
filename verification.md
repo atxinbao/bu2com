@@ -1104,3 +1104,11 @@ npm --prefix sandbox run test:hosted-deployment
 ## 2026-09-09 · LA-05b replay baseline
 
 - `node --test sandbox/la05b.test.mjs`: 4/4 passed after including checkpoint-effective opening events/postings in historical replay.
+
+## 2026-09-09 · Ledger Release Candidate local gate
+
+- Candidate: `ab51f6044623dd2e54cf8f17905c80c991dfb2f3`, tree `fbc9bc2b6b9f5af6aa5e89790bd4ebec73cce3f7`.
+- `node --test sandbox/la05b.test.mjs`: 6/6 passed.
+- `node deploy/runtime-assurance.mjs`: passed; SQLite WAL, schema 18, backup/restore verified; execution disabled.
+- `node deploy/la06a-local-gate.mjs`: passed; Sandbox 202/202, targeted 4/4, deployment contracts 23/23, SDK 10/10, prototype lint/build passed.
+- `git diff --check`: passed. LA-06b bilateral Sandbox/Testnet and production release authorization remain unexecuted.
