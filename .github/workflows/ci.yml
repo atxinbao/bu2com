@@ -1,0 +1,70 @@
+name: BU2 CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bu2-ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  foundation:
+    name: foundation
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Install locked dependencies
+        run: |
+          npm --prefix sandbox ci
+          npm --prefix packages/typescript-sdk ci
+          npm --prefix prototype ci
+      - name: Run foundation gate
+        run: node deploy/la06a-local-gate.mjs
+      - name: Upload foundation evidence
+        if: always()
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808
+        with:
+          name: bu2-foundation-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            deploy/la06a-local-gate.mjs
+            verification.md
+          if-no-files-found: error
+
+  runtime:
+    name: runtime
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Install sandbox dependencies
+        run: npm --prefix sandbox ci
+      - name: Run runtime assurance
+        run: node deploy/runtime-assurance.mjs | tee runtime-assurance.json
+      - name: Upload runtime evidence
+        if: always()
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808
+        with:
+          name: bu2-runtime-${{ github.run_id }}-${{ github.run_attempt }}
+          path: runtime-assurance.json
+          if-no-files-found: error
+
+  gate:
+    name: BU2 / CI Gate
+    if: always()
+    needs: [foundation, runtime]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Require foundation and runtime success
+        run: |
+          test "${{ needs.foundation.result }}" = success
+          test "${{ needs.runtime.result }}" = success
