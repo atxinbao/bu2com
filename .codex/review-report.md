@@ -1050,3 +1050,12 @@ F06b 让 Quote 和 PaymentIntent 能够保留可验证的资金来源与收款�
 - 证据：定向退款回归 14/14；Sandbox 198/198；Runtime assurance Schema 1–18；契约 63 项不变量/6 个 MCP 工具；SDK 10/10；Prototype lint/build 通过。
 - 遗留风险：真实 Provider、Hosted、Base Sepolia、LA-06b、Live/Mainnet 和 E3.1 未执行；需独立 R2 Domain / Architecture 人工审查。
 - 结论：建议提交 `fix(refunds): bind persisted attempts to immutable request terms` Draft PR；合并前 Release 保持阻塞。
+
+## 2026-09-09 · CI-RT01 发布镜像内运行时验收审查
+
+- 审查者：Codex（Contributor / Verifier，非 R2 Approver）。
+- 技术评分：94/100。实际镜像精确固定 Node digest，以 UID/GID 10001 在断网、只读容器内验证 Node、npm、SQLite、Schema 1–18、WAL、外键和 Online Backup；证据绑定 checkout commit 与构建器独立 image ID。
+- 战略评分：96/100。CI-RT01 只补齐发布制品运行时真实性，不启用 Signer、Provider、Hosted、Testnet、Live/Mainnet 或资金执行。
+- 验证：定向测试 4/4；OrbStack 实际镜像探针通过；LA-06a 总门禁中 Sandbox 202/202、边界 4/4、部署/Hosted 契约 23/23、SDK 10/10，契约验证、Prototype lint/build 通过；workflow YAML 和 `git diff --check` 通过。
+- 遗留风险：GitHub-hosted runtime-image job 尚待 PR 运行；workflow 与资金代码准入仍需独立 R2 审查，作者自审不能替代 Approver。
+- 综合评分：95/100。建议提交 Draft PR，等待远程 Gate 与独立审查；LA-06b 和所有真实资金环境保持关闭。

@@ -10,6 +10,9 @@ const DOCKERFILE = readFileSync(new URL("./Dockerfile", import.meta.url), "utf8"
 const SANDBOX_PACKAGE = JSON.parse(
   readFileSync(new URL("../sandbox/package.json", import.meta.url), "utf8"),
 );
+const RUNTIME_POLICY = JSON.parse(
+  readFileSync(new URL("./runtime-policy.json", import.meta.url), "utf8"),
+);
 
 const parseNodeVersion = (version) => {
   const match = version.match(/^v?(\d+)\.(\d+)\.(\d+)/);
@@ -30,11 +33,11 @@ export function validateRuntimeEvidence(evidence) {
     evidence.gate === "fixed_sqlite_runtime" &&
     evidence.status === "passed" &&
     evidence.runtime?.node_version?.startsWith("v") &&
-    evidence.runtime?.node_floor === ">=22.16.0" &&
+    evidence.runtime?.node_floor === SANDBOX_PACKAGE.engines?.node &&
     evidence.sqlite?.journal_mode === "wal" &&
     evidence.sqlite?.foreign_keys === 1 &&
-    evidence.sqlite?.schema_version >= CURRENT_SCHEMA_VERSION &&
-    evidence.sqlite?.migration_versions?.length >= CURRENT_SCHEMA_VERSION &&
+    evidence.sqlite?.schema_version === CURRENT_SCHEMA_VERSION &&
+    evidence.sqlite?.migration_versions?.length === CURRENT_SCHEMA_VERSION &&
     evidence.backup_restore?.integrity === "ok" &&
     evidence.backup_restore?.same_schema === true &&
     evidence.authorization?.payment_execution_attempted === false &&
@@ -46,7 +49,8 @@ export async function runRuntimeAssurance({ workRoot = null } = {}) {
   const nodeVersion = parseNodeVersion(process.version);
   assert.ok(nodeVersion && atLeast(nodeVersion, [22, 16, 0]), "Node.js runtime must be >=22.16.0");
   assert.equal(SANDBOX_PACKAGE.engines?.node, ">=22.16.0");
-  assert.equal((DOCKERFILE.match(/FROM node:22\.16\.0-bookworm-slim/g) ?? []).length, 2);
+  assert.equal(RUNTIME_POLICY.ledger_schema_version, CURRENT_SCHEMA_VERSION);
+  assert.equal((DOCKERFILE.match(new RegExp(`FROM ${RUNTIME_POLICY.node_image.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`, "g")) ?? []).length, 2);
 
   const directory = workRoot ?? mkdtempSync(join(tmpdir(), "bu2-rt01-"));
   const sourcePath = join(directory, "source.sqlite");
@@ -75,10 +79,11 @@ export async function runRuntimeAssurance({ workRoot = null } = {}) {
       status: "passed",
       runtime: {
         node_version: process.version,
-        node_floor: ">=22.16.0",
-        docker_base: "node:22.16.0-bookworm-slim",
+        node_floor: SANDBOX_PACKAGE.engines.node,
+        docker_base: RUNTIME_POLICY.node_image,
       },
       sqlite: {
+        engine_version: restored.db.prepare("SELECT sqlite_version() AS version").get().version,
         journal_mode: "wal",
         foreign_keys: 1,
         schema_version: source?.schemaVersion?.() ?? restored.schemaVersion(),

@@ -17,9 +17,10 @@ node deploy/runtime-assurance.mjs
 ## 2. 验收范围
 
 - Node.js 运行时不低于 `22.16.0`。
-- Docker 制品的 dependencies/runtime 两个阶段均固定为 `node:22.16.0-bookworm-slim`。
+- Docker 制品的 dependencies/runtime 两个阶段均固定为 `runtime-policy.json` 批准的 Node 镜像及完整 digest。
+- 发布镜像以 Sandbox 非特权身份 `10001:10001` 运行，并在内部报告及精确匹配 Node、npm、SQLite 引擎版本和账本 Schema；证据中的 image ID 必须与构建器输出的独立 ID 文件一致。
 - SQLite 开启 WAL 和 foreign keys。
-- Schema migration 从 1 连续到当前版本 15，不跳号、不回退。
+- Schema migration 从 1 连续到当前版本 18，不跳号、不回退。
 - Online Backup 复制到新的隔离文件，源库与恢复库完整性均为 `ok` 且 Schema 一致。
 - 运行时证据明确不加载 Signer、不调用 Provider、不执行付款。
 
@@ -32,4 +33,4 @@ node deploy/runtime-assurance.mjs
 
 ## 4. 放行结论
 
-RT-01 通过只表示固定本地运行时、WAL、迁移和隔离备份恢复可重复验证，达到 **GO for R2 review**。LA-03 完整多账户能力、LA-06b 外部双向证据、E3.1、Live/Mainnet 和生产资金路径仍保持关闭。
+RT-01 通过只表示固定本地运行时、WAL、迁移和隔离备份恢复可重复验证。CI-RT01 进一步要求同一 checkout 构建的不可变镜像在隔离容器内执行 `runtime-image-assurance.mjs`，并将 image ID 与 source commit 写入证据。LA-03 完整多账户能力、LA-06b 外部双向证据、E3.1、Live/Mainnet 和生产资金路径仍保持关闭。

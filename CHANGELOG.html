@@ -151,6 +151,12 @@
 
       <h2 id="unreleased">Unreleased</h2>
       <article class="release">
+        <div class="release-head"><div><h3>CI-RT01 · 发布镜像内运行时验收</h3><time datetime="2026-09-09">2026-09-09</time></div><span class="status">Unreleased</span></div>
+        <p class="summary">固定 Node 基础镜像 digest，并在实际发布镜像内部验证 Node、npm、SQLite、Schema 1–18、WAL、外键和 Online Backup，避免宿主门禁通过但制品运行时漂移。</p>
+        <div class="change-group"><h4>Changed</h4><ul><li><span class="tag changed">Changed</span>新增 <code>rt01.policy.v1</code>、镜像内探针和证据验证器；<code>BU2 / CI Gate</code> 强制依赖 runtime-image job，并交叉核对构建器输出的 image ID 与镜像证据。</li><li><span class="tag governance">Governance</span>镜像以 Sandbox 非特权身份 <code>10001:10001</code>、<code>--network none</code> 和只读根文件系统运行验收，不加载 Signer、不调用 Provider、不开放 Live。</li></ul></div>
+        <div class="evidence"><div><b>本地制品验证</b><span>OrbStack image 内 Node v22.16.0、SQLite 3.49.1、Schema 1–18 与备份恢复通过</span></div><div><b>风险</b><span>R2；远程 Actions 由本 PR 独立运行</span></div></div>
+      </article>
+      <article class="release">
         <div class="release-head"><div><h3>CI-02 · 合并证据与源码批次绑定</h3><time datetime="2026-09-09">2026-09-09</time></div><span class="status">Unreleased</span></div>
         <p class="summary">在 CI-01 基础上严格校验七项本地门禁、实际 checkout 的 commit/tree、workflow run/attempt、原始日志哈希与 Local/Simulation 边界，避免制品上传成功被误认为测试通过。</p>
         <div class="change-group"><h4>Changed</h4><ul><li><span class="tag changed">Changed</span>新增 <code>bu2.ci.v1</code> 证据清单校验器，拒绝重复/未知检查、非零退出码、缺失制品和源码批次漂移。</li><li><span class="tag governance">Governance</span>CI 不加载资金或部署凭证，不改变 <code>execution_disabled</code>，LA-06b 与 Live 保持未执行。</li></ul></div>

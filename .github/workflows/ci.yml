@@ -60,10 +60,40 @@ jobs:
             runtime-assurance.stderr
           if-no-files-found: error
 
+  runtime-image:
+    name: runtime image
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Build immutable runtime image
+        run: docker build --file deploy/Dockerfile --iidfile runtime-image-id --tag bu2-ci-rt01:${{ github.run_id }} .
+      - name: Verify runtime inside image
+        run: |
+          image_id="$(cat runtime-image-id)"
+          docker run --rm --network none --read-only --user 10001:10001 \
+            --tmpfs /tmp:rw,size=16m,uid=10001,gid=10001,mode=1770 \
+            --env BU2_IMAGE_ID="$image_id" \
+            --env BU2_SOURCE_COMMIT="$GITHUB_SHA" \
+            --entrypoint node "$image_id" sandbox/runtime-image-assurance.mjs \
+            > runtime-image-assurance.json 2> runtime-image-assurance.stderr
+          node deploy/validate-runtime-image.mjs runtime-image-assurance.json runtime-image-id
+      - name: Upload runtime image evidence
+        if: always()
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808
+        with:
+          name: bu2-runtime-image-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            runtime-image-id
+            runtime-image-assurance.json
+            runtime-image-assurance.stderr
+          if-no-files-found: error
+
   gate:
     name: BU2 / CI Gate
     if: always()
-    needs: [foundation, runtime]
+    needs: [foundation, runtime, runtime-image]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -81,6 +111,14 @@ jobs:
           pattern: bu2-runtime-${{ github.run_id }}-${{ github.run_attempt }}
           path: evidence/runtime
           merge-multiple: true
+      - name: Download runtime image evidence
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          pattern: bu2-runtime-image-${{ github.run_id }}-${{ github.run_attempt }}
+          path: evidence/runtime-image
+          merge-multiple: true
+      - name: Validate runtime image evidence
+        run: node deploy/validate-runtime-image.mjs evidence/runtime-image/runtime-image-assurance.json evidence/runtime-image/runtime-image-id
       - name: Validate evidence and source binding
         run: node scripts/ci/validate-evidence.mjs evidence/foundation/foundation.json evidence/runtime/runtime-assurance.json evidence/foundation/foundation.stderr evidence/runtime/runtime-assurance.stderr ci-evidence.json
       - name: Upload validated manifest
@@ -94,3 +132,4 @@ jobs:
         run: |
           test "${{ needs.foundation.result }}" = success
           test "${{ needs.runtime.result }}" = success
+          test "${{ needs['runtime-image'].result }}" = success

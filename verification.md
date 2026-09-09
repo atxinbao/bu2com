@@ -1119,6 +1119,14 @@ npm --prefix sandbox run test:hosted-deployment
 - Workflow YAML parsed successfully; `BU2 / CI Gate` now downloads same-run/attempt evidence and validates exact check IDs, source commit/tree, boundary and artifact hashes.
 - GitHub Actions execution is pending the CI-02 PR; no production or payment credentials are used.
 
+## 2026-09-09 · CI-RT01 runtime image assurance
+
+- OrbStack/Docker produced an immutable local image ID; its in-image probe passed with Node `v22.16.0`, npm `10.9.2`, SQLite `3.49.1`, WAL, foreign keys, Schema 1–18 and Online Backup/restore. The per-build ID is preserved by the CI artifact rather than copied into this rolling document.
+- `node --test deploy/runtime-assurance.test.mjs deploy/runtime-image-assurance.test.mjs`: 4/4 passed after correcting the legacy 17-migration fixture to Schema 18.
+- The validator rejects source commit, runtime, image ID and disabled-execution-boundary drift; the CI Gate compares the JSON image ID with the separately uploaded builder ID file.
+- `node deploy/la06a-local-gate.mjs`: passed on the working candidate with Sandbox 202/202, LA-06a 4/4, deployment/Hosted contracts 23/23, TypeScript SDK 10/10, contract validation, Prototype lint and Prototype build.
+- The container probe ran as the Sandbox non-root identity `10001:10001`, with no network, a read-only root filesystem and no Signer/Provider/payment execution. GitHub-hosted image evidence remains pending the PR workflow.
+
 ## 2026-09-09 · Local/Sandbox ledger baseline approval
 
 - Approval: Project Owner explicitly approved commit `005b394` as the Local/Sandbox internal ledger baseline.

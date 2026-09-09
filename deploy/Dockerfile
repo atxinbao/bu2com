@@ -1,11 +1,11 @@
 # syntax=docker/dockerfile:1.7
 
-FROM node:22.16.0-bookworm-slim AS dependencies
+FROM node:22.16.0-bookworm-slim@sha256:048ed02c5fd52e86fda6fbd2f6a76cf0d4492fd6c6fee9e2c463ed5108da0e34 AS dependencies
 WORKDIR /opt/bu2/sandbox
 COPY sandbox/package.json sandbox/package-lock.json ./
 RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
 
-FROM node:22.16.0-bookworm-slim AS runtime
+FROM node:22.16.0-bookworm-slim@sha256:048ed02c5fd52e86fda6fbd2f6a76cf0d4492fd6c6fee9e2c463ed5108da0e34 AS runtime
 
 LABEL org.opencontainers.image.title="BU2 Reference Server" \
       org.opencontainers.image.description="BU2 ENV-04/05/06/07 shared immutable runtime artifact" \
@@ -23,6 +23,7 @@ RUN groupadd --gid 10001 bu2sandbox \
 WORKDIR /opt/bu2
 COPY --from=dependencies /opt/bu2/sandbox/node_modules ./sandbox/node_modules
 COPY sandbox ./sandbox
+COPY deploy/runtime-policy.json ./deploy/runtime-policy.json
 COPY docs/03-technical/environment-contract.json ./docs/03-technical/environment-contract.json
 COPY docs/03-technical/contract-versions.json ./docs/03-technical/contract-versions.json
 COPY docs/03-technical/access-contract.json ./docs/03-technical/access-contract.json
