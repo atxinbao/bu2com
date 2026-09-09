@@ -1094,3 +1094,9 @@ npm --prefix sandbox run test:hosted-deployment
 - 未执行：运行时钱包余额切换、历史迁移、Provider、Hosted、Base Sepolia、Live/Mainnet、E3.1。
 
 结论：LA-03d Posting/投影子范围达到 **GO for R2 review**；不构成完整 Ledger Assurance Gate，仍需独立实现运行时投影刷新和历史迁移/切换证据。
+
+## 2026-09-09 · R61 refund outcome recovery
+
+- `node --test sandbox/f13.test.mjs sandbox/la01-refund-request-binding.test.mjs sandbox/la01-confirmed-unposted-refunds.test.mjs`: 16/16 passed.
+- `npm --prefix sandbox test`: existing suite has 196/200 passed; 4 unrelated LA-05b baseline failures remain (historical replay fixtures), while refund regressions pass.
+- Boundary: local Simulation only; no external provider, Hosted, Testnet, Mainnet or custody execution.

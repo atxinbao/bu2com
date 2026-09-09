@@ -95,6 +95,49 @@ test("F13 records bounded partial and full refunds without exceeding settled val
   ledger.close();
 });
 
+test("R61-01 preserves quota when adapter fails after an external refund effect", async () => {
+  const ledger = new SqliteLedger(":memory:");
+  class EffectThenFailAdapter extends SimulatedPaymentAdapter {
+    refund(transactionId, amount, context) {
+      super.refund(transactionId, amount, context);
+      throw new Error("connection closed after provider commit");
+    }
+  }
+  const sandbox = new Bu2Sandbox({ ledger, adapter: new EffectThenFailAdapter({ ledger }) });
+  const flow = await settledTransaction(sandbox, "r61-p0");
+  const first = await sandbox.requestRefund(flow.transactionId, { amount: { value: 80, currency: "CNY" } }, "r61-p0-first");
+  assert.equal(first.refund.status, "provider_unknown");
+  assert.equal(sandbox.listRefunds(flow.transactionId)[0].status, "provider_unknown");
+  assert.equal(sandbox.refundReservation(flow.transactionId), 80);
+  await assert.rejects(
+    sandbox.requestRefund(flow.transactionId, { amount: { value: 221, currency: "CNY" } }, "r61-p0-second"),
+    (error) => error.code === "refund_amount_exceeded",
+  );
+  ledger.close();
+});
+
+test("R61-02 replays a confirmed attempt locally without querying the provider", async () => {
+  const ledger = new SqliteLedger(":memory:");
+  class RecoveryAdapter extends SimulatedPaymentAdapter {
+    refund() { return { status: "provider_unknown", reason_code: "timeout" }; }
+    recoverRefund() { throw new Error("provider must not be queried"); }
+  }
+  const adapter = new RecoveryAdapter({ ledger });
+  const sandbox = new Bu2Sandbox({ ledger, adapter });
+  const flow = await settledTransaction(sandbox, "r61-p1");
+  const first = await sandbox.requestRefund(flow.transactionId, { amount: { value: 80, currency: "CNY" } }, "r61-p1-first");
+  const refund = first.refund;
+  refund.status = "provider_unknown";
+  const attempt = sandbox.refundAttemptById(refund.id);
+  ledger.transitionRefundAttempt(attempt.operation_key, { from: "provider_unknown", status: "refunded", provider_reference: "sim_refund_confirmed" });
+  sandbox.syncRefundAttempt({ ...attempt, status: "refunded", provider_reference: "sim_refund_confirmed" });
+  sandbox.refunds.get(refund.id).status = "provider_unknown";
+  const recovered = await sandbox.recoverRefund(refund.id, {}, "r61-p1-recover");
+  assert.equal(recovered.refund.status, "refunded");
+  assert.equal(sandbox.getTransaction(flow.transactionId).transaction.refunded_amount.value, 80);
+  ledger.close();
+});
+
 test("F13 serializes concurrent refunds against the remaining settled amount", async () => {
   const ledger = new SqliteLedger(":memory:");
   const sandbox = new Bu2Sandbox({ ledger, adapter: new SimulatedPaymentAdapter({ ledger }) });

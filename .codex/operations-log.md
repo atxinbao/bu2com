@@ -486,3 +486,10 @@
 - Tool: `npm --prefix sandbox test`; result: 198/198 passed.
 - Tool: `node deploy/runtime-assurance.mjs`, contract validation, SDK test, Prototype lint/build and `git diff --check`; result: Schema 1–18 passed, 63 invariants/6 MCP tools passed, SDK 10/10 and local quality gates passed.
 - Boundary: Local/Simulation only; no real Provider, Hosted, Base Sepolia, Live/Mainnet, custody or E3.1 activation. Release remains blocked pending R2 review and merge.
+
+## 2026-09-09 · R61 退款不确定结果与确认恢复修复
+
+- Scope: 修复审计 R61-01/R61-02；提交后无法证明外部未生效的异常统一保留 `provider_unknown` 占用，已确认 Attempt 直接补记本地事实。
+- Tool: `apply_patch`; result: 更新 `sandbox/domain.mjs`，补充 F13 回归测试覆盖外部效果后异常、新键额度保护和确认恢复不查询 Provider。
+- Tool: `node --test sandbox/f13.test.mjs sandbox/la01-refund-request-binding.test.mjs sandbox/la01-confirmed-unposted-refunds.test.mjs`; result: 16/16 passed。
+- Boundary: Local/Simulation only; no real Provider, Hosted, Base Sepolia, Live/Mainnet or custody.
