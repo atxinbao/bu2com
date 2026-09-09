@@ -1,0 +1,113 @@
+name: BU2 Ledger Release Candidate
+
+on:
+  workflow_dispatch:
+    inputs:
+      candidate_version:
+        description: Immutable RC label, for example ledger-v0.1.0-rc.1
+        required: true
+        type: string
+      source_commit:
+        description: Full protected-main commit SHA selected for the candidate
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bu2-ledger-rc-${{ inputs.source_commit }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    name: prepare bounded ledger RC
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+          persist-credentials: false
+      - name: Admit protected main request
+        env:
+          BU2_CANDIDATE_VERSION: ${{ inputs.candidate_version }}
+          BU2_CANDIDATE_SOURCE_COMMIT: ${{ inputs.source_commit }}
+          BU2_WORKFLOW_SOURCE_COMMIT: ${{ github.sha }}
+          BU2_WORKFLOW_REF: ${{ github.ref }}
+          BU2_WORKFLOW_REF_PROTECTED: ${{ github.ref_protected }}
+          BU2_WORKFLOW_EVENT: ${{ github.event_name }}
+          BU2_WORKFLOW_RUN_ID: ${{ github.run_id }}
+          BU2_WORKFLOW_RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: node scripts/ci/validate-release-request.mjs release-request.json
+      - name: Install locked dependencies
+        run: |
+          npm --prefix sandbox ci
+          npm --prefix packages/typescript-sdk ci
+          npm --prefix prototype ci
+      - name: Run local foundation evidence
+        run: node deploy/la06a-local-gate.mjs > foundation.json 2> foundation.stderr
+      - name: Run host runtime evidence
+        run: node deploy/runtime-assurance.mjs > runtime-assurance.json 2> runtime-assurance.stderr
+      - name: Build and verify candidate image
+        run: |
+          docker build --file deploy/Dockerfile --iidfile runtime-image-id --tag bu2-ledger-rc:${{ github.run_id }} .
+          image_id="$(cat runtime-image-id)"
+          docker run --rm --network none --read-only --user 10001:10001 \
+            --tmpfs /tmp:rw,size=16m,uid=10001,gid=10001,mode=1770 \
+            --env BU2_IMAGE_ID="$image_id" \
+            --env BU2_SOURCE_COMMIT="$GITHUB_SHA" \
+            --entrypoint node "$image_id" sandbox/runtime-image-assurance.mjs \
+            > runtime-image-assurance.json 2> runtime-image-assurance.stderr
+          node deploy/validate-runtime-image.mjs runtime-image-assurance.json runtime-image-id
+          docker save --output ledger-release-image.tar "$image_id"
+      - name: Bind CI evidence to candidate source
+        run: >-
+          node scripts/ci/validate-evidence.mjs
+          foundation.json runtime-assurance.json
+          foundation.stderr runtime-assurance.stderr
+          ci-evidence.json > ci-evidence.stdout
+      - name: Verify tracked checkout remains unchanged
+        run: |
+          git diff --exit-code
+          git diff --cached --exit-code
+      - name: Prepare bounded candidate manifest
+        run: >-
+          node scripts/ci/release-candidate.mjs
+          release-request.json ci-evidence.json
+          runtime-image-assurance.json runtime-image-id
+          ledger-release-image.tar release-candidate.json release-notes.md
+          > release-candidate.stdout
+      - name: Upload validated candidate
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808
+        with:
+          name: bu2-ledger-rc-${{ github.run_id }}-${{ github.run_attempt }}
+          retention-days: 90
+          compression-level: 0
+          path: |
+            ledger-release-image.tar
+            release-candidate.json
+            release-notes.md
+            release-request.json
+            ci-evidence.json
+            foundation.json
+            foundation.stderr
+            runtime-assurance.json
+            runtime-assurance.stderr
+            runtime-image-id
+            runtime-image-assurance.json
+            runtime-image-assurance.stderr
+          if-no-files-found: error
+      - name: Upload failed candidate diagnostics
+        if: failure()
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808
+        with:
+          name: bu2-ledger-rc-failure-${{ github.run_id }}-${{ github.run_attempt }}
+          retention-days: 14
+          path: |
+            *.json
+            *.stderr
+            *.stdout
+            runtime-image-id
+          if-no-files-found: warn

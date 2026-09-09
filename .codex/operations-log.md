@@ -518,3 +518,14 @@
 - Tool: `ruby` / `git diff --check`; result: workflow YAML parsed and patch whitespace validation passed.
 - Tool: `graphify update .`; result: code knowledge graph updated after implementation; the final incremental pass reported no further topology drift.
 - Boundary: container runs as UID/GID 10001 with network disabled and root filesystem read-only; no Signer, Provider, Hosted, Testnet, Mainnet or payment execution.
+
+## 2026-09-10 · CI-03 有边界账本 Release Candidate
+
+- Scope: PR #69 合并后清理本地 CI-RT01 分支，从 `d05b5ec` 创建 `ci/bounded-ledger-release-candidates`；只准备 Local/Integration 候选，不执行发布或资金动作。
+- Tool: `rg` / `sed` / Graphify instructions; result: traced CI-01/CI-02/CI-RT01 evidence, runtime image and release policy boundaries; confirmed request, evidence, image and archive must be bound to one protected-main source and workflow run.
+- Tool: `gh api`; result: branch-protection endpoint returned HTTP 403 with the private-repository plan upgrade requirement. Decision: retain the protected-main assertion and fail closed rather than weaken admission.
+- Tool: `apply_patch`; result: added read-only manual candidate workflow, release policy, protected-main request validator, source/run/image/archive manifest generator, negative tests, product/technical contracts and synchronized README/CHANGELOG records.
+- Tool: `node --test`; result: CI/RT targeted matrix passed 13/13, including CLI rejection of an unprotected main ref, post-validation request-file creation and cross-run/ref evidence drift.
+- Tool: `node deploy/la06a-local-gate.mjs`; result: passed with Sandbox 202/202, LA-06a 4/4, deployment/Hosted 23/23, SDK 10/10, contract validation and Prototype lint/build.
+- Tool: Ruby YAML, Node JSON/syntax and `git diff --check`; result: all local syntax and patch checks passed.
+- Boundary: candidate status is always `prepared_not_released`; tag, GitHub Release, registry, Hosted, Sandbox/Testnet bilateral settlement, Live/Mainnet, Signer, Provider and payment execution remain unauthorized. E3.1 remains paused and LA-06b remains not executed.

@@ -1,34 +1,42 @@
 {
-  "date": "2026-09-09",
+  "date": "2026-09-10",
   "executor": "Codex",
-  "task": "CI-RT01",
+  "task": "CI-03",
   "locations": [
     ".github/workflows/ci.yml",
-    "deploy/Dockerfile",
-    "deploy/runtime-assurance.mjs",
-    "sandbox/persistence.mjs",
-    "docs/02-product/RT01_RUNTIME_ASSURANCE_CONTRACT.md"
+    ".github/workflows/ledger-release-candidate.yml",
+    "scripts/ci/validate-evidence.mjs",
+    "scripts/ci/validate-release-request.mjs",
+    "scripts/ci/release-candidate.mjs",
+    "deploy/release-policy.json",
+    "deploy/runtime-policy.json",
+    "deploy/la06a-local-gate.mjs"
   ],
   "existing_patterns": [
-    "CI-01 使用 GitHub-hosted runner 执行 LA-06a",
-    "CI-02 将证据绑定 checkout commit、tree 与 run attempt",
-    "RT-01 已验证宿主 SQLite WAL、迁移和 Online Backup"
+    "CI-01 通过 GitHub-hosted runner 执行 LA-06a",
+    "CI-02 将七项门禁证据绑定 checkout commit/tree 与 run attempt",
+    "CI-RT01 将实际镜像运行时绑定构建器 image ID 与源码 SHA"
   ],
-  "stack": ["GitHub Actions", "Docker/OrbStack", "Node.js ESM", "node:sqlite"],
+  "stack": ["GitHub Actions", "Docker/OrbStack", "Node.js ESM", "SHA-256 manifest"],
   "tests": [
+    "scripts/ci/validate-release-request.test.mjs",
+    "scripts/ci/release-candidate.test.mjs",
+    "scripts/ci/validate-evidence.test.mjs",
     "deploy/runtime-assurance.test.mjs",
     "deploy/runtime-image-assurance.test.mjs",
     "deploy/la06a-local-gate.mjs"
   ],
   "observations": [
-    "宿主 RT-01 不能证明发布镜像内运行时未漂移",
-    "image ID 必须由构建器独立输出并与 JSON 证据交叉核对",
-    "普通 PR 无资金秘密，镜像探针必须以 UID/GID 10001 断网运行且关闭所有执行能力"
+    "候选准备必须与 tag/Release/registry 晋级分离",
+    "request 与 CI evidence 必须交叉验证同一 workflow run/attempt，而不是只记录字段",
+    "依赖安装和门禁执行后需要再次确认受版本控制源码未漂移",
+    "当前私有仓库套餐无法启用 main 分支保护，真实 workflow 必须失败关闭"
   ],
   "questions": [
-    {"priority": "high", "question": "镜像证据是否与实际 builder image ID 和 checkout SHA 同时绑定？", "resolved": true},
-    {"priority": "high", "question": "探针是否能在只读、断网容器中完成 SQLite 备份恢复？", "resolved": true},
-    {"priority": "medium", "question": "远程 GitHub-hosted runner 是否通过同一 workflow？", "resolved": false, "reason": "等待 PR 触发"}
+    {"priority": "high", "question": "候选是否同时绑定源码、运行批次、镜像和归档字节？", "resolved": true},
+    {"priority": "high", "question": "未保护 main 或跨运行证据能否被拒绝？", "resolved": true},
+    {"priority": "high", "question": "候选准备会不会隐式授权发布或支付？", "resolved": true},
+    {"priority": "medium", "question": "GitHub 上能否实际成功生成候选 artifact？", "resolved": false, "reason": "当前私有仓库套餐不提供 main 分支保护；按契约失败关闭"}
   ],
   "sufficiency": {
     "interface_contract": true,

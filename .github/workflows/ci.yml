@@ -48,6 +48,8 @@ jobs:
           persist-credentials: false
       - name: Install sandbox dependencies
         run: npm --prefix sandbox ci
+      - name: Test CI and runtime evidence contracts
+        run: node --test scripts/ci/*.test.mjs deploy/runtime-assurance.test.mjs deploy/runtime-image-assurance.test.mjs
       - name: Run runtime assurance
         run: node deploy/runtime-assurance.mjs > runtime-assurance.json 2> runtime-assurance.stderr
       - name: Upload runtime evidence

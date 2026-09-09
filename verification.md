@@ -1132,3 +1132,11 @@ npm --prefix sandbox run test:hosted-deployment
 - Approval: Project Owner explicitly approved commit `005b394` as the Local/Sandbox internal ledger baseline.
 - Scope: This approval excludes real funds, Hosted, Testnet, Mainnet and production execution.
 - Release label: `ledger-rc-local-v0.1`.
+
+## 2026-09-10 · CI-03 bounded ledger release candidate preparation
+
+- `node --test scripts/ci/*.test.mjs deploy/runtime-assurance.test.mjs deploy/runtime-image-assurance.test.mjs`: 13/13 passed. Coverage includes protected-ref admission, exact source and workflow run binding, post-validation request-file creation, archive/evidence tamper rejection, CI-02 envelope validation and fixed runtime evidence.
+- The CLI-level negative check presented the current checkout as an unprotected `refs/heads/main`; it exited 1 with `The main ref is not protected`, proving the currently unavailable branch-protection prerequisite fails closed.
+- `node deploy/la06a-local-gate.mjs`: passed with Sandbox 202/202, LA-06a 4/4, deployment/Hosted contracts 23/23, TypeScript SDK 10/10, contract validation, Prototype lint and Prototype build.
+- Workflow YAML and policy/context JSON parsed successfully; Node syntax checks and `git diff --check` passed.
+- GitHub API still reports that the private repository plan does not provide branch protection. No successful RC artifact, tag, GitHub Release, registry publication, Hosted deployment, Sandbox/Testnet bilateral settlement, Live/Mainnet action, Signer, Provider call or payment execution was performed.

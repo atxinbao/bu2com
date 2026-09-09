@@ -1059,3 +1059,12 @@ F06b 让 Quote 和 PaymentIntent 能够保留可验证的资金来源与收款�
 - 验证：定向测试 4/4；OrbStack 实际镜像探针通过；LA-06a 总门禁中 Sandbox 202/202、边界 4/4、部署/Hosted 契约 23/23、SDK 10/10，契约验证、Prototype lint/build 通过；workflow YAML 和 `git diff --check` 通过。
 - 遗留风险：GitHub-hosted runtime-image job 尚待 PR 运行；workflow 与资金代码准入仍需独立 R2 审查，作者自审不能替代 Approver。
 - 综合评分：95/100。建议提交 Draft PR，等待远程 Gate 与独立审查；LA-06b 和所有真实资金环境保持关闭。
+
+## 2026-09-10 · CI-03 有边界账本 Release Candidate 自主审查
+
+- 审查者：Codex（Contributor / Verifier，非 R2 Approver）。
+- 技术评分：95/100。请求验证器严格绑定受保护 `main`、完整 commit/tree、workflow run/attempt、干净源码和未占用版本；候选生成器交叉验证 CI/runtime evidence，并绑定 image ID、Docker archive 与证据哈希。
+- 战略评分：97/100。候选准备与 tag、GitHub Release、registry、部署和支付执行彻底分离，输出固定为 `prepared_not_released`，不会将 Local/Simulation 证据误报为 Hosted/Testnet/Live 能力。
+- 验证评分：96/100。CI/运行时专项 13/13；LA-06a 总门禁中 Sandbox 202/202、边界 4/4、部署/Hosted 23/23、SDK 10/10，契约验证与 Prototype lint/build 通过；YAML/JSON/语法/diff 检查通过。
+- 遗留风险：当前私有仓库套餐无法启用所需 `main` 分支保护，因此真实 workflow 必须失败关闭，尚无 GitHub-hosted 候选 artifact 证据。作者自审不能替代独立 R2 审查，PR 合并也不构成发布批准。
+- 综合评分：96/100。建议提交 R2 Draft PR；启用分支保护后才可对合并后的确定 `main` SHA 运行 CI-03。LA-06b、Hosted、Sandbox/Testnet 双向结算、Live/Mainnet 和真实资金保持关闭。
