@@ -106,7 +106,7 @@ test("CI-04 workflow pins the approved Node runtime and read-only permissions", 
     workflow.match(/actions\/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e/g)?.length,
     2,
   );
-  assert.equal(workflow.match(/node-version: 22\.16\.0/g)?.length, 2);
+  assert.equal(workflow.match(/node-version: 24\.20\.0/g)?.length, 2);
   assert.match(workflow, /permissions:\n  contents: read/);
   assert.doesNotMatch(workflow, /pull_request_target/);
 });

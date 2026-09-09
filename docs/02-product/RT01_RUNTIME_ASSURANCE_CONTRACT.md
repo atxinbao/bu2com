@@ -1,6 +1,6 @@
 # RT-01 固定运行时与 SQLite 账本准入契约
 
-更新日期：2026-09-09
+更新日期：2026-09-10
 维护者：Codex
 风险等级：R2（账本持久化与恢复运行时证据）
 
@@ -16,7 +16,8 @@ node deploy/runtime-assurance.mjs
 
 ## 2. 验收范围
 
-- Node.js 运行时不低于 `22.16.0`。
+- Node.js 运行时固定为 `24.20.0`，Sandbox engine 下限同步为 `>=24.20.0`。
+- `runtime-policy.json` 固定 npm `11.19.0`、SQLite `3.53.4`，并永久要求 SQLite 不低于 WAL-reset 修复下限 `3.51.3`；host 与最终镜像都必须精确匹配批准版本且满足该下限。
 - Docker 制品的 dependencies/runtime 两个阶段均固定为 `runtime-policy.json` 批准的 Node 镜像及完整 digest。
 - 发布镜像以 Sandbox 非特权身份 `10001:10001` 运行，并在内部报告及精确匹配 Node、npm、SQLite 引擎版本和账本 Schema；证据中的 image ID 必须与构建器输出的独立 ID 文件一致。
 - SQLite 开启 WAL 和 foreign keys。
@@ -26,7 +27,7 @@ node deploy/runtime-assurance.mjs
 
 ## 3. 明确不包含
 
-- 不修改 Docker 基础镜像、SQLite Schema、API、Transaction Core 或支付 Adapter。
+- FP-03 只替换批准的 Docker/Node/SQLite 运行时基线；不修改 SQLite Schema、API、Transaction Core 或支付 Adapter。
 - 不创建 Hosted endpoint，不执行 Base Sepolia 或 Mainnet 付款。
 - 不把本地 WAL/备份证据解释为高可用、多节点或生产财务准入。
 - 不替代 LA-06b 的真实 Sandbox 双向收付与 G-F 审查。

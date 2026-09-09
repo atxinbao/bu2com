@@ -15,7 +15,7 @@
   },
   "backup": {
     "mechanism": "node_sqlite_online_backup",
-    "minimum_node_version": "22.16.0",
+    "minimum_node_version": "24.20.0",
     "manifest_suffix": ".manifest.json",
     "integrity_check": "PRAGMA integrity_check",
     "overwrite": "forbidden",

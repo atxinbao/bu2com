@@ -1050,7 +1050,6 @@ export async function listen({
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
   const running = await listen({ logSink: (line) => console.log(line) });
-  console.log(`BU2 Reference Server v${packageMetadata.version} listening on ${running.url}`);
 
   // 容器停止时先停止接收请求，再关闭数据库，避免 SQLite WAL 留下未完成写入。
   let shuttingDown = false;
@@ -1066,4 +1065,7 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
   };
   process.once("SIGTERM", () => shutdown("SIGTERM"));
   process.once("SIGINT", () => shutdown("SIGINT"));
+  // 只有在关闭信号处理器完成注册后才能宣布服务就绪，否则编排器可能在该间隙发送
+  // SIGTERM，绕过 SQLite 的优雅关闭流程。
+  console.log(`BU2 Reference Server v${packageMetadata.version} listening on ${running.url}`);
 }

@@ -23,7 +23,7 @@ CI-04 在常规 PR 门禁之外持续发现低频故障、账本增长和依赖�
 | Advisory | 新的 high/critical 默认阻断；例外必须绑定 workspace、包、advisory、实际版本、Owner 与到期日 |
 | 证据 | commit/tree、Node 版本、seed、测试数量、完整日志路径与 SHA-256 可核对 |
 
-两个 nightly job 均使用固定 `Node 22.16.0`，不得随 GitHub runner 默认版本漂移。
+两个 nightly job 均使用固定 `Node 24.20.0`，不得随 GitHub runner 默认版本漂移。
 
 任何测试为零、失败、skip/todo、日志缺失、新高危/严重问题、未匹配或过期例外都不得输出通过结论。失败仍应上传诊断 artifact，但上传成功不等于 Gate 通过。
 

@@ -31,7 +31,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
-          node-version: 22.16.0
+          node-version: 24.20.0
           package-manager-cache: false
       - name: Install locked Sandbox dependencies
         run: npm --prefix sandbox ci
@@ -69,7 +69,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
-          node-version: 22.16.0
+          node-version: 24.20.0
           package-manager-cache: false
       - name: Install exact locked dependencies
         run: |

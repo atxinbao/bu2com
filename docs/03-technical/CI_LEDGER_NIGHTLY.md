@@ -5,7 +5,7 @@
 
 ## 工作流
 
-`.github/workflows/ledger-nightly.yml` 每日 UTC 18:17 定时运行，也支持手工传入逗号分隔的 property seed。工作流权限固定为 `contents: read`，使用 GitHub-hosted `ubuntu-24.04` 和固定 SHA 的官方 `setup-node` 将两个 job 对齐到 `Node 22.16.0`；不使用 OrbStack/self-hosted runner，也不加载业务或资金 Secret。
+`.github/workflows/ledger-nightly.yml` 每日 UTC 18:17 定时运行，也支持手工传入逗号分隔的 property seed。工作流权限固定为 `contents: read`，使用 GitHub-hosted `ubuntu-24.04` 和固定 SHA 的官方 `setup-node` 将两个 job 对齐到 `Node 24.20.0`；不使用 OrbStack/self-hosted runner，也不加载业务或资金 Secret。
 
 工作流包含两个独立 job 和一个 `always()` 汇总 Gate：
 
