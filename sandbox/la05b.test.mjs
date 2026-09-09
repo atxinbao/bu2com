@@ -70,6 +70,23 @@ test("LA-05b reports missing financial history instead of inventing postings", a
   assert.equal(replay.posting_count, 2);
 });
 
+test("LA-05b excludes opening balances that are not effective at the replay cutoff", async () => {
+  const sandbox = new Bu2Sandbox();
+  await sandbox.createOpeningBalance(checkpointInput, "la05b-effective-opening");
+  await sandbox.createOpeningBalance({
+    ...checkpointInput,
+    id: "obc_la05b_future",
+    amount: { value: 900, currency: "CNY" },
+    effective_at: "2026-09-10T00:00:00.000Z",
+    source_reference: "migration-la05b-future-001",
+  }, "la05b-future-opening");
+  const replay = sandbox.replayLedgerHistory({ as_of: "2026-09-09T13:00:00.000Z" });
+  assert.equal(replay.status, "complete");
+  assert.equal(replay.checkpoint_count, 1);
+  assert.equal(replay.posting_count, 2);
+  assert.equal(replay.accounts.find((balance) => balance.account === "asset.cash:acct_la05b_owner").balance_minor, 1000);
+});
+
 test("LA-05b produces append-only catch-up evidence after a validated SQLite backup", async () => {
   const directory = mkdtempSync(join(tmpdir(), "bu2-la05b-backup-catchup-"));
   const sourcePath = join(directory, "source.sqlite");

@@ -1334,8 +1334,15 @@ export class Bu2Sandbox {
         .map((checkpoint) => this.events.find((event) => event.type === "ledger.opening_balance_posted" && event.resource_id === checkpoint.id)?.id)
         .filter(Boolean),
     );
+    const openingEventIds = new Set(
+      this.events
+        .filter((event) => event.type === "ledger.opening_balance_posted")
+        .map((event) => event.id),
+    );
     const postings = [...this.financialPostings.values()]
-      .filter((posting) => withinCutoff(posting.created_at) || eligibleOpeningEventIds.has(posting.event_id))
+      .filter((posting) => openingEventIds.has(posting.event_id)
+        ? eligibleOpeningEventIds.has(posting.event_id)
+        : withinCutoff(posting.created_at))
       .map((posting) => {
         const { journal_id: _journalId, ...immutablePosting } = clone(posting);
         return { ...immutablePosting, ledger_account_id: posting.ledger_account_id ?? null };
