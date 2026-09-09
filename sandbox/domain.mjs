@@ -1319,12 +1319,16 @@ export class Bu2Sandbox {
     if (as_of !== null) validateDate(as_of, "as_of");
     const cutoff = as_of === null ? null : Date.parse(as_of);
     const withinCutoff = (value) => cutoff === null || Date.parse(value) <= cutoff;
+    const openingCheckpoints = new Map([...this.openingBalances.values()].map((checkpoint) => [checkpoint.id, checkpoint]));
     const events = this.events
-      .filter((event) => replayableLedgerEventTypes.has(event.type) && (
-        withinCutoff(event.created_at)
-        || (event.type === "ledger.opening_balance_posted"
-          && [...this.openingBalances.values()].some((checkpoint) => checkpoint.id === event.resource_id && withinCutoff(checkpoint.effective_at)))
-      ))
+      .filter((event) => {
+        if (!replayableLedgerEventTypes.has(event.type)) return false;
+        if (event.type !== "ledger.opening_balance_posted") return withinCutoff(event.created_at);
+        const checkpoint = openingCheckpoints.get(event.resource_id);
+        // 已知 checkpoint 的开账事件与分录共享 effective_at；孤立事件仍按
+        // created_at 保留，以便回放明确报告历史缺口。
+        return checkpoint ? withinCutoff(checkpoint.effective_at) : withinCutoff(event.created_at);
+      })
       .map((event, index) => ({ sequence: index + 1, ...clone(event) }));
     // 开账分录代表 checkpoint 的生效时点；即使迁移时实际写入时间晚于
     // as_of，也必须随该 checkpoint 纳入历史重放，否则合法的开账余额会丢失。

@@ -87,6 +87,25 @@ test("LA-05b excludes opening balances that are not effective at the replay cuto
   assert.equal(replay.accounts.find((balance) => balance.account === "asset.cash:acct_la05b_owner").balance_minor, 1000);
 });
 
+test("LA-05b uses effective time for an opening event written before the cutoff", async () => {
+  const sandbox = new Bu2Sandbox();
+  await sandbox.createOpeningBalance(checkpointInput, "la05b-window-effective");
+  await sandbox.createOpeningBalance({
+    ...checkpointInput,
+    id: "obc_la05b_future_written_early",
+    amount: { value: 900, currency: "CNY" },
+    effective_at: "2026-09-10T00:00:00.000Z",
+    source_reference: "migration-la05b-future-early-001",
+  }, "la05b-future-written-early");
+  const futureEvent = sandbox.events.find((event) => event.resource_id === "obc_la05b_future_written_early");
+  futureEvent.created_at = "2026-09-09T12:00:00.000Z";
+  const replay = sandbox.replayLedgerHistory({ as_of: "2026-09-09T13:00:00.000Z" });
+  assert.equal(replay.status, "complete");
+  assert.equal(replay.event_count, 1);
+  assert.equal(replay.posting_count, 2);
+  assert.equal(replay.gap_count, 0);
+});
+
 test("LA-05b produces append-only catch-up evidence after a validated SQLite backup", async () => {
   const directory = mkdtempSync(join(tmpdir(), "bu2-la05b-backup-catchup-"));
   const sourcePath = join(directory, "source.sqlite");
