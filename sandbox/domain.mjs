@@ -1320,10 +1320,22 @@ export class Bu2Sandbox {
     const cutoff = as_of === null ? null : Date.parse(as_of);
     const withinCutoff = (value) => cutoff === null || Date.parse(value) <= cutoff;
     const events = this.events
-      .filter((event) => replayableLedgerEventTypes.has(event.type) && withinCutoff(event.created_at))
+      .filter((event) => replayableLedgerEventTypes.has(event.type) && (
+        withinCutoff(event.created_at)
+        || (event.type === "ledger.opening_balance_posted"
+          && [...this.openingBalances.values()].some((checkpoint) => checkpoint.id === event.resource_id && withinCutoff(checkpoint.effective_at)))
+      ))
       .map((event, index) => ({ sequence: index + 1, ...clone(event) }));
+    // 开账分录代表 checkpoint 的生效时点；即使迁移时实际写入时间晚于
+    // as_of，也必须随该 checkpoint 纳入历史重放，否则合法的开账余额会丢失。
+    const eligibleOpeningEventIds = new Set(
+      [...this.openingBalances.values()]
+        .filter((checkpoint) => withinCutoff(checkpoint.effective_at))
+        .map((checkpoint) => this.events.find((event) => event.type === "ledger.opening_balance_posted" && event.resource_id === checkpoint.id)?.id)
+        .filter(Boolean),
+    );
     const postings = [...this.financialPostings.values()]
-      .filter((posting) => withinCutoff(posting.created_at))
+      .filter((posting) => withinCutoff(posting.created_at) || eligibleOpeningEventIds.has(posting.event_id))
       .map((posting) => {
         const { journal_id: _journalId, ...immutablePosting } = clone(posting);
         return { ...immutablePosting, ledger_account_id: posting.ledger_account_id ?? null };
