@@ -3268,7 +3268,9 @@ export class Bu2Sandbox {
           this.applyRefund(transaction, refund, provider);
           return { transaction: clone(transaction), refund: clone(refund) };
         } catch (error) {
-          if (error?.type !== "provider_unknown" && error?.code !== "refund_result_unknown") {
+          // 只有 Adapter 明确声明未越过外部执行边界时才可确定失败；其余异常
+          // （包括超时、AbortError 和响应解析失败）都必须保留额度并进入未知态。
+          if (error?.no_external_effect === true) {
             this.transitionRefundAttempt(operationKey, {
               from: "submitting",
               status: "failed",
@@ -3279,11 +3281,11 @@ export class Bu2Sandbox {
           this.transitionRefundAttempt(operationKey, {
             from: "submitting",
             status: "provider_unknown",
-            reason_code: error.code ?? "refund_result_unknown",
+            reason_code: error?.code ?? "refund_result_unknown",
           });
           refund.status = "provider_unknown";
           refund.recovery_required = true;
-          refund.failure_reason = error.code ?? "refund_result_unknown";
+          refund.failure_reason = error?.code ?? "refund_result_unknown";
           this.event("refund.provider_unknown", refund);
           return { transaction: clone(transaction), refund: clone(refund) };
         }
@@ -3303,10 +3305,21 @@ export class Bu2Sandbox {
           return this.refundFromAttempt(attempt);
         })();
         if (!refund) throw new ApiError(404, "resource_not_found", "refund_not_found", "Refund was not found.");
+        const transaction = this.transactions.get(refund.transaction_id);
+        if (!transaction) throw new ApiError(404, "resource_not_found", "transaction_not_found", "Transaction was not found.");
         if (refund.status === "refunded") return { transaction: clone(this.transactions.get(refund.transaction_id)), refund: clone(refund), recovery: { status: "refunded" } };
         if (refund.status !== "provider_unknown") throw new ApiError(409, "invalid_state_transition", "refund_not_recoverable", "Only a provider_unknown refund can be recovered.", { current_state: refund.status });
+        const persistedAttempt = this.refundAttemptById(refund.id);
+        if (persistedAttempt?.status === "refunded") {
+          // Provider 已确认且 Attempt 已持久化时，只补记本地事实；不得再次查询
+          // 通道或重复执行终态转换。
+          this.applyRefund(transaction, refund, {
+            status: "refunded",
+            provider_reference: persistedAttempt.provider_reference,
+          });
+          return { transaction: clone(transaction), refund: clone(refund), recovery: { status: "refunded" } };
+        }
         if (typeof this.adapter?.recoverRefund !== "function") throw new ApiError(409, "invalid_state_transition", "refund_recovery_unsupported", "The active payment adapter does not support refund recovery.");
-        const transaction = this.transactions.get(refund.transaction_id);
         const provider = await this.executeAdapter("recoverRefund", transaction.id, refund.amount, { refund_id: refund.id });
         if (provider?.status !== "refunded") {
           const attempt = this.refundAttemptById(refund.id);

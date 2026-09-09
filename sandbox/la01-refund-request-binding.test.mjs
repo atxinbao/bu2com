@@ -39,7 +39,9 @@ function openRuntime(database, counter, { failNextRefund = false } = {}) {
       counter.calls += 1;
       if (failNextRefund) {
         failNextRefund = false;
-        throw new Error("injected provider rejection before external effect");
+        const error = new Error("injected provider rejection before external effect");
+        error.no_external_effect = true;
+        throw error;
       }
       return super.refund(...args);
     }
