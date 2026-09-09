@@ -10,7 +10,8 @@ BU2.com 是 Agent 的 AI 收付平台。它嵌入 ChatGPT、Codex、Claude 和�
 | --- | --- |
 | 项目阶段 | Phase 0 · local execution / Sandbox architecture |
 | 当前工程关卡 | LA-03d · 版本化账户投影刷新；CI-03 候选仍受私有仓库分支保护套餐阻塞 |
-| 产品定义 | Product v0.3 · Transaction-first |
+| 上层产品方向 | Social Wallet · Foundation 接入前收口；尚未切换资金读写 |
+| 交易领域基线 | Product v0.3 · Transaction-first（继续约束授权/预留/交付/结算语义） |
 | API 契约 | Agent Payment API v0.3.0 |
 | Reference Server | v0.17 · Node.js + SQLite WAL + 持久身份、钱包绑定、版本化 Mandate 与有界 ExecutionSession |
 | TypeScript SDK | `@bu2/sdk` v0.3 · Monorepo private package |
@@ -23,6 +24,8 @@ BU2.com 是 Agent 的 AI 收付平台。它嵌入 ChatGPT、Codex、Claude 和�
 | 生产边界 | Live 初始 `execution_disabled`；客户资金托管和法币能力尚未开放 |
 
 当前代码已经形成可运行的 Agent 收付闭环，并已发布内部账本基线 `ledger-rc-local-v0.1`；其批准范围是 Local/Simulation，既有 Release 名称中的 Sandbox 不代表已获得 Sandbox/Testnet 双向结算、Hosted、生产支付或法律合规结论。ENV-02–06 已由 PR #19–#23 合并；ENV-07A 为 Hosted Sandbox 增加专用启动门槛、文件型 Secret、不可变候选、独立激活与证据验证器，但尚未创建托管 Sandbox 或 Live。
+
+当前进入 **Ledger Foundation 产品接入收口**：底层收付、账务、恢复与证据能力作为多个产品共享 Foundation，不单独作为收费产品；首个上层产品方向是社交钱包。当前 Schema 19 账户投影仍未替代运行时 wallet，多账户业务分录归属、正式 WalletReadModel、目标账簿迁移/cutover 与新 RC 尚未完成，因此社交钱包不得直接读取账表、`this.wallet` 或把派生投影包装成正式产品余额。当前能力入口见 [Ledger Foundation 当前能力与产品接入基线](docs/03-technical/LEDGER_FOUNDATION_OVERVIEW.md)，产品边界见 [社交钱包与 Ledger Foundation 接入边界](docs/02-product/SOCIAL_WALLET_INTEGRATION_BOUNDARY.md)。
 
 F06a 已把受控访问中的 Principal、Account 和 Agent 声明落到 SQLite Schema v10 的持久业务主体记录；F06b 在其上增加 Schema v11 的资金来源与收款目标绑定；F07 在 Schema v12 增加 Budget、Budget Hold 与 Financial Posting；F08 在 Schema v13 增加版本化 PaymentMandate、PolicyDecision 及确定性授权判断，并接入 PaymentIntent；LA-01 在 Schema v14 增加持久化 RefundAttempt；LA-02 在 Schema v15 增加成组平衡 Journal/Posting、严格安全整数和已过账不可变保护；LA-03a 将结算、确认退款和 ProviderFee 事实接入两行平衡 Journal；LA-03b 增加可核对期初检查点和追加更正事实；LA-03c 增加从不可变 Posting 重建账户余额与 Journal 平衡的只读报告；LA-03d 在 Schema v16/v17 建立账户所有权与 Posting 绑定，并在 Schema v19 增加版本化派生投影、确定性重建和条件激活；LA-04 增加 pending Collection 持续验证、迟到证据和单次过账；LA-05a 增加独立外部观察、未决队列和孤立事实对账；LA-05b 增加期初检查点历史重放、历史缺口报告和备份后追加事实追平；LA-06a 增加本地全量回归、故障/属性/跨租户测试的机器化准入输出；RT-01 增加固定 Node/SQLite 运行时、WAL、迁移连续性和隔离备份恢复证据；F12 增加可恢复 AccessGrant；F13 增加预留态取消、部分/全额退款与 provider-unknown 显式恢复；F14 增加 ProviderFee 与 ReconciliationRun，在不改写原始事实的前提下汇总支付、收款、退款和手续费；F15a 增加独立激活、15 分钟窗口和会话级支出边界；F15b 增加有限业务负载、停机、SQLite 重启、无重复结算和对账恢复证据；F16a 增加买方 Agent 自主付款、卖方 Agent 收款、权益恢复、退款、故障恢复和对账的本地 Beta 候选证据；F16b 增加 Hosted Candidate、Activation、Evidence 的本地基础资格检查。上述能力都只在 Local / Sandbox / Testnet 边界内运行，不启用 Live/Mainnet、托管或生产凭证。LA-03 历史迁移与运行时切换、LA-06b 外部双向证据与 E3.1 仍需独立 R2/外部准入，E3.1 Pilot Manifest 保持暂停。
 
@@ -223,6 +226,9 @@ bu2com/
 ### 产品与技术
 
 - [完整文档目录](docs/README.md)
+- [Ledger Foundation 当前能力与产品接入基线](docs/03-technical/LEDGER_FOUNDATION_OVERVIEW.md)
+- [社交钱包与 Ledger Foundation 接入边界](docs/02-product/SOCIAL_WALLET_INTEGRATION_BOUNDARY.md)
+- [Ledger Foundation 产品接入 PR 计划](docs/03-technical/FOUNDATION_PR_PLAN.md)
 - [Transaction-first 产品基线](docs/02-product/P0_TRANSACTION_FIRST_BASELINE.md)
 - [Phase 0 业务路线与 PR 基线](docs/02-product/PHASE0_ROADMAP_BASELINE.md)
 - [F08 Payment Mandate 契约](docs/02-product/F08_PAYMENT_MANDATE_CONTRACT.md)

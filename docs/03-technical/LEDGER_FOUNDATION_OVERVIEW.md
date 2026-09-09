@@ -1,0 +1,91 @@
+# Ledger Foundation 当前能力与产品接入基线
+
+日期：2026-09-10
+状态：FP-01 current-capability baseline
+整理起点：`2cb8b1259b9d590447c22321a8f1b9cf608ea9a1`
+
+本页是当前能力入口，不替代 [`AGENTS.md`](../../AGENTS.md)、[`PROJECT.html`](../../PROJECT.html)、[`ARCHITECTURE.html`](../../ARCHITECTURE.html)、[`GOVERNANCE.html`](../../GOVERNANCE.html) 或具体版本化契约。它不授予资金执行、Sandbox/Testnet 验收、Live/Mainnet、生产迁移或发布权限。
+
+## 1. 定位
+
+BU2 Ledger Foundation 是多个上层业务产品共享的收付、授权、账务、恢复与证据基础，不单独作为收费产品。**社交钱包是首个上层产品方向**，但当前仍处于 Foundation 接入前收口阶段；产品不得把既有单钱包运行时路径包装成已经完成的多账户社交钱包。
+
+Transaction-first v0.3 继续作为交易领域语义基线：授权、预留、交付、结算、退款和争议保持独立事实。它不等同于上层产品的信息架构或余额读模型。
+
+## 2. 必须分开的四个维度
+
+1. **服务环境**：`local / sandbox / live`。
+2. **执行后端**：`simulated / x402` 或后续经批准的 Adapter。
+3. **已实现能力**：Schema、命令、状态机、查询、恢复和证据代码是否存在。
+4. **运行准入**：该能力是否只在 Local 验证、是否已完成真实 Sandbox/Testnet 验收、是否得到 Live 资金准入。
+
+Simulation 不是对外 Sandbox。CI 成功、代码已合并或存在 Live 配置都不自动形成 Testnet/Live 资金授权。
+
+## 3. 核心对象与事实所有者
+
+| 对象 | 当前职责与边界 |
+| --- | --- |
+| `Account / AgentIdentity / Credential` | 法律/业务责任主体、Agent 与受限调用身份；公开昵称不是资金主键。 |
+| `LedgerAccount` | `environment / tenant / book / owner / asset / network` 的账簿归属边界。 |
+| `Posting.account` | 会计科目；与 `ledger_account_id`、公开钱包身份是不同概念。 |
+| `Journal / FinancialPosting` | 已过账的技术账务事实；更正追加新事实，不覆盖历史。 |
+| `PaymentAttempt / RefundAttempt` | 外部执行与未知结果边界；先持久化 Attempt，再进入外部执行或恢复。 |
+| `Wallet / Budget / Hold` | 当前运行时约束、预留与额度事实；不是外部资产确权。 |
+| `ProjectionVersion` | 从不可变 Posting 重建的派生读模型；不是第二套资金事实。 |
+| Provider observation | 外部独立证据；不能直接等同于 BU2 已结算、已交付或已对账。 |
+| `Receipt / AccessGrant` | 交易凭证与履约权益；二者互不替代。 |
+
+只有 Transaction Core 可以改变核心交易状态；上层产品和只读工具均不得绕过该边界。
+
+## 4. 当前能力矩阵
+
+| 能力 | 当前已有 | 仍未完成 | 当前可依赖范围 |
+| --- | --- | --- | --- |
+| Journal / Posting | 平衡校验、已过账不可变、业务资金事实分录 | 所有新业务分录的可信账户归属接线 | 内部账务事实 |
+| LedgerAccount | Schema 16 所有权注册，Schema 17 Posting 绑定 | 业务来源到唯一账户的统一解析与更强归属校验 | 内部所有权边界 |
+| 账户投影 | Schema 19、确定性内容哈希、显式期望版本、条件激活、可重建 | 源水位、完整性/陈旧状态、产品读模型与运行时切换 | 内部派生报告；**不是产品余额** |
+| 运行时余额 | 既有 `wallet_accounts` / `this.wallet` 路径 | 多账户 WalletReadModel、shadow 比对、受控 cutover | 既有运行时内部路径 |
+| 历史重放/恢复 | 只读重放、备份追加事实追平、缺口报告 | 目标产品账簿的归属迁移/期初核对与 cutover 证据 | 已验收范围内报告 |
+| 收款/付款/退款/费用 | Local/Simulation 业务与故障路径、Attempt/对账能力 | 业务分录全面绑定、产品范围真实 Sandbox 证据 | 不扩张到未批准通道 |
+| CI | main `2cb8b125…` 的 `BU2 CI` run `34396290376` 已完成且 success | FP-02 的证据消费者收口和仓库合并门禁 | 回归证据；**不是资金授权** |
+| 内部 Release | `ledger-rc-local-v0.1` 保留 | 新产品接入基线 RC 尚未生成 | 仅原批准范围 |
+
+### v0.1 与当前 main 的边界
+
+`ledger-rc-local-v0.1` 实际指向：
+
+```text
+005b3949de4672a5aae301bd9b511e47b8be89fa
+```
+
+它是 Local/Simulation 内部历史基线，不包含当前 main 后续的 Schema 19 与账户投影刷新能力。不得移动、覆盖或重打该标签来改变历史批准范围。
+
+## 5. 为什么现在还不能把账户投影当成社交钱包余额
+
+[`LA03D_MULTI_ACCOUNT_OWNERSHIP_CONTRACT.md`](../02-product/LA03D_MULTI_ACCOUNT_OWNERSHIP_CONTRACT.md) 已明确：运行时 `wallet.available` 尚未切换。当前账户投影还会对同币种未绑定 Posting 失败关闭，这保护了资金事实，但也证明产品接入尚未完成。
+
+社交钱包正式消费余额前，至少还需要：
+
+- 所有新增业务资金事实从可信 `FundingSource / ReceivingTarget / Account / tenant / book / asset / network` 关系解析到唯一 `ledger_account_id`；
+- 明确定义 WalletReadModel，把账簿余额、Provider 外部观察、reserved/pending、可支出能力、投影陈旧/缺口、对账状态分开；
+- 对目标产品账簿完成 shadow 比对、归属/期初核对和独立 R2 cutover；
+- 证明暂停账户仍可查询历史和对账，而新增支出保持失败关闭；
+- 保持 Journal/Posting 与 Provider 已发生事实不可改写，不用重新付款掩盖差异。
+
+## 6. 只读盘点入口
+
+FP-01 增加 [`scripts/ledger/ledger_inventory.py`](../../scripts/ledger/ledger_inventory.py)，只允许对**明确提供的隔离一致性 SQLite 备份**执行查询：
+
+```bash
+python3 scripts/ledger/ledger_inventory.py \
+  /path/to/isolated-backup.sqlite \
+  --acknowledge-isolated-copy
+```
+
+工具固定输出 `verdict=inventory_only_not_acceptance`，不会实例化 `SqliteLedger`、不会运行迁移、不会调用 Provider、不会修改源数据库，也不会授予 Release 或运行时切换权限。缺文件、缺关键表、查询不可评估或检测到同名 WAL/SHM 伴随文件时失败关闭。
+
+**零异常计数也不等于完整历史、产品准入或账本验收。** 实际业务数据库、生产数据和 Live 运行不属于 FP-01。
+
+## 7. 后续依赖
+
+执行顺序见 [`FOUNDATION_PR_PLAN.md`](FOUNDATION_PR_PLAN.md)。FP-01 只建立当前能力入口和安全盘点工具；真正改变账务写入、余额模型、迁移与切换的 FP-05/FP-06 必须分别按 R2 审查。

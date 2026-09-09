@@ -19,8 +19,8 @@
 | 目录 | 当前内容 | 状态 |
 | --- | --- | --- |
 | [`01-business-plan/`](01-business-plan/) | 商业计划书 PDF 与可编辑 PPTX | BP v0.1 |
-| [`02-product/`](02-product/) | Transaction-first 产品基线、PRD、策略、验收与历史决策 | Product v0.3 |
-| [`03-technical/`](03-technical/) | API、OpenAPI、MCP、doctor、持久化、Webhook、x402 与验证证据 | Contract v0.1–v0.3 |
+| [`02-product/`](02-product/) | 社交钱包接入边界、Transaction-first 领域基线、PRD、策略、验收与历史决策 | Social Wallet integration / Product v0.3 domain |
+| [`03-technical/`](03-technical/) | Ledger Foundation 当前能力、PR 计划、API、OpenAPI、MCP、持久化、Webhook、x402 与验证证据 | Foundation / Contract v0.1–v0.3 |
 
 当前没有可索引的市场、架构或运营文档；空目录不作为正式文档入口。相关规则以项目根目录 HTML 文件和现存产品、技术文档为准。
 
@@ -39,7 +39,8 @@
 
 | 文档 | 作用 |
 | --- | --- |
-| [`P0_TRANSACTION_FIRST_BASELINE.md`](02-product/P0_TRANSACTION_FIRST_BASELINE.md) | 当前正式产品定位、交易对象、范围和演示闭环 |
+| [`SOCIAL_WALLET_INTEGRATION_BOUNDARY.md`](02-product/SOCIAL_WALLET_INTEGRATION_BOUNDARY.md) | 首个上层社交钱包与 Foundation 的读写、余额、生命周期和准入边界；不是现有 API |
+| [`P0_TRANSACTION_FIRST_BASELINE.md`](02-product/P0_TRANSACTION_FIRST_BASELINE.md) | Transaction-first 交易领域语义、对象、状态约束和演示闭环 |
 | [`MVP_PRD.md`](02-product/MVP_PRD.md) | Transaction-first MVP 功能、流程、优先级和验收标准 |
 | [`PHASE0_ROADMAP_BASELINE.md`](02-product/PHASE0_ROADMAP_BASELINE.md) | M1～M5 里程碑、F02-CI～F16b 依赖与文档提交规则 |
 | [`F08_PAYMENT_MANDATE_CONTRACT.md`](02-product/F08_PAYMENT_MANDATE_CONTRACT.md) | D2 版本化 Payment Mandate、Policy Decision 与 F07/F09 边界 |
@@ -67,6 +68,8 @@
 
 ### 核心契约
 
+- [`LEDGER_FOUNDATION_OVERVIEW.md`](03-technical/LEDGER_FOUNDATION_OVERVIEW.md)：当前 Ledger Foundation 能力、Release 边界、未完成接线与安全盘点入口。
+- [`FOUNDATION_PR_PLAN.md`](03-technical/FOUNDATION_PR_PLAN.md)：FP-01～FP-07 的依赖、风险边界和产品接入终点。
 - [`API_CONTRACT_V0.1.md`](03-technical/API_CONTRACT_V0.1.md)：Agent Payment API 的资源、状态、金额、幂等、错误和 Receipt 契约。
 - [`openapi.yaml`](03-technical/openapi.yaml)：OpenAPI 3.1 接口定义。
 - [`mcp-tools.json`](03-technical/mcp-tools.json)：Agent 原生 MCP 工具定义。

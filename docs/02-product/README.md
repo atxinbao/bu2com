@@ -6,7 +6,7 @@
 
 **BU2.com 是 Agent 的 AI 收付平台。**
 
-首发产品使用演示资金验证交易状态，不要求用户迁移任务。BU2 首先帮助 Agent 完成：
+首个上层产品方向是**社交钱包**。在其正式实现资金体验前，BU2 先把共享 Ledger Foundation 的归属、收付、余额、恢复与对账接入收口；Transaction-first v0.3 继续作为底层交易领域语义，不再被解释为“上层产品已经完成多账户钱包”。BU2 首先必须稳定回答：
 
 > 谁代表谁，向谁购买了什么，依据什么授权，是否完成交付，资金最终结算到哪里？
 
@@ -14,6 +14,7 @@
 
 | 文档 | 解决的问题 |
 | --- | --- |
+| [社交钱包与 Ledger Foundation 接入边界](SOCIAL_WALLET_INTEGRATION_BOUNDARY.md) | 首个上层产品可以依赖什么、不得直接写什么，以及何时允许接入正式余额 |
 | [产品战略](PRODUCT_STRATEGY.md) | 做什么、不做什么，以及如何逐步实现钱包愿景 |
 | [用户与核心任务](USERS_AND_JOBS.md) | 第一批用户是谁，他们为什么使用 BU2 |
 | [MVP PRD](MVP_PRD.md) | 首版功能、流程、优先级与验收标准 |
@@ -48,7 +49,7 @@
 | [CI-03 有边界账本 Release Candidate 契约](CI03_LEDGER_RELEASE_CANDIDATE_CONTRACT.md) | 从受保护 main 的确定 SHA 准备源码、镜像和证据绑定的 Local/Integration RC；不自动发布 |
 | [CI-04 定时账本韧性与供应链契约](CI04_LEDGER_RESILIENCE_CONTRACT.md) | 定时验证真实模块故障/属性/容量/迁移恢复与锁定依赖风险；不执行资金或自动发布 |
 | [页面与交互规格](INTERACTION_SPEC.md) | Transaction-first P0 的页面、状态、操作和验收标准 |
-| [Transaction-first P0 产品基线](P0_TRANSACTION_FIRST_BASELINE.md) | 当前正式定位、交易契约和原型验收路径 |
+| [Transaction-first P0 交易领域基线](P0_TRANSACTION_FIRST_BASELINE.md) | 保留交易对象、状态契约和原型验收语义；不是社交钱包余额接入完成证明 |
 | [Transaction-first P0 验收方案](TRANSACTION_P0_ACCEPTANCE.md) | 当前主路径、辅助路径和 GO/ITERATE/STOP 门槛 |
 
 已废止的 Task-first 基线与用户测试方案保留为历史决策记录，不再作为产品导航或实现入口。
@@ -70,6 +71,7 @@ Agent 商业账户、信誉与服务网络
 ## 当前状态
 
 - 产品阶段：Phase 0 开发（Local / Sandbox / Testnet 边界）；首个 `ledger-rc-local-v0.1` 仅批准为 Local/Simulation 内部账本基线，既有 Release 名称中的 Sandbox 不表示 Testnet 已验收。退款审计阻断与 R63-01 历史回放时间窗口已经后续 PR 关闭；CI-01、CI-02、CI-RT01、CI-03、CI-04 已实现，LA-03d 继续补齐版本化账户投影刷新。当前私有仓库套餐不能证明分支保护，CI-03 必须失败关闭；LA-03 历史迁移/运行时切换、LA-06b 真实 Sandbox 双向证据与 E3.1 仍未放行。
+- 上层产品方向：Social Wallet；当前只冻结接入边界，**尚未把运行时 wallet 或 Schema 19 投影切换成社交钱包正式余额**。
 - 产品版本：Product v0.3 Transaction-first
 - 对应商业计划：BP v0.1
 - 更新日期：2026-09-10

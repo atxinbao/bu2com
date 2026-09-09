@@ -7,6 +7,14 @@
 
 LA-03d 已冻结多账户账簿所有权、余额投影切换和历史迁移契约；Schema 16 增加账簿账户所有权注册表，Schema 17 增加 Financial Posting 账簿账户绑定，Schema 19 增加按账户/币种隔离的版本化派生投影、确定性内容哈希和条件激活。后续仍必须拆分历史迁移与运行时切换证据并按 R2 审查；当前实现不改变运行时余额、交易状态或资金环境。
 
+## Foundation 当前入口
+
+- [Ledger Foundation 当前能力与产品接入基线](LEDGER_FOUNDATION_OVERVIEW.md)
+- [Ledger Foundation 产品接入收口 PR 计划](FOUNDATION_PR_PLAN.md)
+- [社交钱包与 Foundation 接入边界](../02-product/SOCIAL_WALLET_INTEGRATION_BOUNDARY.md)
+
+这些入口区分“已实现”“已接入业务”“本地已验证”和“已获准运行”。当前账户投影仍不是社交钱包正式余额，LA-03 历史迁移/运行时切换、LA-06b 与 Live 资金准入保持独立。
+
 - [Agent Payment API 契约 v0.3.0](API_CONTRACT_V0.1.md)
 - [OpenAPI v0.3.0](openapi.yaml)
 - [MCP 工具定义](mcp-tools.json)

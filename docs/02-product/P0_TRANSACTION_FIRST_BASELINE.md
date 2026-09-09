@@ -3,6 +3,8 @@
 日期：2026-09-01  
 执行者：Codex
 
+> 2026-09-10 状态说明：本文件继续作为 Transaction-first **交易领域语义基线**，保留授权、预留、交付、结算与退款的状态约束；首个上层产品方向已进入社交钱包 Foundation 接入收口，产品读写与余额边界以 [`SOCIAL_WALLET_INTEGRATION_BOUNDARY.md`](SOCIAL_WALLET_INTEGRATION_BOUNDARY.md) 为准。当前没有完成运行时多账户余额切换，本说明不授权直接读取账表或把既有 `Wallet` 当成社交钱包正式余额。
+
 ## 1. 产品定位
 
 BU2.com 是 **Agent 的 AI 收付平台**。它让任何 Agent 在账户所有者预先授权的范围内自主收款与付款，并完成交易验证、交付、结算、退款和追溯。
