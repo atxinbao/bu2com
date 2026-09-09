@@ -228,6 +228,11 @@ export class SqliteLedger {
         name: "refund_request_binding",
         apply: () => this.migrateRefundRequestBinding(),
       },
+      {
+        version: 19,
+        name: "ledger_account_projection_versions",
+        apply: () => this.migrateLedgerAccountProjectionVersions(),
+      },
     ];
     for (const migration of migrations) {
       if (applied.has(migration.version)) continue;
@@ -791,6 +796,53 @@ export class SqliteLedger {
     this.db.exec("CREATE TRIGGER IF NOT EXISTS financial_postings_ledger_account_guard BEFORE INSERT ON financial_postings WHEN NEW.ledger_account_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM ledger_accounts WHERE id = NEW.ledger_account_id AND status = 'active') BEGIN SELECT RAISE(ABORT, 'financial_posting_requires_active_ledger_account'); END;");
   }
 
+  migrateLedgerAccountProjectionVersions() {
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS ledger_projection_versions (
+        id TEXT PRIMARY KEY,
+        ledger_account_id TEXT NOT NULL,
+        environment TEXT NOT NULL CHECK (environment IN ('local', 'sandbox', 'live')),
+        tenant_id TEXT NOT NULL,
+        book_id TEXT NOT NULL,
+        asset TEXT NOT NULL,
+        network TEXT,
+        currency TEXT NOT NULL CHECK (currency GLOB '[A-Z][A-Z][A-Z]'),
+        version INTEGER NOT NULL CHECK (version >= 1),
+        content_hash TEXT NOT NULL CHECK (length(content_hash) = 64),
+        status TEXT NOT NULL CHECK (status IN ('ready', 'active', 'superseded')),
+        posting_count INTEGER NOT NULL CHECK (posting_count >= 0),
+        journal_count INTEGER NOT NULL CHECK (journal_count >= 0),
+        unbalanced_journal_count INTEGER NOT NULL CHECK (unbalanced_journal_count >= 0),
+        created_at TEXT NOT NULL,
+        activated_at TEXT,
+        UNIQUE (ledger_account_id, currency, version),
+        UNIQUE (ledger_account_id, currency, content_hash),
+        FOREIGN KEY (ledger_account_id) REFERENCES ledger_accounts(id)
+      );
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_ledger_projection_active
+        ON ledger_projection_versions(ledger_account_id, currency)
+        WHERE status='active';
+      CREATE INDEX IF NOT EXISTS idx_ledger_projection_history
+        ON ledger_projection_versions(ledger_account_id, currency, version);
+
+      CREATE TABLE IF NOT EXISTS ledger_projection_balances (
+        projection_version_id TEXT NOT NULL,
+        ledger_account_id TEXT NOT NULL,
+        asset TEXT NOT NULL,
+        network TEXT,
+        currency TEXT NOT NULL CHECK (currency GLOB '[A-Z][A-Z][A-Z]'),
+        account TEXT NOT NULL,
+        balance_minor INTEGER NOT NULL CHECK (typeof(balance_minor) = 'integer'),
+        posting_count INTEGER NOT NULL CHECK (posting_count >= 0),
+        PRIMARY KEY (projection_version_id, account),
+        FOREIGN KEY (projection_version_id) REFERENCES ledger_projection_versions(id) ON DELETE CASCADE,
+        FOREIGN KEY (ledger_account_id) REFERENCES ledger_accounts(id)
+      );
+      CREATE INDEX IF NOT EXISTS idx_ledger_projection_balances_account
+        ON ledger_projection_balances(ledger_account_id, currency, account);
+    `);
+  }
+
   migrateDurableRefundAttempts() {
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS refund_attempts (
@@ -1141,6 +1193,243 @@ export class SqliteLedger {
       if (existing.status === status) return existing;
       this.db.prepare("UPDATE ledger_accounts SET status=?, version=version+1, updated_at=? WHERE id=? AND version=? AND status=?").run(status, updated_at, id, version, existing.status);
       return this.getLedgerAccount(id);
+    });
+  }
+
+  getActiveLedgerAccountProjection({ ledger_account_id, currency }) {
+    const version = this.db.prepare(`
+      SELECT * FROM ledger_projection_versions
+      WHERE ledger_account_id=? AND currency=? AND status='active'
+    `).get(ledger_account_id, currency);
+    if (!version) return null;
+    const accounts = this.db.prepare(`
+      SELECT account, balance_minor, currency, ledger_account_id, asset, network, posting_count
+      FROM ledger_projection_balances
+      WHERE projection_version_id=?
+      ORDER BY account
+    `).all(version.id).map((row) => ({
+      ...row,
+      balance_minor: Number(row.balance_minor),
+      posting_count: Number(row.posting_count),
+    }));
+    return {
+      ...version,
+      version: Number(version.version),
+      posting_count: Number(version.posting_count),
+      journal_count: Number(version.journal_count),
+      unbalanced_journal_count: Number(version.unbalanced_journal_count),
+      accounts,
+    };
+  }
+
+  listLedgerAccountProjectionVersions({ ledger_account_id, currency }) {
+    return this.db.prepare(`
+      SELECT * FROM ledger_projection_versions
+      WHERE ledger_account_id=? AND currency=?
+      ORDER BY version
+    `).all(ledger_account_id, currency).map((row) => ({
+      ...row,
+      version: Number(row.version),
+      posting_count: Number(row.posting_count),
+      journal_count: Number(row.journal_count),
+      unbalanced_journal_count: Number(row.unbalanced_journal_count),
+    }));
+  }
+
+  refreshLedgerAccountProjection({
+    ledger_account_id,
+    currency,
+    environment = null,
+    expected_active_version = undefined,
+    generated_at = new Date().toISOString(),
+    buildProjection,
+  }) {
+    if (typeof currency !== "string" || !/^[A-Z]{3}$/.test(currency)) {
+      throw new ApiError(400, "validation_error", "invalid_projection_currency", "Projection currency must be an uppercase three-letter currency.");
+    }
+    if (expected_active_version === undefined) {
+      throw new ApiError(400, "validation_error", "expected_projection_version_required", "Projection refresh requires the expected active version; use null only when no active version exists.");
+    }
+    if (
+      expected_active_version !== null
+      && (!Number.isSafeInteger(expected_active_version) || expected_active_version < 1)
+    ) {
+      throw new ApiError(400, "validation_error", "invalid_projection_version", "Expected projection version must be null or a positive safe integer.");
+    }
+    if (typeof generated_at !== "string" || Number.isNaN(Date.parse(generated_at))) {
+      throw new ApiError(400, "validation_error", "invalid_projection_generated_at", "Projection generated_at must be a valid ISO date-time.");
+    }
+    if (typeof buildProjection !== "function") {
+      throw new TypeError("buildProjection must be a function");
+    }
+    return immediateTransaction(this.db, () => {
+      const ledgerAccount = this.assertLedgerAccountBinding(ledger_account_id, { environment });
+      let active = this.db.prepare(`
+        SELECT * FROM ledger_projection_versions
+        WHERE ledger_account_id=? AND currency=? AND status='active'
+      `).get(ledger_account_id, currency);
+      const activeVersion = active ? Number(active.version) : null;
+      if (expected_active_version !== activeVersion) {
+        throw new ApiError(409, "concurrency_conflict", "ledger_projection_version_conflict", "Ledger projection changed concurrently; query the active version before retrying.", {
+          ledger_account_id,
+          currency,
+          expected_active_version,
+          actual_active_version: activeVersion,
+        });
+      }
+      const unbound = this.db.prepare(`
+        SELECT COUNT(*) AS count FROM financial_postings
+        WHERE ledger_account_id IS NULL AND currency=?
+      `).get(currency);
+      if (Number(unbound.count) > 0) {
+        throw new ApiError(422, "financial_constraint", "ledger_projection_unbound_postings", "Unbound financial postings must be resolved before activating an account projection.", {
+          ledger_account_id,
+          currency,
+          unbound_posting_count: Number(unbound.count),
+        });
+      }
+      const postings = this.db.prepare(`
+        SELECT * FROM financial_postings
+        WHERE ledger_account_id=? AND currency=?
+        ORDER BY created_at, id
+      `).all(ledger_account_id, currency).map((row) => ({
+        ...row,
+        amount_value: Number(row.amount_value),
+      }));
+      const projection = buildProjection(postings);
+      if (
+        !projection
+        || !Array.isArray(projection.accounts)
+        || !Number.isSafeInteger(projection.posting_count)
+        || !Number.isSafeInteger(projection.journal_count)
+        || !Number.isSafeInteger(projection.unbalanced_journal_count)
+      ) {
+        throw new ApiError(500, "internal_error", "ledger_projection_invalid", "Ledger projection builder returned an invalid result.");
+      }
+      if (projection.unbalanced_journal_count !== 0) {
+        throw new ApiError(422, "financial_constraint", "ledger_projection_unbalanced", "An unbalanced journal prevents projection activation.", {
+          ledger_account_id,
+          currency,
+          unbalanced_journal_count: projection.unbalanced_journal_count,
+        });
+      }
+      const contentHash = requestFingerprint({
+        ownership: {
+          ledger_account_id,
+          environment: ledgerAccount.environment,
+          tenant_id: ledgerAccount.tenant_id,
+          book_id: ledgerAccount.book_id,
+          owner_account_id: ledgerAccount.owner_account_id,
+          asset: ledgerAccount.asset,
+          network: ledgerAccount.network,
+          ledger_account_version: Number(ledgerAccount.version),
+          currency,
+        },
+        postings: postings.map((posting) => ({
+          id: posting.id,
+          event_id: posting.event_id,
+          journal_id: posting.journal_id,
+          direction: posting.direction,
+          account: posting.account,
+          amount_value: posting.amount_value,
+          currency: posting.currency,
+          created_at: posting.created_at,
+        })),
+      });
+      if (active?.content_hash === contentHash) {
+        const activeProjection = this.getActiveLedgerAccountProjection({ ledger_account_id, currency });
+        const comparable = (row) => ({
+          account: row.account,
+          balance_minor: Number(row.balance_minor),
+          currency: row.currency,
+          ledger_account_id: row.ledger_account_id,
+          posting_count: Number(row.posting_count),
+        });
+        const expectedBalances = projection.accounts.map(comparable).sort((left, right) => left.account.localeCompare(right.account));
+        const actualBalances = activeProjection.accounts.map(comparable).sort((left, right) => left.account.localeCompare(right.account));
+        if (canonical(expectedBalances) === canonical(actualBalances)) {
+          return { ...activeProjection, idempotent: true };
+        }
+        // 投影是可删除派生数据；内容行不完整时移除损坏版本，并在本事务内
+        // 仅依靠不可变 Posting 重建，资金事实本身不被修改。
+        this.db.prepare("DELETE FROM ledger_projection_versions WHERE id=? AND status='active'").run(active.id);
+        active = null;
+      }
+      const nextVersion = Number(this.db.prepare(`
+        SELECT COALESCE(MAX(version), 0) + 1 AS version
+        FROM ledger_projection_versions
+        WHERE ledger_account_id=? AND currency=?
+      `).get(ledger_account_id, currency).version);
+      const projectionId = `lpv_${ledger_account_id.slice(4)}_${currency.toLowerCase()}_${nextVersion}`;
+      this.db.prepare(`
+        INSERT INTO ledger_projection_versions(
+          id, ledger_account_id, environment, tenant_id, book_id, asset, network,
+          currency, version, content_hash, status, posting_count, journal_count,
+          unbalanced_journal_count, created_at, activated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ready', ?, ?, ?, ?, NULL)
+      `).run(
+        projectionId,
+        ledger_account_id,
+        ledgerAccount.environment,
+        ledgerAccount.tenant_id,
+        ledgerAccount.book_id,
+        ledgerAccount.asset,
+        ledgerAccount.network,
+        currency,
+        nextVersion,
+        contentHash,
+        projection.posting_count,
+        projection.journal_count,
+        projection.unbalanced_journal_count,
+        generated_at,
+      );
+      const insertBalance = this.db.prepare(`
+        INSERT INTO ledger_projection_balances(
+          projection_version_id, ledger_account_id, asset, network, currency,
+          account, balance_minor, posting_count
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+      for (const balance of projection.accounts) {
+        if (
+          balance.ledger_account_id !== ledger_account_id
+          || balance.currency !== currency
+          || !Number.isSafeInteger(balance.balance_minor)
+          || !Number.isSafeInteger(balance.posting_count)
+        ) {
+          throw new ApiError(500, "internal_error", "ledger_projection_balance_invalid", "Ledger projection contains an invalid or cross-account balance row.");
+        }
+        insertBalance.run(
+          projectionId,
+          ledger_account_id,
+          ledgerAccount.asset,
+          ledgerAccount.network,
+          currency,
+          balance.account,
+          balance.balance_minor,
+          balance.posting_count,
+        );
+      }
+      this.failureInjector?.("after_projection_version_write");
+      if (active) {
+        const superseded = this.db.prepare(`
+          UPDATE ledger_projection_versions
+          SET status='superseded'
+          WHERE id=? AND status='active'
+        `).run(active.id);
+        if (superseded.changes !== 1) {
+          throw new ApiError(409, "concurrency_conflict", "ledger_projection_activation_conflict", "The active ledger projection changed before activation.");
+        }
+      }
+      const activated = this.db.prepare(`
+        UPDATE ledger_projection_versions
+        SET status='active', activated_at=?
+        WHERE id=? AND status='ready'
+      `).run(generated_at, projectionId);
+      if (activated.changes !== 1) {
+        throw new ApiError(409, "concurrency_conflict", "ledger_projection_activation_conflict", "The new ledger projection could not be activated.");
+      }
+      this.failureInjector?.("after_projection_activation");
+      return { ...this.getActiveLedgerAccountProjection({ ledger_account_id, currency }), idempotent: false };
     });
   }
 

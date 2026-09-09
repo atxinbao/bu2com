@@ -1153,3 +1153,11 @@ npm --prefix sandbox run test:hosted-deployment
 - `node deploy/la06a-local-gate.mjs`: passed with Sandbox 202/202, LA-06a 4/4, deployment/Hosted contracts 23/23, TypeScript SDK 10/10, contract validation, Prototype lint and Prototype build.
 - Workflow YAML and policy/context JSON parsed successfully; Node syntax checks and `git diff --check` passed.
 - GitHub API still reports that the private repository plan does not provide branch protection. No successful RC artifact, tag, GitHub Release, registry publication, Hosted deployment, Sandbox/Testnet bilateral settlement, Live/Mainnet action, Signer, Provider call or payment execution was performed.
+
+## 2026-09-10 · LA-03d versioned ledger-account projection refresh
+
+- `node --test sandbox/la03d.test.mjs sandbox/la03d-posting.test.mjs sandbox/la03d-projection-refresh.test.mjs deploy/runtime-assurance.test.mjs deploy/runtime-image-assurance.test.mjs scripts/ci/release-candidate.test.mjs`: 20/20 passed.
+- Coverage: first activation, deterministic idempotency, added-Posting version advance, mandatory/stale expected version rejection, single-writer activation, failure before and after activation rollback, account/currency/environment isolation, inactive and unbound fact rejection, SQLite restart, deleted derived-balance rebuild, and unchanged runtime wallet.
+- `node deploy/runtime-assurance.mjs`: passed with SQLite WAL, foreign keys, continuous migrations 1–19 and isolated Online Backup/restore.
+- `node deploy/la06a-local-gate.mjs`: passed with Sandbox 213/213, LA-06a boundary 4/4, deployment/Hosted contract 23/23, TypeScript SDK 10/10, API/MCP contract validation and Prototype lint/build.
+- Boundary: `external_sandbox_bilateral.accepted=false`; no historical ownership migration, runtime balance cutover, Provider, Signer, Hosted execution, Sandbox/Testnet bilateral settlement, Live/Mainnet, real funds or E3.1.

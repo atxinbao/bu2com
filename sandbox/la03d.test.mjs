@@ -19,7 +19,7 @@ const account = (overrides = {}) => ({
 test("LA-03d persists an explicit multi-account ownership tuple", () => {
   const ledger = new SqliteLedger(":memory:");
   const created = ledger.registerLedgerAccount(account());
-  assert.equal(ledger.schemaVersion(), 18);
+  assert.equal(ledger.schemaVersion(), 19);
   assert.equal(created.status, "active");
   assert.equal(created.version, 1);
   assert.deepEqual(ledger.listLedgerAccounts({ tenant_id: "ten_buyer" }), [created]);
@@ -85,7 +85,7 @@ test("LA-03d ownership records survive SQLite restart", () => {
     first.registerLedgerAccount(account({ network: "base-sepolia" }));
     first.close();
     const second = new SqliteLedger(path);
-  assert.equal(second.schemaVersion(), 18);
+    assert.equal(second.schemaVersion(), 19);
     assert.equal(second.getLedgerAccount("lga_buyer_cny").network, "base-sepolia");
     second.close();
   } finally {

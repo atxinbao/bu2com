@@ -546,3 +546,14 @@
 | Patch | `git diff --check` | 通过 |
 
 当前未执行成功的 GitHub 候选 workflow，因为私有仓库套餐不能提供契约要求的 `main` 分支保护。该限制按失败关闭处理；没有生成可发布 artifact，也没有执行 Hosted、Sandbox/Testnet 双向结算、Live/Mainnet、Signer、Provider 或真实资金操作。
+
+## 2026-09-10 · LA-03d 版本化账户投影刷新
+
+| 验证项 | 命令 | 结果 |
+|---|---|---|
+| LA-03d/Runtime/CI 专项 | `node --test sandbox/la03d.test.mjs sandbox/la03d-posting.test.mjs sandbox/la03d-projection-refresh.test.mjs deploy/runtime-assurance.test.mjs deploy/runtime-image-assurance.test.mjs scripts/ci/release-candidate.test.mjs` | 20/20 通过 |
+| 固定 SQLite 运行时 | `node deploy/runtime-assurance.mjs` | WAL、foreign keys、Schema 1–19、Online Backup/restore 通过 |
+| 完整本地门禁 | `node deploy/la06a-local-gate.mjs` | Sandbox 213/213；边界 4/4；部署/Hosted 23/23；SDK 10/10；契约、Prototype lint/build 通过 |
+| 外部 Sandbox 双向证据 | LA-06b | 未执行，`accepted=false` |
+
+首次专项执行有 1 个测试证据断言错误：直接写 Journal 的夹具不会写领域 LedgerEvent。修正为验证刷新前后 LedgerEvent 数不变后，专项与完整门禁均通过；未放宽实现约束。
