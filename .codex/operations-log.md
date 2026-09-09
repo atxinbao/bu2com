@@ -500,3 +500,10 @@
 - Tool: `apply_patch`; result: 更新 `exportLedgerReplayEvidence`，不生成或改写历史分录。
 - Tool: `node --test sandbox/la05b.test.mjs`; result: 4/4 passed。
 - Boundary: Local/Simulation only; no provider or financial execution.
+
+## 2026-09-09 · CI-02 合并证据绑定
+
+- Scope: 严格绑定 CI foundation/runtime 证据到同一 run/attempt、checkout commit/tree 和 Local/Simulation 边界。
+- Tool: `apply_patch`; result: 新增 `scripts/ci/validate-evidence.mjs`、负向测试、CI-02 文档，并让 workflow 保存原始 JSON/日志和验证 manifest。
+- Tool: `node --test scripts/ci/validate-evidence.test.mjs`; result: 2/2 passed；workflow YAML 解析通过。
+- Boundary: no financial credentials, Provider calls, Hosted, Testnet, Mainnet or automatic release.

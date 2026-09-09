@@ -1113,6 +1113,12 @@ npm --prefix sandbox run test:hosted-deployment
 - `node deploy/la06a-local-gate.mjs`: passed; Sandbox 202/202, targeted 4/4, deployment contracts 23/23, SDK 10/10, prototype lint/build passed.
 - `git diff --check`: passed. LA-06b bilateral Sandbox/Testnet and production release authorization remain unexecuted.
 
+## 2026-09-09 · CI-02 evidence binding
+
+- `node --test scripts/ci/validate-evidence.test.mjs`: 2/2 passed.
+- Workflow YAML parsed successfully; `BU2 / CI Gate` now downloads same-run/attempt evidence and validates exact check IDs, source commit/tree, boundary and artifact hashes.
+- GitHub Actions execution is pending the CI-02 PR; no production or payment credentials are used.
+
 ## 2026-09-09 · Local/Sandbox ledger baseline approval
 
 - Approval: Project Owner explicitly approved commit `005b394` as the Local/Sandbox internal ledger baseline.
