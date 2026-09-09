@@ -1112,3 +1112,9 @@ npm --prefix sandbox run test:hosted-deployment
 - `node deploy/runtime-assurance.mjs`: passed; SQLite WAL, schema 18, backup/restore verified; execution disabled.
 - `node deploy/la06a-local-gate.mjs`: passed; Sandbox 202/202, targeted 4/4, deployment contracts 23/23, SDK 10/10, prototype lint/build passed.
 - `git diff --check`: passed. LA-06b bilateral Sandbox/Testnet and production release authorization remain unexecuted.
+
+## 2026-09-09 · Local/Sandbox ledger baseline approval
+
+- Approval: Project Owner explicitly approved commit `005b394` as the Local/Sandbox internal ledger baseline.
+- Scope: This approval excludes real funds, Hosted, Testnet, Mainnet and production execution.
+- Release label: `ledger-rc-local-v0.1`.
