@@ -6,6 +6,7 @@ import {
 } from "node:crypto";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { classifyOperationalError } from "./observability.mjs";
+import { buildPostingProjection } from "./ledger-calculations.mjs";
 import {
   CURRENT_RECEIPT_SCHEMA_VERSION,
   RECEIPT_CANONICALIZATION_VERSION,
@@ -142,50 +143,11 @@ function validateReconciliationObservation(observation) {
 }
 
 function postingProjection(postings, currency = null) {
-  const balances = new Map();
-  const journals = new Map();
-  for (const posting of postings) {
-    if (currency !== null && posting.currency !== currency) continue;
-    const ledgerAccountId = posting.ledger_account_id ?? null;
-    const key = `${ledgerAccountId ?? "legacy"}:${posting.currency}:${posting.account}`;
-    const current = balances.get(key) ?? {
-      account: posting.account,
-      currency: posting.currency,
-      balance_minor: 0,
-      posting_count: 0,
-    };
-    if (ledgerAccountId !== null) current.ledger_account_id = ledgerAccountId;
-    const signedAmount = posting.direction === "debit" ? posting.amount_value : -posting.amount_value;
-    const nextBalance = current.balance_minor + signedAmount;
-    if (!Number.isSafeInteger(nextBalance)) {
-      throw new ApiError(422, "financial_constraint", "projection_amount_overflow", "Ledger projection exceeds the safe integer boundary.", { account: posting.account, currency: posting.currency });
-    }
-    current.balance_minor = nextBalance;
-    current.posting_count += 1;
-    balances.set(key, current);
-    const journal = journals.get(posting.event_id) ?? { event_id: posting.event_id, currency: posting.currency, debit_minor: 0, credit_minor: 0, posting_count: 0 };
-    if (posting.direction === "debit") journal.debit_minor += posting.amount_value;
-    if (posting.direction === "credit") journal.credit_minor += posting.amount_value;
-    journal.posting_count += 1;
-    journals.set(posting.event_id, journal);
+  const { projection, violation } = buildPostingProjection(postings, currency);
+  if (violation) {
+    throw new ApiError(422, "financial_constraint", violation.code, violation.message, violation.details);
   }
-  const journalRows = [...journals.values()].map((journal) => ({
-    ...journal,
-    balanced: journal.debit_minor === journal.credit_minor,
-  }));
-  return {
-    posting_count: [...balances.values()].reduce((total, account) => total + account.posting_count, 0),
-    journal_count: journalRows.length,
-    unbalanced_journal_count: journalRows.filter((journal) => !journal.balanced).length,
-    accounts: [...balances.values()]
-      .sort((left, right) =>
-        (left.ledger_account_id ?? "").localeCompare(right.ledger_account_id ?? "")
-        || left.currency.localeCompare(right.currency)
-        || left.account.localeCompare(right.account),
-      )
-      .map((account) => clone(account)),
-    journals: journalRows.sort((left, right) => left.event_id.localeCompare(right.event_id)).map((journal) => clone(journal)),
-  };
+  return projection;
 }
 
 export class Bu2Sandbox {

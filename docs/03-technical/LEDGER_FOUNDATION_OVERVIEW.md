@@ -41,9 +41,9 @@ Simulation 不是对外 Sandbox。CI 成功、代码已合并或存在 Live 配�
 
 | 能力 | 当前已有 | 仍未完成 | 当前可依赖范围 |
 | --- | --- | --- | --- |
-| Journal / Posting | 平衡校验、已过账不可变、业务资金事实分录 | 所有新业务分录的可信账户归属接线 | 内部账务事实 |
+| Journal / Posting | 平衡校验、已过账不可变、业务资金事实分录；FP-04 将 Posting shape 与 Journal 合计/平衡纯计算提到内部 helper，`SqliteLedger` 仍拥有 DB 校验和写事务 | 所有新业务分录的可信账户归属接线 | 内部账务事实 |
 | LedgerAccount | Schema 16 所有权注册，Schema 17 Posting 绑定 | 业务来源到唯一账户的统一解析与更强归属校验 | 内部所有权边界 |
-| 账户投影 | Schema 19、确定性内容哈希、显式期望版本、条件激活、可重建 | 源水位、完整性/陈旧状态、产品读模型与运行时切换 | 内部派生报告；**不是产品余额** |
+| 账户投影 | Schema 19、确定性内容哈希、显式期望版本、条件激活、可重建；FP-04 让全局/账户/持久化刷新复用同一纯 Posting 投影计算 | 源水位、完整性/陈旧状态、产品读模型与运行时切换 | 内部派生报告；**不是产品余额** |
 | 运行时余额 | 既有 `wallet_accounts` / `this.wallet` 路径 | 多账户 WalletReadModel、shadow 比对、受控 cutover | 既有运行时内部路径 |
 | 历史重放/恢复 | 只读重放、备份追加事实追平、缺口报告 | 目标产品账簿的归属迁移/期初核对与 cutover 证据 | 已验收范围内报告 |
 | 收款/付款/退款/费用 | Local/Simulation 业务与故障路径、Attempt/对账能力 | 业务分录全面绑定、产品范围真实 Sandbox 证据 | 不扩张到未批准通道 |
@@ -71,6 +71,12 @@ Simulation 不是对外 Sandbox。CI 成功、代码已合并或存在 Live 配�
 - 对目标产品账簿完成 shadow 比对、归属/期初核对和独立 R2 cutover；
 - 证明暂停账户仍可查询历史和对账，而新增支出保持失败关闭；
 - 保持 Journal/Posting 与 Provider 已发生事实不可改写，不用重新付款掩盖差异。
+
+### FP-04 内部 facade 边界
+
+`sandbox/ledger-calculations.mjs` 只负责确定性的 Posting shape、Journal 合计/平衡和 Posting → 投影计算。它不持有 SQLite handle，不开启或提交事务，不解析业务归属，不读取运行环境，也不调用 Provider。计算失败只返回稳定 violation；`Bu2Sandbox` / `SqliteLedger` 在既有兼容入口将 violation 转回原有 `ApiError` 语义。
+
+数据库相关责任仍留在 `SqliteLedger`：账簿账户 active/environment 校验、source/event 存在性、不可变内容 fingerprint、Posting/Journal 写入，以及 Schema 19 投影版本的 `BEGIN IMMEDIATE` / `expected_active_version` 条件激活。FP-04 不改变这些事务边界，也不改变退款、provider unknown、迁移、运行时 `wallet.available` 或业务分录归属；后者仍由 FP-05/FP-06 独立处理。
 
 ## 6. 只读盘点入口
 

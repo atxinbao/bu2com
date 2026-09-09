@@ -3,7 +3,7 @@
 日期：2026-09-07
 执行者：Codex
 
-本目录实现 Phase 0 Frozen `/v1` Contract 的本地 SQLite Reference Server。它具备追加账本、Webhook Outbox、模拟支付 Adapter、签名 Receipt、稳定分页与运行时请求校验、基于官方 MCP SDK 的外部 Agent 接入样例，以及基于官方 x402 SDK 的 Base Sepolia `exact` 支付通道；ENV-02–06 已建立环境、客户端、Receipt、隔离容器、受控访问与恢复边界，ENV-07A 增加 Hosted Sandbox 的专用启动和证据门槛。LA-03a 进一步把结算、确认退款和 ProviderFee 事实接入受保护的 Journal/Posting，LA-03b 增加可核对期初检查点与追加更正事实，LA-03c 提供从不可变 Posting 重建账户余额与 Journal 平衡的只读报告，LA-04 支持 pending Collection 持续验证与单次入账，LA-05a 支持独立外部观察对账、未决队列和孤立事实，LA-05b 支持历史账务重放和备份追加事实追平证据，LA-06a 提供本地全量回归、故障/属性/跨租户准入编排，RT-01 提供固定 Node/SQLite、WAL、迁移和隔离备份恢复证据。它不持有真实资金，不可用于生产；LA-06a/RT-01 不代表真实 Sandbox 双向收付已验收。
+本目录实现 Phase 0 Frozen `/v1` Contract 的本地 SQLite Reference Server。它具备追加账本、Webhook Outbox、模拟支付 Adapter、签名 Receipt、稳定分页与运行时请求校验、基于官方 MCP SDK 的外部 Agent 接入样例，以及基于官方 x402 SDK 的 Base Sepolia `exact` 支付通道；ENV-02–06 已建立环境、客户端、Receipt、隔离容器、受控访问与恢复边界，ENV-07A 增加 Hosted Sandbox 的专用启动和证据门槛。LA-03a 进一步把结算、确认退款和 ProviderFee 事实接入受保护的 Journal/Posting，LA-03b 增加可核对期初检查点与追加更正事实，LA-03c 提供从不可变 Posting 重建账户余额与 Journal 平衡的只读报告，FP-04 将 Posting/Journal/投影的纯计算整理到内部 `ledger-calculations.mjs`，但继续由 `Bu2Sandbox` / `SqliteLedger` 提供兼容入口并保留原数据库事务边界；LA-04 支持 pending Collection 持续验证与单次入账，LA-05a 支持独立外部观察对账、未决队列和孤立事实，LA-05b 支持历史账务重放和备份追加事实追平证据，LA-06a 提供本地全量回归、故障/属性/跨租户准入编排，RT-01 提供固定 Node/SQLite、WAL、迁移和隔离备份恢复证据。它不持有真实资金，不可用于生产；LA-06a/RT-01 不代表真实 Sandbox 双向收付已验收。
 
 ## 启动
 
