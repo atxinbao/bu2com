@@ -94,6 +94,7 @@
 - [`PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md`](03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md)：首个正式开发 Epic 的范围、Owner、可靠性工作包和完成门槛。
 - [`PHASE0_EPIC2_DEVELOPER_INTEGRATION_SCALE.md`](03-technical/PHASE0_EPIC2_DEVELOPER_INTEGRATION_SCALE.md)：开发者接入规模化 Epic 的 SDK、MCP 分发、诊断、试点证据与阶段边界。
 - [`PHASE0_EPIC3_EXTERNAL_PILOT_EVIDENCE.md`](03-technical/PHASE0_EPIC3_EXTERNAL_PILOT_EVIDENCE.md)：外部试点的 Manifest、最小证据、失败支持、三团队验证和阶段决策边界。
+- [`CI_RELEASE_CANDIDATE.md`](03-technical/CI_RELEASE_CANDIDATE.md)：CI-03 从受保护 `main` 准备有边界、尚未发布的账本 Local/Integration RC。
 
 ## 可运行实现
 

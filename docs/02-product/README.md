@@ -45,6 +45,7 @@
 | [LA-05b 历史账务重放与备份追平](LA05B_HISTORY_REPLAY_CATCHUP_CONTRACT.md) | Ledger Assurance Gate 第五项整改的第二个子范围：期初检查点重放、历史缺口与备份追加事实追平 |
 | [LA-06a 本地全量与隔离准入](LA06A_LOCAL_FOUNDATION_GATE_CONTRACT.md) | Ledger Assurance Gate 第六项整改的本地子范围：全量回归、故障/属性/跨租户证据；不接受真实 Sandbox 双向结算 |
 | [RT-01 固定运行时与 SQLite 账本准入](RT01_RUNTIME_ASSURANCE_CONTRACT.md) | 核对固定 Node/SQLite 运行时、WAL、迁移连续性与隔离备份恢复；不改变生产运行时 |
+| [CI-03 有边界账本 Release Candidate 契约](CI03_LEDGER_RELEASE_CANDIDATE_CONTRACT.md) | 从受保护 main 的确定 SHA 准备源码、镜像和证据绑定的 Local/Integration RC；不自动发布 |
 | [页面与交互规格](INTERACTION_SPEC.md) | Transaction-first P0 的页面、状态、操作和验收标准 |
 | [Transaction-first P0 产品基线](P0_TRANSACTION_FIRST_BASELINE.md) | 当前正式定位、交易契约和原型验收路径 |
 | [Transaction-first P0 验收方案](TRANSACTION_P0_ACCEPTANCE.md) | 当前主路径、辅助路径和 GO/ITERATE/STOP 门槛 |
@@ -67,8 +68,8 @@ Agent 商业账户、信誉与服务网络
 
 ## 当前状态
 
-- 产品阶段：Phase 0 开发（Simulation / Testnet）；F07 已合并，F08～F15b 运行时/验收已实现，F16a 本地 Beta 候选、F16b Hosted 基础资格、LA-01/LA-01b 退款安全整改、LA-01c 已确认未入账退款额度保护与 LA-01d 退款请求条款持久化绑定、LA-02 Journal/Posting 保护、LA-03a 业务事实分录、LA-03b 期初/更正事实、LA-03c 账务投影重建、LA-04 Collection 持续验证、LA-05a 外部观察对账、LA-05b 历史重放/备份追平、LA-06a 本地全量/隔离准入与 RT-01 固定运行时准入已实现，LA-03d 契约、Schema/所有权与 Posting 绑定/投影子范围已完成，均待各自 R2 Domain 与 Architecture 审查；当前 Release 仍等待 LA-01d 退款请求条款绑定修复完成并审查，LA-03 完整范围未完成；LA-06b 真实 Sandbox 双向证据未执行；E3.1 暂停
+- 产品阶段：Phase 0 开发（Local / Sandbox / Testnet 边界）；首个 `ledger-rc-local-v0.1` 仅批准为 Local/Simulation 内部账本基线，既有 Release 名称中的 Sandbox 不表示 Testnet 已验收。退款审计阻断与 R63-01 历史回放时间窗口已经后续 PR 关闭；CI-01、CI-02、CI-RT01 已实现，CI-03 正在准备受保护 `main` 的 Local/Integration RC。当前私有仓库套餐不能证明分支保护，CI-03 必须失败关闭；LA-03 完整迁移/切换、LA-06b 真实 Sandbox 双向证据与 E3.1 仍未放行。
 - 产品版本：Product v0.3 Transaction-first
 - 对应商业计划：BP v0.1
-- 更新日期：2026-09-09
+- 更新日期：2026-09-10
 - 维护者：Codex

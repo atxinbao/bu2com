@@ -151,6 +151,12 @@
 
       <h2 id="unreleased">Unreleased</h2>
       <article class="release">
+        <div class="release-head"><div><h3>CI-03 · 有边界账本 Release Candidate</h3><time datetime="2026-09-10">2026-09-10</time></div><span class="status">Unreleased</span></div>
+        <p class="summary">新增只接受受保护 main 完整 SHA 的手工候选工作流，将同一源码、七项本地门禁、固定镜像运行时、Docker archive 与证据哈希绑定为 Local/Integration Ledger RC，且不自动发布或执行资金操作。</p>
+        <div class="change-group"><h4>Added</h4><ul><li><span class="tag added">Added</span>新增 <code>ci03.release-policy.v1</code>、发布请求准入、候选 manifest/notes 生成器和正常/篡改负向测试；请求与 CI 证据必须绑定同一 run/attempt、事件、ref 和 workflow SHA。</li><li><span class="tag governance">Governance</span>候选状态固定为 <code>prepared_not_released</code>；tag、Release、registry、Hosted、Testnet、Live/Mainnet、Signer、Provider 与资金执行均未授权。</li></ul></div>
+        <div class="evidence"><div><b>风险等级</b><span>R2 · 影响账本制品与发布准入，需独立审查</span></div><div><b>验证</b><span>CI/运行时专项 13/13；LA-06a：Sandbox 202/202、边界 4/4、部署契约 23/23、SDK 10/10、Prototype lint/build 通过</span></div><div><b>当前阻塞</b><span>私有仓库套餐不支持 main 分支保护；准入脚本失败关闭，不能生成成功候选</span></div><div><b>恢复</b><span>revert 本变更恢复 CI-RT01；已生成 artifact 不具发布授权且可自然过期</span></div></div>
+      </article>
+      <article class="release">
         <div class="release-head"><div><h3>CI-RT01 · 发布镜像内运行时验收</h3><time datetime="2026-09-09">2026-09-09</time></div><span class="status">Unreleased</span></div>
         <p class="summary">固定 Node 基础镜像 digest，并在实际发布镜像内部验证 Node、npm、SQLite、Schema 1–18、WAL、外键和 Online Backup，避免宿主门禁通过但制品运行时漂移。</p>
         <div class="change-group"><h4>Changed</h4><ul><li><span class="tag changed">Changed</span>新增 <code>rt01.policy.v1</code>、镜像内探针和证据验证器；<code>BU2 / CI Gate</code> 强制依赖 runtime-image job，并交叉核对构建器输出的 image ID 与镜像证据。</li><li><span class="tag governance">Governance</span>镜像以 Sandbox 非特权身份 <code>10001:10001</code>、<code>--network none</code> 和只读根文件系统运行验收，不加载 Signer、不调用 Provider、不开放 Live。</li></ul></div>

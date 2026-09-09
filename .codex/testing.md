@@ -521,3 +521,15 @@
 提交前回归：TypeScript SDK 10/10（生成、格式、Lint、类型、build 通过）；Prototype lint/build 通过；`git diff --check` 通过。
 
 本 PR 只验证本地固定运行时与 SQLite 恢复边界，不构成真实 Sandbox/Base Sepolia 双向收付证据。
+
+## 2026-09-10 · CI-03 有边界账本候选
+
+| 验证项 | 命令 | 结果 |
+|---|---|---|
+| CI/运行时契约 | `node --test scripts/ci/*.test.mjs deploy/runtime-assurance.test.mjs deploy/runtime-image-assurance.test.mjs` | 13/13 通过 |
+| 未保护 main CLI 反例 | CI-03 请求验证器子进程 | 退出码 1，明确拒绝 |
+| 完整本地门禁 | `node deploy/la06a-local-gate.mjs` | Sandbox 202/202；边界 4/4；部署 23/23；SDK 10/10；Prototype lint/build 通过 |
+| Workflow/JSON 语法 | Ruby YAML + Node JSON parse | 通过 |
+| Patch | `git diff --check` | 通过 |
+
+当前未执行成功的 GitHub 候选 workflow，因为私有仓库套餐不能提供契约要求的 `main` 分支保护。该限制按失败关闭处理；没有生成可发布 artifact，也没有执行 Hosted、Sandbox/Testnet 双向结算、Live/Mainnet、Signer、Provider 或真实资金操作。

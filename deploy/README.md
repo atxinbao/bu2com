@@ -5,6 +5,12 @@
 
 本目录提供同一不可变镜像、两个隔离部署单元、外部默认鉴权，以及制品提升、监控、在线备份和隔离恢复的本地参考实现。它只用于验证环境、关闭入口与恢复边界；不是云部署、公开 Sandbox 或 Live 上线方案。
 
+## CI-03 有边界账本候选
+
+`ledger-release-candidate.yml` 只从受保护 `main` 的确定 SHA 准备 Local/Integration 候选。它复跑本地门禁与镜像运行时探针，导出同一 image ID 的 Docker archive，并生成绑定源码、制品与证据哈希的 `ci03.release-candidate.v1`。输出状态始终为 `prepared_not_released`，不会创建 tag、GitHub Release、registry package 或部署。
+
+当前私有仓库套餐尚不支持分支保护，候选准入会失败关闭。完整规则、artifact 内容和启用后的触发方式见 [CI-03 技术说明](../docs/03-technical/CI_RELEASE_CANDIDATE.md)。
+
 ## Internal OrbStack Sandbox 一键流程
 
 `local-sandbox.mjs` 是内部 Sandbox 的本地编排入口。它只启动 `sandbox` 服务，不启动 Live，不删除本地数据卷，并固定使用 loopback、Base Sepolia、x402 和 `execution_disabled`。
