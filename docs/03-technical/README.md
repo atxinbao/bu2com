@@ -5,15 +5,17 @@
 
 ## LA-03d 当前契约状态
 
-LA-03d 已冻结多账户账簿所有权、余额投影切换和历史迁移契约；Schema 16 增加账簿账户所有权注册表，Schema 17 增加 Financial Posting 账簿账户绑定，Schema 19 增加按账户/币种隔离的版本化派生投影、确定性内容哈希和条件激活，Schema 20 再把 FundingSource/ReceivingTarget 的可信 LedgerAccount 归属接到新业务 Posting。FP-06a 在不新增 Schema 的前提下增加只读 WalletReadModel、source watermark、stale/completeness 和 legacy wallet shadow；后续仍必须拆分历史归属迁移与运行时切换证据并按 R2 审查，当前 shadow 不参与支出决策。
+LA-03d 已冻结多账户账簿所有权、余额投影切换和历史迁移契约；Schema 16/17/19 建立所有权、Posting 绑定与版本化投影，Schema 20 把可信 FundingSource/ReceivingTarget 接到业务 Posting，FP-06a 增加 WalletReadModel/shadow。FP-06b Schema 21 再增加仅 Local 的 append-only migration plan / assessment / cutover generation：运行时读值可受控切到 `available_spending_capacity`，但资金写与支出决策仍留在 legacy Transaction Core wallet，Sandbox/Live 与生产数据切换继续关闭。
 
 ## Foundation 当前入口
 
 - [Ledger Foundation 当前能力与产品接入基线](LEDGER_FOUNDATION_OVERVIEW.md)
 - [Ledger Foundation 产品接入收口 PR 计划](FOUNDATION_PR_PLAN.md)
 - [社交钱包与 Foundation 接入边界](../02-product/SOCIAL_WALLET_INTEGRATION_BOUNDARY.md)
+- [FP-06b 目标账簿迁移与 Local 读路径切换](../02-product/FP06B_WALLET_READ_CUTOVER_CONTRACT.md)
+- [ADR-0002 Local WalletReadModel cutover](ADR_0002_LOCAL_WALLET_READ_CUTOVER.md)
 
-这些入口区分“已实现”“已接入业务”“本地已验证”和“已获准运行”。当前账户投影仍不是社交钱包正式余额，LA-03 历史迁移/运行时切换、LA-06b 与 Live 资金准入保持独立。
+这些入口区分“已实现”“已接入业务”“本地已验证”和“已获准运行”。FP-06b 只完成 Local 受控读路径切换机制，不是正式社交钱包 API、Sandbox/Testnet 或 Live 资金准入。
 
 - [Agent Payment API 契约 v0.3.0](API_CONTRACT_V0.1.md)
 - [OpenAPI v0.3.0](openapi.yaml)
@@ -84,6 +86,6 @@ LA-03d 已冻结多账户账簿所有权、余额投影切换和历史迁移契�
 - [CI-03 Ledger Release Candidate 技术说明](CI_RELEASE_CANDIDATE.md)
 - [CI-04 Ledger Nightly 技术说明](CI_LEDGER_NIGHTLY.md)
 
-Contract v0.3.0 已具备本地 SQLite Reference Server、数据库 processing 幂等 Claim、状态版本 CAS、原子化 Ledger/Outbox、预算 Scope/Hold/Financial Posting、受保护的成组 Journal/Posting、结算/确认退款/ProviderFee 业务事实分录、期初检查点与追加更正事实、只读账务投影重建、版本化账户投影刷新、历史账务重放与备份追加事实追平、版本化 PaymentMandate/PolicyDecision、短时有界 ExecutionSession、Receivable/Collection 入站收款事实、可恢复 AccessGrant、独立 Delivery Fact、有限重试与死信、审计重放、Secret 版本轮换、端到端交易关联、结构化观测、环境自描述、签名 Receipt、ProviderFee 与 ReconciliationRun、独立外部观察对账、环境绑定的 Agent/Developer/Operator 访问控制、租户隔离与受控运维入口，以及基于官方 MCP/x402 SDK 的 Agent 支付接入。Epic 1 与 Epic 2 已完成；Transaction Trust Gate 1–3 已经 PR #15–#17 合并。F06a/F06b/F07 已完成，F08/F09a/F10/F11/F12/F13/F14/F15a 运行时、F15b 本地运营验收、F16a 本地 Beta 候选、F16b Hosted 基础资格、LA-01/LA-01b/LA-01c 持久化退款尝试、确认事实恢复与新请求容量保护、LA-01d 退款请求条款持久化绑定（Schema 18）、LA-02 Journal/Posting 保护、LA-03a 业务事实分录、LA-03b 期初/更正事实、LA-03c 账务投影重建、LA-03d Schema 19 版本化账户投影刷新、FP-05 Schema 20 新业务 Posting 可信归属、FP-06a WalletReadModel/shadow、LA-05a 外部观察对账、LA-05b 历史重放/备份追平、LA-06a 本地全量/隔离准入与 RT-01 固定运行时准入已实现，待对应独立 R2 Domain 与 Architecture 审查。
+Contract v0.3.0 已具备本地 SQLite Reference Server、幂等/CAS、Ledger/Outbox、授权/预留/结算/退款、受保护 Journal/Posting、期初/更正、版本化账户投影、历史重放/备份追平、外部观察对账、Receipt、MCP/x402 等既有能力；FP-05 Schema 20 将新业务事实接到可信 LedgerAccount，FP-06a 建立 WalletReadModel/shadow，FP-06b Schema 21 增加 Local-only append-only migration plan / assessment / cutover generation 与 stale reserve guard。FP-06b 的运行时读值可选择 `available_spending_capacity`，但支付授权/资金写继续属于 legacy Transaction Core wallet。
 
-F01/ENV-01 至 ENV-06 已分别由 PR #18–#23 批准。ENV-07A 与 ENV-07B 本地部署准备、外部验收 Schema 和 Runbook 已实现；真实托管 Sandbox、Base Sepolia 双向收付与边缘 E2E 仍为 Not yet accepted。D0/D1/D2 与 F07 已合并，F08～F16b、LA-01、LA-02、LA-03a、LA-03b、LA-03c、LA-04、LA-05a、LA-05b、LA-06a、RT-01、FP-05 与 FP-06a 的代码/本地验收已实现并等待各自独立 R2 审查；LA-03 的历史归属迁移与运行时切换仍未完成；LA-06b 外部双向证据未执行；E3.1 暂停，继续完成 Ledger Assurance Gate。SDK/MCP 未公开发布，Live/Mainnet、真实资金托管与生产凭证仍未经独立准入。
+F01/ENV-01 至 ENV-06 已分别由 PR #18–#23 批准。ENV-07A/07B 本地部署准备已实现；真实托管 Sandbox、Base Sepolia 双向收付与边缘 E2E 仍为 Not yet accepted。FP-06b 只完成隔离 Local 的迁移解释与读路径切换机制；正式产品 API/多账户资金写、LA-06b 外部双向证据、E3.1 与 Live/Mainnet/生产数据仍未经独立准入。

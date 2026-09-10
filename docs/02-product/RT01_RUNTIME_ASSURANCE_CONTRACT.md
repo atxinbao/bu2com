@@ -6,7 +6,7 @@
 
 ## 1. 目标
 
-RT-01 验证包含已修复 SQLite 账本的固定运行时可以在本地重复启动、迁移、写入 WAL 并完成 Online Backup 与隔离恢复。当前迁移连续性为 Schema 1–20；入口为：
+RT-01 验证包含已修复 SQLite 账本的固定运行时可以在本地重复启动、迁移、写入 WAL 并完成 Online Backup 与隔离恢复。当前迁移连续性为 Schema 1–21；入口为：
 
 ```bash
 node deploy/runtime-assurance.mjs
@@ -21,13 +21,13 @@ node deploy/runtime-assurance.mjs
 - Docker 制品的 dependencies/runtime 两个阶段均固定为 `runtime-policy.json` 批准的 Node 镜像及完整 digest。
 - 发布镜像以 Sandbox 非特权身份 `10001:10001` 运行，并在内部报告及精确匹配 Node、npm、SQLite 引擎版本和账本 Schema；证据中的 image ID 必须与构建器输出的独立 ID 文件一致。
 - SQLite 开启 WAL 和 foreign keys。
-- Schema migration 从 1 连续到当前版本 20，不跳号、不回退。
+- Schema migration 从 1 连续到当前版本 21，不跳号、不回退。
 - Online Backup 复制到新的隔离文件，源库与恢复库完整性均为 `ok` 且 Schema 一致。
 - 运行时证据明确不加载 Signer、不调用 Provider、不执行付款。
 
 ## 3. 明确不包含
 
-- FP-03 历史上只替换批准的 Docker/Node/SQLite 运行时基线；当前 runtime policy 随后续账本迁移同步到 Schema 20，但 Node/npm/SQLite 固定版本和 WAL-reset 安全下限不变。
+- FP-03 历史上只替换批准的 Docker/Node/SQLite 运行时基线；当前 runtime policy 随后续账本迁移同步到 Schema 21，但 Node/npm/SQLite 固定版本和 WAL-reset 安全下限不变。
 - 不创建 Hosted endpoint，不执行 Base Sepolia 或 Mainnet 付款。
 - 不把本地 WAL/备份证据解释为高可用、多节点或生产财务准入。
 - 不替代 LA-06b 的真实 Sandbox 双向收付与 G-F 审查。

@@ -64,4 +64,6 @@ Schema/归属约束子范围已增加 `ledger_accounts` Schema 16、唯一所有
 
 第五实现子范围 FP-06a 不新增 Schema：在活动 Schema 19 projection 与 Schema 20 ownership 上增加只读 `wallet-read-model.v1` / `wallet-shadow.v1`。模型冻结 liquidity 科目映射、minor-unit 格式、账户/币种 Journal 水位、source/projection hash、generation、stale/completeness、reserved/pending、对账状态和 shadow 差异；completeness 只对 `trusted_bound_sources` 失败关闭，目标 source 的 unbound Posting 与未绑定/异常 pending 必须阻断，而无法归属到目标账户的全局 legacy unbound 只标记历史迁移 pending/cutover=false。缺账户级 Provider balance observation 时明确返回 `not_observed`。读取允许 suspended 账户，但候选可支出能力固定 `usable_for_spend=false`，shadow 固定 `decision_use=forbidden`，且调用前后 Wallet、Posting、LedgerEvent、projection version/rows 必须不变。
 
-以上实现不切换运行时 `wallet.available`，不执行历史归属迁移或运行时 cutover。剩余隔离历史迁移/期初核对与切换证据必须由 FP-06b 独立取证。
+第六实现子范围 FP-06b 增加 Schema 21 append-only migration plan / assessment / cutover generation。它不 UPDATE 历史 Posting，而以 fully-bound、逐 source exclusion 或 reconciled-opening 明确解释目标范围；活动计划 source fingerprint 漂移即失效。Local cutover 激活重验 state revision、legacy wallet、fresh assessment、projection/source hash 和 generation CAS；运行时 `read_balance` 可切到 WalletReadModel `available_spending_capacity`，但资金写与支出判断仍由 legacy Transaction Core wallet 所有。stale/incomplete 时不 fallback，并阻止新 reserve；rollback 追加新的 legacy generation。
+
+FP-06b 不授权 Sandbox/Testnet、Hosted、Live/Mainnet 或生产数据迁移。正式社交钱包产品读写、两个独立 Account 的产品级 E2E 与新 RC 继续交给 FP-07。

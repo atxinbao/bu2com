@@ -1315,6 +1315,7 @@ export class Bu2Sandbox {
     ledger_account_id,
     currency,
     expected_active_version = undefined,
+    migration_plan_id = null,
   } = {}) {
     validateIdentifier(ledger_account_id, "lga", "ledger_account_id");
     if (!this.ledger) {
@@ -1324,6 +1325,7 @@ export class Bu2Sandbox {
       ledger_account_id,
       currency,
       expected_active_version,
+      migration_plan_id,
       environment: this.environmentConfig.environment,
       buildProjection: (postings) => postingProjection(postings, currency),
     });
@@ -1482,6 +1484,337 @@ export class Bu2Sandbox {
       legacy_wallet_id: this.wallet?.id ?? null,
       legacy_scope: "global_single_wallet",
     };
+  }
+
+  walletReconciledSourceIds(ledgerAccountId) {
+    const sourceIds = new Set();
+    for (const transaction of this.transactions.values()) {
+      if (transaction.ledger_account_id !== ledgerAccountId || !["settled", "refunded"].includes(transaction.status)) continue;
+      sourceIds.add(transaction.id);
+      for (const refund of this.refunds.values()) {
+        if (refund.transaction_id === transaction.id && refund.status === "refunded") sourceIds.add(refund.id);
+      }
+    }
+    for (const collection of this.collections.values()) {
+      if (collection.ledger_account_id === ledgerAccountId && collection.status === "posted") sourceIds.add(collection.id);
+    }
+    for (const fee of this.providerFees.values()) {
+      if (fee.ledger_account_id === ledgerAccountId) sourceIds.add(fee.id);
+    }
+    return [...sourceIds].sort();
+  }
+
+  walletCutoverReconciliationStatus(requiredSourceIds) {
+    const required = [...new Set(requiredSourceIds ?? [])].sort();
+    if (required.length === 0) {
+      return {
+        status: "not_required",
+        run_id: null,
+        mode: null,
+        as_of: null,
+        required_source_count: 0,
+        matched_source_count: 0,
+        missing_source_ids: [],
+        duplicate_source_ids: [],
+      };
+    }
+    const requiredSet = new Set(required);
+    const runs = [...this.reconciliationRuns.values()]
+      .sort((left, right) => right.created_at.localeCompare(left.created_at) || right.id.localeCompare(left.id));
+    for (const run of runs) {
+      const relevant = (run.items ?? []).filter((item) => requiredSet.has(item.source_id));
+      if (relevant.length === 0) continue;
+      const counts = new Map();
+      for (const item of relevant) counts.set(item.source_id, (counts.get(item.source_id) ?? 0) + 1);
+      const duplicateSourceIds = [...counts.entries()].filter(([, count]) => count !== 1).map(([sourceId]) => sourceId).sort();
+      const present = new Set(relevant.map((item) => item.source_id));
+      const missingSourceIds = required.filter((sourceId) => !present.has(sourceId));
+      const matchedSourceIds = relevant.filter((item) => item.status === "matched").map((item) => item.source_id);
+      const hasException = relevant.some((item) => item.status === "exception");
+      const hasUnknown = relevant.some((item) => item.status === "unknown");
+      const status = missingSourceIds.length > 0 || duplicateSourceIds.length > 0
+        ? "incomplete"
+        : hasException
+          ? "exception"
+          : hasUnknown
+            ? "unknown"
+            : matchedSourceIds.length === required.length
+              ? "matched"
+              : "incomplete";
+      return {
+        status,
+        run_id: run.id,
+        mode: run.mode,
+        as_of: run.as_of,
+        required_source_count: required.length,
+        matched_source_count: new Set(matchedSourceIds).size,
+        missing_source_ids: missingSourceIds,
+        duplicate_source_ids: duplicateSourceIds,
+      };
+    }
+    return {
+      status: "not_observed",
+      run_id: null,
+      mode: null,
+      as_of: null,
+      required_source_count: required.length,
+      matched_source_count: 0,
+      missing_source_ids: required,
+      duplicate_source_ids: [],
+    };
+  }
+
+  getWalletMigrationPlan(id) {
+    validateIdentifier(id, "wmp", "wallet_migration_plan_id");
+    if (!this.ledger) return null;
+    return this.ledger.getWalletMigrationPlan(id);
+  }
+
+  async prepareWalletMigrationPlan({
+    ledger_account_id,
+    currency,
+    history_strategy,
+    opening_balance_id = null,
+    classifications = [],
+  } = {}, key) {
+    validateIdentifier(ledger_account_id, "lga", "ledger_account_id");
+    if (typeof currency !== "string" || !/^[A-Z]{3}$/.test(currency)) throw new ApiError(400, "validation_error", "invalid_projection_currency", "Projection currency must be an uppercase three-letter currency.");
+    if (opening_balance_id !== null) validateIdentifier(opening_balance_id, "obc", "opening_balance_id");
+    if (!this.ledger) throw new ApiError(503, "service_unavailable", "ledger_persistence_required", "A persistent ledger is required for wallet migration planning.");
+    return this.enqueueMutation(() => this.ledger.createWalletMigrationPlan({
+      ledger_account_id,
+      currency,
+      environment: this.environmentConfig.environment,
+      history_strategy,
+      opening_balance_id,
+      classifications,
+      idempotency_key: key,
+    }));
+  }
+
+  walletCutoverUnresolvedAttempts(ledgerAccountId, currency) {
+    const unresolved = [];
+    const postedSources = new Set([...this.financialPostings.values()]
+      .filter((posting) => posting.currency === currency).map((posting) => posting.source_id));
+    const belongsElsewhere = (transaction) => transaction?.ledger_account_id
+      && transaction.ledger_account_id !== ledgerAccountId;
+    // Attempt 先于业务事务持久化，不能只看内存 refund 或 reserved=0；
+    // 未知结果及已确认未入账事实仍阻断切换，归属缺失时保守阻断同币种。
+    for (const attempt of this.ledger.refundAttempts()) {
+      if (attempt.currency !== currency || attempt.status === "failed") continue;
+      if (belongsElsewhere(this.transactions.get(attempt.transaction_id))) continue;
+      const refund = this.refunds.get(attempt.refund_id);
+      if (attempt.status === "refunded" && refund?.status === "refunded" && postedSources.has(refund.id)) continue;
+      unresolved.push(attempt.id);
+    }
+    for (const attempt of this.ledger.paymentAttempts()) {
+      if (attempt.status === "rejected") continue;
+      const transaction = this.transactions.get(attempt.transaction_id);
+      if (belongsElsewhere(transaction)) continue;
+      const operation = this.ledger.getAdapterOperation(attempt.operation_key);
+      if (operation?.currency && operation.currency !== currency) continue;
+      if (attempt.status === "settled" && ["settled", "refunded"].includes(transaction?.status)
+        && postedSources.has(transaction.id)) continue;
+      unresolved.push(attempt.id);
+    }
+    return [...new Set(unresolved)].sort();
+  }
+
+  walletCutoverAssessmentState({ ledger_account_id, currency, migration_plan_id }) {
+    const planState = this.ledger.walletMigrationPlanState(migration_plan_id);
+    if (planState.plan.ledger_account_id !== ledger_account_id || planState.plan.currency !== currency || planState.plan.environment !== this.environmentConfig.environment) {
+      throw new ApiError(409, "financial_constraint", "wallet_migration_plan_scope_mismatch", "Wallet migration plan does not belong to the requested cutover scope.");
+    }
+    const model = this.getWalletReadModel({ ledger_account_id, currency });
+    const shadow = this.shadowCompareWalletReadModel({ ledger_account_id, currency });
+    const reconciledSourceIds = this.walletReconciledSourceIds(ledger_account_id);
+    const cutoverReconciliation = this.walletCutoverReconciliationStatus(reconciledSourceIds);
+    const unresolvedAttempts = this.walletCutoverUnresolvedAttempts(ledger_account_id, currency);
+    const blockers = [];
+    if (this.stateRevision !== this.ledger.domainStateRevision()) blockers.push("wallet_domain_state_stale");
+    if (unresolvedAttempts.length > 0) blockers.push("unresolved_provider_attempts");
+    if (!planState.current) blockers.push(...planState.blockers);
+    if (model.account_status !== "active") blockers.push("ledger_account_not_active");
+    if (model.stale) blockers.push("wallet_read_model_stale");
+    if (model.completeness.status !== "complete") blockers.push("wallet_read_model_incomplete");
+    if (model.available_spending_capacity.status !== "candidate" || model.available_spending_capacity.amount === null) blockers.push("candidate_capacity_unavailable");
+    if (model.reserved.value !== 0 || model.pending_outbound.value !== 0) blockers.push("funds_in_flight");
+    if (shadow.status !== "matched") blockers.push("legacy_shadow_not_matched");
+    if (cutoverReconciliation.status === "incomplete") blockers.push("reconciliation_incomplete");
+    else if (reconciledSourceIds.length > 0 && cutoverReconciliation.status !== "matched") blockers.push("reconciliation_not_matched");
+    const uniqueBlockers = [...new Set(blockers)].sort();
+    const snapshot = {
+      schema_version: "wallet-cutover-assessment.v1",
+      state_revision: this.stateRevision,
+      migration_plan: {
+        id: planState.plan.id,
+        status: planState.plan.status,
+        history_strategy: planState.plan.history_strategy,
+        unbound_source_fingerprint: planState.plan.unbound_source_fingerprint,
+      },
+      model: {
+        ledger_account_id: model.ledger_account_id,
+        accounting_currency: model.accounting_currency,
+        account_status: model.account_status,
+        projection_id: model.projection_id,
+        generation: model.generation,
+        source_sequence: model.source_sequence,
+        source_content_hash: model.source_content_hash,
+        projection_content_hash: model.projection_content_hash,
+        stale: model.stale,
+        completeness: clone(model.completeness),
+        book_balance: clone(model.book_balance),
+        reserved: clone(model.reserved),
+        pending_outbound: clone(model.pending_outbound),
+        available_spending_capacity: clone(model.available_spending_capacity),
+        reconciliation_status: clone(model.reconciliation_status),
+      },
+      shadow: {
+        status: shadow.status,
+        available_delta: clone(shadow.available_delta),
+        reserved_delta: clone(shadow.reserved_delta),
+      },
+      reconciliation_required: reconciledSourceIds.length > 0,
+      reconciled_source_ids: reconciledSourceIds,
+      cutover_reconciliation: cutoverReconciliation,
+      unresolved_attempt_ids: unresolvedAttempts,
+      legacy_wallet: clone(this.wallet),
+    };
+    return {
+      plan_state: planState,
+      status: uniqueBlockers.length === 0 ? "ready" : "blocked",
+      blockers: uniqueBlockers,
+      snapshot,
+    };
+  }
+
+  async prepareWalletCutoverAssessment({ ledger_account_id, currency, migration_plan_id } = {}, key) {
+    validateIdentifier(ledger_account_id, "lga", "ledger_account_id");
+    validateIdentifier(migration_plan_id, "wmp", "wallet_migration_plan_id");
+    if (typeof currency !== "string" || !/^[A-Z]{3}$/.test(currency)) throw new ApiError(400, "validation_error", "invalid_projection_currency", "Projection currency must be an uppercase three-letter currency.");
+    if (!this.ledger) throw new ApiError(503, "service_unavailable", "ledger_persistence_required", "A persistent ledger is required for wallet cutover assessment.");
+    return this.enqueueMutation(() => {
+      const assessmentState = this.walletCutoverAssessmentState({ ledger_account_id, currency, migration_plan_id });
+      return this.ledger.createWalletCutoverAssessment({
+        ledger_account_id,
+        currency,
+        environment: this.environmentConfig.environment,
+        migration_plan_id,
+        state_revision: this.stateRevision,
+        snapshot: assessmentState.snapshot,
+        status: assessmentState.status,
+        blockers: assessmentState.blockers,
+        idempotency_key: key,
+      });
+    });
+  }
+
+  async activateWalletReadCutover({ assessment_id, expected_active_generation = 0, reason } = {}, key) {
+    validateIdentifier(assessment_id, "wca", "wallet_cutover_assessment_id");
+    if (!Number.isSafeInteger(expected_active_generation) || expected_active_generation < 0) throw new ApiError(400, "validation_error", "wallet_cutover_expected_generation_invalid", "Expected cutover generation must be a non-negative safe integer.");
+    if (!this.ledger) throw new ApiError(503, "service_unavailable", "ledger_persistence_required", "A persistent ledger is required for wallet cutover activation.");
+    return this.enqueueMutation(() => {
+      const assessment = this.ledger.getWalletCutoverAssessment(assessment_id);
+      if (!assessment) throw new ApiError(404, "resource_not_found", "wallet_cutover_assessment_not_found", "Wallet cutover assessment was not found.");
+      return this.ledger.activateWalletReadCutover({
+        assessment_id,
+        expected_active_generation,
+        relevant_source_ids: this.walletLedgerSourceIds(assessment.ledger_account_id),
+        buildProjection: (postings) => postingProjection(postings, assessment.currency),
+        validateAssessment: () => this.walletCutoverAssessmentState({
+          ledger_account_id: assessment.ledger_account_id,
+          currency: assessment.currency,
+          migration_plan_id: assessment.migration_plan_id,
+        }),
+        idempotency_key: key,
+        reason,
+      });
+    });
+  }
+
+  async rollbackWalletReadCutover({ ledger_account_id, currency, expected_active_generation, reason } = {}, key) {
+    validateIdentifier(ledger_account_id, "lga", "ledger_account_id");
+    if (typeof currency !== "string" || !/^[A-Z]{3}$/.test(currency)) throw new ApiError(400, "validation_error", "invalid_projection_currency", "Projection currency must be an uppercase three-letter currency.");
+    if (!this.ledger) throw new ApiError(503, "service_unavailable", "ledger_persistence_required", "A persistent ledger is required for wallet cutover rollback.");
+    return this.enqueueMutation(() => this.ledger.rollbackWalletReadCutover({
+      ledger_account_id,
+      currency,
+      environment: this.environmentConfig.environment,
+      expected_active_generation,
+      idempotency_key: key,
+      reason,
+    }));
+  }
+
+  getRuntimeWalletView({ ledger_account_id, currency } = {}) {
+    validateIdentifier(ledger_account_id, "lga", "ledger_account_id");
+    if (typeof currency !== "string" || !/^[A-Z]{3}$/.test(currency)) throw new ApiError(400, "validation_error", "invalid_projection_currency", "Projection currency must be an uppercase three-letter currency.");
+    if (!this.ledger) throw new ApiError(503, "service_unavailable", "ledger_persistence_required", "A persistent ledger is required for the runtime wallet view.");
+    const cutover = this.ledger.getWalletCutoverState({ ledger_account_id, currency, environment: this.environmentConfig.environment });
+    const generation = cutover.generation;
+    if (!generation || generation.read_mode === "legacy_wallet") {
+      return {
+        schema_version: "wallet-runtime-view.v1",
+        status: "legacy",
+        read_mode: "legacy_wallet",
+        ledger_account_id,
+        accounting_currency: currency,
+        cutover_generation: generation?.generation ?? 0,
+        legacy_wallet: clone(this.wallet),
+        model: null,
+        read_balance: this.wallet.currency === currency ? { value: this.wallet.available, currency } : null,
+        read_balance_semantics: "legacy_wallet.available",
+        fallback_performed: false,
+        spend_decision_source: "legacy_wallet",
+      };
+    }
+    const planState = this.ledger.walletMigrationPlanState(generation.migration_plan_id);
+    const model = this.getWalletReadModel({ ledger_account_id, currency });
+    const blockers = [];
+    if (this.stateRevision !== this.ledger.domainStateRevision()) blockers.push("wallet_domain_state_stale");
+    if (this.walletCutoverUnresolvedAttempts(ledger_account_id, currency).length > 0) blockers.push("unresolved_provider_attempts");
+    if (!planState.current) blockers.push(...planState.blockers);
+    if (model.stale) blockers.push("wallet_read_model_stale");
+    if (model.completeness.status !== "complete") blockers.push("wallet_read_model_incomplete");
+    if (model.available_spending_capacity.status !== "candidate" || model.available_spending_capacity.amount === null) blockers.push("candidate_capacity_unavailable");
+    const uniqueBlockers = [...new Set(blockers)].sort();
+    const status = uniqueBlockers.length === 0 ? "active" : "blocked";
+    return {
+      schema_version: "wallet-runtime-view.v1",
+      status,
+      read_mode: "ledger_projection",
+      ledger_account_id,
+      accounting_currency: currency,
+      cutover_generation: generation.generation,
+      migration_plan_id: generation.migration_plan_id,
+      assessment_id: generation.assessment_id,
+      read_balance: status === "active" ? clone(model.available_spending_capacity.amount) : null,
+      read_balance_semantics: "available_spending_capacity",
+      model,
+      blockers: uniqueBlockers,
+      fallback_performed: false,
+      recovery: status === "blocked" ? "refresh_projection_or_append_legacy_rollback_generation" : null,
+      spend_decision_source: "legacy_wallet",
+    };
+  }
+
+  assertWalletReadCutoverHealthy(ledgerAccountId, currency) {
+    if (!this.ledger || !ledgerAccountId) return null;
+    // 本 PR 的读路径 guard 只作用于 Local；其他环境继续由原授权、
+    // execution_status 与绑定规则保护，不因未启用的 cutover 改变行为。
+    if (this.environmentConfig.environment !== "local") return null;
+    const cutover = this.ledger.getWalletCutoverState({ ledger_account_id: ledgerAccountId, currency, environment: this.environmentConfig.environment });
+    if (!cutover.generation || cutover.generation.read_mode !== "ledger_projection") return null;
+    const view = this.getRuntimeWalletView({ ledger_account_id: ledgerAccountId, currency });
+    if (view.status !== "active") {
+      throw new ApiError(409, "financial_constraint", "wallet_read_cutover_unhealthy", "Wallet read cutover is unhealthy; new funds reservation is blocked until projection recovery or rollback.", {
+        ledger_account_id: ledgerAccountId,
+        currency,
+        blockers: view.blockers,
+        recovery: view.recovery,
+      });
+    }
+    return view;
   }
 
   exportLedgerReplayEvidence({ as_of = null } = {}) {
@@ -3033,6 +3366,9 @@ export class Bu2Sandbox {
           "Payment intent funding ownership changed before funds reservation.",
         );
       }
+    }
+    if (intent.funding_ledger_account_id) {
+      this.assertWalletReadCutoverHealthy(intent.funding_ledger_account_id, intent.amount.currency);
     }
     if (this.wallet.currency !== intent.amount.currency)
       throw new ApiError(

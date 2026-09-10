@@ -242,6 +242,11 @@ export class SqliteLedger {
         name: "trusted_posting_ownership",
         apply: () => this.migrateTrustedPostingOwnership(),
       },
+      {
+        version: 21,
+        name: "wallet_read_cutover_controls",
+        apply: () => this.migrateWalletReadCutoverControls(),
+      },
     ];
     for (const migration of migrations) {
       if (applied.has(migration.version)) continue;
@@ -944,6 +949,111 @@ export class SqliteLedger {
     `);
   }
 
+  migrateWalletReadCutoverControls() {
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS wallet_migration_plans (
+        id TEXT PRIMARY KEY,
+        scope_key TEXT NOT NULL,
+        ledger_account_id TEXT NOT NULL,
+        environment TEXT NOT NULL CHECK (environment = 'local'),
+        tenant_id TEXT NOT NULL,
+        book_id TEXT NOT NULL,
+        owner_account_id TEXT NOT NULL,
+        asset TEXT NOT NULL,
+        network TEXT,
+        currency TEXT NOT NULL CHECK (currency GLOB '[A-Z][A-Z][A-Z]'),
+        history_strategy TEXT NOT NULL CHECK (history_strategy IN ('fully_bound', 'scoped_exclusion', 'reconciled_opening')),
+        opening_balance_id TEXT,
+        opening_balance_fingerprint TEXT CHECK (opening_balance_fingerprint IS NULL OR length(opening_balance_fingerprint) = 64),
+        unbound_source_fingerprint TEXT NOT NULL CHECK (length(unbound_source_fingerprint) = 64),
+        global_unbound_source_count INTEGER NOT NULL CHECK (global_unbound_source_count >= 0),
+        covered_source_count INTEGER NOT NULL CHECK (covered_source_count >= 0),
+        excluded_source_count INTEGER NOT NULL CHECK (excluded_source_count >= 0),
+        classifications_json TEXT NOT NULL,
+        status TEXT NOT NULL CHECK (status IN ('verified', 'blocked')),
+        blockers_json TEXT NOT NULL,
+        request_fingerprint TEXT NOT NULL CHECK (length(request_fingerprint) = 64),
+        idempotency_key TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        UNIQUE (scope_key, idempotency_key),
+        FOREIGN KEY (ledger_account_id) REFERENCES ledger_accounts(id)
+      );
+      CREATE INDEX IF NOT EXISTS idx_wallet_migration_plan_scope
+        ON wallet_migration_plans(scope_key, created_at, id);
+
+      CREATE TABLE IF NOT EXISTS wallet_cutover_assessments (
+        id TEXT PRIMARY KEY,
+        scope_key TEXT NOT NULL,
+        ledger_account_id TEXT NOT NULL,
+        currency TEXT NOT NULL CHECK (currency GLOB '[A-Z][A-Z][A-Z]'),
+        migration_plan_id TEXT NOT NULL,
+        state_revision INTEGER NOT NULL CHECK (state_revision >= 0),
+        projection_id TEXT,
+        projection_generation INTEGER CHECK (projection_generation IS NULL OR projection_generation >= 1),
+        source_sequence INTEGER NOT NULL CHECK (source_sequence >= 0),
+        source_content_hash TEXT NOT NULL CHECK (length(source_content_hash) = 64),
+        projection_content_hash TEXT CHECK (projection_content_hash IS NULL OR length(projection_content_hash) = 64),
+        snapshot_hash TEXT NOT NULL CHECK (length(snapshot_hash) = 64),
+        snapshot_json TEXT NOT NULL,
+        status TEXT NOT NULL CHECK (status IN ('ready', 'blocked')),
+        blockers_json TEXT NOT NULL,
+        request_fingerprint TEXT NOT NULL CHECK (length(request_fingerprint) = 64),
+        idempotency_key TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        UNIQUE (scope_key, idempotency_key),
+        FOREIGN KEY (ledger_account_id) REFERENCES ledger_accounts(id),
+        FOREIGN KEY (migration_plan_id) REFERENCES wallet_migration_plans(id)
+      );
+      CREATE INDEX IF NOT EXISTS idx_wallet_cutover_assessment_scope
+        ON wallet_cutover_assessments(scope_key, created_at, id);
+
+      CREATE TABLE IF NOT EXISTS wallet_cutover_generations (
+        id TEXT PRIMARY KEY,
+        scope_key TEXT NOT NULL,
+        ledger_account_id TEXT NOT NULL,
+        currency TEXT NOT NULL CHECK (currency GLOB '[A-Z][A-Z][A-Z]'),
+        generation INTEGER NOT NULL CHECK (generation >= 1),
+        read_mode TEXT NOT NULL CHECK (read_mode IN ('legacy_wallet', 'ledger_projection')),
+        assessment_id TEXT,
+        migration_plan_id TEXT,
+        reason TEXT NOT NULL,
+        request_fingerprint TEXT NOT NULL CHECK (length(request_fingerprint) = 64),
+        idempotency_key TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        UNIQUE (scope_key, generation),
+        UNIQUE (scope_key, idempotency_key),
+        CHECK (
+          (read_mode = 'ledger_projection' AND assessment_id IS NOT NULL AND migration_plan_id IS NOT NULL) OR
+          (read_mode = 'legacy_wallet' AND assessment_id IS NULL AND migration_plan_id IS NULL)
+        ),
+        FOREIGN KEY (ledger_account_id) REFERENCES ledger_accounts(id),
+        FOREIGN KEY (assessment_id) REFERENCES wallet_cutover_assessments(id),
+        FOREIGN KEY (migration_plan_id) REFERENCES wallet_migration_plans(id)
+      );
+      CREATE INDEX IF NOT EXISTS idx_wallet_cutover_generation_scope
+        ON wallet_cutover_generations(scope_key, generation DESC);
+
+      CREATE TRIGGER IF NOT EXISTS wallet_migration_plans_no_update
+      BEFORE UPDATE ON wallet_migration_plans
+      BEGIN SELECT RAISE(ABORT, 'wallet_migration_plan_immutable'); END;
+      CREATE TRIGGER IF NOT EXISTS wallet_migration_plans_no_delete
+      BEFORE DELETE ON wallet_migration_plans
+      BEGIN SELECT RAISE(ABORT, 'wallet_migration_plan_immutable'); END;
+      CREATE TRIGGER IF NOT EXISTS wallet_cutover_assessments_no_update
+      BEFORE UPDATE ON wallet_cutover_assessments
+      BEGIN SELECT RAISE(ABORT, 'wallet_cutover_assessment_immutable'); END;
+      CREATE TRIGGER IF NOT EXISTS wallet_cutover_assessments_no_delete
+      BEFORE DELETE ON wallet_cutover_assessments
+      BEGIN SELECT RAISE(ABORT, 'wallet_cutover_assessment_immutable'); END;
+      CREATE TRIGGER IF NOT EXISTS wallet_cutover_generations_no_update
+      BEFORE UPDATE ON wallet_cutover_generations
+      BEGIN SELECT RAISE(ABORT, 'wallet_cutover_generation_immutable'); END;
+      CREATE TRIGGER IF NOT EXISTS wallet_cutover_generations_no_delete
+      BEFORE DELETE ON wallet_cutover_generations
+      BEGIN SELECT RAISE(ABORT, 'wallet_cutover_generation_immutable'); END;
+    `);
+  }
+
   migrateDurableRefundAttempts() {
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS refund_attempts (
@@ -1320,6 +1430,484 @@ export class SqliteLedger {
     });
   }
 
+  domainStateRevision() {
+    return Number(this.db.prepare("SELECT data FROM sandbox_state WHERE key='state_revision'").get()?.data ?? 0);
+  }
+
+  walletCutoverScope({ ledger_account_id, currency, environment = null }) {
+    if (typeof currency !== "string" || !/^[A-Z]{3}$/.test(currency)) {
+      throw new ApiError(400, "validation_error", "invalid_projection_currency", "Projection currency must be an uppercase three-letter currency.");
+    }
+    const ledgerAccount = this.assertLedgerAccountBinding(ledger_account_id, {
+      environment,
+      require_active: false,
+    });
+    if (ledgerAccount.environment !== "local") {
+      throw new ApiError(409, "policy_error", "wallet_cutover_environment_not_authorized", "FP-06b wallet read cutover is limited to isolated Local data; Sandbox/Testnet and Live/Mainnet require independent later authorization.");
+    }
+    const scopeKey = `wscope_${requestFingerprint({
+      ledger_account_id: ledgerAccount.id,
+      environment: ledgerAccount.environment,
+      tenant_id: ledgerAccount.tenant_id,
+      book_id: ledgerAccount.book_id,
+      owner_account_id: ledgerAccount.owner_account_id,
+      asset: ledgerAccount.asset,
+      network: ledgerAccount.network,
+      currency,
+    })}`;
+    return { scope_key: scopeKey, ledger_account: ledgerAccount };
+  }
+
+  listUnboundPostingSources({ currency }) {
+    if (typeof currency !== "string" || !/^[A-Z]{3}$/.test(currency)) {
+      throw new ApiError(400, "validation_error", "invalid_projection_currency", "Projection currency must be an uppercase three-letter currency.");
+    }
+    return this.db.prepare(`
+      SELECT source_id,
+             COUNT(*) AS posting_count,
+             COUNT(DISTINCT journal_id) AS journal_count,
+             MIN(created_at) AS first_posted_at,
+             MAX(created_at) AS last_posted_at
+      FROM financial_postings
+      WHERE ledger_account_id IS NULL AND currency=?
+      GROUP BY source_id
+      ORDER BY source_id
+    `).all(currency).map((row) => ({
+      ...row,
+      posting_count: Number(row.posting_count),
+      journal_count: Number(row.journal_count),
+    }));
+  }
+
+  unboundPostingSourceState(currency) {
+    const sources = this.listUnboundPostingSources({ currency });
+    return {
+      sources,
+      fingerprint: requestFingerprint(sources),
+    };
+  }
+
+  walletMigrationPlanView(row) {
+    if (!row) return null;
+    return {
+      ...row,
+      global_unbound_source_count: Number(row.global_unbound_source_count),
+      covered_source_count: Number(row.covered_source_count),
+      excluded_source_count: Number(row.excluded_source_count),
+      classifications: parse(row.classifications_json, []),
+      blockers: parse(row.blockers_json, []),
+    };
+  }
+
+  getWalletMigrationPlan(id) {
+    return this.walletMigrationPlanView(
+      this.db.prepare("SELECT * FROM wallet_migration_plans WHERE id=?").get(id),
+    );
+  }
+
+  walletMigrationPlanState(id) {
+    const plan = this.getWalletMigrationPlan(id);
+    if (!plan) {
+      throw new ApiError(404, "resource_not_found", "wallet_migration_plan_not_found", "Wallet migration plan was not found.");
+    }
+    const current = this.unboundPostingSourceState(plan.currency);
+    const blockers = [];
+    if (plan.status !== "verified") blockers.push("migration_plan_blocked");
+    if (current.fingerprint !== plan.unbound_source_fingerprint) blockers.push("migration_plan_source_drift");
+    let currentOpeningBalanceFingerprint = null;
+    if (plan.opening_balance_id !== null) {
+      const openingRow = this.db.prepare("SELECT data FROM resources WHERE kind='opening_balances' AND id=?").get(plan.opening_balance_id);
+      const openingBalance = openingRow ? parse(openingRow.data, null) : null;
+      currentOpeningBalanceFingerprint = openingBalance ? requestFingerprint(openingBalance) : null;
+      if (currentOpeningBalanceFingerprint !== plan.opening_balance_fingerprint) blockers.push("migration_plan_opening_drift");
+    }
+    return {
+      plan,
+      current: blockers.length === 0,
+      blockers,
+      current_unbound_source_fingerprint: current.fingerprint,
+      current_unbound_sources: current.sources,
+      current_opening_balance_fingerprint: currentOpeningBalanceFingerprint,
+    };
+  }
+
+  createWalletMigrationPlan({
+    ledger_account_id,
+    currency,
+    environment = null,
+    history_strategy,
+    opening_balance_id = null,
+    classifications = [],
+    idempotency_key,
+    created_at = new Date().toISOString(),
+  }) {
+    if (!new Set(["fully_bound", "scoped_exclusion", "reconciled_opening"]).has(history_strategy)) {
+      throw new ApiError(400, "validation_error", "wallet_migration_strategy_invalid", "Wallet migration strategy is invalid.");
+    }
+    if (!Array.isArray(classifications) || classifications.length > 500) {
+      throw new ApiError(400, "validation_error", "wallet_migration_classifications_invalid", "Wallet migration classifications must contain at most 500 entries.");
+    }
+    if (typeof idempotency_key !== "string" || idempotency_key.length < 1 || idempotency_key.length > 255) {
+      throw new ApiError(400, "validation_error", "idempotency_key_invalid", "Idempotency key is invalid.");
+    }
+    if (typeof created_at !== "string" || Number.isNaN(Date.parse(created_at))) {
+      throw new ApiError(400, "validation_error", "wallet_migration_created_at_invalid", "Wallet migration created_at must be a valid date-time.");
+    }
+    return immediateTransaction(this.db, () => {
+      const scope = this.walletCutoverScope({ ledger_account_id, currency, environment });
+      const normalized = classifications.map((classification) => {
+        if (!classification || typeof classification.source_id !== "string" || classification.source_id.length < 1 || classification.source_id.length > 255) {
+          throw new ApiError(400, "validation_error", "wallet_migration_source_invalid", "Migration classification source_id is invalid.");
+        }
+        if (!["covered_by_opening", "excluded_other_scope"].includes(classification.disposition)) {
+          throw new ApiError(400, "validation_error", "wallet_migration_disposition_invalid", "Migration classification disposition is invalid.");
+        }
+        if (typeof classification.evidence_ref !== "string" || classification.evidence_ref.trim().length < 3 || classification.evidence_ref.length > 255) {
+          throw new ApiError(400, "validation_error", "wallet_migration_evidence_ref_invalid", "Every migration classification requires a bounded evidence_ref.");
+        }
+        return {
+          source_id: classification.source_id,
+          disposition: classification.disposition,
+          evidence_ref: classification.evidence_ref.trim(),
+        };
+      }).sort((left, right) => left.source_id.localeCompare(right.source_id));
+      if (new Set(normalized.map((classification) => classification.source_id)).size !== normalized.length) {
+        throw new ApiError(400, "validation_error", "wallet_migration_source_duplicate", "Migration source classifications must be unique.");
+      }
+      const requestFingerprintValue = requestFingerprint({
+        ledger_account_id,
+        currency,
+        history_strategy,
+        opening_balance_id,
+        classifications: normalized,
+      });
+      const existing = this.db.prepare(`
+        SELECT * FROM wallet_migration_plans WHERE scope_key=? AND idempotency_key=?
+      `).get(scope.scope_key, idempotency_key);
+      if (existing) {
+        if (existing.request_fingerprint !== requestFingerprintValue) {
+          throw new ApiError(409, "idempotency_conflict", "wallet_migration_plan_idempotency_conflict", "Wallet migration plan idempotency key was reused with different terms.");
+        }
+        return this.walletMigrationPlanView(existing);
+      }
+      const unbound = this.unboundPostingSourceState(currency);
+      if (unbound.sources.length > 500) {
+        throw new ApiError(422, "financial_constraint", "wallet_migration_scope_too_large", "Wallet migration plan exceeds the bounded legacy source classification limit.", {
+          unbound_source_count: unbound.sources.length,
+          max_source_count: 500,
+        });
+      }
+      const sourceMap = new Map(unbound.sources.map((source) => [source.source_id, source]));
+      const classificationMap = new Map(normalized.map((classification) => [classification.source_id, classification]));
+      const blockers = [];
+      for (const source of unbound.sources) {
+        if (!classificationMap.has(source.source_id)) blockers.push(`unclassified_source:${source.source_id}`);
+      }
+      for (const classification of normalized) {
+        if (!sourceMap.has(classification.source_id)) blockers.push(`classification_not_unbound:${classification.source_id}`);
+      }
+      const covered = normalized.filter((classification) => classification.disposition === "covered_by_opening");
+      const excluded = normalized.filter((classification) => classification.disposition === "excluded_other_scope");
+      if (history_strategy === "fully_bound" && unbound.sources.length > 0) blockers.push("legacy_unbound_sources_present");
+      if (history_strategy === "fully_bound" && normalized.length > 0) blockers.push("fully_bound_classification_not_empty");
+      if (history_strategy === "scoped_exclusion" && covered.length > 0) blockers.push("scoped_exclusion_cannot_cover_target_history");
+      if (history_strategy !== "reconciled_opening" && opening_balance_id !== null) blockers.push("opening_balance_not_allowed_for_strategy");
+      if (history_strategy === "reconciled_opening" && typeof opening_balance_id !== "string") blockers.push("opening_balance_required");
+
+      let checkpoint = null;
+      let openingBalanceFingerprint = null;
+      if (history_strategy === "reconciled_opening" && typeof opening_balance_id === "string") {
+        const checkpointRow = this.db.prepare("SELECT data FROM resources WHERE kind='opening_balances' AND id=?").get(opening_balance_id);
+        checkpoint = checkpointRow ? parse(checkpointRow.data, null) : null;
+        openingBalanceFingerprint = checkpoint ? requestFingerprint(checkpoint) : null;
+        if (
+          !checkpoint
+          || checkpoint.status !== "posted"
+          || checkpoint.ledger_account_id !== ledger_account_id
+          || checkpoint.environment !== scope.ledger_account.environment
+          || checkpoint.book_id !== scope.ledger_account.book_id
+          || checkpoint.owner_account_id !== scope.ledger_account.owner_account_id
+          || checkpoint.asset !== scope.ledger_account.asset
+          || checkpoint.network !== scope.ledger_account.network
+          || checkpoint.amount?.currency !== currency
+          || Number.isNaN(Date.parse(checkpoint.effective_at))
+        ) {
+          blockers.push("opening_balance_scope_mismatch");
+        }
+        if (checkpoint && !Number.isNaN(Date.parse(checkpoint.effective_at))) {
+          for (const classification of covered) {
+            const source = sourceMap.get(classification.source_id);
+            if (source && Date.parse(source.last_posted_at) > Date.parse(checkpoint.effective_at)) {
+              blockers.push(`covered_source_after_opening:${classification.source_id}`);
+            }
+          }
+        }
+      }
+      const uniqueBlockers = [...new Set(blockers)].sort();
+      const id = `wmp_${randomUUID().replaceAll("-", "").slice(0, 16)}`;
+      this.db.prepare(`
+        INSERT INTO wallet_migration_plans(
+          id, scope_key, ledger_account_id, environment, tenant_id, book_id,
+          owner_account_id, asset, network, currency, history_strategy,
+          opening_balance_id, opening_balance_fingerprint, unbound_source_fingerprint, global_unbound_source_count,
+          covered_source_count, excluded_source_count, classifications_json, status,
+          blockers_json, request_fingerprint, idempotency_key, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        id,
+        scope.scope_key,
+        ledger_account_id,
+        scope.ledger_account.environment,
+        scope.ledger_account.tenant_id,
+        scope.ledger_account.book_id,
+        scope.ledger_account.owner_account_id,
+        scope.ledger_account.asset,
+        scope.ledger_account.network,
+        currency,
+        history_strategy,
+        opening_balance_id,
+        openingBalanceFingerprint,
+        unbound.fingerprint,
+        unbound.sources.length,
+        covered.length,
+        excluded.length,
+        JSON.stringify(normalized),
+        uniqueBlockers.length === 0 ? "verified" : "blocked",
+        JSON.stringify(uniqueBlockers),
+        requestFingerprintValue,
+        idempotency_key,
+        created_at,
+      );
+      return this.getWalletMigrationPlan(id);
+    });
+  }
+
+  walletCutoverAssessmentView(row) {
+    if (!row) return null;
+    return {
+      ...row,
+      state_revision: Number(row.state_revision),
+      projection_generation: row.projection_generation === null ? null : Number(row.projection_generation),
+      source_sequence: Number(row.source_sequence),
+      snapshot: parse(row.snapshot_json, {}),
+      blockers: parse(row.blockers_json, []),
+    };
+  }
+
+  getWalletCutoverAssessment(id) {
+    return this.walletCutoverAssessmentView(
+      this.db.prepare("SELECT * FROM wallet_cutover_assessments WHERE id=?").get(id),
+    );
+  }
+
+  createWalletCutoverAssessment({
+    ledger_account_id,
+    currency,
+    environment = null,
+    migration_plan_id,
+    state_revision,
+    snapshot,
+    status,
+    blockers = [],
+    idempotency_key,
+    created_at = new Date().toISOString(),
+  }) {
+    if (!["ready", "blocked"].includes(status)) throw new ApiError(400, "validation_error", "wallet_cutover_assessment_status_invalid", "Wallet cutover assessment status is invalid.");
+    if (!Number.isSafeInteger(state_revision) || state_revision < 0) throw new ApiError(400, "validation_error", "wallet_cutover_state_revision_invalid", "Wallet cutover state revision is invalid.");
+    if (!snapshot || typeof snapshot !== "object" || Array.isArray(snapshot)) throw new ApiError(400, "validation_error", "wallet_cutover_snapshot_invalid", "Wallet cutover assessment snapshot is invalid.");
+    if (typeof idempotency_key !== "string" || idempotency_key.length < 1 || idempotency_key.length > 255) throw new ApiError(400, "validation_error", "idempotency_key_invalid", "Idempotency key is invalid.");
+    if (snapshot.state_revision !== state_revision) throw new ApiError(400, "validation_error", "wallet_cutover_snapshot_revision_mismatch", "Wallet cutover snapshot revision does not match the assessment revision.");
+    const snapshotModel = snapshot.model ?? {};
+    if (!Number.isSafeInteger(snapshotModel.source_sequence) || snapshotModel.source_sequence < 0 || typeof snapshotModel.source_content_hash !== "string" || snapshotModel.source_content_hash.length !== 64) {
+      throw new ApiError(400, "validation_error", "wallet_cutover_snapshot_source_invalid", "Wallet cutover snapshot source watermark is invalid.");
+    }
+    if (status === "ready" && (
+      typeof snapshotModel.projection_id !== "string"
+      || !Number.isSafeInteger(snapshotModel.generation)
+      || snapshotModel.generation < 1
+      || typeof snapshotModel.projection_content_hash !== "string"
+      || snapshotModel.projection_content_hash.length !== 64
+    )) {
+      throw new ApiError(400, "validation_error", "wallet_cutover_ready_projection_invalid", "A ready wallet cutover assessment requires a complete active projection identity.");
+    }
+    return immediateTransaction(this.db, () => {
+      const scope = this.walletCutoverScope({ ledger_account_id, currency, environment });
+      const planState = this.walletMigrationPlanState(migration_plan_id);
+      if (planState.plan.scope_key !== scope.scope_key) throw new ApiError(409, "financial_constraint", "wallet_migration_plan_scope_mismatch", "Wallet migration plan does not belong to the cutover scope.");
+      const normalizedBlockers = [...new Set(blockers)].sort();
+      const snapshotHash = requestFingerprint(snapshot);
+      // 幂等绑定调用者请求，而非随后变化的派生快照；重放旧 assessment
+      // 不代表重新批准，激活仍必须验证原 state revision 和完整快照。
+      const requestFingerprintValue = requestFingerprint({
+        ledger_account_id,
+        currency,
+        migration_plan_id,
+      });
+      const existing = this.db.prepare("SELECT * FROM wallet_cutover_assessments WHERE scope_key=? AND idempotency_key=?").get(scope.scope_key, idempotency_key);
+      if (existing) {
+        if (existing.request_fingerprint !== requestFingerprintValue) throw new ApiError(409, "idempotency_conflict", "wallet_cutover_assessment_idempotency_conflict", "Wallet cutover assessment idempotency key was reused with different terms.");
+        return this.walletCutoverAssessmentView(existing);
+      }
+      const model = snapshotModel;
+      const id = `wca_${randomUUID().replaceAll("-", "").slice(0, 16)}`;
+      this.db.prepare(`
+        INSERT INTO wallet_cutover_assessments(
+          id, scope_key, ledger_account_id, currency, migration_plan_id, state_revision,
+          projection_id, projection_generation, source_sequence, source_content_hash,
+          projection_content_hash, snapshot_hash, snapshot_json, status, blockers_json,
+          request_fingerprint, idempotency_key, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        id,
+        scope.scope_key,
+        ledger_account_id,
+        currency,
+        migration_plan_id,
+        state_revision,
+        model.projection_id,
+        model.generation,
+        model.source_sequence,
+        model.source_content_hash,
+        model.projection_content_hash,
+        snapshotHash,
+        JSON.stringify(snapshot),
+        status,
+        JSON.stringify(normalizedBlockers),
+        requestFingerprintValue,
+        idempotency_key,
+        created_at,
+      );
+      return this.getWalletCutoverAssessment(id);
+    });
+  }
+
+  walletCutoverGenerationView(row) {
+    return row ? { ...row, generation: Number(row.generation) } : null;
+  }
+
+  getWalletCutoverState({ ledger_account_id, currency, environment = null }) {
+    const scope = this.walletCutoverScope({ ledger_account_id, currency, environment });
+    const latest = this.db.prepare(`
+      SELECT * FROM wallet_cutover_generations
+      WHERE scope_key=? ORDER BY generation DESC LIMIT 1
+    `).get(scope.scope_key);
+    return {
+      scope_key: scope.scope_key,
+      ledger_account: scope.ledger_account,
+      generation: this.walletCutoverGenerationView(latest),
+    };
+  }
+
+  activateWalletReadCutover({
+    assessment_id,
+    expected_active_generation,
+    relevant_source_ids = [],
+    buildProjection,
+    validateAssessment,
+    idempotency_key,
+    reason,
+    created_at = new Date().toISOString(),
+  }) {
+    if (!Number.isSafeInteger(expected_active_generation) || expected_active_generation < 0) throw new ApiError(400, "validation_error", "wallet_cutover_expected_generation_invalid", "Expected cutover generation must be a non-negative safe integer.");
+    if (typeof reason !== "string" || reason.trim().length < 3 || reason.length > 500) throw new ApiError(400, "validation_error", "wallet_cutover_reason_invalid", "Wallet cutover reason is invalid.");
+    if (typeof idempotency_key !== "string" || idempotency_key.length < 1 || idempotency_key.length > 255) throw new ApiError(400, "validation_error", "idempotency_key_invalid", "Idempotency key is invalid.");
+    if (typeof buildProjection !== "function") throw new TypeError("buildProjection must be a function");
+    if (typeof validateAssessment !== "function") throw new TypeError("validateAssessment must be a function");
+    return immediateTransaction(this.db, () => {
+      const assessment = this.getWalletCutoverAssessment(assessment_id);
+      if (!assessment) throw new ApiError(404, "resource_not_found", "wallet_cutover_assessment_not_found", "Wallet cutover assessment was not found.");
+      const requestFingerprintValue = requestFingerprint({ assessment_id, expected_active_generation, reason: reason.trim() });
+      const existing = this.db.prepare("SELECT * FROM wallet_cutover_generations WHERE scope_key=? AND idempotency_key=?").get(assessment.scope_key, idempotency_key);
+      if (existing) {
+        if (existing.request_fingerprint !== requestFingerprintValue) throw new ApiError(409, "idempotency_conflict", "wallet_cutover_generation_idempotency_conflict", "Wallet cutover generation idempotency key was reused with different terms.");
+        return this.walletCutoverGenerationView(existing);
+      }
+      if (assessment.status !== "ready") throw new ApiError(409, "financial_constraint", "wallet_cutover_assessment_blocked", "Only a ready wallet cutover assessment can be activated.", { blockers: assessment.blockers });
+      const planState = this.walletMigrationPlanState(assessment.migration_plan_id);
+      if (!planState.current) throw new ApiError(409, "financial_constraint", "wallet_migration_plan_stale", "Wallet migration plan changed before cutover activation.", { blockers: planState.blockers });
+      const revision = Number(this.db.prepare("SELECT data FROM sandbox_state WHERE key='state_revision'").get()?.data ?? 0);
+      if (revision !== assessment.state_revision) throw new ApiError(409, "concurrency_conflict", "wallet_cutover_state_changed", "Transaction state changed after the wallet cutover assessment; reassess before activation.", { expected_revision: assessment.state_revision, actual_revision: revision });
+      const assessedWallet = assessment.snapshot?.legacy_wallet ?? null;
+      const walletRow = assessedWallet?.id
+        ? this.db.prepare("SELECT id, available, reserved, currency FROM wallet_accounts WHERE id=?").get(assessedWallet.id)
+        : null;
+      if (
+        !walletRow
+        || Number(walletRow.available) !== assessedWallet.available
+        || Number(walletRow.reserved) !== assessedWallet.reserved
+        || walletRow.currency !== assessedWallet.currency
+      ) {
+        throw new ApiError(409, "concurrency_conflict", "wallet_cutover_legacy_wallet_changed", "Legacy wallet state changed after cutover assessment; reassess before activation.");
+      }
+      const freshAssessment = validateAssessment();
+      if (!freshAssessment || freshAssessment.status !== "ready" || requestFingerprint(freshAssessment.snapshot) !== assessment.snapshot_hash) {
+        throw new ApiError(409, "concurrency_conflict", "wallet_cutover_assessment_changed", "Wallet cutover conditions changed after assessment; reassess before activation.", {
+          blockers: freshAssessment?.blockers ?? ["assessment_revalidation_failed"],
+        });
+      }
+      const inspected = this.inspectLedgerAccountProjection({
+        ledger_account_id: assessment.ledger_account_id,
+        currency: assessment.currency,
+        environment: planState.plan.environment,
+        relevant_source_ids,
+        buildProjection,
+      });
+      if (inspected.ledger_account.status !== "active") throw new ApiError(409, "financial_constraint", "wallet_cutover_account_not_active", "Wallet read cutover requires an active ledger account at activation.");
+      if (
+        inspected.completeness_blockers.length > 0
+        || inspected.active_projection?.id !== assessment.projection_id
+        || inspected.active_projection?.version !== assessment.projection_generation
+        || inspected.source_sequence !== assessment.source_sequence
+        || inspected.current_content_hash !== assessment.source_content_hash
+        || inspected.active_projection?.content_hash !== assessment.projection_content_hash
+      ) {
+        throw new ApiError(409, "concurrency_conflict", "wallet_cutover_projection_changed", "Wallet projection changed after assessment; reassess before activation.");
+      }
+      const current = this.db.prepare("SELECT * FROM wallet_cutover_generations WHERE scope_key=? ORDER BY generation DESC LIMIT 1").get(assessment.scope_key);
+      const currentGeneration = current ? Number(current.generation) : 0;
+      if (currentGeneration !== expected_active_generation) throw new ApiError(409, "concurrency_conflict", "wallet_cutover_generation_conflict", "Wallet read cutover generation changed concurrently.", { expected_active_generation, actual_active_generation: currentGeneration });
+      const nextGeneration = currentGeneration + 1;
+      const id = `wcg_${randomUUID().replaceAll("-", "").slice(0, 16)}`;
+      this.db.prepare(`
+        INSERT INTO wallet_cutover_generations(
+          id, scope_key, ledger_account_id, currency, generation, read_mode,
+          assessment_id, migration_plan_id, reason, request_fingerprint,
+          idempotency_key, created_at
+        ) VALUES (?, ?, ?, ?, ?, 'ledger_projection', ?, ?, ?, ?, ?, ?)
+      `).run(id, assessment.scope_key, assessment.ledger_account_id, assessment.currency, nextGeneration, assessment.id, assessment.migration_plan_id, reason.trim(), requestFingerprintValue, idempotency_key, created_at);
+      this.failureInjector?.("after_wallet_cutover_write");
+      return this.walletCutoverGenerationView(this.db.prepare("SELECT * FROM wallet_cutover_generations WHERE id=?").get(id));
+    });
+  }
+
+  rollbackWalletReadCutover({ ledger_account_id, currency, environment = null, expected_active_generation, idempotency_key, reason, created_at = new Date().toISOString() }) {
+    if (!Number.isSafeInteger(expected_active_generation) || expected_active_generation < 1) throw new ApiError(400, "validation_error", "wallet_cutover_expected_generation_invalid", "Rollback requires a positive expected cutover generation.");
+    if (typeof reason !== "string" || reason.trim().length < 3 || reason.length > 500) throw new ApiError(400, "validation_error", "wallet_cutover_reason_invalid", "Wallet cutover reason is invalid.");
+    if (typeof idempotency_key !== "string" || idempotency_key.length < 1 || idempotency_key.length > 255) throw new ApiError(400, "validation_error", "idempotency_key_invalid", "Idempotency key is invalid.");
+    return immediateTransaction(this.db, () => {
+      const scope = this.walletCutoverScope({ ledger_account_id, currency, environment });
+      const requestFingerprintValue = requestFingerprint({ ledger_account_id, currency, expected_active_generation, reason: reason.trim() });
+      const replay = this.db.prepare("SELECT * FROM wallet_cutover_generations WHERE scope_key=? AND idempotency_key=?").get(scope.scope_key, idempotency_key);
+      if (replay) {
+        if (replay.request_fingerprint !== requestFingerprintValue) throw new ApiError(409, "idempotency_conflict", "wallet_cutover_generation_idempotency_conflict", "Wallet cutover generation idempotency key was reused with different terms.");
+        return this.walletCutoverGenerationView(replay);
+      }
+      const current = this.db.prepare("SELECT * FROM wallet_cutover_generations WHERE scope_key=? ORDER BY generation DESC LIMIT 1").get(scope.scope_key);
+      if (!current || Number(current.generation) !== expected_active_generation) throw new ApiError(409, "concurrency_conflict", "wallet_cutover_generation_conflict", "Wallet read cutover generation changed before rollback.", { expected_active_generation, actual_active_generation: current ? Number(current.generation) : 0 });
+      if (current.read_mode !== "ledger_projection") throw new ApiError(409, "invalid_state_transition", "wallet_cutover_not_active", "Wallet read cutover is not currently using the ledger projection.");
+      const nextGeneration = Number(current.generation) + 1;
+      const id = `wcg_${randomUUID().replaceAll("-", "").slice(0, 16)}`;
+      this.db.prepare(`
+        INSERT INTO wallet_cutover_generations(
+          id, scope_key, ledger_account_id, currency, generation, read_mode,
+          assessment_id, migration_plan_id, reason, request_fingerprint,
+          idempotency_key, created_at
+        ) VALUES (?, ?, ?, ?, ?, 'legacy_wallet', NULL, NULL, ?, ?, ?, ?)
+      `).run(id, scope.scope_key, ledger_account_id, currency, nextGeneration, reason.trim(), requestFingerprintValue, idempotency_key, created_at);
+      return this.walletCutoverGenerationView(this.db.prepare("SELECT * FROM wallet_cutover_generations WHERE id=?").get(id));
+    });
+  }
+
   getActiveLedgerAccountProjection({ ledger_account_id, currency }) {
     const version = this.db.prepare(`
       SELECT * FROM ledger_projection_versions
@@ -1369,13 +1957,20 @@ export class SqliteLedger {
     const relevantSourceIds = [...new Set(relevant_source_ids ?? [])]
       .filter((value) => typeof value === "string" && value.length > 0)
       .sort();
-    const relevantUnboundPostingCount = relevantSourceIds.length === 0
-      ? 0
-      : Number(this.db.prepare(`
-          SELECT COUNT(*) AS count FROM financial_postings
-          WHERE ledger_account_id IS NULL AND currency=?
-            AND source_id IN (${relevantSourceIds.map(() => "?").join(",")})
-        `).get(currency, ...relevantSourceIds).count);
+    let relevantUnboundPostingCount = 0;
+    for (let offset = 0; offset < relevantSourceIds.length; offset += 400) {
+      const chunk = relevantSourceIds.slice(offset, offset + 400);
+      const count = Number(this.db.prepare(`
+        SELECT COUNT(*) AS count FROM financial_postings
+        WHERE ledger_account_id IS NULL AND currency=?
+          AND source_id IN (${chunk.map(() => "?").join(",")})
+      `).get(currency, ...chunk).count);
+      const next = relevantUnboundPostingCount + count;
+      if (!Number.isSafeInteger(next)) {
+        throw new ApiError(500, "internal_error", "wallet_read_scope_count_overflow", "Wallet read scope exceeds the safe integer boundary.");
+      }
+      relevantUnboundPostingCount = next;
+    }
     const postings = this.db.prepare(`
       SELECT * FROM financial_postings
       WHERE ledger_account_id=? AND currency=?
@@ -1470,6 +2065,7 @@ export class SqliteLedger {
     currency,
     environment = null,
     expected_active_version = undefined,
+    migration_plan_id = null,
     generated_at = new Date().toISOString(),
     buildProjection,
   }) {
@@ -1511,11 +2107,34 @@ export class SqliteLedger {
         WHERE ledger_account_id IS NULL AND currency=?
       `).get(currency);
       if (Number(unbound.count) > 0) {
-        throw new ApiError(422, "financial_constraint", "ledger_projection_unbound_postings", "Unbound financial postings must be resolved before activating an account projection.", {
-          ledger_account_id,
-          currency,
-          unbound_posting_count: Number(unbound.count),
-        });
+        if (migration_plan_id === null) {
+          throw new ApiError(422, "financial_constraint", "ledger_projection_unbound_postings", "Unbound financial postings must be resolved before activating an account projection.", {
+            ledger_account_id,
+            currency,
+            unbound_posting_count: Number(unbound.count),
+          });
+        }
+        const planState = this.walletMigrationPlanState(migration_plan_id);
+        const scope = this.walletCutoverScope({ ledger_account_id, currency, environment });
+        if (planState.plan.scope_key !== scope.scope_key) {
+          throw new ApiError(409, "financial_constraint", "wallet_migration_plan_scope_mismatch", "Wallet migration plan does not belong to this ledger projection scope.");
+        }
+        if (!planState.current) {
+          throw new ApiError(409, "financial_constraint", "wallet_migration_plan_stale", "Wallet migration plan is blocked or stale; projection refresh is not allowed.", {
+            blockers: planState.blockers,
+          });
+        }
+      } else if (migration_plan_id !== null) {
+        const planState = this.walletMigrationPlanState(migration_plan_id);
+        const scope = this.walletCutoverScope({ ledger_account_id, currency, environment });
+        if (planState.plan.scope_key !== scope.scope_key) {
+          throw new ApiError(409, "financial_constraint", "wallet_migration_plan_scope_mismatch", "Wallet migration plan does not belong to this ledger projection scope.");
+        }
+        if (!planState.current) {
+          throw new ApiError(409, "financial_constraint", "wallet_migration_plan_stale", "Wallet migration plan is blocked or stale; projection refresh is not allowed.", {
+            blockers: planState.blockers,
+          });
+        }
       }
       const postings = this.db.prepare(`
         SELECT * FROM financial_postings

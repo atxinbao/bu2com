@@ -95,7 +95,7 @@ test("F06b bindings are normalized, persisted, exposed, and survive restart", ()
     const identity = second.identityBundle("local", "ten_binding");
     assert.equal(identity.funding_sources[0].generation, 1);
     assert.equal(identity.receiving_targets[0].verification_status, "verified");
-    assert.equal(second.schemaVersion(), 20);
+    assert.equal(second.schemaVersion(), 21);
     second.close();
   } finally {
     rmSync(directory, { recursive: true, force: true });

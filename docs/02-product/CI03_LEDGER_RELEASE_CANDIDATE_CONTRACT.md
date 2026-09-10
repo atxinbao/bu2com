@@ -25,7 +25,7 @@ CI-03 将已经通过 CI-01、CI-02 与 CI-RT01 的确定 `main` 提交，准备
 候选只声明：
 
 - Local 账本与集成测试基线；
-- SQLite Schema 20、WAL 与 Online Backup/restore；
+- 当前 SQLite Schema 21、WAL 与 Online Backup/restore；
 - 固定 Node/npm/SQLite 运行时；
 - 可加载的不可变 Docker archive；
 - 源码、制品与证据绑定的机器清单。
