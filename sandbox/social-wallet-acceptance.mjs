@@ -300,7 +300,7 @@ async function rejectedCode(operation) {
 
 function validateAcceptanceShape(evidence, { expectedSourceCommit = null, expectedImageId = null } = {}) {
   return Boolean(
-    evidence?.schema_version === "fp07.social-wallet-acceptance.v1"
+    evidence?.schema_version === "fp08.social-wallet-acceptance.v1"
     && evidence.status === "passed"
     && evidence.environment?.service === "local"
     && evidence.environment?.execution_backend === "simulated"
@@ -310,7 +310,7 @@ function validateAcceptanceShape(evidence, { expectedSourceCommit = null, expect
     && evidence.flows?.outbound_payment === "settled"
     && evidence.flows?.inbound_collection === "posted"
     && evidence.flows?.partial_refund === "refunded"
-    && evidence.flows?.provider_fee_count === 1
+    && evidence.flows?.provider_fee_count === 3
     && evidence.flows?.reconciliation === "matched"
     && evidence.recovery?.provider_unknown_recovered === true
     && evidence.recovery?.restart_verified === true
@@ -318,7 +318,7 @@ function validateAcceptanceShape(evidence, { expectedSourceCommit = null, expect
     && evidence.history?.automatic_provider_replay === false
     && evidence.projection?.delete_rebuild_verified === true
     && evidence.wallet_read?.buyer_runtime_status === "active"
-    && evidence.wallet_read?.buyer_spend_decision_source === "legacy_wallet"
+    && evidence.wallet_read?.buyer_spend_decision_source === "account_wallet"
     && evidence.wallet_read?.seller_shadow_status === "difference"
     && evidence.backup_restore?.integrity === "ok"
     && evidence.backup_restore?.same_financial_fact_hash === true
@@ -337,10 +337,10 @@ function validateAcceptanceShape(evidence, { expectedSourceCommit = null, expect
     && evidence.authorization?.live_enabled === false
     && evidence.external_sandbox_bilateral?.status === "not_executed"
     && evidence.external_sandbox_bilateral?.accepted === false
-    && evidence.product_boundary?.multi_account_spend_decision_source === "legacy_global_wallet"
+    && evidence.product_boundary?.multi_account_spend_decision_source === "account_scoped_wallet"
     && evidence.product_boundary?.public_wallet_api_authorized === false
     && evidence.product_boundary?.product_promotion_authorized === false
-    && evidence.product_boundary?.buyer_side_provider_fee_spend_semantics_authorized === false
+    && evidence.product_boundary?.buyer_side_provider_fee_spend_semantics_authorized === true
     && (!expectedSourceCommit || evidence.source?.commit === expectedSourceCommit)
     && (!expectedImageId || evidence.source?.image_id === expectedImageId)
   );
@@ -494,12 +494,26 @@ export async function runSocialWalletAcceptance({
       provider_reference: collection.collection.provider_reference,
       amount: { value: 1, currency: CURRENCY },
     }, "fp07-fee-collection"));
+    fees.push(await sandbox.recordProviderFee({
+      source_type: "payment",
+      source_id: settled.transaction.id,
+      provider: "bu2_simulated_provider",
+      provider_reference: settled.transaction.settlement_provider_reference,
+      amount: { value: 2, currency: CURRENCY },
+    }, "fp08-fee-payment"));
+    fees.push(await sandbox.recordProviderFee({
+      source_type: "refund",
+      source_id: refund.refund.id,
+      provider: "bu2_simulated_provider",
+      provider_reference: refund.refund.provider_reference,
+      amount: { value: 1, currency: CURRENCY },
+    }, "fp08-fee-refund"));
 
     const reconciliation = await sandbox.createReconciliation({ id: "rec_fp07_product" }, "fp07-reconciliation");
     assert.equal(reconciliation.status, "matched");
     assert.equal(reconciliation.exception_count, 0);
     assert.equal(reconciliation.unknown_count, 0);
-    assert.deepEqual(reconciliation.totals[CURRENCY], { payments: 180, collections: 100, refunds: 20, fees: 1 });
+    assert.deepEqual(reconciliation.totals[CURRENCY], { payments: 180, collections: 100, refunds: 20, fees: 4 });
 
     const buyerActive = sandbox.getActiveLedgerAccountProjection({ ledger_account_id: "lga_fp07_buyer", currency: CURRENCY });
     const sellerActive = sandbox.getActiveLedgerAccountProjection({ ledger_account_id: "lga_fp07_seller", currency: CURRENCY });
@@ -516,7 +530,7 @@ export async function runSocialWalletAcceptance({
     });
     const runtimeAfterReconciliation = sandbox.getRuntimeWalletView({ ledger_account_id: "lga_fp07_buyer", currency: CURRENCY });
     assert.equal(runtimeAfterReconciliation.status, "active");
-    assert.deepEqual(runtimeAfterReconciliation.read_balance, { value: 99_840, currency: CURRENCY });
+    assert.deepEqual(runtimeAfterReconciliation.read_balance, { value: 99_837, currency: CURRENCY });
     const sellerShadow = sandbox.shadowCompareWalletReadModel({ ledger_account_id: "lga_fp07_seller", currency: CURRENCY });
     assert.equal(sellerShadow.status, "difference");
 
@@ -594,7 +608,7 @@ export async function runSocialWalletAcceptance({
     const backupReplay = backupSandbox.replayLedgerHistory({ currency: CURRENCY });
     const backupRuntime = backupSandbox.getRuntimeWalletView({ ledger_account_id: "lga_fp07_buyer", currency: CURRENCY });
     assert.equal(JSON.stringify(backupLedger.databaseIntegrity()), JSON.stringify(["ok"]));
-    assert.equal(backupLedger.schemaVersion(), 21);
+    assert.equal(backupLedger.schemaVersion(), 22);
     assert.equal(backupFacts.sha256, factsBeforeBackup.sha256);
     assert.equal(backupReplay.status, "complete");
     assert.equal(backupRuntime.status, "active");
@@ -602,7 +616,7 @@ export async function runSocialWalletAcceptance({
 
     const sandboxEnvironment = loadEnvironmentConfig({ environment: "sandbox", paymentAdapter: "x402" }, {});
     const evidence = {
-      schema_version: "fp07.social-wallet-acceptance.v1",
+      schema_version: "fp08.social-wallet-acceptance.v1",
       status: "passed",
       source: { commit: sourceCommit, image_id: imageId },
       environment: {
@@ -687,18 +701,18 @@ export async function runSocialWalletAcceptance({
       external_sandbox_bilateral: {
         status: "not_executed",
         accepted: false,
-        reason: "FP-07 product acceptance is Local/Simulation only and does not create Base Sepolia settlement evidence.",
+        reason: "FP-08 product acceptance is Local/Simulation only and does not create Base Sepolia settlement evidence.",
       },
       product_boundary: {
-        multi_account_spend_decision_source: "legacy_global_wallet",
+        multi_account_spend_decision_source: "account_scoped_wallet",
         public_wallet_api_authorized: false,
         product_promotion_authorized: false,
         seller_shadow_difference_expected: true,
-        buyer_side_provider_fee_spend_semantics_authorized: false,
+        buyer_side_provider_fee_spend_semantics_authorized: true,
       },
     };
     if (!validateSocialWalletAcceptance(evidence, { expectedSourceCommit: sourceCommit, expectedImageId: imageId })) {
-      throw new Error(`FP-07 Social Wallet acceptance evidence failed self-validation: ${JSON.stringify({
+      throw new Error(`FP-08 Social Wallet acceptance evidence failed self-validation: ${JSON.stringify({
         flows: evidence.flows,
         recovery: evidence.recovery,
         wallet_read: evidence.wallet_read,

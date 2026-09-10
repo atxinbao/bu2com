@@ -2,7 +2,7 @@
 
 日期：2026-09-10
 执行者：Codex
-状态：Proposed · FP-06b（等待独立 R2 Domain / Architecture 人类审查）
+状态：Accepted for FP-06b；资金写源部分由 FP-08 契约扩展
 
 ## 背景
 
@@ -60,3 +60,7 @@ FP-05 已把新业务资金事实绑定到可信 LedgerAccount，FP-06a 已提�
 - 单一 legacy wallet 被真正多账户写模型替代；
 - migration source 超过当前 500 条有界分类上限；
 - 引入新的资产、网络、Provider balance observation 或多写者数据库。
+
+## FP-08 后续决定
+
+FP-08 已触发“单一 legacy wallet 被真正多账户写模型替代”的重新评估条件。Schema 21 的追加式 plan / assessment / generation 与 Local-only 控制边界保持不变；Schema 22 在健康激活时初始化账户级写余额，新交易持久化写源，Transaction Core 继续独占所有余额修改。账户余额发生变化后不允许 rollback 到 legacy 全局写源。具体金额、费用、并发和恢复契约见 [`FP08_ACCOUNT_WALLET_WRITE_CONTRACT.md`](../02-product/FP08_ACCOUNT_WALLET_WRITE_CONTRACT.md)。

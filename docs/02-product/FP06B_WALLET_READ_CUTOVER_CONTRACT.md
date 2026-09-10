@@ -8,6 +8,8 @@
 
 FP-06b 把 FP-06a 的 shadow 模型推进为**可受控选择的 Local 运行时读路径**，同时保持 Transaction Core 和资金写路径不变。它不执行生产数据迁移，不回填旧 Posting，不创建产品公开 Wallet API，不让 projection 直接决定扣款额度，也不开放 Sandbox/Testnet、Hosted、Live/Mainnet、Signer 或真实资金。
 
+> 后续状态：FP-08 在不改写 FP-06b 历史控制事实的前提下增加 Schema 22。健康 cutover 激活现在会初始化账户级写源；新交易由 Transaction Core 写入该账户余额。未激活 scope 和历史交易仍保持本页的 legacy 行为。
+
 ## 2. Schema 21 控制事实
 
 - `wallet_migration_plans`：冻结目标 LedgerAccount/币种、当前 legacy unbound source fingerprint、分类策略和证据引用。
@@ -63,12 +65,14 @@ spend_decision_source = legacy_wallet
 
 因此正常 reserve 后，projection 的 `book_balance` 尚未变化时，reserved/pending 仍会从 candidate available 中扣除；在已核对的同一隔离 scope 中，读值不会因漏减该预留而高估。active cutover 每次读取还必须重新执行 shadow equivalence 和同一共享 reconciliation coverage 判定；即使 Posting、projection 与 shadow 都未变化，只要最新相关对账变为 incomplete/unknown/exception，也立即 blocked/null 并在 Adapter 前阻止新 reserve。全局 legacy wallet 尚不具备真正多账户资金写隔离，不能据此宣称跨账户读值与旧 wallet 永远一致。真正 settlement/collection/refund/fee 产生新 Posting 后，如果活动 projection 尚未刷新，则 runtime view 同样 `blocked`，不会返回旧值或静默 fallback。
 
+FP-08 后，第二段代码块中的 `spend_decision_source` 对已初始化 scope 更新为 `account_wallet`；shadow 比较对象也更新为对应 `ledger_account_id + currency` 行。公开 API 和非 Local 环境仍不改变。
+
 ## 6. 停止与恢复
 
 - active cutover stale/incomplete、Domain 内存 revision 落后于数据库、存在未完成 Payment/Refund Attempt、持久 `provider_unknown/payment_*` settlement Adapter operation、持续 shadow mismatch，或 required reconciliation 为 not_observed/incomplete/unknown/exception：`read_balance=null`、`fallback_performed=false`；匹配 LedgerAccount 的新 reserve 在 Adapter 前拒绝。该 guard 仅适用于 Local，其他环境原有 execution/authorization/binding 门槛不变，cutover 控制面仍拒绝 Sandbox/Live。
 - 已预留/已确认外部事实不因读路径故障被删除或重复付款；继续按 Transaction Core/provider_unknown/reconciliation 恢复。
 - 对账异常通过追加更新且完整的正规 reconciliation evidence 恢复；不删除旧 run、不修改 Posting、不重新付款。其他异常可使用同一个仍 current 的 migration plan 刷新 projection 后重新 assessment，或追加 `legacy_wallet` rollback generation。
-- rollback 后重新切换必须使用新的 assessment 和更高 generation；旧 plan/assessment/generation 永不改写。
+- rollback 后重新切换必须使用新的 assessment 和更高 generation；旧 plan/assessment/generation 永不改写。FP-08 账户余额一旦与 legacy wallet 分歧，rollback 必须拒绝并以前滚修复，避免把已发生的账户级变动丢回全局余额。
 
 ## 7. 验收边界
 

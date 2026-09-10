@@ -27,7 +27,7 @@ node deploy/runtime-assurance.mjs
 
 ## 3. 明确不包含
 
-- FP-03 历史上只替换批准的 Docker/Node/SQLite 运行时基线；当前 runtime policy 随后续账本迁移同步到 Schema 21，但 Node/npm/SQLite 固定版本和 WAL-reset 安全下限不变。
+- FP-03 历史上只替换批准的 Docker/Node/SQLite 运行时基线；当前 runtime policy 随 FP-08 迁移同步到 Schema 22，但 Node/npm/SQLite 固定版本和 WAL-reset 安全下限不变。
 - 不创建 Hosted endpoint，不执行 Base Sepolia 或 Mainnet 付款。
 - 不把本地 WAL/备份证据解释为高可用、多节点或生产财务准入。
 - 不替代 LA-06b 的真实 Sandbox 双向收付与 G-F 审查。

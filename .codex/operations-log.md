@@ -578,3 +578,14 @@
 - Tool: `graphify update .`; result: 知识图源码 freshness 更新到 `e19bae63`，输出为 4014 nodes / 6747 edges / 264 communities；工具提示文档语义变更需后续由 AI-assisted full update 处理，本轮不把该输出解释为新的业务能力证据。
 - Verification correction: 首次图谱统计断言误读不存在的 `.edges` 字段而提前退出；按实际 Graphify JSON 的 `.links` 字段修正只读检查后完整复跑通过，未修改业务或文档结论。
 - Boundary: RC 保持 `prepared_not_released`；不配置 branch protection，不执行 Tag/Release、Hosted、Sandbox/Testnet 双向、Live/Mainnet、Signer、Provider 或真实资金操作。
+
+## 2026-09-11 · FP-08 账户级资金写源与买方 ProviderFee
+
+- Scope: 从 main 父基线 `b454dfee4f3ce6a217aa50bd9f4df78692d57b00` 创建 `feat/account-scoped-wallet-writes`；实现 Schema 22 账户钱包、固定交易写源、买方 Payment/Refund ProviderFee 与 FP-08 RC 证据契约。
+- Tool: `rg`, `sed`, `git`, Graphify query; result: 对照既有 cutover、legacy wallet、金融原子提交、幂等和 release-candidate 模式完成上下文扫描，并冻结 FP-08 边界。
+- Tool: `apply_patch`; result: 新增 `account_wallet_balances`、切换初始化事件、交易写源、账户级 reserve/cancel/settle/refund/fee 原子路径及数据库约束；同步产品、技术、运行时、RC 和 Changelog 文档。
+- Tool: Node 24.20.0 定向与全量测试; result: FP-08 7/7，Sandbox 266/266，RT-01 证明 Schema 1–22、SQLite 3.53.4、WAL/FK/Online Backup，LA-06a 全部通过。
+- Tool: `graphify update .`; result: 项目图谱刷新为 4047 nodes / 6834 edges / 258 communities；生成文件仅反映本轮代码与文档关系。
+- Tool: `git diff --check`, JSON 解析、Node 语法与范围审查; result: 补丁格式通过，未发现秘密或 FP-08 之外的业务改动。
+- Evidence caveat: 未提交工作树中的本地 JSON 记录父 `source_commit=b454dfee...`，不冒充最终提交或远程 CI 证据。
+- Boundary: 仅 Local/Simulation 实现与验证；公开 Wallet API、Collection runtime credit、Hosted、真实 Sandbox/Testnet 双向结算、Live/Mainnet、Signer、Provider 付款和真实资金均未执行或未授权。

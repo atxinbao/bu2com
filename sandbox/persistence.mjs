@@ -247,6 +247,11 @@ export class SqliteLedger {
         name: "wallet_read_cutover_controls",
         apply: () => this.migrateWalletReadCutoverControls(),
       },
+      {
+        version: 22,
+        name: "account_scoped_wallet_writes",
+        apply: () => this.migrateAccountScopedWalletWrites(),
+      },
     ];
     for (const migration of migrations) {
       if (applied.has(migration.version)) continue;
@@ -1051,6 +1056,46 @@ export class SqliteLedger {
       CREATE TRIGGER IF NOT EXISTS wallet_cutover_generations_no_delete
       BEFORE DELETE ON wallet_cutover_generations
       BEGIN SELECT RAISE(ABORT, 'wallet_cutover_generation_immutable'); END;
+    `);
+  }
+
+  migrateAccountScopedWalletWrites() {
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS account_wallet_balances (
+        ledger_account_id TEXT NOT NULL,
+        currency TEXT NOT NULL CHECK (currency GLOB '[A-Z][A-Z][A-Z]'),
+        available INTEGER NOT NULL CHECK (
+          typeof(available) = 'integer'
+          AND available BETWEEN -9007199254740991 AND 9007199254740991
+        ),
+        reserved INTEGER NOT NULL CHECK (
+          typeof(reserved) = 'integer'
+          AND reserved BETWEEN 0 AND 9007199254740991
+        ),
+        version INTEGER NOT NULL CHECK (version >= 1),
+        initialized_from TEXT NOT NULL CHECK (initialized_from = 'wallet_cutover_activation'),
+        initialized_generation INTEGER NOT NULL CHECK (initialized_generation >= 1),
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        PRIMARY KEY (ledger_account_id, currency),
+        FOREIGN KEY (ledger_account_id) REFERENCES ledger_accounts(id)
+      );
+      CREATE TRIGGER IF NOT EXISTS account_wallet_balances_scope_immutable
+      BEFORE UPDATE OF ledger_account_id, currency, initialized_from
+      ON account_wallet_balances
+      WHEN NOT (
+        NEW.ledger_account_id = OLD.ledger_account_id
+        AND NEW.currency = OLD.currency
+        AND NEW.initialized_from = OLD.initialized_from
+      )
+      BEGIN
+        SELECT RAISE(ABORT, 'account_wallet_scope_immutable');
+      END;
+      CREATE TRIGGER IF NOT EXISTS account_wallet_balances_no_delete
+      BEFORE DELETE ON account_wallet_balances
+      BEGIN
+        SELECT RAISE(ABORT, 'account_wallet_delete_forbidden');
+      END;
     `);
   }
 
@@ -1868,6 +1913,50 @@ export class SqliteLedger {
       if (currentGeneration !== expected_active_generation) throw new ApiError(409, "concurrency_conflict", "wallet_cutover_generation_conflict", "Wallet read cutover generation changed concurrently.", { expected_active_generation, actual_active_generation: currentGeneration });
       const nextGeneration = currentGeneration + 1;
       const id = `wcg_${randomUUID().replaceAll("-", "").slice(0, 16)}`;
+      const accountWallet = this.db.prepare(`
+        SELECT available, reserved, version
+        FROM account_wallet_balances
+        WHERE ledger_account_id=? AND currency=?
+      `).get(assessment.ledger_account_id, assessment.currency);
+      const candidateAvailable = freshAssessment.snapshot?.model?.available_spending_capacity?.amount?.value;
+      const candidateReserved = freshAssessment.snapshot?.model?.reserved?.value;
+      if (!Number.isSafeInteger(candidateAvailable) || !Number.isSafeInteger(candidateReserved) || candidateReserved < 0) {
+        throw new ApiError(409, "financial_constraint", "account_wallet_initialization_invalid", "Wallet cutover assessment does not contain a valid account wallet balance.");
+      }
+      let accountWalletChanged = false;
+      if (!accountWallet) {
+        this.db.prepare(`
+          INSERT INTO account_wallet_balances(
+            ledger_account_id, currency, available, reserved, version,
+            initialized_from, initialized_generation, created_at, updated_at
+          ) VALUES (?, ?, ?, ?, 1, 'wallet_cutover_activation', ?, ?, ?)
+        `).run(
+          assessment.ledger_account_id,
+          assessment.currency,
+          candidateAvailable,
+          candidateReserved,
+          nextGeneration,
+          created_at,
+          created_at,
+        );
+        accountWalletChanged = true;
+      } else if (!current || current.read_mode === "legacy_wallet") {
+        const updated = this.db.prepare(`
+          UPDATE account_wallet_balances
+          SET available=?, reserved=?, initialized_generation=?, version=version+1, updated_at=?
+          WHERE ledger_account_id=? AND currency=? AND version=?
+        `).run(
+          candidateAvailable,
+          candidateReserved,
+          nextGeneration,
+          created_at,
+          assessment.ledger_account_id,
+          assessment.currency,
+          accountWallet.version,
+        );
+        if (updated.changes !== 1) throw new ApiError(409, "concurrency_conflict", "account_wallet_state_conflict", "Account wallet state changed before cutover activation.");
+        accountWalletChanged = true;
+      }
       this.db.prepare(`
         INSERT INTO wallet_cutover_generations(
           id, scope_key, ledger_account_id, currency, generation, read_mode,
@@ -1875,6 +1964,24 @@ export class SqliteLedger {
           idempotency_key, created_at
         ) VALUES (?, ?, ?, ?, ?, 'ledger_projection', ?, ?, ?, ?, ?, ?)
       `).run(id, assessment.scope_key, assessment.ledger_account_id, assessment.currency, nextGeneration, assessment.id, assessment.migration_plan_id, reason.trim(), requestFingerprintValue, idempotency_key, created_at);
+      if (accountWalletChanged) {
+        this.insertEventAndOutbox({
+          id: `evt_${randomUUID().replaceAll("-", "").slice(0, 16)}`,
+          type: "wallet.account_write_initialized",
+          resource_id: id,
+          created_at,
+          ledger_account_id: assessment.ledger_account_id,
+          currency: assessment.currency,
+          available: candidateAvailable,
+          reserved: candidateReserved,
+          cutover_generation: nextGeneration,
+        });
+        const revisionUpdate = this.db.prepare(`
+          UPDATE sandbox_state SET data=?
+          WHERE key='state_revision' AND data=?
+        `).run(String(revision + 1), String(revision));
+        if (revisionUpdate.changes !== 1) throw new ApiError(409, "concurrency_conflict", "transaction_state_conflict", "Domain state changed before account wallet activation.");
+      }
       this.failureInjector?.("after_wallet_cutover_write");
       return this.walletCutoverGenerationView(this.db.prepare("SELECT * FROM wallet_cutover_generations WHERE id=?").get(id));
     });
@@ -1895,6 +2002,26 @@ export class SqliteLedger {
       const current = this.db.prepare("SELECT * FROM wallet_cutover_generations WHERE scope_key=? ORDER BY generation DESC LIMIT 1").get(scope.scope_key);
       if (!current || Number(current.generation) !== expected_active_generation) throw new ApiError(409, "concurrency_conflict", "wallet_cutover_generation_conflict", "Wallet read cutover generation changed before rollback.", { expected_active_generation, actual_active_generation: current ? Number(current.generation) : 0 });
       if (current.read_mode !== "ledger_projection") throw new ApiError(409, "invalid_state_transition", "wallet_cutover_not_active", "Wallet read cutover is not currently using the ledger projection.");
+      const accountWallet = this.db.prepare(`
+        SELECT available, reserved
+        FROM account_wallet_balances
+        WHERE ledger_account_id=? AND currency=?
+      `).get(ledger_account_id, currency);
+      const legacyWallet = this.db.prepare("SELECT available, reserved, currency FROM wallet_accounts LIMIT 1").get();
+      if (accountWallet && (
+        !legacyWallet
+        || legacyWallet.currency !== currency
+        || Number(accountWallet.available) !== Number(legacyWallet.available)
+        || Number(accountWallet.reserved) !== Number(legacyWallet.reserved)
+      )) {
+        throw new ApiError(
+          409,
+          "financial_constraint",
+          "wallet_cutover_account_wallet_diverged",
+          "An account wallet that has moved funds cannot be rolled back to the legacy global wallet.",
+          { ledger_account_id, currency, recovery: "stop_new_execution_and_forward_repair" },
+        );
+      }
       const nextGeneration = Number(current.generation) + 1;
       const id = `wcg_${randomUUID().replaceAll("-", "").slice(0, 16)}`;
       this.db.prepare(`
@@ -2339,6 +2466,19 @@ export class SqliteLedger {
       .prepare("SELECT id, available, reserved, currency FROM wallet_accounts LIMIT 1")
       .get();
     if (walletAccount) stateRows.wallet = { ...walletAccount };
+    stateRows.account_wallets = this.db
+      .prepare(`
+        SELECT ledger_account_id, currency, available, reserved
+        FROM account_wallet_balances
+        ORDER BY ledger_account_id, currency
+      `)
+      .all()
+      .map((row) => [JSON.stringify([row.ledger_account_id, row.currency]), {
+        ledger_account_id: row.ledger_account_id,
+        currency: row.currency,
+        available: Number(row.available),
+        reserved: Number(row.reserved),
+      }]);
     stateRows.state_revision = Number(stateRows.state_revision ?? 0);
     const idempotency = this.db
       .prepare(
@@ -2593,6 +2733,7 @@ export class SqliteLedger {
     idempotency: { scopeKey, fingerprint, ownerToken, result },
     expectedRevision,
     expectedWallet,
+    expectedAccountWallets = [],
   }) {
     return immediateTransaction(this.db, () => {
       const revision = this.db
@@ -2652,6 +2793,82 @@ export class SqliteLedger {
           );
       }
       this.failureInjector?.("after_wallet_write");
+      const expectedScopedWallets = new Map(expectedAccountWallets);
+      const nextScopedWallets = new Map(snapshot.accountWallets ?? []);
+      for (const [scopeKey] of expectedScopedWallets) {
+        if (!nextScopedWallets.has(scopeKey)) {
+          throw new ApiError(
+            409,
+            "financial_constraint",
+            "account_wallet_delete_forbidden",
+            "Account wallet balances cannot be removed from a domain mutation.",
+          );
+        }
+      }
+      for (const [scopeKey, nextWallet] of nextScopedWallets) {
+        const expected = expectedScopedWallets.get(scopeKey);
+        const row = this.db.prepare(`
+          SELECT available, reserved, version
+          FROM account_wallet_balances
+          WHERE ledger_account_id=? AND currency=?
+        `).get(nextWallet.ledger_account_id, nextWallet.currency);
+        if (!expected) {
+          throw new ApiError(
+            409,
+            "financial_constraint",
+            row ? "account_wallet_state_conflict" : "account_wallet_initialization_required",
+            row
+              ? "Account wallet state changed concurrently; query the account before retrying."
+              : "Account wallet state must be initialized by an approved wallet cutover activation.",
+            { retry: "query_before_retry", ledger_account_id: nextWallet.ledger_account_id },
+          );
+        }
+        if (!row) {
+          throw new ApiError(
+            409,
+            "concurrency_conflict",
+            "account_wallet_state_conflict",
+            "Account wallet state changed concurrently; query the account before retrying.",
+            { retry: "query_before_retry", ledger_account_id: nextWallet.ledger_account_id },
+          );
+        }
+        const unchanged = expected.available === nextWallet.available
+          && expected.reserved === nextWallet.reserved;
+        if (unchanged) continue;
+        if (Number(row.available) !== expected.available || Number(row.reserved) !== expected.reserved) {
+          throw new ApiError(
+            409,
+            "concurrency_conflict",
+            "account_wallet_state_conflict",
+            "Account wallet state changed concurrently; query the account before retrying.",
+            { retry: "query_before_retry", ledger_account_id: nextWallet.ledger_account_id },
+          );
+        }
+        const updated = this.db.prepare(`
+          UPDATE account_wallet_balances
+          SET available=?, reserved=?, version=version+1, updated_at=?
+          WHERE ledger_account_id=? AND currency=? AND available=? AND reserved=? AND version=?
+        `).run(
+          nextWallet.available,
+          nextWallet.reserved,
+          new Date().toISOString(),
+          nextWallet.ledger_account_id,
+          nextWallet.currency,
+          expected.available,
+          expected.reserved,
+          row.version,
+        );
+        if (updated.changes !== 1) {
+          throw new ApiError(
+            409,
+            "concurrency_conflict",
+            "account_wallet_state_conflict",
+            "Account wallet state changed concurrently; query the account before retrying.",
+            { retry: "query_before_retry", ledger_account_id: nextWallet.ledger_account_id },
+          );
+        }
+      }
+      this.failureInjector?.("after_account_wallet_write");
       const upsert = this.db.prepare(`
         INSERT INTO resources(kind, id, data, updated_at) VALUES (?, ?, ?, ?)
         ON CONFLICT(kind, id) DO UPDATE SET data=excluded.data, updated_at=excluded.updated_at

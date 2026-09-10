@@ -38,11 +38,13 @@ export class ApiError extends Error {
 
 const prefix = (value) => `${value}_${randomUUID().replaceAll("-", "").slice(0, 16)}`;
 const clone = (value) => structuredClone(value);
+const accountWalletKey = (ledgerAccountId, currency) => JSON.stringify([ledgerAccountId, currency]);
 const publicResourceView = (value) => {
   const view = clone(value);
   delete view.ledger_account_id;
   delete view.funding_ledger_account_id;
   delete view.receiving_ledger_account_id;
+  delete view.wallet_write_source;
   return view;
 };
 const hash = (value) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
@@ -138,6 +140,29 @@ function validateAmount(amount) {
   }
 }
 
+function applyWalletDelta(wallet, { available = 0, reserved = 0 }) {
+  const nextAvailable = wallet.available + available;
+  const nextReserved = wallet.reserved + reserved;
+  if (!Number.isSafeInteger(nextAvailable) || !Number.isSafeInteger(nextReserved)) {
+    throw new ApiError(
+      409,
+      "financial_constraint",
+      "wallet_balance_overflow",
+      "Wallet balance arithmetic exceeded the safe integer range.",
+    );
+  }
+  if (nextReserved < 0) {
+    throw new ApiError(
+      409,
+      "financial_constraint",
+      "wallet_reserved_negative",
+      "Wallet reserved balance cannot become negative.",
+    );
+  }
+  wallet.available = nextAvailable;
+  wallet.reserved = nextReserved;
+}
+
 function validateReconciliationObservation(observation) {
   requireFields(observation ?? {}, ["kind", "provider", "provider_reference", "amount"]);
   if (!reconciliationObservationKinds.has(observation.kind)) {
@@ -225,6 +250,7 @@ export class Bu2Sandbox {
         reserved: 0,
         currency: "CNY",
       };
+    this.accountWallets = new Map(restored.state.account_wallets ?? []);
     this.knownPayees = new Set(restored.state.known_payees ?? []);
     this.inFlightIdempotency = new Map();
     this.mutationQueue = Promise.resolve();
@@ -316,6 +342,7 @@ export class Bu2Sandbox {
         receipts: [...this.receipts.entries()].map(([id, value]) => [id, clone(value)]),
       },
       wallet: clone(this.wallet),
+      accountWallets: [...this.accountWallets.entries()].map(([key, value]) => [key, clone(value)]),
       knownPayees: [...this.knownPayees],
       financial: {
         budgets: [...this.budgets.entries()].map(([id, value]) => [id, clone(value)]),
@@ -345,6 +372,7 @@ export class Bu2Sandbox {
     this.openingBalances = new Map(snapshot.resources.opening_balances ?? []);
     this.ledgerCorrections = new Map(snapshot.resources.ledger_corrections ?? []);
     this.wallet = clone(snapshot.wallet);
+    this.accountWallets = new Map(snapshot.accountWallets ?? []);
     this.knownPayees = new Set(snapshot.knownPayees ?? []);
     const financial = snapshot.financial ?? {};
     this.budgets = new Map(financial.budgets ?? []);
@@ -359,12 +387,59 @@ export class Bu2Sandbox {
     this.restoreState({
       resources: restored.resources,
       wallet: restored.state.wallet ?? this.wallet,
+      accountWallets: restored.state.account_wallets ?? [],
       knownPayees: restored.state.known_payees ?? [],
       financial: restored.financial,
     });
     this.idempotency = new Map(restored.idempotency ?? []);
     this.events = restored.events ?? [];
     this.stateRevision = Number(restored.state.state_revision ?? 0);
+  }
+
+  accountWalletState(ledgerAccountId, currency) {
+    const wallet = this.accountWallets.get(accountWalletKey(ledgerAccountId, currency));
+    return wallet ? clone(wallet) : null;
+  }
+
+  walletForWriteSource(source, ledgerAccountId, currency) {
+    if (source !== "account_wallet") return this.wallet;
+    const wallet = this.accountWallets.get(accountWalletKey(ledgerAccountId, currency));
+    if (!wallet) {
+      throw new ApiError(
+        409,
+        "financial_constraint",
+        "account_wallet_state_missing",
+        "The account wallet write source is not initialized for this ledger account.",
+        { ledger_account_id: ledgerAccountId, currency },
+      );
+    }
+    return wallet;
+  }
+
+  walletWriteSourceForIntent(intent) {
+    if (!this.ledger || !intent.funding_ledger_account_id) {
+      return { source: "legacy_wallet", wallet: this.wallet };
+    }
+    const cutover = this.ledger.getWalletCutoverState({
+      ledger_account_id: intent.funding_ledger_account_id,
+      currency: intent.amount.currency,
+      environment: this.environmentConfig.environment,
+    });
+    if (cutover.generation?.read_mode !== "ledger_projection") {
+      return { source: "legacy_wallet", wallet: this.wallet };
+    }
+    return {
+      source: "account_wallet",
+      wallet: this.walletForWriteSource("account_wallet", intent.funding_ledger_account_id, intent.amount.currency),
+    };
+  }
+
+  walletForTransaction(transaction) {
+    return this.walletForWriteSource(
+      transaction.wallet_write_source ?? "legacy_wallet",
+      transaction.ledger_account_id ?? null,
+      transaction.reserved_amount?.currency ?? transaction.settled_amount?.currency,
+    );
   }
 
   async runIdempotentAsync(scope, key, body, operation) {
@@ -419,6 +494,7 @@ export class Bu2Sandbox {
           },
           expectedRevision,
           expectedWallet: before.wallet,
+          expectedAccountWallets: before.accountWallets,
         });
         this.idempotency.set(storeKey, { fingerprint, result: clone(result) });
         this.events.push(...context.events);
@@ -1537,8 +1613,16 @@ export class Bu2Sandbox {
 
   shadowCompareWalletReadModel(input = {}) {
     const model = this.getWalletReadModel(input);
+    const cutover = this.ledger?.getWalletCutoverState({
+      ledger_account_id: input.ledger_account_id,
+      currency: input.currency,
+      environment: this.environmentConfig.environment,
+    });
+    const accountWallet = cutover?.generation?.read_mode === "ledger_projection"
+      ? this.accountWalletState(input.ledger_account_id, input.currency)
+      : null;
     return {
-      ...compareWalletShadow({ model, legacyWallet: this.wallet }),
+      ...compareWalletShadow({ model, legacyWallet: this.wallet, accountWallet }),
       model,
       legacy_wallet_id: this.wallet?.id ?? null,
       legacy_scope: "global_single_wallet",
@@ -1694,6 +1778,8 @@ export class Bu2Sandbox {
       cutover_reconciliation: cutoverReconciliation,
       unresolved_attempt_ids: unresolvedAttempts,
       legacy_wallet: clone(this.wallet),
+      account_wallet: this.accountWalletState(ledger_account_id, currency),
+      spend_decision_source: shadow.spend_decision_source,
     };
     return {
       plan_state: planState,
@@ -1731,7 +1817,7 @@ export class Bu2Sandbox {
     return this.enqueueMutation(() => {
       const assessment = this.ledger.getWalletCutoverAssessment(assessment_id);
       if (!assessment) throw new ApiError(404, "resource_not_found", "wallet_cutover_assessment_not_found", "Wallet cutover assessment was not found.");
-      return this.ledger.activateWalletReadCutover({
+      const generation = this.ledger.activateWalletReadCutover({
         assessment_id,
         expected_active_generation,
         relevant_source_ids: this.walletLedgerSourceIds(assessment.ledger_account_id),
@@ -1744,6 +1830,8 @@ export class Bu2Sandbox {
         idempotency_key: key,
         reason,
       });
+      this.reloadCommittedState();
+      return generation;
     });
   }
 
@@ -1795,7 +1883,9 @@ export class Bu2Sandbox {
     if (!["matched", "not_required"].includes(model.reconciliation_status.status)) {
       blockers.push(`wallet_reconciliation_${model.reconciliation_status.status}`);
     }
-    const shadow = compareWalletShadow({ model, legacyWallet: this.wallet });
+    const accountWallet = this.accountWalletState(ledger_account_id, currency);
+    const shadow = compareWalletShadow({ model, legacyWallet: this.wallet, accountWallet });
+    if (!accountWallet) blockers.push("account_wallet_state_missing");
     if (shadow.status !== "matched") blockers.push("wallet_shadow_mismatch");
     const uniqueBlockers = [...new Set(blockers)].sort();
     const status = uniqueBlockers.length === 0 ? "active" : "blocked";
@@ -1815,7 +1905,7 @@ export class Bu2Sandbox {
       blockers: uniqueBlockers,
       fallback_performed: false,
       recovery: status === "blocked" ? "append_complete_reconciliation_refresh_projection_or_append_legacy_rollback_generation" : null,
-      spend_decision_source: "legacy_wallet",
+      spend_decision_source: accountWallet ? "account_wallet" : "unavailable",
     };
   }
 
@@ -2247,6 +2337,7 @@ export class Bu2Sandbox {
         account_id: this.intents.get(transaction.payment_intent_id)?.payer_account_id ?? null,
         agent_id: this.intents.get(transaction.payment_intent_id)?.buyer_agent_id ?? null,
         ledger_account_id: transaction.ledger_account_id ?? null,
+        wallet_write_source: transaction.wallet_write_source ?? "legacy_wallet",
       };
     }
     if (sourceType === "collection") {
@@ -2278,6 +2369,8 @@ export class Bu2Sandbox {
         account_id: this.intents.get(transaction?.payment_intent_id)?.payer_account_id ?? null,
         agent_id: this.intents.get(transaction?.payment_intent_id)?.buyer_agent_id ?? null,
         ledger_account_id: transaction?.ledger_account_id ?? null,
+        transaction_id: transaction?.id ?? null,
+        wallet_write_source: transaction?.wallet_write_source ?? "legacy_wallet",
       };
     }
     throw new ApiError(400, "validation_error", "invalid_reconciliation_source", "Provider fee source type is invalid.");
@@ -2320,6 +2413,11 @@ export class Bu2Sandbox {
         return this.providerFeeView(duplicate);
       }
       const now = new Date().toISOString();
+      const walletWriteSource = source.wallet_write_source ?? "legacy_wallet";
+      if (["payment", "refund"].includes(input.source_type) && walletWriteSource === "account_wallet") {
+        const wallet = this.walletForWriteSource("account_wallet", source.ledger_account_id, input.amount.currency);
+        applyWalletDelta(wallet, { available: -input.amount.value });
+      }
       const fee = {
         id: input.id ?? prefix("fee"),
         source_type: input.source_type,
@@ -2330,6 +2428,7 @@ export class Bu2Sandbox {
         account_id: source.account_id,
         agent_id: source.agent_id,
         ledger_account_id: source.ledger_account_id ?? null,
+        wallet_write_source: walletWriteSource,
         status: "reported",
         observed_at: input.observed_at ?? now,
         metadata: clone(input.metadata ?? {}),
@@ -3391,14 +3490,15 @@ export class Bu2Sandbox {
     if (intent.funding_ledger_account_id) {
       this.assertWalletReadCutoverHealthy(intent.funding_ledger_account_id, intent.amount.currency);
     }
-    if (this.wallet.currency !== intent.amount.currency)
+    const write = this.walletWriteSourceForIntent(intent);
+    if (write.wallet.currency !== intent.amount.currency)
       throw new ApiError(
         409,
         "validation_error",
         "wallet_currency_mismatch",
         "Wallet currency must match the payment intent currency.",
       );
-    if (this.wallet.available < intent.amount.value)
+    if (write.wallet.available < intent.amount.value)
       throw new ApiError(
         409,
         "insufficient_funds",
@@ -3412,6 +3512,7 @@ export class Bu2Sandbox {
         payment_intent_id: intent.id,
         execution_session_id: intent.execution_session_id ?? null,
         ledger_account_id: intent.funding_ledger_account_id ?? null,
+        wallet_write_source: write.source,
         status: "funds_reserved",
       authorized_amount: clone(intent.amount),
       reserved_amount: clone(intent.amount),
@@ -3435,8 +3536,10 @@ export class Bu2Sandbox {
     );
     if (provider) transaction.reserve_provider_reference = provider.provider_reference;
     if (emitAuthorization) this.event("payment_intent.authorized", intent);
-    this.wallet.available -= intent.amount.value;
-    this.wallet.reserved += intent.amount.value;
+    applyWalletDelta(write.wallet, {
+      available: -intent.amount.value,
+      reserved: intent.amount.value,
+    });
     this.transactions.set(transaction.id, transaction);
     intent.transaction_id = transaction.id;
     intent.status = "funds_reserved";
@@ -3620,8 +3723,11 @@ export class Bu2Sandbox {
         transaction.canceled_at = new Date().toISOString();
         transaction.cancel_reason = input?.reason ?? null;
         transaction.cancel_provider_reference = provider?.provider_reference ?? null;
-        this.wallet.reserved -= transaction.reserved_amount.value;
-        this.wallet.available += transaction.reserved_amount.value;
+        const wallet = this.walletForTransaction(transaction);
+        applyWalletDelta(wallet, {
+          available: transaction.reserved_amount.value,
+          reserved: -transaction.reserved_amount.value,
+        });
         this.releaseExecutionSession(transaction);
         this.releaseBudgetHold(transaction);
         const intent = this.intents.get(transaction.payment_intent_id);
@@ -3809,7 +3915,7 @@ export class Bu2Sandbox {
     transaction.status = transaction.refunded_amount.value === transaction.settled_amount.value ? "refunded" : "settled";
     transaction.last_refunded_at = new Date().toISOString();
     transaction.last_refund_provider_reference = provider?.provider_reference ?? refund.provider_reference ?? null;
-    this.wallet.available += refund.amount.value;
+    applyWalletDelta(this.walletForTransaction(transaction), { available: refund.amount.value });
     refund.status = "refunded";
     refund.provider_reference = transaction.last_refund_provider_reference;
     refund.refunded_at = transaction.last_refunded_at;
@@ -4002,7 +4108,7 @@ export class Bu2Sandbox {
     }
     this.consumeBudgetHold(transaction);
     this.commitExecutionSession(transaction);
-    this.wallet.reserved -= transaction.settled_amount.value;
+    applyWalletDelta(this.walletForTransaction(transaction), { reserved: -transaction.settled_amount.value });
     const intent = this.intents.get(transaction.payment_intent_id);
     intent.status = "settled";
     const quote = this.quotes.get(intent.quote_id);

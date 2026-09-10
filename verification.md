@@ -1183,3 +1183,15 @@ npm --prefix sandbox run test:hosted-deployment
 - Boundary: GitHub still reports `main protected=false`; RC remains `prepared_not_released`. No account-level funding write, ProviderFee spend semantics, public Wallet API, LA-06b, Hosted, Sandbox/Testnet bilateral settlement, Live/Mainnet, Signer, Provider call, Tag, Release or real-funds action was performed.
 
 Conclusion: FP-A02 is **GO for R0 documentation review**. It closes Foundation status drift after FP-A01 without changing or authorizing product execution behavior.
+
+## 2026-09-11 · FP-08 account-scoped wallet writes
+
+- `node --test sandbox/fp08-account-wallet-writes.test.mjs`: 7/7 passed on Node v24.20.0.
+- `npm --prefix sandbox test`: 266/266 passed.
+- `node deploy/runtime-assurance.mjs`: passed with Node v24.20.0, npm 11.19.0, SQLite 3.53.4, migrations 1–22, WAL, foreign keys and isolated Online Backup/restore.
+- `node deploy/la06a-local-gate.mjs`: passed with Sandbox 266/266, LA-06a 4/4, deployment/Hosted contracts 23/23, SDK 10/10, 63 API invariants / 6 MCP tools and Prototype lint/build.
+- Coverage includes account/currency isolation, activation-only initialization, fixed transaction write source, reserve/cancel/settle/refund, buyer-side Payment/Refund ProviderFee, negative available balance, SQLite constraints, restart, concurrency, idempotency and failure rollback.
+- Evidence caveat: dirty-tree local gates report parent `source_commit=b454dfee...`; they are not final-commit or remote-CI evidence.
+- Boundary: no public Wallet API, Collection runtime wallet credit, Hosted, real Sandbox/Testnet bilateral settlement, LA-06b, Live/Mainnet, Signer, Provider payment, Tag, Release or real-funds action was performed.
+
+Conclusion: FP-08 is **GO for R2 review** within the Local/Simulation boundary. Independent Domain / Architecture review and final-SHA CI evidence remain required before merge.

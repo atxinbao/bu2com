@@ -6,7 +6,7 @@
 
 ## 1. 目标
 
-CI-03 将已经通过 CI-01、CI-02、CI-RT01 与 FP-07 Local 产品验收的确定 `main` 提交，准备为可下载、可复核但**尚未发布**的 Social Wallet Local Integration Release Candidate。候选必须绑定同一份源码、同一次本地门禁、同一次镜像运行时证据、同一 image ID 的 FP-07 acceptance 和同一份 Docker archive，不能在批准后重新构建同名制品。
+CI-03 将已经通过 CI-01、CI-02、CI-RT01 与 FP-08 Local 产品验收的确定 `main` 提交，准备为可下载、可复核但**尚未发布**的 Social Wallet Local Integration Release Candidate。候选必须绑定同一份源码、同一次本地门禁、同一次镜像运行时证据、同一 image ID 的 FP-08 acceptance 和同一份 Docker archive，不能在批准后重新构建同名制品。
 
 ## 2. 准入条件
 
@@ -15,7 +15,7 @@ CI-03 将已经通过 CI-01、CI-02、CI-RT01 与 FP-07 Local 产品验收的确
 - 用户输入的完整 source SHA、workflow SHA 和实际 checkout SHA 必须完全相同。
 - 版本必须符合 `social-wallet-vX.Y.Z-rc.N`，且同名 Git tag 尚不存在。
 - checkout 必须干净；基础门禁、宿主运行时和镜像运行时证据必须全部通过。
-- Docker image ID、导出 archive SHA-256、源码 commit/tree、workflow run/attempt、FP-07 acceptance SHA-256 和证据文件哈希必须写入 `ci03.release-candidate.v1`；请求与 CI 证据中的 run/attempt 必须相同。FP-07 acceptance 必须绑定相同 source commit/image ID，并保持产品 promotion/public Wallet API/buyer-side ProviderFee spend 语义未授权。CI-02 上游还必须证明 foundation/runtime producer 的 source commit 和 run/attempt 与同一 checkout/run 一致，并保留必需原始日志。
+- Docker image ID、导出 archive SHA-256、源码 commit/tree、workflow run/attempt、FP-08 acceptance SHA-256 和证据文件哈希必须写入 `ci03.release-candidate.v1`；请求与 CI 证据中的 run/attempt 必须相同。`fp08.social-wallet-acceptance.v1` 必须绑定相同 source commit/image ID，证明账户级写源与买方 Payment/Refund ProviderFee 语义，同时保持产品 promotion/public Wallet API 未授权。旧 FP-07 v1 证据不得被解释为 FP-08 通过。CI-02 上游还必须证明 foundation/runtime producer 的 source commit 和 run/attempt 与同一 checkout/run 一致，并保留必需原始日志。
 - 安装依赖和运行门禁后，受版本控制的文件必须仍无差异；生成的临时证据不允许掩盖源码漂移。
 
 当前私有仓库的 GitHub 套餐尚未提供分支保护能力，因此工作流在该条件改变前会以 `The main ref is not protected` 拒绝候选。不得删除或放宽该断言来制造成功记录。
@@ -27,7 +27,8 @@ CI-03 将已经通过 CI-01、CI-02、CI-RT01 与 FP-07 Local 产品验收的确
 候选只声明：
 
 - Local 账本与集成测试基线；
-- 当前 SQLite Schema 21、WAL 与 Online Backup/restore；
+- 当前 SQLite Schema 22、WAL 与 Online Backup/restore；
+- Local 账户级资金写源与 buyer-side Payment/Refund ProviderFee 单次扣减；
 - 固定 Node/npm/SQLite 运行时；
 - 可加载的不可变 Docker archive；
 - 源码、制品与证据绑定的机器清单。
@@ -40,6 +41,7 @@ CI-03 将已经通过 CI-01、CI-02、CI-RT01 与 FP-07 Local 产品验收的确
 - 真实资金或生产托管；
 - 自动创建 tag、GitHub Release 或 registry publish；
 - 任何 Signer、Provider 或支付执行。
+- 公开 Wallet API 和 Collection 运行时净入账。
 
 ## 4. 状态与批准
 

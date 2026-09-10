@@ -59,9 +59,9 @@ FP-06a 已提供内部 `wallet-read-model.v1`，但它仍是**shadow-only** 读�
 
 FP-06b 增加 `wallet-runtime-view.v1`，只允许 Local、明确 LedgerAccount+币种 scope。目标历史必须先建立机器可校验的 migration plan；`verified` 只表示 source 分类完整、scope/期初条件成立与证据引用存在，不代表证据已被 AI 或机器独立证明。cutover assessment 还要求 shadow matched、无 in-flight reserved/pending、目标对账满足、projection 非 stale/complete，并在激活事务中再次比较 state/wallet/snapshot/projection/generation。
 
-激活后 `read_balance` 使用 `available_spending_capacity`，但 `spend_decision_source=legacy_wallet`：Transaction Core 仍用既有 wallet 进行授权后预留、结算和退款。读模型 stale 或最新 required reconciliation 不再完整 matched 时不会退回旧数值，而是 blocked/null；匹配该账簿的新 reserve 也在 Provider/Adapter 前失败关闭。正规新对账证据可以恢复 active read，不会触发新支付；rollback 通过追加更高 generation 恢复 legacy 读路径，不修改旧 generation 或资金历史。
+激活后 `read_balance` 使用 `available_spending_capacity`。FP-08 Schema 22 同时初始化 `ledger_account_id + currency` 写源，`spend_decision_source=account_wallet`；Transaction Core 仍是授权后预留、结算、退款和买方费用扣减的唯一写者。读模型 stale、账户写源分歧或最新 required reconciliation 不再完整 matched 时不会退回旧数值，而是 blocked/null；匹配该账簿的新 reserve 也在 Provider/Adapter 前失败关闭。正规新对账证据可以恢复 active read，不会触发新支付；账户余额已发生变化后不得回退到 legacy 全局写源。
 
-FP-07 进一步要求 active cutover 在每次读取持续保持 shadow equivalence；legacy `wallet.reserved` 与候选比较时使用 `reserved + pending_outbound` 的等价暴露。若会计事实（例如 buyer-side ProviderFee）已经改变候选可用能力、但 legacy spend-decision wallet 未同步表达该语义，则必须 `wallet_shadow_mismatch` 并停止新 reserve，不能只刷新 projection 后继续使用。当前 buyer-side Payment/Refund ProviderFee 的支出语义未获产品准入。
+FP-07 进一步要求 active cutover 在每次读取持续保持 shadow equivalence；FP-08 将比较对象从全局 legacy wallet 改为对应账户写源，并批准 Local 范围内 buyer-side Payment/Refund ProviderFee 的单次扣减语义。费用导致负 available 时仍保留费用事实，但后续新 reserve 必须停止。Collection 主金额及其 fee 的运行时净入账仍未获产品准入。
 
 ## 5. 生命周期语义
 
