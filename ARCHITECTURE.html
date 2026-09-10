@@ -6,105 +6,19 @@
   <meta name="description" content="BU2.com 系统架构宪法 v1.1：长期领域、一致性、版本、环境隔离、迁移、稳定性与治理原则。">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23073d3b'/%3E%3Ctext x='32' y='39' text-anchor='middle' font-family='Arial' font-size='18' font-weight='700' fill='%23e2bd79'%3EBU2%3C/text%3E%3C/svg%3E">
   <title>BU2 系统架构宪法 v1.1</title>
-  <style>
-    :root {
-      color-scheme: light;
-      --ink: #102a30;
-      --muted: #60777a;
-      --line: #d9e5e3;
-      --paper: #edf3f1;
-      --card: #fffefa;
-      --brand: #087f75;
-      --brand-dark: #073d3b;
-      --brand-deep: #052d2c;
-      --brand-soft: #e3f3ef;
-      --gold: #c99a49;
-      --gold-soft: #f6ecda;
-      --code: #082b30;
-      --shadow: 0 28px 80px rgb(6 45 44 / 10%);
-    }
-    * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
-    body {
-      margin: 0;
-      color: var(--ink);
-      background:
-        radial-gradient(circle at 10% 3%, rgb(8 127 117 / 10%), transparent 25rem),
-        radial-gradient(circle at 94% 28%, rgb(201 154 73 / 9%), transparent 22rem),
-        var(--paper);
-      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-      line-height: 1.75;
-    }
-    .progress { position: fixed; z-index: 20; inset: 0 auto auto 0; width: 0; height: 3px; background: linear-gradient(90deg, var(--gold), #e7c988); box-shadow: 0 0 16px rgb(201 154 73 / 60%); }
-    .shell { display: grid; grid-template-columns: 290px minmax(0, 900px); gap: 44px; max-width: 1280px; margin: 0 auto; padding: 42px 28px 88px; }
-    aside { position: sticky; top: 24px; align-self: start; max-height: calc(100vh - 48px); overflow: auto; padding: 25px 18px 22px; color: white; background: linear-gradient(155deg, var(--brand-deep), var(--brand-dark)); border: 1px solid rgb(255 255 255 / 9%); border-radius: 20px; box-shadow: 0 24px 64px rgb(5 45 44 / 18%); scrollbar-width: thin; scrollbar-color: rgb(255 255 255 / 20%) transparent; }
-    .brand { display: flex; align-items: center; gap: 13px; margin-bottom: 20px; padding: 0 4px 20px; border-bottom: 1px solid rgb(255 255 255 / 12%); }
-    .mark { display: grid; flex: 0 0 auto; place-items: center; width: 46px; height: 46px; border: 1px solid rgb(255 255 255 / 18%); border-radius: 13px; color: var(--brand-deep); background: linear-gradient(145deg, #f4ddb4, var(--gold)); box-shadow: inset 0 1px rgb(255 255 255 / 55%); font-size: 13px; font-weight: 900; letter-spacing: .05em; }
-    .brand strong { display: block; font-size: 15px; letter-spacing: .04em; }
-    .brand small { display: block; margin-top: 1px; color: rgb(232 246 243 / 57%); font-size: 10px; line-height: 1.4; letter-spacing: .05em; }
-    #toc { list-style: none; margin: 0; padding: 0; font-size: 12.5px; }
-    #toc li { margin: 2px 0; }
-    #toc li.sub { padding-left: 14px; }
-    #toc a { display: block; padding: 6px 9px; color: rgb(231 246 243 / 58%); text-decoration: none; border-left: 2px solid transparent; border-radius: 6px; transition: .18s ease; }
-    #toc a:hover { color: white; background: rgb(255 255 255 / 7%); }
-    #toc a.active { color: #f2d9aa; background: rgb(201 154 73 / 12%); border-left-color: var(--gold); }
-    article { position: relative; min-width: 0; overflow: hidden; padding: 62px 72px 76px; background: var(--card); border: 1px solid rgb(255 255 255 / 72%); border-radius: 24px; box-shadow: var(--shadow); }
-    article::before { content: ""; position: absolute; inset: 0 0 auto; height: 7px; background: linear-gradient(90deg, var(--brand-deep), var(--brand), var(--gold)); }
-    h1 { margin: 0 0 16px; max-width: 720px; font-family: Georgia, "Songti SC", "STSong", serif; font-size: clamp(38px, 5vw, 58px); font-weight: 700; line-height: 1.08; letter-spacing: -0.045em; }
-    h1::before { content: "BU2.COM · GOVERNING DOCUMENT"; display: block; margin-bottom: 18px; color: var(--brand); font-family: Inter, ui-sans-serif, sans-serif; font-size: 11px; font-weight: 800; letter-spacing: .18em; }
-    h2 { position: relative; margin: 68px 0 22px; padding: 15px 0 0 18px; color: var(--brand-dark); font-family: Georgia, "Songti SC", "STSong", serif; font-size: 28px; line-height: 1.3; letter-spacing: -0.025em; }
-    h2::before { content: ""; position: absolute; left: 0; top: 19px; width: 4px; height: 24px; background: linear-gradient(var(--gold), var(--brand)); border-radius: 99px; }
-    h3 { margin: 36px 0 12px; color: #163b3e; font-size: 19px; line-height: 1.45; }
-    p, li { font-size: 15.5px; }
-    body > .shell article > p:first-of-type { margin: 0 0 42px; padding: 18px 20px; color: var(--muted); background: linear-gradient(120deg, #f4f9f7, #faf7f0); border: 1px solid var(--line); border-radius: 14px; font-size: 13px; }
-    blockquote { position: relative; margin: 26px 0; padding: 22px 24px 22px 26px; color: #174e4b; background: linear-gradient(115deg, var(--brand-soft), #f7f4ea); border: 1px solid #d6e6df; border-left: 4px solid var(--brand); border-radius: 4px 14px 14px 4px; }
-    blockquote::after { content: "“"; position: absolute; right: 18px; top: -3px; color: rgb(8 127 117 / 10%); font-family: Georgia, serif; font-size: 74px; line-height: 1; }
-    blockquote p { position: relative; z-index: 1; margin: 0; font-size: 16px; font-weight: 650; }
-    pre { overflow: auto; margin: 22px 0; padding: 22px 24px; color: #d9eff0; background: linear-gradient(145deg, var(--code), #0c3638); border: 1px solid rgb(255 255 255 / 7%); border-radius: 15px; box-shadow: inset 0 1px rgb(255 255 255 / 5%); line-height: 1.6; }
-    code { font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; font-size: 13px; }
-    p code, li code { padding: 2px 6px; color: #096f68; background: var(--brand-soft); border-radius: 5px; }
-    table { width: 100%; border-collapse: collapse; margin: 22px 0; font-size: 14px; }
-    th, td { padding: 11px 13px; text-align: left; border: 1px solid var(--line); }
-    th { color: var(--brand-dark); background: #edf5f2; }
-    hr { margin: 50px 0; border: 0; border-top: 1px solid var(--line); }
-    a { color: var(--brand); }
-    .principles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 26px 0; padding: 0; counter-reset: principle; list-style: none; }
-    .principles li { position: relative; min-height: 104px; margin: 0; padding: 43px 18px 16px; background: linear-gradient(145deg, #f7faf8, #f3f0e8); border: 1px solid var(--line); border-radius: 13px; counter-increment: principle; }
-    .principles li::before { content: "0" counter(principle); position: absolute; left: 18px; top: 13px; color: var(--gold); font-size: 11px; font-weight: 900; letter-spacing: .12em; }
-    .final-statement { margin-top: 22px; padding: 28px 30px; color: #eff8f6; background: linear-gradient(145deg, var(--brand-deep), var(--brand-dark)); border-radius: 16px; box-shadow: 0 18px 40px rgb(5 45 44 / 16%); }
-    .final-statement p:first-child { margin-top: 0; }
-    .final-statement blockquote { margin-bottom: 0; color: #f4e5c8; background: rgb(255 255 255 / 7%); border-color: rgb(201 154 73 / 45%); border-left-color: var(--gold); }
-    .constitution-note { margin-top: 34px; padding-top: 20px; color: var(--muted); border-top: 1px solid var(--line); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
-    .back-top { position: fixed; right: 24px; bottom: 24px; z-index: 10; display: grid; place-items: center; width: 42px; height: 42px; color: white; background: var(--brand-dark); border: 1px solid rgb(255 255 255 / 18%); border-radius: 50%; box-shadow: 0 12px 28px rgb(5 45 44 / 22%); text-decoration: none; opacity: 0; transform: translateY(8px); pointer-events: none; transition: .2s ease; }
-    .back-top.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
-    .back-top:hover { background: var(--brand); }
-    @media (max-width: 900px) {
-      .shell { display: block; padding: 18px 12px 48px; }
-      aside { position: static; max-height: none; margin: 0 4px 20px; padding: 18px; }
-      #toc { display: none; }
-      article { padding: 34px 22px 48px; border-radius: 16px; }
-      h2 { margin-top: 48px; }
-      .principles { grid-template-columns: 1fr; }
-      .back-top { right: 14px; bottom: 14px; }
-    }
-    @media print {
-      body { background: white; }
-      .shell { display: block; max-width: none; padding: 0; }
-      aside, .progress, .back-top { display: none; }
-      article { padding: 0; border: 0; box-shadow: none; }
-      article::before { display: none; }
-      h2, h3 { break-after: avoid; }
-      pre, blockquote { break-inside: avoid; }
-      .principles { display: block; }
-      .principles li { min-height: 0; margin: 0 0 8px; padding: 10px 14px 10px 46px; break-inside: avoid; }
-    }
-  </style>
+  <link rel="stylesheet" href="docs-system.css">
 </head>
-<body>
+<body class="doc-page architecture-page">
   <div class="progress" aria-hidden="true"></div>
   <div class="shell">
     <aside aria-label="文档目录">
       <div class="brand"><span class="mark">BU2</span><div><strong>架构宪法</strong><small>Architecture Constitution v1.1</small></div></div>
+      <div class="doc-switcher" aria-label="治理文档快速切换">
+        <a href="PROJECT.html">Project</a>
+        <a href="ARCHITECTURE.html" aria-current="page">Architecture</a>
+        <a href="GOVERNANCE.html">Governance</a>
+        <a href="CHANGELOG.html">Changelog</a>
+      </div>
       <ol id="toc"></ol>
     </aside>
     <article>

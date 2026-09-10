@@ -6,84 +6,19 @@
   <meta name="description" content="BU2.com 项目治理制度：权威层级、责任、决策、变更、发布、例外、事故与退役规范。">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23073d3b'/%3E%3Ctext x='32' y='39' text-anchor='middle' font-family='Arial' font-size='18' font-weight='700' fill='%23e2bd79'%3EBU2%3C/text%3E%3C/svg%3E">
   <title>BU2 项目治理制度</title>
-  <style>
-    :root { color-scheme: light; --ink:#102a30; --muted:#62777a; --line:#d8e5e2; --paper:#edf3f1; --card:#fffefa; --brand:#087f75; --deep:#052d2c; --dark:#073d3b; --soft:#e3f3ef; --gold:#c99a49; --gold-soft:#f6ecda; --blue-soft:#e8f1f5; --danger:#9b4339; --danger-soft:#f8e8e5; --shadow:0 28px 80px rgb(6 45 44 / 10%); }
-    * { box-sizing:border-box; }
-    html { scroll-behavior:smooth; }
-    body { margin:0; color:var(--ink); background:radial-gradient(circle at 7% 3%,rgb(8 127 117 / 12%),transparent 28rem),radial-gradient(circle at 95% 26%,rgb(201 154 73 / 10%),transparent 26rem),var(--paper); font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; line-height:1.72; }
-    a { color:var(--brand); }
-    .progress { position:fixed; z-index:30; inset:0 auto auto 0; width:0; height:3px; background:linear-gradient(90deg,var(--gold),#e7c988); }
-    .shell { display:grid; grid-template-columns:286px minmax(0,920px); gap:44px; max-width:1280px; margin:0 auto; padding:42px 28px 88px; }
-    aside { position:sticky; top:24px; align-self:start; max-height:calc(100vh - 48px); overflow:auto; color:white; background:linear-gradient(155deg,var(--deep),var(--dark)); border-radius:20px; box-shadow:0 24px 64px rgb(5 45 44 / 18%); }
-    .identity { display:flex; align-items:center; gap:13px; padding:25px 22px 20px; border-bottom:1px solid rgb(255 255 255 / 10%); }
-    .mark { display:grid; place-items:center; width:46px; height:46px; color:var(--deep); background:linear-gradient(145deg,#f4ddb4,var(--gold)); border-radius:13px; font-size:13px; font-weight:900; }
-    .identity strong { display:block; font-size:15px; }
-    .identity small { display:block; margin-top:2px; color:rgb(232 246 243 / 58%); font-size:10px; letter-spacing:.05em; }
-    nav { padding:16px 18px 18px; }
-    nav a { display:block; margin:2px 0; padding:7px 9px; color:rgb(231 246 243 / 62%); border-left:2px solid transparent; border-radius:6px; font-size:12.5px; text-decoration:none; }
-    nav a:hover,nav a.active { color:#f2d9aa; background:rgb(201 154 73 / 12%); border-left-color:var(--gold); }
-    .aside-note { margin:0 18px 20px; padding:14px 15px; color:rgb(238 248 246 / 78%); background:rgb(255 255 255 / 6%); border:1px solid rgb(255 255 255 / 8%); border-radius:12px; font-size:11.5px; }
-    main { min-width:0; }
-    .hero { position:relative; overflow:hidden; padding:62px 66px 54px; color:white; background:linear-gradient(145deg,var(--deep),#0a4a46); border-radius:24px; box-shadow:var(--shadow); }
-    .hero::after { content:""; position:absolute; right:-90px; top:-110px; width:360px; height:360px; background:radial-gradient(circle,rgb(201 154 73 / 25%),transparent 67%); }
-    .eyebrow { position:relative; z-index:1; margin:0 0 17px; color:#e7ca91; font-size:11px; font-weight:850; letter-spacing:.18em; }
-    h1 { position:relative; z-index:1; margin:0; font-family:Georgia,"Songti SC","STSong",serif; font-size:clamp(39px,5vw,59px); line-height:1.08; letter-spacing:-.045em; }
-    .lead { position:relative; z-index:1; max-width:720px; margin:21px 0 0; color:rgb(238 248 246 / 74%); font-size:15.5px; }
-    .meta { position:relative; z-index:1; display:flex; flex-wrap:wrap; gap:9px; margin-top:29px; }
-    .meta span { padding:6px 10px; color:#f2e3c8; background:rgb(255 255 255 / 8%); border:1px solid rgb(255 255 255 / 10%); border-radius:99px; font-size:11px; }
-    .manifesto { margin:24px 0; padding:27px 31px; background:linear-gradient(125deg,var(--card),#f7f3e9); border:1px solid var(--line); border-radius:18px; box-shadow:0 16px 44px rgb(6 45 44 / 6%); }
-    .manifesto b { color:var(--brand); font-size:10px; letter-spacing:.12em; text-transform:uppercase; }
-    .manifesto p { margin:9px 0 0; color:var(--dark); font-family:Georgia,"Songti SC",serif; font-size:20px; font-weight:700; }
-    section { scroll-margin-top:24px; }
-    .section { margin-top:22px; padding:34px 38px; background:var(--card); border:1px solid var(--line); border-radius:19px; box-shadow:0 14px 38px rgb(6 45 44 / 5%); }
-    h2 { margin:0 0 18px; color:var(--dark); font-family:Georgia,"Songti SC","STSong",serif; font-size:28px; letter-spacing:-.025em; }
-    h3 { margin:25px 0 9px; color:#173c3f; font-size:17px; }
-    p,li { font-size:14px; }
-    .authority { display:grid; gap:9px; margin-top:18px; counter-reset:level; }
-    .authority div { display:grid; grid-template-columns:48px 175px 1fr; gap:14px; align-items:center; padding:13px 15px; background:#f5f9f7; border:1px solid var(--line); border-radius:11px; counter-increment:level; }
-    .authority div::before { content:"0" counter(level); color:var(--gold); font-size:10px; font-weight:900; letter-spacing:.1em; }
-    .authority b { color:var(--dark); font-size:13px; }
-    .authority span { color:var(--muted); font-size:12.5px; }
-    .lifecycle { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin-top:20px; }
-    .stage { min-height:140px; padding:16px; background:linear-gradient(145deg,#f5f9f7,#f7f3ea); border:1px solid var(--line); border-radius:12px; }
-    .stage small { color:var(--gold); font-weight:900; letter-spacing:.1em; }
-    .stage b { display:block; margin:7px 0 5px; color:var(--brand); }
-    .stage p { margin:0; color:var(--muted); font-size:12px; }
-    .role-table,.gate-table { width:100%; margin-top:18px; border-collapse:collapse; font-size:12.5px; }
-    th,td { padding:10px 11px; text-align:left; vertical-align:top; border:1px solid var(--line); }
-    th { color:var(--dark); background:#edf5f2; }
-    code { padding:2px 6px; color:#096f68; background:var(--soft); border-radius:5px; font:12px "SFMono-Regular",Consolas,monospace; }
-    .gates { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin-top:18px; }
-    .gate { padding:18px; border:1px solid var(--line); border-radius:13px; }
-    .gate.ready { background:var(--soft); }
-    .gate.done { background:var(--gold-soft); }
-    .gate h3 { margin-top:0; }
-    .gate ul { margin-bottom:0; padding-left:19px; }
-    .registers { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin-top:18px; }
-    .register { padding:18px; background:#f6f9f7; border:1px solid var(--line); border-radius:13px; }
-    .register h3 { margin-top:0; }
-    .register p { margin-bottom:8px; color:var(--muted); font-size:12.5px; }
-    .register a { font-size:12px; font-weight:700; }
-    .inline-status { display:inline-flex; padding:5px 9px; border-radius:999px; color:var(--brand); background:var(--brand-soft); font-size:12px; font-weight:800; }
-    .warning { margin-top:18px; padding:15px 17px; color:#805d23; background:var(--gold-soft); border-left:4px solid var(--gold); border-radius:4px 10px 10px 4px; font-size:12.5px; }
-    .danger { color:var(--danger); background:var(--danger-soft); }
-    .flow { overflow:auto; margin:18px 0 0; padding:20px 22px; color:#d9efec; background:linear-gradient(145deg,#082b30,#0c3638); border-radius:14px; white-space:pre; font:12px/1.65 "SFMono-Regular",Consolas,monospace; }
-    .cadence { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:11px; margin-top:18px; }
-    .cadence div { padding:17px; background:#f6f9f7; border:1px solid var(--line); border-radius:12px; }
-    .cadence b { color:var(--brand); }
-    .cadence p { margin:5px 0 0; color:var(--muted); font-size:12px; }
-    footer { margin-top:28px; padding:20px 4px; color:var(--muted); border-top:1px solid var(--line); font-size:11px; letter-spacing:.05em; }
-    .back-top { position:fixed; right:24px; bottom:24px; z-index:20; display:grid; place-items:center; width:42px; height:42px; color:white; background:var(--dark); border-radius:50%; box-shadow:0 12px 28px rgb(5 45 44 / 22%); text-decoration:none; opacity:0; transform:translateY(8px); pointer-events:none; transition:.2s ease; }
-    .back-top.visible { opacity:1; transform:none; pointer-events:auto; }
-    @media(max-width:900px){ .shell{display:block;padding:18px 12px 48px}.hero{padding:39px 24px 35px;border-radius:17px}aside{position:static;max-height:none;margin:0 4px 20px}nav,.aside-note{display:none}.section,.manifesto{padding:24px 21px}.lifecycle{grid-template-columns:repeat(2,minmax(0,1fr))}.gates,.registers,.cadence{grid-template-columns:1fr}.authority div{grid-template-columns:38px 1fr}.authority span{grid-column:2}.role-table,.gate-table{display:block;overflow-x:auto}.back-top{right:14px;bottom:14px} }
-    @media print{ body{background:white}.shell{display:block;max-width:none;padding:0}aside,.progress,.back-top{display:none}.hero{color:var(--ink);background:white;border:2px solid var(--dark);box-shadow:none}.eyebrow,.lead{color:var(--ink)}.section,.manifesto{box-shadow:none;break-inside:avoid} }
-  </style>
+  <link rel="stylesheet" href="docs-system.css">
 </head>
-<body>
+<body class="doc-page governance-page">
   <div class="progress" aria-hidden="true"></div>
   <div class="shell">
     <aside>
       <div class="identity"><span class="mark">BU2</span><div><strong>项目治理制度</strong><small>GOVERNANCE · V1.1</small></div></div>
+      <div class="doc-switcher" aria-label="治理文档快速切换">
+        <a href="PROJECT.html">Project</a>
+        <a href="ARCHITECTURE.html">Architecture</a>
+        <a href="GOVERNANCE.html" aria-current="page">Governance</a>
+        <a href="CHANGELOG.html">Changelog</a>
+      </div>
       <nav aria-label="页面目录"><a href="#authority">权威层级</a><a href="#lifecycle">项目生命周期</a><a href="#roles">责任与批准</a><a href="#gates">Ready / Done</a><a href="#decisions">决策与例外</a><a href="#release">发布制度</a><a href="#incident">事故与恢复</a><a href="#retirement">退役与债务</a><a href="#cadence">治理节奏</a></nav>
       <div class="aside-note">AI 可以起草、实现和验证，但不能成为 R2/R3 变更的唯一批准者。</div>
     </aside>
