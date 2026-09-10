@@ -19,8 +19,8 @@ FP-05 已把新业务资金事实绑定到可信 LedgerAccount，FP-06a 已提�
 4. migration plan 的 `verified` 只表示机器检查“当前 legacy source 集合完整分类、scope/期初/时间边界一致且证据引用存在”；它**不等于** R2/R3 人类批准，也不证明证据内容真实性。source 清单指纹与 checkpoint 内容指纹分别保护范围和期初快照，后续漂移使计划 stale。
 5. cutover assessment 必须重新取得当前 WalletReadModel/shadow，并要求 active account、非 stale、target completeness complete、candidate available、无 in-flight reserved/pending 或持久化未知/已确认未过账 Attempt、legacy shadow matched；目标存在 settled/refunded/posted/fee source 时，同一最新相关 reconciliation 必须完整且唯一覆盖全部 source 并 matched。blocked assessment 也保留为追加式失败证据。
 6. 激活在同一个 SQLite `BEGIN IMMEDIATE` 内重新验证 migration-plan fingerprint、`state_revision`、legacy wallet 快照、fresh assessment snapshot hash、活动 projection identity/source hash/content hash 和 generation CAS。任一漂移都拒绝激活。
-7. `wallet-runtime-view.v1` 在 cutover 后选择 `available_spending_capacity` 作为与旧 `wallet.available` 对应的运行时读值，同时保留完整 `book_balance`/reserved/pending 模型。该读值不成为支付授权：`spend_decision_source` 仍固定为 `legacy_wallet`。
-8. cutover 健康时现有 Transaction Core 仍按原 wallet 规则 reserve/settle/refund；cutover 变 stale/unresolved、Domain revision 过期或 Attempt 未完成时不静默 fallback，而是在新 reserve 调用 Adapter 前失败关闭。该 guard 只作用 Local，不改变其他环境原有授权/执行规则。已存在或已确认的资金事实仍按原恢复路径完成。
+7. `wallet-runtime-view.v1` 在 cutover 后选择 `available_spending_capacity` 作为与旧 `wallet.available` 对应的运行时读值，同时保留完整 `book_balance`/reserved/pending 模型。shadow 对 legacy reserved 的等价比较使用 candidate `reserved + pending_outbound`。该读值不成为支付授权：`spend_decision_source` 仍固定为 `legacy_wallet`。
+8. cutover 健康时现有 Transaction Core 仍按原 wallet 规则 reserve/settle/refund；每次 runtime read 持续重验 shadow equivalence。cutover 变 stale/unresolved、Domain revision 过期、Attempt/settlement Adapter operation 未完成或 accounting candidate 与 legacy spend source 分叉时不静默 fallback，而是在新 reserve 调用 Adapter 前失败关闭。该 guard 只作用 Local，不改变其他环境原有授权/执行规则。已存在或已确认的资金事实仍按原恢复路径完成。
 9. rollback 不修改旧 generation；它追加一个新的 `legacy_wallet` generation。恢复 projection 后若要再次 cutover，必须重新 assessment 并追加下一 generation。
 
 ## 事务与数据所有权

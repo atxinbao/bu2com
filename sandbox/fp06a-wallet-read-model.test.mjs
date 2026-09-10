@@ -72,7 +72,7 @@ function freshContext(suffix = "primary") {
   postJournal(ledger, { suffix: 1, ledgerAccountId: account.id, account: `asset.cash:${account.owner_account_id}` });
   const sandbox = new Bu2Sandbox({
     ledger,
-    initialWallet: { id: `wal_fp06a_${suffix}`, available: 850, reserved: 100, currency: "CNY" },
+    initialWallet: { id: `wal_fp06a_${suffix}`, available: 850, reserved: 150, currency: "CNY" },
   });
   const projection = sandbox.refreshLedgerAccountProjection({
     ledger_account_id: account.id,

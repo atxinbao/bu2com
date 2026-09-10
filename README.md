@@ -9,8 +9,8 @@ BU2.com 是 Agent 的 AI 收付平台。它嵌入 ChatGPT、Codex、Claude 和�
 | 项目 | 当前基线 |
 | --- | --- |
 | 项目阶段 | Phase 0 · local execution / Sandbox architecture |
-| 当前工程关卡 | FP-06b · Local target-ledger migration/read cutover；CI-03 候选仍受私有仓库分支保护套餐阻塞 |
-| 上层产品方向 | Social Wallet · Local 读路径可受控切换；正式产品资金写仍未切换 |
+| 当前工程关卡 | FP-07 · Local Social Wallet 产品接入验收与 RC 证据绑定；actual protected-main RC 仍受私有仓库分支保护套餐阻塞 |
+| 上层产品方向 | Social Wallet · Local 两账户产品验收机制已建立；真正多账户资金写、公开 Wallet API 与 buyer-side ProviderFee spend 语义仍未切换 |
 | 交易领域基线 | Product v0.3 · Transaction-first（继续约束授权/预留/交付/结算语义） |
 | API 契约 | Agent Payment API v0.3.0 |
 | Reference Server | v0.17 · Node.js + SQLite WAL + 持久身份、钱包绑定、版本化 Mandate 与有界 ExecutionSession |
@@ -25,9 +25,9 @@ BU2.com 是 Agent 的 AI 收付平台。它嵌入 ChatGPT、Codex、Claude 和�
 
 当前代码已经形成可运行的 Agent 收付闭环，并已发布内部账本基线 `ledger-rc-local-v0.1`；其批准范围是 Local/Simulation，既有 Release 名称中的 Sandbox 不代表已获得 Sandbox/Testnet 双向结算、Hosted、生产支付或法律合规结论。ENV-02–06 已由 PR #19–#23 合并；ENV-07A 为 Hosted Sandbox 增加专用启动门槛、文件型 Secret、不可变候选、独立激活与证据验证器，但尚未创建托管 Sandbox 或 Live。
 
-当前进入 **Ledger Foundation 产品接入收口**：Schema 20 已把可信 FundingSource/ReceivingTarget → LedgerAccount 归属接入业务分录，FP-06a 建立 WalletReadModel/shadow，FP-06b Schema 21 再增加 Local-only migration plan、cutover assessment 与 append-only route generation。经过 verified/current plan、matched shadow/reconciliation 与多重 CAS 后，Local runtime read 可以选择 WalletReadModel `available_spending_capacity`；但资金预留/结算/退款和实际支出判断仍由 legacy Transaction Core wallet 所有。stale/incomplete 时不静默 fallback，并阻止新的 reserve 在 Adapter 前扩大状态。该能力不是正式社交钱包 API，也不授权生产数据、Sandbox/Testnet、Hosted 或 Live/Mainnet。当前能力入口见 [Ledger Foundation 当前能力与产品接入基线](docs/03-technical/LEDGER_FOUNDATION_OVERVIEW.md)，产品边界见 [社交钱包与 Ledger Foundation 接入边界](docs/02-product/SOCIAL_WALLET_INTEGRATION_BOUNDARY.md)。
+当前进入 **Ledger Foundation 产品接入收口**：Schema 20 已把可信 FundingSource/ReceivingTarget → LedgerAccount 归属接入业务分录，FP-06a 建立 WalletReadModel/shadow，FP-06b Schema 21 增加 Local-only migration/cutover，FP-07 再用两个独立 Account / 四个 Agent 的机器验收组合付款、收款、退款、seller-side ProviderFee、unknown 重启恢复、对账、projection 重建、历史 replay 与 Online Backup，并把该 acceptance 绑定到新的 Social Wallet Local RC 机制。active read 持续要求 accounting candidate 与 legacy spend source 匹配；资金预留/结算/退款和实际支出判断仍由 legacy Transaction Core wallet 所有。buyer-side ProviderFee 支出语义、真正多账户资金写和公开 Wallet API 仍未批准。该能力不授权生产数据、Sandbox/Testnet、Hosted 或 Live/Mainnet。当前能力入口见 [Ledger Foundation 当前能力与产品接入基线](docs/03-technical/LEDGER_FOUNDATION_OVERVIEW.md)，产品边界见 [FP-07 Social Wallet baseline](docs/02-product/FP07_SOCIAL_WALLET_BASELINE_CONTRACT.md)。
 
-F06a/F06b/F07 建立主体、资金绑定与 Financial Posting，F08～F16b 建立授权、执行、收付、恢复和本地/Hosted 准入基础；LA-01～LA-06a 建立退款、Journal/Posting、期初/更正、投影、重放、对账和机器门禁；FP-05 Schema 20 把新业务事实接到可信 LedgerAccount，FP-06a 建立 WalletReadModel/shadow，FP-06b Schema 21 增加 Local-only 历史分类/期初计划、assessment 与 append-only runtime read generation；RT-01 固定 Node/SQLite/WAL/备份运行时证据。以上仍不启用生产数据迁移、真实 Hosted/Base Sepolia 双向付款或 Live/Mainnet；LA-06b 外部双向证据与 E3.1 继续独立，FP-07 才进行社交钱包产品接入基线与新 RC 验收。
+F06a/F06b/F07 建立主体、资金绑定与 Financial Posting，F08～F16b 建立授权、执行、收付、恢复和本地/Hosted 准入基础；LA-01～LA-06a 建立退款、Journal/Posting、期初/更正、投影、重放、对账和机器门禁；FP-05 Schema 20 把新业务事实接到可信 LedgerAccount，FP-06a/06b 建立 WalletReadModel 与 Schema 21 Local cutover，FP-07 建立 Social Wallet Local 产品验收与 source/image-bound RC 机制；RT-01 固定 Node/SQLite/WAL/备份运行时证据。以上仍不启用生产数据迁移、真实 Hosted/Base Sepolia 双向付款或 Live/Mainnet；LA-06b 外部双向证据与 E3.1 继续独立，实际新 RC 还受 protected-main 准入条件约束。
 
 [Phase 0 Epic 1：External Agent Transaction Integration & Reliability](docs/03-technical/PHASE0_EPIC1_EXTERNAL_AGENT_INTEGRATION.md) 与 [Phase 0 Epic 2：Developer Integration Scale](docs/03-technical/PHASE0_EPIC2_DEVELOPER_INTEGRATION_SCALE.md) 已完成。Transaction Trust Gate 1–3 已经 PR #15–#17 合并，F01/ENV-01 至 ENV-06 分别由 PR #18–#23 批准。当前进入 ENV-07：ENV-07A 本地准入与证据契约、F16b Hosted foundation qualification 已实现，ENV-07B 的部署单元、外部验收 Schema 与 Runbook 已准备，但公网部署、真实 Base Sepolia 双向收付和边缘 E2E 仍未执行。CI-01、CI-02、CI-RT01 与 CI-03 已建立本地门禁、源码证据绑定、镜像运行时验收和有边界候选准备；CI-04 增加定时真实模块韧性、容量、迁移恢复和锁定依赖检查。当前私有仓库套餐尚不能提供所需分支保护，因此 CI-03 按契约失败关闭。[Phase 0 Epic 3](docs/03-technical/PHASE0_EPIC3_EXTERNAL_PILOT_EVIDENCE.md) 的 E3.1 Pilot Manifest 继续暂停，LA-06b 仍需独立的真实 Sandbox/Testnet 双向证据。
 

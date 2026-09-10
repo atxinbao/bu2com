@@ -124,6 +124,10 @@ export function compareWalletShadow({ model, legacyWallet }) {
   const legacyReserved = legacyWallet
     ? { value: legacyWallet.reserved, currency: legacyWallet.currency }
     : null;
+  const candidateLegacyReserved = {
+    value: safeAdd(model.reserved.value, model.pending_outbound.value, "wallet_shadow_reserved_overflow"),
+    currency: model.accounting_currency,
+  };
   const common = {
     schema_version: WALLET_SHADOW_SCHEMA_VERSION,
     mode: "shadow_only",
@@ -132,6 +136,8 @@ export function compareWalletShadow({ model, legacyWallet }) {
     candidate_available: model.available_spending_capacity.amount,
     legacy_available: legacyAvailable,
     candidate_reserved: model.reserved,
+    candidate_pending_outbound: model.pending_outbound,
+    candidate_legacy_reserved_equivalent: candidateLegacyReserved,
     legacy_reserved: legacyReserved,
     warnings: [...new Set(warnings)].sort(),
     decision_use: "forbidden",
@@ -157,7 +163,7 @@ export function compareWalletShadow({ model, legacyWallet }) {
     };
   }
   const availableDelta = safeAdd(candidateAvailable.value, -legacyAvailable.value, "wallet_shadow_delta_overflow");
-  const reservedDelta = safeAdd(model.reserved.value, -legacyReserved.value, "wallet_shadow_delta_overflow");
+  const reservedDelta = safeAdd(candidateLegacyReserved.value, -legacyReserved.value, "wallet_shadow_delta_overflow");
   return {
     ...common,
     status: availableDelta === 0 && reservedDelta === 0 ? "matched" : "difference",

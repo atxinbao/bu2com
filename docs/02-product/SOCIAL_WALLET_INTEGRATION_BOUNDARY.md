@@ -61,6 +61,8 @@ FP-06b 增加 `wallet-runtime-view.v1`，只允许 Local、明确 LedgerAccount+
 
 激活后 `read_balance` 使用 `available_spending_capacity`，但 `spend_decision_source=legacy_wallet`：Transaction Core 仍用既有 wallet 进行授权后预留、结算和退款。读模型 stale 时不会退回旧数值，而是 blocked/null；匹配该账簿的新 reserve 也在 Provider/Adapter 前失败关闭。rollback 通过追加更高 generation 恢复 legacy 读路径，不修改旧 generation 或资金历史。
 
+FP-07 进一步要求 active cutover 在每次读取持续保持 shadow equivalence；legacy `wallet.reserved` 与候选比较时使用 `reserved + pending_outbound` 的等价暴露。若会计事实（例如 buyer-side ProviderFee）已经改变候选可用能力、但 legacy spend-decision wallet 未同步表达该语义，则必须 `wallet_shadow_mismatch` 并停止新 reserve，不能只刷新 projection 后继续使用。当前 buyer-side Payment/Refund ProviderFee 的支出语义未获产品准入。
+
 ## 5. 生命周期语义
 
 账户暂停的目标是阻止新的资金权限扩大，不是抹掉历史。FP-05 已按以下规则分离新执行与历史/恢复：
@@ -98,6 +100,8 @@ FP-05 已把 active 校验放在新资金活动的可信 binding 解析处；最
 - 目标产品账簿的未绑定、不平衡或未知事实不能被过滤掉；
 - 无关旧 Demo 数据可以隔离只读，不要求为了产品开发先全量迁移；
 - LA-06b 如果尚未执行，必须继续标记 `not_executed`，不得用 Local 结果替代。
+
+FP-07 的机器化实现与 RC 边界见 [`FP07_SOCIAL_WALLET_BASELINE_CONTRACT.md`](FP07_SOCIAL_WALLET_BASELINE_CONTRACT.md)。
 
 ## 7. 三层准入
 

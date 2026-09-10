@@ -15,7 +15,7 @@ const checkpointInput = {
   funding_source_id: "fund_la05b_source",
   environment: "local",
   asset: "CNY",
-  network: "local_simulation",
+  network: null,
   amount: { value: 1_000, currency: "CNY" },
   effective_at: "2026-01-01T00:00:00.000Z",
   source_reference: "migration-la05b-opening-001",

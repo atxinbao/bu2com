@@ -48,7 +48,7 @@ Simulation 不是对外 Sandbox。CI 成功、代码已合并或存在 Live 配�
 | 历史重放/恢复 | 只读重放、备份追加事实追平、缺口报告；FP-06b 支持 fully-bound/scoped-exclusion/reconciled-opening 迁移计划及追加 rollback generation | 实际生产数据迁移与外部环境验证 | Local 隔离迁移/恢复证据 |
 | 收款/付款/退款/费用 | Local/Simulation 业务与故障路径、Attempt/对账能力；新格式业务分录已从可信 wallet binding 解析到账簿账户；FP-06a 将 reserved/pending 与账簿余额分开读取 | 历史范围迁移、正式产品 cutover 与真实 Sandbox 证据 | 不扩张到未批准通道 |
 | CI | main `2cb8b125…` 的 `BU2 CI` run `34396290376` 已完成且 success | FP-02 的证据消费者收口和仓库合并门禁 | 回归证据；**不是资金授权** |
-| 内部 Release | `ledger-rc-local-v0.1` 保留 | 新产品接入基线 RC 尚未生成 | 仅原批准范围 |
+| 内部 Release | `ledger-rc-local-v0.1` 保留；FP-07 增加 Social Wallet Local RC 准备机制与 acceptance 绑定 | protected-main 条件满足后的实际新 RC artifact、独立人类批准 | 新候选仍 `prepared_not_released`，仅 Local/Simulation |
 
 ### v0.1 与当前 main 的边界
 

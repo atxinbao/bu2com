@@ -1,6 +1,6 @@
 # CI-03 Ledger Release Candidate 技术说明
 
-更新日期：2026-09-10
+更新日期：2026-09-11
 维护者：Codex
 
 ## 工作流
@@ -42,6 +42,7 @@ Protected main + exact source SHA
 | `release-request.json` | 受保护 main 与输入 SHA 准入证据 |
 | `ci-evidence.json` | CI-02 源码与基础门禁绑定 |
 | `runtime-image-assurance.json` | CI-RT01 镜像内运行时证据 |
+| `social-wallet-acceptance.json` | FP-07 两 Account / 四 Agent 的 Local 产品接入证据，绑定同一 source/image |
 | 其他 JSON/stderr | 原始基础与运行时证据 |
 
 ## 当前执行限制
@@ -51,8 +52,8 @@ Protected main + exact source SHA
 ```bash
 gh workflow run ledger-release-candidate.yml \
   --ref main \
-  -f candidate_version=ledger-v0.1.0-rc.1 \
+  -f candidate_version=social-wallet-v0.1.0-rc.1 \
   -f source_commit=<完整 main SHA>
 ```
 
-候选成功后仍停在 artifact。任何后续晋级都必须验证相同 image/archive/manifest hash 并取得独立批准；不得下载源码后重新 build。
+候选成功后仍停在 artifact。manifest 同时绑定 FP-07 acceptance 与历史 `ledger-rc-local-v0.1 @ 005b3949…`；任何后续晋级都必须验证相同 image/archive/manifest/acceptance hash 并取得独立批准，不得下载源码后重新 build，也不得移动旧标签。
