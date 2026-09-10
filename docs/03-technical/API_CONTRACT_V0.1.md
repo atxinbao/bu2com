@@ -232,7 +232,7 @@ Webhook 使用事件 ID 去重；接收方应按至少一次投递处理，不�
 
 - `/v1` 冻结资源名称、金额模型、状态语义和错误外壳。
 - Phase 0 冻结同时覆盖 Transaction 列表分页、`X-Request-Id`、`X-Trace-Id`、运行时校验与 Receipt verify 响应。
-- Access Contract v1 已覆盖环境绑定 API key、权限、claims、访问审计、Sandbox 租户重置与脱敏支持包；正式凭据签发、托管 edge 和 secret manager 仍属于部署准入，当前 Reference Server 不构成公开生产支付服务。
+- Access Contract v1.1 已覆盖环境绑定 API key、权限、claims、访问审计、Sandbox 租户重置、脱敏支持包与认证账户钱包读取；正式凭据签发、托管 edge 和 secret manager 仍属于部署准入，当前 Reference Server 不构成公开生产支付服务。
 - x402、AP2、银行卡或稳定币只能作为 Adapter，不改变核心资源。
 - P0 不承诺真实托管、换汇、跨链、收益或开放市场。
 
@@ -278,3 +278,12 @@ Webhook 使用事件 ID 去重；接收方应按至少一次投递处理，不�
 - 没有期初检查点、财务事件缺少 Posting 或 Posting 缺少 LedgerEvent 时返回 `incomplete` 与稳定缺口码，不伪造历史分录。
 - `catchUpLedgerFromBackup()` 接受经验证的 `la05b.v1` replay evidence，识别备份后的追加事件/Posting；基线事实缺失或漂移时返回 `blocked`。
 - 重放和追平固定 `automatic_provider_replay=false`，不自动写回恢复库、Wallet、Transaction、Posting 或 Receipt。
+
+## 17. Public Wallet API
+
+- `GET /v1/accounts/{account_id}/wallets` 需要 Access Contract v1.1 的 `wallets:read`。
+- 调用方只提供业务 Account ID；服务端从认证 tenant/account claims 解析 LedgerAccount，拒绝任意查询参数和调用方选择 `ledger_account_id`。
+- 响应只包含已经初始化账户钱包的 scope；未初始化或仍使用全局 legacy wallet 的账簿不会被包装成账户余额。
+- 健康状态返回整数最小单位的 `available / reserved` 与 `balance_source=account_wallet`。
+- cutover、projection、reconciliation、shadow 或 Provider Attempt 不健康时返回 `blocked`、null 金额和稳定 blocker，固定 `fallback_performed=false`。
+- 当前只验收 Local/Simulation；钱包写入、Collection 净入账、Hosted、Sandbox/Testnet、Live/Mainnet 与真实资金保持独立关闭。

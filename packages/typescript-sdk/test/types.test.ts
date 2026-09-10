@@ -2,6 +2,7 @@ import {
   Bu2Client,
   type CreatePaymentIntent,
   type CreateQuote,
+  type AccountWallet,
   type TransactionListQuery,
 } from "../src/index.js";
 
@@ -33,6 +34,27 @@ const query: TransactionListQuery = { limit: 20 };
 void client.createQuote(quote, { idempotencyKey: "types-quote-key" });
 void client.createPaymentIntent(intent, { idempotencyKey: "types-intent-key" });
 void client.listTransactions(query);
+void client.listAccountWallets("acct_types");
+
+const wallet: AccountWallet = {
+  schema_version: "wallet.v1",
+  account_id: "acct_types",
+  ledger_account_id: "lga_types",
+  book_id: "book_primary",
+  asset: "CNY",
+  network: null,
+  currency: "CNY",
+  account_status: "active",
+  status: "active",
+  available: { value: 100, currency: "CNY" },
+  reserved: { value: 0, currency: "CNY" },
+  balance_source: "account_wallet",
+  read_mode: "ledger_projection",
+  cutover_generation: 1,
+  blockers: [],
+  fallback_performed: false,
+};
+void wallet;
 
 // @ts-expect-error 写操作必须显式提供幂等键。
 void client.createQuote(quote, {});

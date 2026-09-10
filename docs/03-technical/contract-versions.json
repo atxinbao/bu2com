@@ -8,7 +8,7 @@
   "hosted_sandbox_evidence": "1.0",
   "environment_contract": "1.0",
   "mcp_tools": "0.3.0",
-  "access_contract": "1.0",
+  "access_contract": "1.1",
   "receipt_current": "0.3",
   "receipt_supported": ["0.2", "0.3"]
 }

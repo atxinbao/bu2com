@@ -22,7 +22,7 @@ function environmentResponse(environment = "sandbox", executionStatus = "executi
     execution_backend: sandbox ? "x402" : "simulated",
     api_contract_version: "0.3.0",
     mcp_contract_versions: ["0.3.0"],
-    access_contract_version: "1.0",
+    access_contract_version: "1.1",
     access_mode: environment === "local" ? "development_open" : "authenticated",
     receipt_schema_versions: ["0.2", "0.3"],
     execution_status: executionStatus,
@@ -152,6 +152,48 @@ test("external SDK sends credentials only after public preflight and never to pu
     requests.every((request) => request.redirect === "error"),
     true,
   );
+});
+
+test("SDK maps authenticated account wallet reads without exposing ledger-account selection", async () => {
+  let requestSeen;
+  const client = new Bu2Client({
+    baseUrl: "https://sandbox.example.test/v1",
+    environment: "sandbox",
+    apiKey: TEST_API_KEY,
+    fetch: async (request) => {
+      requestSeen = request;
+      return Response.json({
+        data: [
+          {
+            schema_version: "wallet.v1",
+            account_id: "acct_sdk_wallet",
+            ledger_account_id: "lga_sdk_wallet",
+            book_id: "book_primary",
+            asset: "USDC",
+            network: "eip155:84532",
+            currency: "USD",
+            account_status: "active",
+            status: "active",
+            available: { value: 2500, currency: "USD" },
+            reserved: { value: 500, currency: "USD" },
+            balance_source: "account_wallet",
+            read_mode: "ledger_projection",
+            cutover_generation: 1,
+            blockers: [],
+            fallback_performed: false,
+          },
+        ],
+      });
+    },
+  });
+
+  const wallets = await client.listAccountWallets("acct_sdk_wallet", {
+    traceId: "trc_sdk_wallet_read",
+  });
+  assert.equal(wallets.data[0].available.value, 2500);
+  assert.equal(requestSeen.url, "https://sandbox.example.test/v1/accounts/acct_sdk_wallet/wallets");
+  assert.equal(requestSeen.headers.get("authorization"), `Bearer ${TEST_API_KEY}`);
+  assert.equal(requestSeen.headers.get("x-trace-id"), "trc_sdk_wallet_read");
 });
 
 test("typed SDK completes one local simulated transaction and verifies Receipt v0.3", async (context) => {

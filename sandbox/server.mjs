@@ -300,6 +300,33 @@ export function createBu2Server({
       if (request.method === "GET" && url.pathname === "/v1/access") {
         return send(response, 200, activeAccess.publicActor(actor));
       }
+      if (
+        request.method === "GET" &&
+        segments.length === 4 &&
+        segments[0] === "v1" &&
+        segments[1] === "accounts" &&
+        segments[3] === "wallets"
+      ) {
+        if (actor?.development_open) {
+          throw new ApiError(
+            401,
+            "authentication_error",
+            "credential_required",
+            "Account wallet reads require an authenticated BU2 API key.",
+          );
+        }
+        const accountId = validateResourceId(segments[2], "acct", "account_id");
+        activeAccess.assertClaims(actor, { accountIds: [accountId] }, {
+          ...accessContext,
+          resourceId: accountId,
+        });
+        return send(response, 200, {
+          data: activeSandbox.listAccountWalletViews({
+            account_id: accountId,
+            tenant_id: actor?.platform_access ? null : actor.tenant_id,
+          }),
+        });
+      }
       if (request.method === "GET" && url.pathname === "/v1/payment_mandates") {
         return send(response, 200, { data: activeAccess.filterMandates(actor, activeSandbox.listPaymentMandates()) });
       }

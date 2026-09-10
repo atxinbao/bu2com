@@ -13,9 +13,11 @@ Schema 21 新增只追加的 migration plan、cutover assessment 与 generation�
 
 `npm run acceptance:social-wallet` 在临时 SQLite 中执行两个 Account / 四个 Agent 的 Local/Simulation 产品接入验收，包括期初、付款、收款、部分退款、三类 ProviderFee、unknown 重启恢复、对账、投影重建、历史 replay、权限失败关闭与 Online Backup。FP-08 后，active cutover 使用账户级写源，买方 Payment/Refund ProviderFee 从对应账户可用余额只扣减一次。该命令不调用真实 Provider、不加载 Signer、不创建 Sandbox/Testnet 或 Live 资金证据。完整契约见 [FP-07 Social Wallet baseline](../docs/02-product/FP07_SOCIAL_WALLET_BASELINE_CONTRACT.md) 与 [FP-08 account wallet writes](../docs/02-product/FP08_ACCOUNT_WALLET_WRITE_CONTRACT.md)。
 
-## FP-08 账户级资金写源
+## FP-08 账户级资金写源与 Public Wallet API
 
-Schema 22 新增 `account_wallet_balances`。Local cutover 激活时从已重验的会计候选原子初始化账户余额；此后新交易固定保存 `wallet_write_source=account_wallet`，reserve/cancel/settle/refund 和买方 Payment/Refund ProviderFee 都在同一 `ledger_account_id + currency` 行执行安全整数运算与版本 CAS。费用作为已观察事实可以把 available 降为负值，但负值会在 Provider 前阻止新的 reserve。历史未绑定交易继续使用 legacy wallet，Collection 运行时入账与公开 Wallet API 不在本范围。
+Schema 22 新增 `account_wallet_balances`。Local cutover 激活时从已重验的会计候选原子初始化账户余额；此后新交易固定保存 `wallet_write_source=account_wallet`，reserve/cancel/settle/refund 和买方 Payment/Refund ProviderFee 都在同一 `ledger_account_id + currency` 行执行安全整数运算与版本 CAS。费用作为已观察事实可以把 available 降为负值，但负值会在 Provider 前阻止新的 reserve。历史未绑定交易继续使用 legacy wallet，Collection 运行时入账不在本范围。
+
+`GET /v1/accounts/{account_id}/wallets` 使用 Access Contract v1.1 的 `wallets:read` 权限，从认证 Account/tenant 解析已初始化的钱包。健康时返回账户级 available/reserved；stale、对账异常、未决 Provider Attempt 或 cutover 回滚时返回 `blocked` 和 null 金额，不回退 legacy wallet。该路由当前只获得 Local/Simulation 实现与验收，不代表公网 Sandbox/Testnet 或 Live 服务已开放。
 
 ## 启动
 

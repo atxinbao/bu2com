@@ -17,6 +17,7 @@ export type {
   Authorization,
   AuthorizationDecision,
   AccessIdentity,
+  AccountWallet,
   AccessGrant,
   AccessGrantResult,
   Cancellation,

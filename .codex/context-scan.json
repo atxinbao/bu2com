@@ -1,52 +1,52 @@
 {
   "date": "2026-09-11",
   "executor": "Codex",
-  "work_package": "FP-08",
+  "work_package": "Public Wallet API",
   "location": [
     "sandbox/domain.mjs",
+    "sandbox/server.mjs",
+    "sandbox/access-control.mjs",
     "sandbox/persistence.mjs",
-    "sandbox/wallet-read-model.mjs",
-    "sandbox/fp06b-wallet-cutover.test.mjs",
-    "sandbox/fp07-social-wallet-acceptance.test.mjs"
+    "docs/03-technical/openapi.yaml",
+    "packages/typescript-sdk"
   ],
   "current_state": {
-    "runtime_wallet": "单一 this.wallet",
-    "persistence": "wallet_accounts LIMIT 1 与单行 CAS",
-    "trusted_scope": "FundingSource/ReceivingTarget 已绑定 ledger_account_id",
-    "provider_fee": "Posting 已按账户归属，但 legacy wallet 不变"
+    "runtime_model": "getRuntimeWalletView 已对 Local cutover 的 projection、reconciliation、unknown attempt 与 account wallet shadow 失败关闭",
+    "trusted_scope": "ledger_accounts 以 environment/tenant/owner Account/asset/network 唯一绑定",
+    "account_balance": "FP-08 account_wallet_balances 仅在健康 cutover 激活时初始化并由 Transaction Core 写入",
+    "public_surface": "尚无 Wallet HTTP/OpenAPI/SDK 接口，Access Contract 为 1.0"
   },
   "similar_patterns": [
-    "Schema 20 可信资金绑定",
-    "Schema 21 append-only cutover generation",
-    "commitDomainMutation 全局 revision + wallet CAS",
-    "退款 Attempt 外部事实与业务补记分离"
+    "Receivable list/detail 使用认证 Account/Agent 可见性过滤",
+    "Collection list/detail 使用 assertView 隐藏越权资源",
+    "PaymentIntent detail 使用 path ID 校验与认证 view guard"
   ],
   "observations": [
-    "buyer-side fee 会造成 accounting candidate 与 legacy wallet 分叉",
-    "collection-side fee 不能在 collection 本身未进入运行时余额时单独扣减",
-    "历史交易不能仅凭 ledger_account_id 自动改绑到新写源",
-    "已确认费用即使账户暂停也必须能补记"
+    "请求不能直接选择 ledger_account_id，否则会绕过业务 Account 归属",
+    "LedgerAccount.asset 不总是会计币种，公开列表必须从已初始化 account wallet scope 得到 currency",
+    "legacy global wallet 不是账户级事实，不能在公开 Wallet API 中回退或复制",
+    "新增 wallets:read 会扩大角色权限，必须显式升级 Access Contract"
   ],
   "questions": [
     {
       "priority": "high",
-      "question": "如何避免把历史绑定交易静默切换到新写源？",
-      "answer": "新交易持久化明确 wallet_write_source；缺少该字段的历史交易继续使用 legacy wallet。"
+      "question": "一个 Account 有多币种/网络时如何确定结果？",
+      "answer": "返回确定性排序的 wallets 集合，每个已初始化 ledger_account_id + currency 是独立钱包 scope。"
     },
     {
       "priority": "high",
-      "question": "账户级状态如何进入数据库事务？",
-      "answer": "snapshot 携带 account_wallets，commitDomainMutation 在同一 immediate transaction 中逐变更行执行版本 CAS，再提交资源、Posting、LedgerEvent、Outbox 与幂等终态。"
+      "question": "运行状态不健康时是否还能返回缓存金额？",
+      "answer": "不能；available/reserved 均返回 null，同时返回 blocker，不执行 legacy fallback。"
     },
     {
       "priority": "high",
-      "question": "ProviderFee 余额不足时如何保留已发生事实？",
-      "answer": "账户级 available 允许成为负数；新 reserve 仍要求足额，负值会自然阻止新增支出。"
+      "question": "如何约束 Account 所有权？",
+      "answer": "HTTP path 只接受 acct_ ID，认证后用 assertClaims 校验 actor.account_ids；非平台调用还按 actor.tenant_id 查询 LedgerAccount。"
     },
     {
       "priority": "medium",
-      "question": "Collection fee 是否本轮扣减？",
-      "answer": "否；Collection 主金额尚未进入账户级运行时余额，单独扣费会制造不对称状态。"
+      "question": "是否需要修改 API 主版本？",
+      "answer": "新增向后兼容 GET 能力保持 Agent Payment API 0.3.0；角色权限集合变化单独将 Access Contract 升为 1.1。"
     }
   ],
   "sufficiency": {

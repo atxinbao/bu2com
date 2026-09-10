@@ -70,7 +70,10 @@ function closeServer(context, running) {
 }
 
 test("access contract rejects external development-open mode and wrong-environment metadata", () => {
-  assert.equal(ACCESS_CONTRACT.schema_version, "1.0");
+  assert.equal(ACCESS_CONTRACT.schema_version, "1.1");
+  for (const role of ["agent", "developer", "operator"]) {
+    assert.ok(ACCESS_CONTRACT.roles[role].includes("wallets:read"));
+  }
   const sandboxConfig = loadEnvironmentConfig({
     environment: "sandbox",
     paymentAdapter: "x402",
