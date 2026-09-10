@@ -1,56 +1,54 @@
 {
   "date": "2026-09-11",
   "executor": "Codex",
-  "task": "FP-A01 wallet reconciliation coverage and active-read guard repair",
+  "task": "FP-A02 Foundation status and merged-evidence alignment",
   "location": [
-    "sandbox/domain.mjs",
-    "sandbox/fp06a-wallet-read-model.test.mjs",
-    "sandbox/fp06b-wallet-cutover.test.mjs",
-    "docs/02-product/FP06B_WALLET_READ_CUTOVER_CONTRACT.md",
     "docs/03-technical/LEDGER_FOUNDATION_OVERVIEW.md",
-    "CHANGELOG.html"
+    "docs/03-technical/FOUNDATION_PR_PLAN.md",
+    "CHANGELOG.html",
+    "verification.md"
   ],
   "current_state": {
-    "wallet_summary": "walletReconciliationStatus accepts the latest run containing any target source and can report matched without complete or unique coverage",
-    "cutover_assessment": "walletCutoverReconciliationStatus already checks missing and duplicate required sources during initial assessment",
-    "active_runtime": "getRuntimeWalletView checks projection, pending attempts, capacity and shadow but does not re-evaluate reconciliation after activation",
-    "persistence": "reconciliation runs are persisted in the existing domain snapshot and restored from SQLite"
+    "git": "main and docs/fpa02-foundation-evidence point to e19bae63f29604554bcca9e10151d5363341ac07; the merged local FP-A01 branch has been deleted",
+    "fp_a01": "GitHub PR #82 is merged and no code-level P0/P1 remains in its delivered scope",
+    "ci": "main BU2 CI run 34527198064 completed successfully for foundation, runtime, runtime image and BU2 / CI Gate",
+    "release": "GitHub reports main protected=false; Social Wallet RC remains prepared_not_released",
+    "documentation": "Foundation overview still described FP-A01 as in progress and cited the parent main/CI evidence"
   },
   "similar_patterns": [
-    "walletCutoverReconciliationStatus computes a deterministic required-source set and fails closed on missing or duplicate entries",
-    "getRuntimeWalletView derives stable blockers and returns read_balance=null without fallback when an active Local cutover is unhealthy",
-    "FP-06b restart tests reopen the same SQLite file and validate append-only cutover generations and restored domain state"
+    "Foundation overview separates implemented capability, local verification and runtime admission",
+    "Foundation PR plan records implementation status beneath frozen work-package definitions",
+    "Changelog entries include risk, verification, financial invariants and recovery boundaries"
   ],
   "observations": [
-    "Opening balances and internal corrections are ledger facts but do not require Provider reconciliation and must not permanently block a wallet scope",
-    "Required external sources are settled/refunded payments, confirmed refunds, posted collections and provider fees for the target LedgerAccount and currency",
-    "A reconciliation item must not satisfy coverage when its amount currency is absent or differs from the requested accounting currency",
-    "A new exception or unknown reconciliation run can appear without changing financial Posting, so projection freshness and shadow equality do not imply reconciliation health"
+    "PR #82 success closes FP-A01 but does not satisfy protected-main RC admission",
+    "The next capability work must be split between account-level funding/fee semantics, public Wallet API and LA-06b external evidence",
+    "A documentation-only alignment must not claim Hosted, Sandbox/Testnet bilateral, Live/Mainnet or real-funds acceptance"
   ],
   "questions": [
     {
       "priority": "high",
-      "question": "Which facts require reconciliation for a wallet scope?",
+      "question": "What is the exact merged Foundation baseline?",
       "resolved": true,
-      "answer": "Only externally reconcilable settled/refunded payments, confirmed refunds, posted collections and provider fees bound to the target LedgerAccount and accounting currency."
+      "answer": "PR #82 merged as e19bae63f29604554bcca9e10151d5363341ac07."
     },
     {
       "priority": "high",
-      "question": "How should partial, duplicate, unknown or malformed evidence affect runtime reads?",
+      "question": "What evidence belongs to that exact main commit?",
       "resolved": true,
-      "answer": "A shared strict evaluator returns incomplete, exception, unknown or not_observed; an active Local cutover becomes blocked with read_balance=null and new reserve fails before Adapter invocation."
+      "answer": "BU2 CI push run 34527198064; all four required jobs completed successfully."
     },
     {
       "priority": "high",
-      "question": "How does recovery avoid another payment?",
+      "question": "Does this evidence authorize a release or funds execution?",
       "resolved": true,
-      "answer": "Recovery appends a newer complete reconciliation run; no Transaction, Posting, wallet or Adapter operation is rewritten or repeated."
+      "answer": "No. main remains unprotected and the RC remains prepared_not_released; all external and funds environments retain their separate gates."
     },
     {
       "priority": "medium",
-      "question": "Does this require Schema or API migration?",
+      "question": "What comes after FP-A02?",
       "resolved": true,
-      "answer": "No. The change reinterprets existing reconciliation run items using fields already persisted by F14 and adds compatible diagnostic fields to internal read models."
+      "answer": "Separate capability PRs for account-level funding writes and buyer-side ProviderFee semantics, public Wallet API, then LA-06b external Sandbox/Testnet evidence."
     }
   ],
   "sufficiency": {

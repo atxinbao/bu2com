@@ -1,6 +1,6 @@
 # Ledger Foundation 产品接入收口 PR 计划
 
-日期：2026-09-10
+日期：2026-09-11
 状态：Execution plan；工作包编号不是 GitHub PR 编号
 
 目标不是重写已经验证的 Transaction Core，而是让“已实现能力、真实业务接线、产品读模型、迁移/切换和发布准入”形成可追溯且互不混淆的链路。资金/契约行为修改仍须按各自 R2/R3 门槛独立审查。
@@ -63,6 +63,20 @@ FP-01、FP-02、FP-03 可以并行准备，但应分别提交和审查。
 同一候选上完成两个独立 Account、多个 Agent、收付/退款/费用、恢复、历史重放、权限、环境、迁移与备份 E2E；绑定 CI、runtime image、契约和人工审查证据后生成**新的**产品接入基线 RC。旧 `ledger-rc-local-v0.1` 标签保持不动。
 
 实现状态：新增 `fp07.social-wallet-acceptance.v1`，在隔离 Local/Simulation SQLite 上组合两个 Account、四个 Agent、可信绑定、可核对期初、付款/收款/部分退款/seller-side Collection fee、持久 unknown→重启→recovery、完整对账、projection 删除重建、历史 replay 和 Online Backup。active cutover 增加持续 shadow-match guard，并把 delivery-submitted pending 纳入 legacy reserved 等价比较。buyer-side Payment/Refund ProviderFee 的 spending-capacity 语义仍未批准。CI-03 RC class 更新为 `social_wallet_local_integration_rc`，绑定同 source/image 的 FP-07 acceptance 与旧 `ledger-rc-local-v0.1` 历史基线；候选仍是 `prepared_not_released`，当前 protected-main 套餐阻塞不被绕过。
+
+## 审计修复与当前状态
+
+### FP-A01 — 钱包对账完整性与激活后运行检查统一
+
+PR [#82](https://github.com/atxinbao/bu2com/pull/82) 已合并到 main `e19bae63f29604554bcca9e10151d5363341ac07`。修复统一 WalletReadModel、cutover assessment 与 active Local runtime guard 的 required-source 完整、唯一和状态合法判定；异常时阻止可信余额读取及新的 reserve，正规追加对账可以恢复，且不重新付款或改写 Posting。
+
+该合并提交的 `BU2 CI` run [`34527198064`](https://github.com/atxinbao/bu2com/actions/runs/34527198064) 已完成，`foundation`、`runtime`、`runtime image`、`BU2 / CI Gate` 四组 job 均 success。FP-A01 在当前范围内关闭，不再以“修复进行中”列为后续依赖。
+
+### FP-A02 — Foundation 状态与合并证据收口
+
+本工作包只对齐 FP-A01 合并后的文档状态、固定 main 基线和 CI 证据，风险等级为 **R0**。它不修改代码、Schema、API、交易/账务状态、环境配置或资金执行。GitHub API 当前仍报告 `main protected=false`，Social Wallet RC 继续保持 `prepared_not_released`；该运营门槛不能由 PR #82 的成功检查替代。
+
+FP-A02 后的功能建设顺序为：账户级资金写源与 buyer-side ProviderFee 支出语义、公开 Wallet API、LA-06b 外部 Sandbox/Testnet 双向验收。每项必须按自身 R2/R3 边界单独设计、验证和批准，不把 Local/Simulation 证据扩张为 Hosted、Live/Mainnet 或真实资金准入。
 
 ## 依赖关系
 

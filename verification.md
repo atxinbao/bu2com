@@ -1171,3 +1171,15 @@ npm --prefix sandbox run test:hosted-deployment
 - Runtime fault/recovery coverage proves a later exception/unknown returns `blocked` and `read_balance=null`, rejects reserve before Adapter invocation, survives SQLite restart, and recovers from a newer complete run without another payment or Posting.
 - Evidence caveat: local dirty-tree gates report parent `source_commit=7bbb0cd...`; final commit and remote PR CI require separate evidence and are not claimed here.
 - Boundary: no Schema, public Wallet API, historical Posting, refund, multi-account spend source, Hosted, Sandbox/Testnet bilateral settlement, Live/Mainnet, Signer, real funds, Tag or Release change.
+
+## 2026-09-11 · FP-A02 Foundation merged-evidence alignment
+
+- Baseline: PR #82 merged to main as `e19bae63f29604554bcca9e10151d5363341ac07`.
+- Remote evidence: `BU2 CI` push run `34527198064` completed successfully for `foundation`, `runtime`, `runtime image` and `BU2 / CI Gate` on that exact SHA.
+- Documentation checks: 11/11 relative links resolve; 9 required status/evidence facts are present; 3 stale FP-A01 in-progress statements are absent; FP-A02 Changelog risk, verification, invariant and recovery fields are present.
+- Browser smoke: Chrome headless rendered `CHANGELOG.html` and exposed the FP-A02 entry.
+- `git diff --check`: passed. Scope check contains only Foundation/Changelog/audit records and Graphify generated documentation; no runtime code, Schema, API or execution configuration changed.
+- `graphify update .`: completed with 4014 nodes, 6747 edges and 264 communities; graph source freshness now references `e19bae63`.
+- Boundary: GitHub still reports `main protected=false`; RC remains `prepared_not_released`. No account-level funding write, ProviderFee spend semantics, public Wallet API, LA-06b, Hosted, Sandbox/Testnet bilateral settlement, Live/Mainnet, Signer, Provider call, Tag, Release or real-funds action was performed.
+
+Conclusion: FP-A02 is **GO for R0 documentation review**. It closes Foundation status drift after FP-A01 without changing or authorizing product execution behavior.
