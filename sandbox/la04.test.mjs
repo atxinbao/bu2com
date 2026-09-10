@@ -5,6 +5,7 @@ import { join } from "node:path";
 import test from "node:test";
 import { SimulatedPaymentAdapter } from "./adapter.mjs";
 import { Bu2Sandbox } from "./domain.mjs";
+import { normalizeOnboardingDocument } from "./identity.mjs";
 import { SqliteLedger } from "./persistence.mjs";
 
 class ProgressingCollectionAdapter extends SimulatedPaymentAdapter {
@@ -31,6 +32,15 @@ function quoteInput(suffix) {
     amount: { value: 250, currency: "CNY" },
     expires_at: new Date(Date.now() + 86_400_000).toISOString(),
   };
+}
+
+function bindReceivingLedger(ledger, suffix) {
+  const ledgerAccountId = `lga_la04_seller_${suffix}`;
+  ledger.registerLedgerAccount({ id: ledgerAccountId, environment: "local", tenant_id: `ten_la04_seller_${suffix}`, book_id: "book_primary", owner_account_id: `acct_la04_seller_${suffix}`, asset: "CNY", network: null });
+  ledger.bootstrapIdentityTenants(normalizeOnboardingDocument({
+    environment: "local", requested_by: "usr_la04_operator", idempotency_key: `la04-binding-${suffix}`,
+    tenants: [{ tenant_id: `ten_la04_seller_${suffix}`, principal: { id: `usr_la04_seller_${suffix}`, display_name: "LA04 Seller" }, accounts: [{ id: `acct_la04_seller_${suffix}`, display_name: "LA04 Seller" }], agents: [{ id: `agt_la04_seller_${suffix}`, display_name: "LA04 Seller Agent" }], credentials: [], funding_sources: [], receiving_targets: [{ id: `tgt_la04_seller_${suffix}`, account_id: `acct_la04_seller_${suffix}`, agent_id: `agt_la04_seller_${suffix}`, asset: "CNY", network: null, provider: "simulated", ledger_account_id: ledgerAccountId, target_reference: `wallet:la04-${suffix}` }] }],
+  }, "local"));
 }
 
 async function createReceivable(suffix, ledger, adapter) {
@@ -98,6 +108,7 @@ test("LA-04 persists verification evidence and converges after SQLite restart", 
   const database = join(directory, "collections.sqlite");
   try {
     const firstLedger = new SqliteLedger(database);
+    bindReceivingLedger(firstLedger, "restart");
     const firstAdapter = new ProgressingCollectionAdapter({ ledger: firstLedger });
     const first = await createReceivable("restart", firstLedger, firstAdapter);
     const pending = await first.sandbox.verifyInboundPayment(

@@ -1,6 +1,6 @@
 # LA-03d 多账户账簿所有权与余额投影契约
 
-日期：2026-09-09  
+日期：2026-09-10
 维护者：Codex  
 文档风险等级：R0（冻结后续实现边界；实现 PR 仍按 R2 审查）
 
@@ -60,4 +60,6 @@ Schema/归属约束子范围已增加 `ledger_accounts` Schema 16、唯一所有
 
 第三实现子范围增加 Schema 19 `ledger_projection_versions` 与 `ledger_projection_balances`。刷新以账簿账户、资产/网络和币种为边界，在同一个 `BEGIN IMMEDIATE` 事务内读取不可变 Posting、生成确定性内容哈希、写入新版本并按 `expected_active_version` 条件激活；相同内容幂等复用活动版本，失败或并发冲突整体回滚。未绑定 Posting、非 active 账户、错环境或不平衡结果阻止激活。投影表仍是可删除、可重建的派生数据，不产生新的资金事实。
 
-以上实现不切换运行时 `wallet.available`，不执行历史归属迁移或运行时 cutover。剩余的隔离历史迁移与切换证据必须继续独立取证。
+第四实现子范围 FP-05 增加 Schema 20：FundingSource/ReceivingTarget 保存可信 `ledger_account_id`，onboarding 校验 environment、tenant、owner Account、asset/network 完整匹配并在 DB 层阻止 ownership 改绑；新业务 settlement、collection、refund、ProviderFee、opening/correction Posting 从受信业务快照继承归属。新资金活动要求 active 账户，历史读取与已确认事实补记允许原账户处于 suspended；历史 null/unbound 事实不更新、不伪造归属。
+
+以上实现不切换运行时 `wallet.available`，不执行历史归属迁移或运行时 cutover。剩余 WalletReadModel、shadow comparison、隔离历史迁移/期初核对与切换证据必须继续独立取证。

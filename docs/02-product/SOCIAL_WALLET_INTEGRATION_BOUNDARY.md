@@ -39,7 +39,7 @@ stable business id
 - 通过请求参数选择任意同环境 `ledger_account_id` 来扩大权限；
 - 在失败或数据缺口时降级成 simulated success。
 
-`ledger_account_id` 必须由服务端可信的环境、租户、账簿、Account、Funding Source/Receiving Target、资产与网络关系解析。请求中的账户 ID 最多作为一致性校验，不是授权依据。新格式事实无法解析时拒绝；历史未绑定事实必须保持 unresolved，不能伪造归属。
+`ledger_account_id` 必须由服务端可信的环境、租户、账簿、Account、Funding Source/Receiving Target、资产与网络关系解析。Schema 20 已把该 ID 固定进受信 FundingSource/ReceivingTarget onboarding 记录，并在持久化时校验 environment、tenant、owner Account、asset/network 与 active LedgerAccount 一致；ownership 字段不可通过后续 SQLite UPDATE 偷换。产品请求仍不能任选该 ID。新格式事实无法解析时拒绝；历史 null binding / 未绑定 Posting 保持可读但不能用于新的资金活动，也不能伪造归属。
 
 ## 4. WalletReadModel（后续 FP-06a 冻结）
 
@@ -57,7 +57,7 @@ stable business id
 
 ## 5. 生命周期语义
 
-账户暂停的目标是阻止新的资金权限扩大，不是抹掉历史。后续实现应区分：
+账户暂停的目标是阻止新的资金权限扩大，不是抹掉历史。FP-05 已按以下规则分离新执行与历史/恢复：
 
 | 行为 | 目标规则 |
 | --- | --- |
@@ -66,7 +66,7 @@ stable business id
 | 已存在不可变事实的幂等重放 | 校验原内容一致性；不得解释成新付款。 |
 | 已确认外部资金事实的受控补记 | 使用恢复权限与原执行证据；不得再次调用 Provider 付款。 |
 
-FP-01 不修改当前 active 校验代码；该耦合作为 FP-05/FP-06 的 R2 验收项。
+FP-05 已把 active 校验放在新资金活动的可信 binding 解析处；最终原子落账只要求快照中的 LedgerAccount 仍存在，因此账户在预留后被暂停时，已确认 settlement/refund/collection 等事实仍能按原归属记录。余额 cutover 与目标历史迁移仍属于 FP-06。
 
 ## 6. 产品实现前的集成门槛
 

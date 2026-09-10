@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import test from "node:test";
 import { Bu2Sandbox } from "./domain.mjs";
+import { normalizeOnboardingDocument } from "./identity.mjs";
 import { SqliteLedger } from "./persistence.mjs";
 
 const openingInput = {
@@ -21,11 +22,20 @@ const openingInput = {
   reason: "核对后的本地迁移期初检查点",
 };
 
+function bindOpeningLedger(ledger) {
+  ledger.registerLedgerAccount({ id: "lga_bu2_local", environment: "local", tenant_id: "ten_bu2_ventures", book_id: openingInput.book_id, owner_account_id: openingInput.owner_account_id, asset: openingInput.asset, network: openingInput.network });
+  ledger.bootstrapIdentityTenants(normalizeOnboardingDocument({
+    environment: "local", requested_by: "usr_bu2_operator", idempotency_key: "la03b-opening-binding",
+    tenants: [{ tenant_id: "ten_bu2_ventures", principal: { id: "usr_bu2_ventures", display_name: "BU2 Ventures" }, accounts: [{ id: openingInput.account_id, display_name: "BU2 Ventures" }], agents: [], credentials: [], funding_sources: [{ id: openingInput.funding_source_id, account_id: openingInput.account_id, agent_id: null, asset: openingInput.asset, network: openingInput.network, provider: "simulated", ledger_account_id: "lga_bu2_local", source_reference: "wallet:la03b-opening" }], receiving_targets: [] }],
+  }, "local"));
+}
+
 test("LA-03b records a reconciled opening checkpoint without changing the wallet projection", async () => {
   const directory = mkdtempSync(join(tmpdir(), "bu2-la03b-opening-"));
   const database = join(directory, "opening.sqlite");
   try {
     const firstLedger = new SqliteLedger(database);
+    bindOpeningLedger(firstLedger);
     const first = new Bu2Sandbox({ ledger: firstLedger });
     const initialWallet = first.wallet.available;
     const checkpoint = await first.createOpeningBalance(openingInput, "la03b-opening-001");
@@ -51,6 +61,7 @@ test("LA-03b records a reconciled opening checkpoint without changing the wallet
 
 test("LA-03b appends an immutable correction against an existing event and is idempotent", async () => {
   const ledger = new SqliteLedger(":memory:");
+  bindOpeningLedger(ledger);
   const sandbox = new Bu2Sandbox({ ledger });
   const checkpoint = await sandbox.createOpeningBalance(openingInput, "la03b-correction-opening");
   const original = sandbox.events.find((event) => event.resource_id === checkpoint.id);
@@ -83,6 +94,7 @@ test("LA-03b appends an immutable correction against an existing event and is id
 
 test("LA-03b rejects wrong environments and correction account drift", async () => {
   const ledger = new SqliteLedger(":memory:");
+  bindOpeningLedger(ledger);
   const sandbox = new Bu2Sandbox({ ledger });
   await assert.rejects(
     sandbox.createOpeningBalance({ ...openingInput, id: "obc_la03b_wrong_env", environment: "sandbox" }, "la03b-opening-wrong-env"),
@@ -110,6 +122,7 @@ test("LA-03c rebuilds account balances from immutable postings and survives rest
   const database = join(directory, "projection.sqlite");
   try {
     const firstLedger = new SqliteLedger(database);
+    bindOpeningLedger(firstLedger);
     const first = new Bu2Sandbox({ ledger: firstLedger });
     const checkpoint = await first.createOpeningBalance({ ...openingInput, id: "obc_la03c_projection" }, "la03c-opening");
     const original = first.events.find((event) => event.resource_id === checkpoint.id);

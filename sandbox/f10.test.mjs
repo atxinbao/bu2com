@@ -6,6 +6,7 @@ import test from "node:test";
 import { Bu2Sandbox } from "./domain.mjs";
 import { loadEnvironmentConfig } from "./environment-config.mjs";
 import { SqliteLedger } from "./persistence.mjs";
+import { bindReceivingTarget } from "./test-ledger-bindings.mjs";
 
 function quoteInput(suffix = "f10") {
   return {
@@ -76,6 +77,7 @@ test("F10 receivables survive SQLite restart without moving funds", async () => 
   const config = loadEnvironmentConfig();
   try {
     const firstLedger = new SqliteLedger(database, { environmentConfig: config });
+    bindReceivingTarget(firstLedger, { suffix: "restart" });
     const first = new Bu2Sandbox({ ledger: firstLedger, environmentConfig: config });
     const quote = await first.createQuote(quoteInput("restart"), "f10-quote-restart-005");
     const receivable = await first.createReceivable(

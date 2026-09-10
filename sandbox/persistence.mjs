@@ -237,6 +237,11 @@ export class SqliteLedger {
         name: "ledger_account_projection_versions",
         apply: () => this.migrateLedgerAccountProjectionVersions(),
       },
+      {
+        version: 20,
+        name: "trusted_posting_ownership",
+        apply: () => this.migrateTrustedPostingOwnership(),
+      },
     ];
     for (const migration of migrations) {
       if (applied.has(migration.version)) continue;
@@ -847,6 +852,98 @@ export class SqliteLedger {
     `);
   }
 
+  migrateTrustedPostingOwnership() {
+    for (const table of ["funding_sources", "receiving_targets"]) {
+      const columns = this.db.prepare(`PRAGMA table_info(${table})`).all();
+      if (!columns.some((column) => column.name === "ledger_account_id")) {
+        this.db.exec(`ALTER TABLE ${table} ADD COLUMN ledger_account_id TEXT`);
+      }
+      this.db.exec(`CREATE INDEX IF NOT EXISTS idx_${table}_ledger_account ON ${table}(ledger_account_id)`);
+    }
+    this.db.exec(`
+      DROP TRIGGER IF EXISTS financial_postings_ledger_account_guard;
+      CREATE TRIGGER financial_postings_ledger_account_guard
+      BEFORE INSERT ON financial_postings
+      WHEN NEW.ledger_account_id IS NOT NULL
+        AND NOT EXISTS (SELECT 1 FROM ledger_accounts WHERE id = NEW.ledger_account_id)
+      BEGIN
+        SELECT RAISE(ABORT, 'financial_posting_requires_existing_ledger_account');
+      END;
+
+      CREATE TRIGGER IF NOT EXISTS funding_sources_ledger_account_guard
+      BEFORE INSERT ON funding_sources
+      WHEN NEW.ledger_account_id IS NOT NULL
+        AND NOT EXISTS (
+          SELECT 1 FROM ledger_accounts
+          WHERE id = NEW.ledger_account_id
+            AND environment = NEW.environment
+            AND tenant_id = NEW.tenant_id
+            AND owner_account_id = NEW.account_id
+            AND asset = NEW.asset
+            AND network IS NEW.network
+            AND status = 'active'
+        )
+      BEGIN
+        SELECT RAISE(ABORT, 'funding_source_requires_owned_active_ledger_account');
+      END;
+
+      CREATE TRIGGER IF NOT EXISTS funding_sources_ownership_immutable
+      BEFORE UPDATE OF environment, tenant_id, account_id, agent_id, asset, network, provider, source_reference, generation, ledger_account_id
+      ON funding_sources
+      WHEN NOT (
+        NEW.environment = OLD.environment
+        AND NEW.tenant_id = OLD.tenant_id
+        AND NEW.account_id = OLD.account_id
+        AND NEW.agent_id IS OLD.agent_id
+        AND NEW.asset = OLD.asset
+        AND NEW.network IS OLD.network
+        AND NEW.provider = OLD.provider
+        AND NEW.source_reference = OLD.source_reference
+        AND NEW.generation = OLD.generation
+        AND NEW.ledger_account_id IS OLD.ledger_account_id
+      )
+      BEGIN
+        SELECT RAISE(ABORT, 'funding_source_ownership_immutable');
+      END;
+
+      CREATE TRIGGER IF NOT EXISTS receiving_targets_ledger_account_guard
+      BEFORE INSERT ON receiving_targets
+      WHEN NEW.ledger_account_id IS NOT NULL
+        AND NOT EXISTS (
+          SELECT 1 FROM ledger_accounts
+          WHERE id = NEW.ledger_account_id
+            AND environment = NEW.environment
+            AND tenant_id = NEW.tenant_id
+            AND owner_account_id = NEW.account_id
+            AND asset = NEW.asset
+            AND network IS NEW.network
+            AND status = 'active'
+        )
+      BEGIN
+        SELECT RAISE(ABORT, 'receiving_target_requires_owned_active_ledger_account');
+      END;
+
+      CREATE TRIGGER IF NOT EXISTS receiving_targets_ownership_immutable
+      BEFORE UPDATE OF environment, tenant_id, account_id, agent_id, asset, network, provider, target_reference, generation, ledger_account_id
+      ON receiving_targets
+      WHEN NOT (
+        NEW.environment = OLD.environment
+        AND NEW.tenant_id = OLD.tenant_id
+        AND NEW.account_id = OLD.account_id
+        AND NEW.agent_id IS OLD.agent_id
+        AND NEW.asset = OLD.asset
+        AND NEW.network IS OLD.network
+        AND NEW.provider = OLD.provider
+        AND NEW.target_reference = OLD.target_reference
+        AND NEW.generation = OLD.generation
+        AND NEW.ledger_account_id IS OLD.ledger_account_id
+      )
+      BEGIN
+        SELECT RAISE(ABORT, 'receiving_target_ownership_immutable');
+      END;
+    `);
+  }
+
   migrateDurableRefundAttempts() {
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS refund_attempts (
@@ -1166,13 +1263,36 @@ export class SqliteLedger {
     return row;
   }
 
-  assertLedgerAccountBinding(id, { environment = null } = {}) {
+  assertLedgerAccountBinding(id, {
+    environment = null,
+    tenant_id = null,
+    book_id = null,
+    owner_account_id = null,
+    asset = null,
+    network = undefined,
+    require_active = true,
+  } = {}) {
     const account = this.getLedgerAccount(id);
-    if (account.status !== "active") {
+    if (require_active && account.status !== "active") {
       throw new ApiError(422, "financial_constraint", "ledger_account_not_active", "Financial posting requires an active ledger account.", { ledger_account_id: id, status: account.status });
     }
     if (environment !== null && account.environment !== environment) {
       throw new ApiError(409, "environment_error", "ledger_account_environment_mismatch", "Ledger account environment does not match the active runtime.", { ledger_account_id: id, environment, account_environment: account.environment });
+    }
+    const expected = { tenant_id, book_id, owner_account_id, asset };
+    const mismatches = Object.entries(expected)
+      .filter(([, value]) => value !== null)
+      .filter(([field, value]) => account[field] !== value)
+      .map(([field]) => field);
+    if (network !== undefined && account.network !== network) mismatches.push("network");
+    if (mismatches.length > 0) {
+      throw new ApiError(
+        409,
+        "authorization_error",
+        "ledger_account_ownership_mismatch",
+        "Ledger account ownership does not match the trusted business binding.",
+        { ledger_account_id: id, mismatches: mismatches.sort() },
+      );
     }
     return account;
   }
@@ -1624,7 +1744,10 @@ export class SqliteLedger {
     }
   }
 
-  writeBalancedJournals(postings, events = [], { environment = null } = {}) {
+  writeBalancedJournals(postings, events = [], {
+    environment = null,
+    allow_inactive_ledger_accounts = false,
+  } = {}) {
     const groups = new Map();
     for (const posting of postings ?? []) {
       const validation = validateFinancialPosting(posting);
@@ -1632,7 +1755,10 @@ export class SqliteLedger {
         throw new ApiError(422, "financial_constraint", validation.code, validation.message, validation.details);
       }
       if (posting.ledger_account_id !== undefined && posting.ledger_account_id !== null) {
-        this.assertLedgerAccountBinding(posting.ledger_account_id, { environment });
+        this.assertLedgerAccountBinding(posting.ledger_account_id, {
+          environment,
+          require_active: !allow_inactive_ledger_accounts,
+        });
       }
       const group = groups.get(posting.event_id) ?? [];
       group.push(posting);
@@ -1870,7 +1996,10 @@ export class SqliteLedger {
       this.writeBalancedJournals(
         (financial.financial_postings ?? []).map(([, posting]) => posting),
         events,
-        { environment: this.environmentMetadata()?.environment ?? null },
+        {
+          environment: this.environmentMetadata()?.environment ?? null,
+          allow_inactive_ledger_accounts: true,
+        },
       );
       const refundAttemptUpsert = this.db.prepare(`
         INSERT INTO refund_attempts(
@@ -2833,6 +2962,14 @@ export class SqliteLedger {
         created_at: binding.created_at ?? createdAt,
         updated_at: createdAt,
       };
+      this.assertLedgerAccountBinding(record.ledger_account_id, {
+        environment,
+        tenant_id: record.tenant_id,
+        owner_account_id: record.account_id,
+        asset: record.asset,
+        network: record.network,
+        require_active: true,
+      });
       const current = this.db
         .prepare(`SELECT * FROM ${table} WHERE environment=? AND id=?`)
         .get(environment, binding.id);
@@ -2841,9 +2978,9 @@ export class SqliteLedger {
           .prepare(`
             INSERT INTO ${table}(
               environment, id, tenant_id, account_id, agent_id, asset, network,
-              provider, ${referenceField}, status, verification_status, generation,
+              provider, ${referenceField}, ledger_account_id, status, verification_status, generation,
               created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           `)
           .run(
             environment,
@@ -2855,6 +2992,7 @@ export class SqliteLedger {
             record.network,
             record.provider,
             record[referenceField],
+            record.ledger_account_id,
             record.status,
             record.verification_status,
             record.generation,
@@ -2871,6 +3009,7 @@ export class SqliteLedger {
         "network",
         "provider",
         referenceField,
+        "ledger_account_id",
         "status",
         "verification_status",
         "generation",
@@ -2959,7 +3098,43 @@ export class SqliteLedger {
         { account_id: accountId, agent_id: agentId, asset, network, reference },
       );
     }
-    return { bound: true, binding: matching[0] };
+    if (matching.length > 1) {
+      throw new ApiError(
+        409,
+        "authorization_error",
+        kind === "funding_source"
+          ? "funding_source_binding_ambiguous"
+          : "receiving_target_binding_ambiguous",
+        `The ${kind.replace("_", " ")} must resolve to one trusted wallet binding.`,
+        {
+          account_id: accountId,
+          agent_id: agentId,
+          asset,
+          network,
+          reference,
+          binding_ids: matching.map((row) => row.id).sort(),
+        },
+      );
+    }
+    const binding = matching[0];
+    if (!binding.ledger_account_id) {
+      throw new ApiError(
+        409,
+        "authorization_error",
+        "wallet_binding_ledger_account_required",
+        "An active wallet binding must be linked to a trusted ledger account before new financial activity.",
+        { environment, binding_id: binding.id },
+      );
+    }
+    const ledgerAccount = this.assertLedgerAccountBinding(binding.ledger_account_id, {
+      environment,
+      tenant_id: binding.tenant_id,
+      owner_account_id: binding.account_id,
+      asset: binding.asset,
+      network: binding.network,
+      require_active: true,
+    });
+    return { bound: true, binding, ledger_account: ledgerAccount };
   }
 
   assertWalletBindingById(
@@ -2985,7 +3160,25 @@ export class SqliteLedger {
         { environment, binding_id: bindingId, asset, network },
       );
     }
-    return { bound: true, binding: matching[0] };
+    const binding = matching[0];
+    if (!binding.ledger_account_id) {
+      throw new ApiError(
+        409,
+        "authorization_error",
+        "wallet_binding_ledger_account_required",
+        "An active wallet binding must be linked to a trusted ledger account before new financial activity.",
+        { environment, binding_id: binding.id },
+      );
+    }
+    const ledgerAccount = this.assertLedgerAccountBinding(binding.ledger_account_id, {
+      environment,
+      tenant_id: binding.tenant_id,
+      owner_account_id: binding.account_id,
+      asset: binding.asset,
+      network: binding.network,
+      require_active: true,
+    });
+    return { bound: true, binding, ledger_account: ledgerAccount };
   }
 
   bootstrapIdentityTenants(document) {

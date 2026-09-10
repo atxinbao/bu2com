@@ -101,6 +101,8 @@ test("F08 activation requires verified funding and receiving bindings in persist
   const config = loadEnvironmentConfig();
   const ledger = new SqliteLedger(database, { environmentConfig: config });
   try {
+    ledger.registerLedgerAccount({ id: "lga_f08_buyer", environment: "local", tenant_id: "ten_f08_buyer", book_id: "book_primary", owner_account_id: "acct_buyer_f08", asset: "CNY", network: null });
+    ledger.registerLedgerAccount({ id: "lga_f08_seller", environment: "local", tenant_id: "ten_f08_seller", book_id: "book_primary", owner_account_id: "acct_seller_f08", asset: "CNY", network: null });
     const sandbox = new Bu2Sandbox({ ledger, environmentConfig: config });
     const mandate = await sandbox.createPaymentMandate(
       mandateInput({ currency: "CNY" }),
@@ -137,6 +139,7 @@ test("F08 activation requires verified funding and receiving bindings in persist
                   asset: "CNY",
                   network: null,
                   provider: "simulated",
+                  ledger_account_id: "lga_f08_buyer",
                   source_reference: "wallet:f08-buyer",
                 },
               ],
@@ -157,6 +160,7 @@ test("F08 activation requires verified funding and receiving bindings in persist
                   asset: "CNY",
                   network: null,
                   provider: "simulated",
+                  ledger_account_id: "lga_f08_seller",
                   target_reference: "wallet:f08-seller",
                 },
               ],

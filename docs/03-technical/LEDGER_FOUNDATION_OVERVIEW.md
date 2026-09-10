@@ -41,12 +41,12 @@ Simulation 不是对外 Sandbox。CI 成功、代码已合并或存在 Live 配�
 
 | 能力 | 当前已有 | 仍未完成 | 当前可依赖范围 |
 | --- | --- | --- | --- |
-| Journal / Posting | 平衡校验、已过账不可变、业务资金事实分录；FP-04 将 Posting shape 与 Journal 合计/平衡纯计算提到内部 helper，`SqliteLedger` 仍拥有 DB 校验和写事务 | 所有新业务分录的可信账户归属接线 | 内部账务事实 |
-| LedgerAccount | Schema 16 所有权注册，Schema 17 Posting 绑定 | 业务来源到唯一账户的统一解析与更强归属校验 | 内部所有权边界 |
+| Journal / Posting | 平衡校验、已过账不可变、业务资金事实分录；FP-04 将纯计算提到内部 helper；FP-05 让新格式 settlement/collection/refund/fee/opening/correction Posting 继承可信 `ledger_account_id` | 历史未绑定事实的目标范围迁移/期初核对 | 内部账务事实 |
+| LedgerAccount | Schema 16 所有权注册、Schema 17 Posting 绑定；Schema 20 将 FundingSource/ReceivingTarget 固定到 environment/tenant/owner/asset/network 一致的 LedgerAccount，并在 SQLite 层保护归属不可变 | 历史 null binding 的归属迁移与产品范围 cutover | 内部所有权边界 |
 | 账户投影 | Schema 19、确定性内容哈希、显式期望版本、条件激活、可重建；FP-04 让全局/账户/持久化刷新复用同一纯 Posting 投影计算 | 源水位、完整性/陈旧状态、产品读模型与运行时切换 | 内部派生报告；**不是产品余额** |
 | 运行时余额 | 既有 `wallet_accounts` / `this.wallet` 路径 | 多账户 WalletReadModel、shadow 比对、受控 cutover | 既有运行时内部路径 |
 | 历史重放/恢复 | 只读重放、备份追加事实追平、缺口报告 | 目标产品账簿的归属迁移/期初核对与 cutover 证据 | 已验收范围内报告 |
-| 收款/付款/退款/费用 | Local/Simulation 业务与故障路径、Attempt/对账能力 | 业务分录全面绑定、产品范围真实 Sandbox 证据 | 不扩张到未批准通道 |
+| 收款/付款/退款/费用 | Local/Simulation 业务与故障路径、Attempt/对账能力；新格式业务分录已从可信 wallet binding 解析到账簿账户 | 历史范围迁移、产品 WalletReadModel 与真实 Sandbox 证据 | 不扩张到未批准通道 |
 | CI | main `2cb8b125…` 的 `BU2 CI` run `34396290376` 已完成且 success | FP-02 的证据消费者收口和仓库合并门禁 | 回归证据；**不是资金授权** |
 | 内部 Release | `ledger-rc-local-v0.1` 保留 | 新产品接入基线 RC 尚未生成 | 仅原批准范围 |
 
@@ -58,25 +58,25 @@ Simulation 不是对外 Sandbox。CI 成功、代码已合并或存在 Live 配�
 005b3949de4672a5aae301bd9b511e47b8be89fa
 ```
 
-它是 Local/Simulation 内部历史基线，不包含当前 main 后续的 Schema 19 与账户投影刷新能力。不得移动、覆盖或重打该标签来改变历史批准范围。
+它是 Local/Simulation 内部历史基线，不包含后续的 Schema 19 账户投影刷新或 Schema 20 可信业务归属接线。不得移动、覆盖或重打该标签来改变历史批准范围。
 
 ## 5. 为什么现在还不能把账户投影当成社交钱包余额
 
 [`LA03D_MULTI_ACCOUNT_OWNERSHIP_CONTRACT.md`](../02-product/LA03D_MULTI_ACCOUNT_OWNERSHIP_CONTRACT.md) 已明确：运行时 `wallet.available` 尚未切换。当前账户投影还会对同币种未绑定 Posting 失败关闭，这保护了资金事实，但也证明产品接入尚未完成。
 
-社交钱包正式消费余额前，至少还需要：
+FP-05 已完成**新格式业务事实**的可信归属接线；历史 null binding / unbound Posting 保持原样，不自动回填。社交钱包正式消费余额前，至少还需要：
 
-- 所有新增业务资金事实从可信 `FundingSource / ReceivingTarget / Account / tenant / book / asset / network` 关系解析到唯一 `ledger_account_id`；
+- 对目标产品账簿的历史未绑定事实建立可证明归属或已核对期初，不可确定的事实继续保持 unresolved；
 - 明确定义 WalletReadModel，把账簿余额、Provider 外部观察、reserved/pending、可支出能力、投影陈旧/缺口、对账状态分开；
 - 对目标产品账簿完成 shadow 比对、归属/期初核对和独立 R2 cutover；
 - 证明暂停账户仍可查询历史和对账，而新增支出保持失败关闭；
 - 保持 Journal/Posting 与 Provider 已发生事实不可改写，不用重新付款掩盖差异。
 
-### FP-04 内部 facade 边界
+### FP-04 / FP-05 内部边界
 
 `sandbox/ledger-calculations.mjs` 只负责确定性的 Posting shape、Journal 合计/平衡和 Posting → 投影计算。它不持有 SQLite handle，不开启或提交事务，不解析业务归属，不读取运行环境，也不调用 Provider。计算失败只返回稳定 violation；`Bu2Sandbox` / `SqliteLedger` 在既有兼容入口将 violation 转回原有 `ApiError` 语义。
 
-数据库相关责任仍留在 `SqliteLedger`：账簿账户 active/environment 校验、source/event 存在性、不可变内容 fingerprint、Posting/Journal 写入，以及 Schema 19 投影版本的 `BEGIN IMMEDIATE` / `expected_active_version` 条件激活。FP-04 不改变这些事务边界，也不改变退款、provider unknown、迁移、运行时 `wallet.available` 或业务分录归属；后者仍由 FP-05/FP-06 独立处理。
+数据库相关责任仍留在 `SqliteLedger`：账簿账户所有权/状态校验、source/event 存在性、不可变内容 fingerprint、Posting/Journal 写入，以及 Schema 19 投影版本的 `BEGIN IMMEDIATE` / `expected_active_version` 条件激活。Schema 20 的 FundingSource/ReceivingTarget 归属由服务端 onboarding 记录持有，业务请求不能任选 `ledger_account_id`；ownership 字段在 SQLite 边界不可直接改绑。新资金活动必须绑定 active LedgerAccount；账户后续暂停不会抹掉历史，也不会阻止已确认外部事实按原账户补记。Transaction Core 原事务、幂等、Outbox、provider_unknown 与退款恢复边界保持不变。
 
 ## 6. 只读盘点入口
 
@@ -94,4 +94,4 @@ python3 scripts/ledger/ledger_inventory.py \
 
 ## 7. 后续依赖
 
-执行顺序见 [`FOUNDATION_PR_PLAN.md`](FOUNDATION_PR_PLAN.md)。FP-01 只建立当前能力入口和安全盘点工具；真正改变账务写入、余额模型、迁移与切换的 FP-05/FP-06 必须分别按 R2 审查。
+执行顺序见 [`FOUNDATION_PR_PLAN.md`](FOUNDATION_PR_PLAN.md)。FP-05 已实现新业务分录可信归属，但仍需独立 R2 审查；余额语义、shadow comparison、历史迁移/期初核对和运行时切换继续由 FP-06a/FP-06b 独立处理。

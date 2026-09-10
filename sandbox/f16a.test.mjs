@@ -31,6 +31,7 @@ function bindingDocument(suffix) {
             asset: "CNY",
             network: null,
             provider: "simulated",
+            ledger_account_id: `lga_f16a_buyer_${suffix}`,
             source_reference: `wallet:f16a-buyer-${suffix}`,
           },
         ],
@@ -51,6 +52,7 @@ function bindingDocument(suffix) {
             asset: "CNY",
             network: null,
             provider: "simulated",
+            ledger_account_id: `lga_f16a_seller_${suffix}`,
             target_reference: `wallet:f16a-seller-${suffix}`,
           },
         ],
@@ -114,6 +116,8 @@ function paymentInput(quote, mandate, session) {
 
 async function createBetaContext(suffix, { ledger = new SqliteLedger(":memory:"), adapter } = {}) {
   const environmentConfig = loadEnvironmentConfig();
+  ledger.registerLedgerAccount({ id: `lga_f16a_buyer_${suffix}`, environment: "local", tenant_id: `ten_f16a_buyer_${suffix}`, book_id: "book_primary", owner_account_id: `acct_f16a_buyer_${suffix}`, asset: "CNY", network: null });
+  ledger.registerLedgerAccount({ id: `lga_f16a_seller_${suffix}`, environment: "local", tenant_id: `ten_f16a_seller_${suffix}`, book_id: "book_primary", owner_account_id: `acct_f16a_seller_${suffix}`, asset: "CNY", network: null });
   ledger.bootstrapIdentityTenants(
     normalizeOnboardingDocument(bindingDocument(suffix), "local"),
   );
@@ -184,7 +188,7 @@ test("F16a completes autonomous internal pay-and-collect without per-transaction
   assert.equal(sandbox.getExecutionSession(session.id).committed_spend_minor, 100);
 
   const collectionQuote = await sandbox.createQuote(
-    quoteInput("collection", 100),
+    quoteInput("bilateral", 100),
     "f16a-quote-collection",
   );
   const receivable = await sandbox.createReceivable(

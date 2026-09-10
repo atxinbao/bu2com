@@ -6,6 +6,7 @@ import test from "node:test";
 import { Bu2Sandbox } from "./domain.mjs";
 import { SimulatedPaymentAdapter } from "./adapter.mjs";
 import { SqliteLedger } from "./persistence.mjs";
+import { bindReceivingTarget } from "./test-ledger-bindings.mjs";
 
 function quoteInput(suffix = "f11") {
   return {
@@ -115,6 +116,7 @@ test("F11 persists paid Receivable, collection, and postings across SQLite resta
   const database = join(directory, "collections.sqlite");
   try {
     const firstLedger = new SqliteLedger(database);
+    bindReceivingTarget(firstLedger, { suffix: "restart" });
     const { sandbox, receivable } = await createReceivable("restart", firstLedger);
     const result = await sandbox.verifyInboundPayment(
       receivable.id,
