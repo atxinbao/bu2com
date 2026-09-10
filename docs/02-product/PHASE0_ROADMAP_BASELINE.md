@@ -79,8 +79,8 @@ D0/D1/D2 文档基线与 F07 代码实现已合并。F08 运行时与 F09a 已�
 
 LA-03d 已冻结多账户所有权、余额投影切换和历史迁移契约，并按 Schema/归属约束、写入原语/投影刷新、可信业务接线、迁移/切换证据拆分推进。
 
-LA-03d 的第一实现子范围已增加 Schema 16 账簿账户所有权注册表与条件版本状态转换；第二实现子范围增加 Schema 17 `financial_postings.ledger_account_id`、活跃账户绑定校验和按账户只读投影重建；Schema 19 增加版本化派生投影；FP-05 Schema 20 再把可信 FundingSource/ReceivingTarget 绑定接入真实业务 Posting；FP-06a 增加 WalletReadModel/shadow；FP-06b Schema 21 增加仅 Local 的 append-only migration plan / assessment / read generation。资金写与支出决策仍由 legacy Transaction Core wallet 所有，Sandbox/Testnet/Live 与生产数据切换未授权。
+LA-03d 的第一实现子范围已增加 Schema 16 账簿账户所有权注册表与条件版本状态转换；第二实现子范围增加 Schema 17 `financial_postings.ledger_account_id`、活跃账户绑定校验和按账户只读投影重建；Schema 19 增加版本化派生投影；FP-05 Schema 20 再把可信 FundingSource/ReceivingTarget 绑定接入真实业务 Posting；FP-06a 增加 WalletReadModel/shadow；FP-06b Schema 21 增加仅 Local 的 append-only migration plan / assessment / read generation；FP-08 Schema 22 将健康 cutover 的新付款与买方 Payment/Refund ProviderFee 接到账户级运行时余额。Transaction Core 仍是唯一写者，Sandbox/Testnet/Live 与生产数据切换未授权。
 
 D2 只改文档；F08/F09a/F10/F11/F12 代码 PR 不启用真实 Testnet 双向收付、Hosted Sandbox、Live/Mainnet、托管或生产凭证，必须独立完成 Domain 与 Architecture R2 审查。F09b 的历史实现已覆盖持久化 payment attempt、unknown-result 冻结和显式 recovery 查询，本轮不重复引入第二套恢复实现。
 
-F12～F16b 已完成本地支付/恢复/候选基础，LA-01～LA-06a 已完成退款、Journal、投影、重放、对账与本地机器门禁；FP-05 建立可信业务 LedgerAccount 归属，FP-06a 建立 WalletReadModel/shadow，FP-06b 再完成隔离 Local 的目标历史分类/期初计划、fresh assessment、append-only generation、stale-stop 与 rollback/reactivate。FP-06b 不 UPDATE 历史 Posting，也不把 projection 变成支付授权；正式 Social Wallet API、多账户资金写模型与产品级 E2E 仍由 FP-07 完成。真实 Base Sepolia 双向证据继续属于 LA-06b，Hosted/E3.1/Live/Mainnet/生产数据均未放行；任何本地 cutover 结果不得被解释为真实 Provider、生产财务结算或外部 Beta 准入。
+F12～F16b 已完成本地支付/恢复/候选基础，LA-01～LA-06a 已完成退款、Journal、投影、重放、对账与本地机器门禁；FP-05～FP-08 已依次建立可信归属、WalletReadModel、Local cutover 与账户级写源。FP-08 不 UPDATE 历史 Posting，不迁移历史交易，也不新增公开 Wallet API 或 Collection 运行时净入账。真实 Base Sepolia 双向证据继续属于 LA-06b，Hosted/E3.1/Live/Mainnet/生产数据均未放行；任何本地 cutover 结果不得被解释为真实 Provider、生产财务结算或外部 Beta 准入。

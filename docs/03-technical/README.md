@@ -5,7 +5,7 @@
 
 ## LA-03d 当前契约状态
 
-LA-03d 已冻结多账户账簿所有权、余额投影切换和历史迁移契约；Schema 16/17/19 建立所有权、Posting 绑定与版本化投影，Schema 20 把可信 FundingSource/ReceivingTarget 接到业务 Posting，FP-06a 增加 WalletReadModel/shadow。FP-06b Schema 21 再增加仅 Local 的 append-only migration plan / assessment / cutover generation：运行时读值可受控切到 `available_spending_capacity`，但资金写与支出决策仍留在 legacy Transaction Core wallet，Sandbox/Live 与生产数据切换继续关闭。
+LA-03d 已冻结多账户账簿所有权、余额投影切换和历史迁移契约；Schema 16/17/19 建立所有权、Posting 绑定与版本化投影，Schema 20 把可信 FundingSource/ReceivingTarget 接到业务 Posting，FP-06a 增加 WalletReadModel/shadow，FP-06b Schema 21 增加仅 Local 的 append-only migration plan / assessment / cutover generation。FP-08 Schema 22 在健康 cutover 激活时初始化 `ledger_account_id + currency` 账户级写源，新付款及买方 Payment/Refund ProviderFee 由 Transaction Core 原子写入该余额；Sandbox/Live 与生产数据切换继续关闭。
 
 ## Foundation 当前入口
 
@@ -86,6 +86,6 @@ LA-03d 已冻结多账户账簿所有权、余额投影切换和历史迁移契�
 - [CI-03 Ledger Release Candidate 技术说明](CI_RELEASE_CANDIDATE.md)
 - [CI-04 Ledger Nightly 技术说明](CI_LEDGER_NIGHTLY.md)
 
-Contract v0.3.0 已具备本地 SQLite Reference Server、幂等/CAS、Ledger/Outbox、授权/预留/结算/退款、受保护 Journal/Posting、期初/更正、版本化账户投影、历史重放/备份追平、外部观察对账、Receipt、MCP/x402 等既有能力；FP-05 Schema 20 将新业务事实接到可信 LedgerAccount，FP-06a 建立 WalletReadModel/shadow，FP-06b Schema 21 增加 Local-only append-only migration plan / assessment / cutover generation 与 stale reserve guard。FP-06b 的运行时读值可选择 `available_spending_capacity`，但支付授权/资金写继续属于 legacy Transaction Core wallet。
+Contract v0.3.0 已具备本地 SQLite Reference Server、幂等/CAS、Ledger/Outbox、授权/预留/结算/退款、受保护 Journal/Posting、期初/更正、版本化账户投影、历史重放/备份追平、外部观察对账、Receipt、MCP/x402 等既有能力；FP-05 Schema 20 将新业务事实接到可信 LedgerAccount，FP-06a 建立 WalletReadModel/shadow，FP-06b Schema 21 增加 Local-only append-only migration plan / assessment / cutover generation 与 stale reserve guard，FP-08 Schema 22 增加账户级写余额和固定交易写源。Transaction Core 仍是唯一写入者。
 
-F01/ENV-01 至 ENV-06 已分别由 PR #18–#23 批准。ENV-07A/07B 本地部署准备已实现；真实托管 Sandbox、Base Sepolia 双向收付与边缘 E2E 仍为 Not yet accepted。FP-06b 只完成隔离 Local 的迁移解释与读路径切换机制；正式产品 API/多账户资金写、LA-06b 外部双向证据、E3.1 与 Live/Mainnet/生产数据仍未经独立准入。
+F01/ENV-01 至 ENV-06 已分别由 PR #18–#23 批准。ENV-07A/07B 本地部署准备已实现；真实托管 Sandbox、Base Sepolia 双向收付与边缘 E2E 仍为 Not yet accepted。FP-08 只完成隔离 Local 的账户级写入与买方费用语义；公开 Wallet API、Collection 运行时净入账、LA-06b 外部双向证据、E3.1 与 Live/Mainnet/生产数据仍未经独立准入。

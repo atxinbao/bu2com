@@ -252,7 +252,11 @@ test("FP-06b failed activation rolls back its generation and retry preserves fin
     const result = await sandbox.activateWalletReadCutover(input, "fp06b-activation-fault-key");
     assert.equal(result.generation, 1);
     assert.deepEqual(await sandbox.activateWalletReadCutover(input, "fp06b-activation-fault-key"), result);
-    assert.deepEqual(financialFacts(ledger), before);
+    const after = financialFacts(ledger);
+    assert.deepEqual(after.postings, before.postings);
+    assert.equal(after.events.length, before.events.length + 1);
+    assert.equal(after.events.at(-1).type, "wallet.account_write_initialized");
+    assert.equal(after.state_revision, before.state_revision + 1);
   } finally { ledger.close(); }
 });
 
@@ -274,7 +278,7 @@ test("FP-06b two SQLite connections admit one generation and online backup prese
       contender.activateWalletReadCutover(input, "fp06b-cas-backup-b"),
     ]);
     assert.equal(results.filter((result) => result.status === "fulfilled").length, 1);
-    assert.equal(results.find((result) => result.status === "rejected").reason.code, "wallet_cutover_generation_conflict");
+    assert.equal(results.find((result) => result.status === "rejected").reason.code, "wallet_cutover_state_changed");
     assert.equal(first.db.prepare("SELECT COUNT(*) AS n FROM wallet_cutover_generations").get().n, 1);
     const before = financialFacts(first);
     await first.backupTo(backup, { rate: 100 });
@@ -293,11 +297,11 @@ test("FP-06b two SQLite connections admit one generation and online backup prese
   }
 });
 
-test("FP-06b Schema 21 keeps migration, assessment, and cutover generations append-only", async () => {
+test("FP-06b controls remain append-only after the Schema 22 account-wallet migration", async () => {
   const { ledger, sandbox, ledgerAccountId, plan, assessment } = await readyContext("append_only");
   try {
-    assert.equal(ledger.schemaVersion(), 21);
-    assert.deepEqual(ledger.schemaMigrations().map(({ version }) => version), Array.from({ length: 21 }, (_, index) => index + 1));
+    assert.equal(ledger.schemaVersion(), 22);
+    assert.deepEqual(ledger.schemaMigrations().map(({ version }) => version), Array.from({ length: 22 }, (_, index) => index + 1));
     assert.equal(plan.status, "verified");
     assert.equal(assessment.status, "ready");
     assert.deepEqual(
@@ -341,13 +345,13 @@ test("FP-06b Schema 21 keeps migration, assessment, and cutover generations appe
     );
     await assert.rejects(
       sandbox.activateWalletReadCutover({ assessment_id: assessment.id, expected_active_generation: 0, reason: "second writer" }, "fp06b-activate-race"),
-      (error) => error.code === "wallet_cutover_generation_conflict",
+      (error) => error.code === "wallet_cutover_state_changed",
     );
     const runtime = sandbox.getRuntimeWalletView({ ledger_account_id: ledgerAccountId, currency: CURRENCY });
     assert.equal(runtime.status, "active");
     assert.equal(runtime.read_mode, "ledger_projection");
     assert.deepEqual(runtime.read_balance, { value: OPENING_VALUE, currency: CURRENCY });
-    assert.equal(runtime.spend_decision_source, "legacy_wallet");
+    assert.equal(runtime.spend_decision_source, "account_wallet");
     assert.equal(runtime.fallback_performed, false);
 
     assert.throws(() => ledger.db.prepare("UPDATE wallet_migration_plans SET status='blocked' WHERE id=?").run(plan.id), /wallet_migration_plan_immutable/);
@@ -374,7 +378,11 @@ test("FP-06b Schema 21 keeps migration, assessment, and cutover generations appe
     assert.equal(ledger.db.prepare("DELETE FROM ledger_projection_versions WHERE id=?").run(assessment.projection_id).changes, 1);
     assert.equal(ledger.getWalletCutoverAssessment(assessment.id).projection_id, assessment.projection_id);
     assert.equal(sandbox.getRuntimeWalletView({ ledger_account_id: ledgerAccountId, currency: CURRENCY }).read_mode, "legacy_wallet");
-    assert.deepEqual(financialFacts(ledger), factsBefore);
+    const factsAfter = financialFacts(ledger);
+    assert.deepEqual(factsAfter.postings, factsBefore.postings);
+    assert.equal(factsAfter.events.length, factsBefore.events.length + 1);
+    assert.equal(factsAfter.events.at(-1).type, "wallet.account_write_initialized");
+    assert.equal(factsAfter.state_revision, factsBefore.state_revision + 1);
   } finally {
     ledger.close();
   }
@@ -658,15 +666,21 @@ test("FP-06b active runtime read follows available spending capacity during a re
     };
     await sandbox.runIdempotentAsync("fp06b/healthy-reserve", "fp06b-healthy-reserve-key", { intent_id: intent.id }, () => sandbox.reserve(intent));
     assert.equal(adapterCalls, 1);
-    assert.equal(sandbox.wallet.available, OPENING_VALUE - 250);
-    assert.equal(sandbox.wallet.reserved, 250);
+    assert.equal(sandbox.wallet.available, OPENING_VALUE);
+    assert.equal(sandbox.wallet.reserved, 0);
+    assert.deepEqual(sandbox.accountWalletState(ledgerAccountId, CURRENCY), {
+      ledger_account_id: ledgerAccountId,
+      currency: CURRENCY,
+      available: OPENING_VALUE - 250,
+      reserved: 250,
+    });
     const runtime = sandbox.getRuntimeWalletView({ ledger_account_id: ledgerAccountId, currency: CURRENCY });
     assert.equal(runtime.status, "active");
     assert.equal(runtime.read_balance_semantics, "available_spending_capacity");
     assert.deepEqual(runtime.read_balance, { value: OPENING_VALUE - 250, currency: CURRENCY });
     assert.equal(runtime.model.book_balance.amount.value, OPENING_VALUE);
     assert.equal(runtime.model.reserved.value, 250);
-    assert.equal(runtime.spend_decision_source, "legacy_wallet");
+    assert.equal(runtime.spend_decision_source, "account_wallet");
   } finally {
     ledger.close();
   }

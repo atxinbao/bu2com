@@ -66,4 +66,6 @@ Schema/归属约束子范围已增加 `ledger_accounts` Schema 16、唯一所有
 
 第六实现子范围 FP-06b 增加 Schema 21 append-only migration plan / assessment / cutover generation。它不 UPDATE 历史 Posting，而以 fully-bound、逐 source exclusion 或 reconciled-opening 明确解释目标范围；活动计划 source fingerprint 漂移即失效。Local cutover 激活重验 state revision、legacy wallet、fresh assessment、projection/source hash 和 generation CAS；运行时 `read_balance` 可切到 WalletReadModel `available_spending_capacity`，但资金写与支出判断仍由 legacy Transaction Core wallet 所有。stale/incomplete 时不 fallback，并阻止新 reserve；rollback 追加新的 legacy generation。
 
-FP-06b 不授权 Sandbox/Testnet、Hosted、Live/Mainnet 或生产数据迁移。正式社交钱包产品读写、两个独立 Account 的产品级 E2E 与新 RC 继续交给 FP-07。
+第七实现子范围 FP-08 增加 Schema 22 `account_wallet_balances`。健康 Local cutover 激活从已重验候选原子初始化账户余额并追加初始化 Event/Outbox；新交易固定 `wallet_write_source`，Transaction Core 在既有领域事务内执行账户级 reserve/cancel/settle/refund 与买方 Payment/Refund ProviderFee 扣减。历史交易继续使用 legacy wallet，Collection 运行时净入账和公开 Wallet API 保持关闭。
+
+FP-08 不授权 Sandbox/Testnet、Hosted、Live/Mainnet 或生产数据迁移。公开社交钱包 API、Collection 运行时净入账与外部双向收付继续单独推进。

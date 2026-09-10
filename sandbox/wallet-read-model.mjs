@@ -112,17 +112,19 @@ export function walletCandidateCapacity({ bookBalance, reserved, pendingOutbound
   };
 }
 
-export function compareWalletShadow({ model, legacyWallet }) {
-  const warnings = ["legacy_runtime_scope_is_global"];
+export function compareWalletShadow({ model, legacyWallet, accountWallet = null }) {
+  const runtimeWallet = accountWallet ?? legacyWallet;
+  const spendDecisionSource = accountWallet ? "account_wallet" : "legacy_wallet";
+  const warnings = accountWallet ? [] : ["legacy_runtime_scope_is_global"];
   const blockers = model.available_spending_capacity.blockers ?? [];
   if (model.stale) warnings.push("candidate_projection_stale");
   if (model.completeness.status !== "complete") warnings.push("candidate_projection_incomplete");
   if (model.historical_scope?.status === "migration_pending") warnings.push("historical_scope_migration_pending");
-  const legacyAvailable = legacyWallet
-    ? { value: legacyWallet.available, currency: legacyWallet.currency }
+  const legacyAvailable = runtimeWallet
+    ? { value: runtimeWallet.available, currency: runtimeWallet.currency }
     : null;
-  const legacyReserved = legacyWallet
-    ? { value: legacyWallet.reserved, currency: legacyWallet.currency }
+  const legacyReserved = runtimeWallet
+    ? { value: runtimeWallet.reserved, currency: runtimeWallet.currency }
     : null;
   const candidateLegacyReserved = {
     value: safeAdd(model.reserved.value, model.pending_outbound.value, "wallet_shadow_reserved_overflow"),
@@ -140,10 +142,12 @@ export function compareWalletShadow({ model, legacyWallet }) {
     candidate_legacy_reserved_equivalent: candidateLegacyReserved,
     legacy_reserved: legacyReserved,
     warnings: [...new Set(warnings)].sort(),
+    spend_decision_source: spendDecisionSource,
+    spend_source_scope: accountWallet ? "ledger_account_currency" : "global_single_wallet",
     decision_use: "forbidden",
     writes_performed: false,
   };
-  if (!legacyWallet || legacyWallet.currency !== model.accounting_currency) {
+  if (!runtimeWallet || runtimeWallet.currency !== model.accounting_currency) {
     return {
       ...common,
       status: "blocked",

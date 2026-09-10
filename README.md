@@ -14,7 +14,7 @@ BU2.com 是 Agent 的 AI 收付平台。它把身份、授权、交易编排、�
 | 上层产品方向 | Social Wallet · FP-07 Local 两账户产品接入验收与 RC 证据机制已进入 `main` |
 | 交易领域基线 | Product v0.3 · Transaction-first |
 | API / SDK / MCP | Agent Payment API v0.3.0 · `@bu2/sdk` v0.3 · MCP stdio v0.3 |
-| Reference Server | v0.17 · Node.js + SQLite WAL · Schema 21 |
+| Reference Server | v0.17 · Node.js + SQLite WAL · Schema 22 |
 | 支付通道 | Local Simulated Adapter + x402 Base Sepolia Adapter |
 | 运行时基线 | Node 24.20.0 · npm 11.19.0 · SQLite 3.53.4 |
 | 历史内部 RC | `ledger-rc-local-v0.1`，仅 Local/Simulation 历史基线 |
@@ -40,8 +40,8 @@ BU2.com 是 Agent 的 AI 收付平台。它把身份、授权、交易编排、�
 
 - **交易闭环**：Quote → PaymentIntent → Authorization → Funds Reserved → DeliveryEvidence → Settlement → Receipt，并保持退款与争议为独立事实。
 - **Agent 原生授权**：Account / AgentIdentity / Credential / PaymentMandate / ExecutionSession 形成可撤销、可限额、可审计的授权链。
-- **账务基础**：不可变 LedgerEvent / Journal / FinancialPosting、可信 LedgerAccount ownership、Schema 21 版本化 projection、历史 replay、Reconciliation 与 Online Backup/restore。
-- **Social Wallet Local 基线**：FP-06a/06b 建立 WalletReadModel、shadow comparison 与 Local-only read cutover；FP-07 用 2 个 Account、4 个 Agent、2 个 LedgerAccount 组合验证付款、收款、部分退款、seller-side ProviderFee、unknown 重启恢复、对账、projection 重建和备份。
+- **账务基础**：不可变 LedgerEvent / Journal / FinancialPosting、可信 LedgerAccount ownership、Schema 22 版本化 projection 与账户级运行时余额、历史 replay、Reconciliation 与 Online Backup/restore。
+- **Social Wallet Local 基线**：FP-06a/06b 建立 WalletReadModel、shadow comparison 与 Local-only read cutover；FP-07 组合验证两账户产品闭环；FP-08 把已切换的新付款写入 `ledger_account_id + currency` 账户余额，并让买方 Payment/Refund ProviderFee 只扣减一次。
 - **恢复与未知结果**：Provider 超时或结果未知不会自动重复支付；状态通过持久 Attempt/Adapter operation、显式 recovery 和 reconciliation 收敛。
 - **Agent 接入**：HTTP、TypeScript SDK、MCP stdio、外部 Buyer/Seller Agent 样例和三路径 clean-room 验收均已有 Local 证据。
 - **环境与运维**：环境自描述、运行时 preflight、Webhook Outbox、租约/重试/死信、结构化日志、SQLite WAL、固定运行时和隔离恢复证据已建立。
@@ -50,9 +50,8 @@ BU2.com 是 Agent 的 AI 收付平台。它把身份、授权、交易编排、�
 
 以下能力仍不是当前产品或资金准入的一部分：
 
-- 真正的 **multi-account spend-decision** 资金写模型；当前支出判断仍由 legacy Transaction Core wallet 所有。
-- buyer-side Payment/Refund ProviderFee 如何进入客户 `available_spending_capacity` 的正式产品语义。
 - 面向产品用户的公开 Wallet API。
+- Collection 主金额与 Collection-side ProviderFee 的账户级运行时净入账语义。
 - 真实 Hosted/Base Sepolia 双向结算证据（LA-06b）与 Phase 0 Epic 3 的 E3.1 Pilot Manifest。
 - Live/Mainnet 资金执行、客户资金托管、法币钱包、提现、换汇、跨境和跨链。
 - 成功的 Social Wallet protected-main RC artifact；CI-03 继续要求 `main` 可证明受保护，当前仓库条件不满足时必须失败关闭。
@@ -114,9 +113,9 @@ BU2 永久区分授权、预留、交付、结算、退款与争议。核心资�
 
 - SQLite WAL、追加式 LedgerEvent、双式 Journal/Posting、LedgerAccount ownership 和进程重启恢复。
 - processing idempotency claim、状态版本 CAS、非负钱包约束，以及资源、余额、Ledger、Outbox 与幂等终态的事务一致性。
-- Schema 21 的 migration plan / assessment / append-only read generation，以及 WalletReadModel / shadow comparison。
+- Schema 21 的 migration plan / assessment / append-only read generation，以及 Schema 22 的账户级余额、交易写源快照和版本 CAS。
 - 外部观察对账、未决队列、孤立事实、期初/更正、历史 replay、projection 删除重建和 Online Backup。
-- active Local cutover 会持续比较 accounting candidate 与 legacy spend source；stale、unknown 或 shadow mismatch 时不静默 fallback。
+- active Local cutover 会持续比较 accounting candidate 与对应账户写源；stale、unknown、负可用余额或 shadow mismatch 时不静默 fallback，并在 Adapter 前阻止新 reserve。
 
 ### Adapter、Receipt 与外部协议
 

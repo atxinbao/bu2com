@@ -1130,3 +1130,13 @@ F06b 让 Quote 和 PaymentIntent 能够保留可验证的资金来源与收款�
 - 综合评分：96/100，建议通过并提交 R0 文档 PR。
 - 残余风险：GitHub main 仍未保护，Social Wallet RC 不能进入正式 release；账户级资金写/ProviderFee、公开 Wallet API 和 LA-06b 均未实现或未执行。本轮没有代码级行为变化，也没有独立复跑 PR #82 的全量测试，而是引用其精确 main CI 证据。
 - 恢复：revert FP-A02 文档提交；无数据库、外部系统、交易或资金事实需要恢复。
+
+## 2026-09-11 · FP-08 账户级资金写源自主审查
+
+- 审查者：Codex（Contributor / Verifier，非独立 R2 Approver）。
+- 技术评分：95/100。Schema 22 以 `ledger_account_id + currency` 隔离余额；切换初始化、账户余额、资源、Posting、Event、Outbox、幂等终态和 revision 同事务提交；交易固定写源防止生命周期中途漂移，SQLite 约束与 CAS 拒绝非法或陈旧写入。
+- 战略评分：97/100。完成 Social Wallet 内部基线所需的账户级支出与买方费用语义，同时明确排除公开 Wallet API、收款侧运行时入账、Hosted/Testnet/Live 和真实资金。
+- 验证评分：96/100。FP-08 7/7、Sandbox 266/266、RT-01 Schema 1–22、LA-06a 全门禁通过；覆盖重启、并发、故障注入、幂等 ProviderFee、负可用余额和 legacy transaction 路径。
+- 综合评分：96/100，建议提交 R2 PR，等待独立 Domain / Architecture 审查和最终提交对应的 CI 证据。
+- 遗留风险：现有 legacy transaction 继续使用全局钱包；Collection runtime credit 尚未切换；未提交门禁仅绑定父 SHA。LA-06b、Hosted、真实 Sandbox/Testnet 双向结算、Live/Mainnet 和真实资金均未执行。
+- 恢复：账户状态尚未分歧时可追加 legacy rollback generation；发生账户级资金变动后保持停止新执行并以前滚修复，禁止删除账户钱包行、改写历史 Posting 或重新调用 Provider。

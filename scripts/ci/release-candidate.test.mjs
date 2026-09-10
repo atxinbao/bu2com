@@ -81,8 +81,8 @@ const createFixtures = async () => {
     npm_version: "11.19.0",
     runtime_identity: { uid: 10001, gid: 10001 },
     sqlite_version: "3.53.4",
-    schema_version_number: 21,
-    migration_versions: Array.from({ length: 21 }, (_, index) => index + 1),
+    schema_version_number: 22,
+    migration_versions: Array.from({ length: 22 }, (_, index) => index + 1),
     journal_mode: "wal",
     foreign_keys: 1,
     backup_restore: { integrity: "ok", same_schema: true, provider_replay: false },
@@ -118,9 +118,10 @@ test("CI-03 binds source, image archive and Social Wallet evidence into a non-au
     assert.equal(manifest.approval.candidate_promotion_authorized, false);
     assert.equal(manifest.product_acceptance.status, "passed");
     assert.equal(manifest.product_acceptance.simulated_payment_flow_executed, true);
-    assert.equal(manifest.product_acceptance.spend_decision_source, "legacy_global_wallet");
+    assert.equal(manifest.product_acceptance.schema_version, "fp08.social-wallet-acceptance.v1");
+    assert.equal(manifest.product_acceptance.spend_decision_source, "account_scoped_wallet");
     assert.equal(manifest.product_acceptance.public_wallet_api_authorized, false);
-    assert.equal(manifest.product_acceptance.buyer_side_provider_fee_spend_semantics_authorized, false);
+    assert.equal(manifest.product_acceptance.buyer_side_provider_fee_spend_semantics_authorized, true);
     assert.equal(manifest.historical_baseline.tag, "ledger-rc-local-v0.1");
     assert.equal(manifest.historical_baseline.commit, "005b3949de4672a5aae301bd9b511e47b8be89fa");
     assert.ok(manifest.explicit_exclusions.includes("real_funds"));

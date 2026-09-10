@@ -28,7 +28,8 @@ Protected main + exact source SHA
 
 - `bu2.ci.v1` 的 source commit/tree、七项通过结果与 Local/Simulation 边界；
 - `bu2.ci.v1` 的 workflow event/ref/SHA 与准入请求的 run/attempt；
-- `rt01.image.v1` 的 source commit、image ID、固定运行时、当前 Schema 21 和禁用执行状态；
+- `rt01.image.v1` 的 source commit、image ID、固定运行时、当前 Schema 22 和禁用执行状态；
+- `fp08.social-wallet-acceptance.v1` 的账户级写源、buyer-side fee、Local/Simulation 和相同 source/image 绑定；
 - Docker archive 非空并计算 SHA-256；
 - request、policy、CI evidence、runtime image evidence 和 image ID 文件哈希。
 
@@ -42,7 +43,7 @@ Protected main + exact source SHA
 | `release-request.json` | 受保护 main 与输入 SHA 准入证据 |
 | `ci-evidence.json` | CI-02 源码与基础门禁绑定 |
 | `runtime-image-assurance.json` | CI-RT01 镜像内运行时证据 |
-| `social-wallet-acceptance.json` | FP-07 两 Account / 四 Agent 的 Local 产品接入证据，绑定同一 source/image |
+| `social-wallet-acceptance.json` | FP-08 两 Account / 四 Agent 的 Local 账户级写入证据，绑定同一 source/image |
 | 其他 JSON/stderr | 原始基础与运行时证据 |
 
 ## 当前执行限制
@@ -56,4 +57,4 @@ gh workflow run ledger-release-candidate.yml \
   -f source_commit=<完整 main SHA>
 ```
 
-候选成功后仍停在 artifact。manifest 同时绑定 FP-07 acceptance 与历史 `ledger-rc-local-v0.1 @ 005b3949…`；任何后续晋级都必须验证相同 image/archive/manifest/acceptance hash 并取得独立批准，不得下载源码后重新 build，也不得移动旧标签。
+候选成功后仍停在 artifact。manifest 同时绑定 FP-08 acceptance 与历史 `ledger-rc-local-v0.1 @ 005b3949…`；任何后续晋级都必须验证相同 image/archive/manifest/acceptance hash 并取得独立批准，不得下载源码后重新 build，也不得移动旧标签。

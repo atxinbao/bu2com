@@ -237,9 +237,9 @@ export function validateReleaseCandidate(manifest, {
     manifest.product_acceptance?.ledger_account_count === 2 &&
     manifest.product_acceptance?.external_sandbox_bilateral === "not_executed" &&
     manifest.product_acceptance?.simulated_payment_flow_executed === true &&
-    manifest.product_acceptance?.spend_decision_source === "legacy_global_wallet" &&
+    manifest.product_acceptance?.spend_decision_source === "account_scoped_wallet" &&
     manifest.product_acceptance?.public_wallet_api_authorized === false &&
-    manifest.product_acceptance?.buyer_side_provider_fee_spend_semantics_authorized === false &&
+    manifest.product_acceptance?.buyer_side_provider_fee_spend_semantics_authorized === true &&
     manifest.product_acceptance?.product_promotion_authorized === false &&
     JSON.stringify(manifest.historical_baseline) === JSON.stringify(policy.historical_baseline) &&
     sameArray(manifest.capabilities, policy.capabilities) &&

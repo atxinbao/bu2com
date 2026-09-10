@@ -64,6 +64,12 @@ FP-01、FP-02、FP-03 可以并行准备，但应分别提交和审查。
 
 实现状态：新增 `fp07.social-wallet-acceptance.v1`，在隔离 Local/Simulation SQLite 上组合两个 Account、四个 Agent、可信绑定、可核对期初、付款/收款/部分退款/seller-side Collection fee、持久 unknown→重启→recovery、完整对账、projection 删除重建、历史 replay 和 Online Backup。active cutover 增加持续 shadow-match guard，并把 delivery-submitted pending 纳入 legacy reserved 等价比较。buyer-side Payment/Refund ProviderFee 的 spending-capacity 语义仍未批准。CI-03 RC class 更新为 `social_wallet_local_integration_rc`，绑定同 source/image 的 FP-07 acceptance 与旧 `ledger-rc-local-v0.1` 历史基线；候选仍是 `prepared_not_released`，当前 protected-main 套餐阻塞不被绕过。
 
+### FP-08 — 账户级资金写源与买方费用语义
+
+独立 R2：Schema 22 增加 `ledger_account_id + currency` 账户余额。健康 Local cutover 激活从重验后的会计候选原子初始化写源；新交易固定保存 `wallet_write_source`，reserve/cancel/settle/refund 与买方 Payment/Refund ProviderFee 在 Transaction Core 既有强事务内通过账户余额版本 CAS 提交。
+
+实现状态：`fp08.social-wallet-acceptance.v1` 取代旧 FP-07 证据语义，明确 `spend_decision_source=account_scoped_wallet` 且 buyer-side fee 已授权；旧 v1 证据不被静默重新解释。费用作为已观察外部事实可以使 available 为负，但新 reserve 在 Adapter 前失败关闭。历史交易继续使用 legacy wallet；公开 Wallet API、Collection 运行时净入账、Sandbox/Testnet/Live 和真实资金不在本范围。
+
 ## 审计修复与当前状态
 
 ### FP-A01 — 钱包对账完整性与激活后运行检查统一
@@ -76,7 +82,7 @@ PR [#82](https://github.com/atxinbao/bu2com/pull/82) 已合并到 main `e19bae63
 
 本工作包只对齐 FP-A01 合并后的文档状态、固定 main 基线和 CI 证据，风险等级为 **R0**。它不修改代码、Schema、API、交易/账务状态、环境配置或资金执行。GitHub API 当前仍报告 `main protected=false`，Social Wallet RC 继续保持 `prepared_not_released`；该运营门槛不能由 PR #82 的成功检查替代。
 
-FP-A02 后的功能建设顺序为：账户级资金写源与 buyer-side ProviderFee 支出语义、公开 Wallet API、LA-06b 外部 Sandbox/Testnet 双向验收。每项必须按自身 R2/R3 边界单独设计、验证和批准，不把 Local/Simulation 证据扩张为 Hosted、Live/Mainnet 或真实资金准入。
+FP-A02 后的功能建设顺序为：FP-08 账户级资金写源与 buyer-side ProviderFee 支出语义、公开 Wallet API、LA-06b 外部 Sandbox/Testnet 双向验收。FP-08 当前候选通过后再进入公开 Wallet API；每项必须按自身 R2/R3 边界单独设计、验证和批准，不把 Local/Simulation 证据扩张为 Hosted、Live/Mainnet 或真实资金准入。
 
 ## 依赖关系
 
@@ -84,6 +90,7 @@ FP-A02 后的功能建设顺序为：账户级资金写源与 buyer-side Provide
 FP-01 ─┐
 FP-02 ─┼─> FP-04 -> FP-05 -> FP-06a -> FP-06b -> FP-07
 FP-03 ─┘
+FP-07 -> FP-08 -> Public Wallet API -> LA-06b
 ```
 
 共享账务写入路径和数据库迁移按顺序合并；不要并行打开多个同时修改同一资金写边界的大 PR。

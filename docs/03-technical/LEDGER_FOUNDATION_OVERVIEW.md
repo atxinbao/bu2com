@@ -1,14 +1,14 @@
 # Ledger Foundation 当前能力与产品接入基线
 
 日期：2026-09-11
-状态：FP-07 后 current-capability baseline；FP-A01 已由 PR #82 关闭
-固定整理基线：`e19bae63f29604554bcca9e10151d5363341ac07`
+状态：FP-08 account-scoped write candidate；FP-A01 已由 PR #82 关闭
+固定起点：`b454dfee4f3ce6a217aa50bd9f4df78692d57b00`
 
 本页是当前能力入口，不替代 [`AGENTS.md`](../../AGENTS.md)、[`PROJECT.html`](../../PROJECT.html)、[`ARCHITECTURE.html`](../../ARCHITECTURE.html)、[`GOVERNANCE.html`](../../GOVERNANCE.html) 或具体版本化契约。它不授予资金执行、Sandbox/Testnet 验收、Live/Mainnet、生产迁移或发布权限。
 
 ## 1. 定位
 
-BU2 Ledger Foundation 是多个上层业务产品共享的收付、授权、账务、恢复与证据基础，不单独作为收费产品。**社交钱包是首个上层产品方向**；FP-07 已完成有限 Local/Simulation 产品接入验收，但资金写与支出决策仍是 legacy 单钱包，公开 Wallet API、真实多账户写模型及外部资金环境尚未交付。产品不得把 Local 读路径基线包装成完整多账户社交钱包。
+BU2 Ledger Foundation 是多个上层业务产品共享的收付、授权、账务、恢复与证据基础，不单独作为收费产品。**社交钱包是首个上层产品方向**；FP-07 已完成有限 Local/Simulation 产品接入验收，FP-08 进一步在健康 Local cutover 下交付账户级写余额与买方 Payment/Refund ProviderFee 支出语义。公开 Wallet API、Collection 运行时净入账及外部资金环境尚未交付，产品不得把 Local 能力包装成完整公网社交钱包。
 
 Transaction-first v0.3 继续作为交易领域语义基线：授权、预留、交付、结算、退款和争议保持独立事实。它不等同于上层产品的信息架构或余额读模型。
 
@@ -44,7 +44,7 @@ Simulation 不是对外 Sandbox。CI 成功、代码已合并或存在 Live 配�
 | Journal / Posting | 平衡校验、已过账不可变、业务资金事实分录；FP-04 将纯计算提到内部 helper；FP-05 让新格式 settlement/collection/refund/fee/opening/correction Posting 继承可信 `ledger_account_id` | 历史未绑定事实的目标范围迁移/期初核对 | 内部账务事实 |
 | LedgerAccount | Schema 16 所有权注册、Schema 17 Posting 绑定；Schema 20 将 FundingSource/ReceivingTarget 固定到 environment/tenant/owner/asset/network 一致的 LedgerAccount，并在 SQLite 层保护归属不可变 | 历史 null binding 的归属迁移与产品范围 cutover | 内部所有权边界 |
 | 账户投影 | Schema 19、确定性内容哈希、显式期望版本、条件激活、可重建；FP-06a 增加只读 source watermark、source/projection hash、stale/completeness inspection；FP-06b 允许经 current Local migration plan 的目标投影刷新 | 时间型 freshness SLA、Sandbox/Live cutover | Local 受控派生读路径；**不是支付授权** |
-| 运行时余额 | legacy `wallet_accounts` / `this.wallet` 仍是资金写/支出决策源；FP-06b Schema 21 以 append-only generation 在 Local 选择 `legacy_wallet` 或 WalletReadModel `available_spending_capacity` 作为读值；FP-A01 统一摘要、assessment 和 active guard 的严格对账覆盖 | 正式产品 API、真实多账户写模型、Sandbox/Live cutover | Local 受控读路径；spend decision 仍为 legacy wallet |
+| 运行时余额 | FP-06b Schema 21 以 append-only generation 在 Local 选择读路径；FP-08 Schema 22 为活动 cutover 初始化 `ledger_account_id + currency` 余额，新交易固定写源并以版本 CAS 更新；历史未切换交易继续使用 legacy wallet | 公开 Wallet API、Collection 运行时净入账、Sandbox/Live cutover | Local 账户级写入；Transaction Core 仍是唯一写者 |
 | 历史重放/恢复 | 只读重放、备份追加事实追平、缺口报告；FP-06b 支持 fully-bound/scoped-exclusion/reconciled-opening 迁移计划及追加 rollback generation | 实际生产数据迁移与外部环境验证 | Local 隔离迁移/恢复证据 |
 | 收款/付款/退款/费用 | Local/Simulation 业务与故障路径、Attempt/对账能力；新格式业务分录已从可信 wallet binding 解析到账簿账户；FP-06a 将 reserved/pending 与账簿余额分开读取 | 历史范围迁移、正式产品 cutover 与真实 Sandbox 证据 | 不扩张到未批准通道 |
 | CI | main `e19bae63…` 的 `BU2 CI` run `34527198064` 已完成，`foundation`、`runtime`、`runtime image`、`BU2 / CI Gate` 四组 job 均 success；FP-02 已绑定 source commit/tree/run/attempt、原始日志和测试统计 | GitHub API 仍报告 `main protected=false`，因此 protected-main RC 准入仍未满足 | 合并后精确源码回归证据；**不是资金授权** |
@@ -68,7 +68,7 @@ FP-05 已完成**新格式业务事实**的可信归属接线；FP-06a 已建立
 
 - 对目标产品账簿的历史未绑定事实建立可证明归属或已核对期初，不可确定的事实继续保持 unresolved；
 - 在真实目标产品范围内完成人工审查的历史归属/期初证据，并持续取得完整 shadow/reconciliation 差异证据；
-- FP-07 已完成不新增公开 Wallet API、不开启多账户资金写的 Local 集成基线；正式产品 API、账户级写模型与 Sandbox/Testnet/Live cutover 仍需独立准入；
+- FP-08 当前候选已完成不新增公开 Wallet API 的 Local 账户级写入；正式产品 API、Collection 运行时净入账与 Sandbox/Testnet/Live cutover 仍需独立准入；
 - 证明暂停账户仍可查询历史和对账，而新增支出保持失败关闭；
 - 保持 Journal/Posting 与 Provider 已发生事实不可改写，不用重新付款掩盖差异。
 
@@ -80,7 +80,7 @@ FP-05 已完成**新格式业务事实**的可信归属接线；FP-06a 已建立
 
 FP-06a 的 `inspectLedgerAccountProjection()` 只执行 SELECT，并以当前不可变 Posting 重算 content hash / Journal 水位 / projection rows 对照；不会调用 projection refresh、不会删除损坏派生行、不会追加 LedgerEvent。completeness scope 固定为 `trusted_bound_sources`：Domain 只把已有可信 ledger ownership 的 transaction/refund/collection/fee/opening/correction source ID 传给 inspection，相关 source 若仍有 unbound Posting 才阻断目标模型；其他全局 unbound 历史只进入 `historical_scope` 迁移警告。`wallet-posting-liquidity.v1` 的 `book_balance` 只包含明确流动性科目，`available_spending_capacity` 永远标记 `usable_for_spend=false`。仓库当前没有账户级 Provider balance observation，因此 `provider_balance` 必须返回 `not_observed/null`；交易级 reconciliation evidence 只能决定 `reconciliation_status`，不能冒充 Provider 余额。FP-A01 后该状态与 cutover 共用 LedgerAccount+币种 scoped required-source 判定：完整、唯一且状态合法才能 matched，无需 Provider 对账为 not_required。`stale` 当前只表示 source/projection 内容漂移，未定义时间型 freshness SLA。
 
-FP-06b Schema 21 的 migration plan / assessment / generation 都是 append-only 控制事实，不是资金事实。plan `verified` 只证明 legacy source 分类、scope 与期初时间边界在机器上自洽，证据引用本身仍需人类审查。Local cutover 激活会在同一 SQLite 写事务内重验 plan、state revision、legacy wallet、fresh assessment snapshot、projection/source hash 与 generation；运行时读值选择 WalletReadModel `available_spending_capacity`，但 `spend_decision_source` 继续是 legacy wallet。active cutover 若 stale/incomplete、shadow 分歧或最新 required reconciliation 异常，则读值失败关闭且不 fallback，并阻止新的 reserve 在 Adapter 前继续；正规完整的新对账 run 恢复读取，不重付、不改写旧 run 或 Posting。rollback 追加 legacy generation。完整契约见 [`FP06B_WALLET_READ_CUTOVER_CONTRACT.md`](../02-product/FP06B_WALLET_READ_CUTOVER_CONTRACT.md) 与 [`ADR_0002_LOCAL_WALLET_READ_CUTOVER.md`](ADR_0002_LOCAL_WALLET_READ_CUTOVER.md)。
+FP-06b Schema 21 的 migration plan / assessment / generation 都是 append-only 控制事实，不是资金事实。plan `verified` 只证明 legacy source 分类、scope 与期初时间边界在机器上自洽，证据引用本身仍需人类审查。FP-08 Schema 22 在首次健康激活的同一 SQLite 事务中从 fresh assessment 初始化账户写余额，并追加初始化 Event/Outbox；新交易持久化 `wallet_write_source`，后续生命周期不重新推断路由。active cutover 若 stale/incomplete、账户写源与会计候选分歧、负可用余额或最新 required reconciliation 异常，则读值失败关闭且不 fallback，并阻止新的 reserve 在 Adapter 前继续。完整契约见 [`FP06B_WALLET_READ_CUTOVER_CONTRACT.md`](../02-product/FP06B_WALLET_READ_CUTOVER_CONTRACT.md)、[`FP08_ACCOUNT_WALLET_WRITE_CONTRACT.md`](../02-product/FP08_ACCOUNT_WALLET_WRITE_CONTRACT.md) 与 [`ADR_0002_LOCAL_WALLET_READ_CUTOVER.md`](ADR_0002_LOCAL_WALLET_READ_CUTOVER.md)。
 
 ## 6. 只读盘点入口
 
@@ -98,4 +98,4 @@ python3 scripts/ledger/ledger_inventory.py \
 
 ## 7. 后续依赖
 
-执行顺序及已交付状态见 [`FOUNDATION_PR_PLAN.md`](FOUNDATION_PR_PLAN.md)。FP-07 已完成有限 Local 产品接入验收，FP-A01 已由 PR #82 关闭持续对账健康性缺口，并由 main run `34527198064` 取得精确合并提交的四组成功检查。下一阶段应把账户级资金写源与 buyer-side ProviderFee 支出语义、公开 Wallet API 拆为独立能力 PR；LA-06b 继续负责外部 Sandbox/Testnet 双向证据。真实产品数据迁移、Hosted、Live/Mainnet 或资金准入仍不由本页授予。
+执行顺序及已交付状态见 [`FOUNDATION_PR_PLAN.md`](FOUNDATION_PR_PLAN.md)。FP-08 当前候选完成账户级资金写源与 buyer-side ProviderFee 支出语义；下一项能力应独立推进公开 Wallet API，Collection 运行时净入账另行冻结。LA-06b 继续负责外部 Sandbox/Testnet 双向证据。真实产品数据迁移、Hosted、Live/Mainnet 或资金准入仍不由本页授予。

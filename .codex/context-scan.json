@@ -1,54 +1,52 @@
 {
   "date": "2026-09-11",
   "executor": "Codex",
-  "task": "FP-A02 Foundation status and merged-evidence alignment",
+  "work_package": "FP-08",
   "location": [
-    "docs/03-technical/LEDGER_FOUNDATION_OVERVIEW.md",
-    "docs/03-technical/FOUNDATION_PR_PLAN.md",
-    "CHANGELOG.html",
-    "verification.md"
+    "sandbox/domain.mjs",
+    "sandbox/persistence.mjs",
+    "sandbox/wallet-read-model.mjs",
+    "sandbox/fp06b-wallet-cutover.test.mjs",
+    "sandbox/fp07-social-wallet-acceptance.test.mjs"
   ],
   "current_state": {
-    "git": "main and docs/fpa02-foundation-evidence point to e19bae63f29604554bcca9e10151d5363341ac07; the merged local FP-A01 branch has been deleted",
-    "fp_a01": "GitHub PR #82 is merged and no code-level P0/P1 remains in its delivered scope",
-    "ci": "main BU2 CI run 34527198064 completed successfully for foundation, runtime, runtime image and BU2 / CI Gate",
-    "release": "GitHub reports main protected=false; Social Wallet RC remains prepared_not_released",
-    "documentation": "Foundation overview still described FP-A01 as in progress and cited the parent main/CI evidence"
+    "runtime_wallet": "单一 this.wallet",
+    "persistence": "wallet_accounts LIMIT 1 与单行 CAS",
+    "trusted_scope": "FundingSource/ReceivingTarget 已绑定 ledger_account_id",
+    "provider_fee": "Posting 已按账户归属，但 legacy wallet 不变"
   },
   "similar_patterns": [
-    "Foundation overview separates implemented capability, local verification and runtime admission",
-    "Foundation PR plan records implementation status beneath frozen work-package definitions",
-    "Changelog entries include risk, verification, financial invariants and recovery boundaries"
+    "Schema 20 可信资金绑定",
+    "Schema 21 append-only cutover generation",
+    "commitDomainMutation 全局 revision + wallet CAS",
+    "退款 Attempt 外部事实与业务补记分离"
   ],
   "observations": [
-    "PR #82 success closes FP-A01 but does not satisfy protected-main RC admission",
-    "The next capability work must be split between account-level funding/fee semantics, public Wallet API and LA-06b external evidence",
-    "A documentation-only alignment must not claim Hosted, Sandbox/Testnet bilateral, Live/Mainnet or real-funds acceptance"
+    "buyer-side fee 会造成 accounting candidate 与 legacy wallet 分叉",
+    "collection-side fee 不能在 collection 本身未进入运行时余额时单独扣减",
+    "历史交易不能仅凭 ledger_account_id 自动改绑到新写源",
+    "已确认费用即使账户暂停也必须能补记"
   ],
   "questions": [
     {
       "priority": "high",
-      "question": "What is the exact merged Foundation baseline?",
-      "resolved": true,
-      "answer": "PR #82 merged as e19bae63f29604554bcca9e10151d5363341ac07."
+      "question": "如何避免把历史绑定交易静默切换到新写源？",
+      "answer": "新交易持久化明确 wallet_write_source；缺少该字段的历史交易继续使用 legacy wallet。"
     },
     {
       "priority": "high",
-      "question": "What evidence belongs to that exact main commit?",
-      "resolved": true,
-      "answer": "BU2 CI push run 34527198064; all four required jobs completed successfully."
+      "question": "账户级状态如何进入数据库事务？",
+      "answer": "snapshot 携带 account_wallets，commitDomainMutation 在同一 immediate transaction 中逐变更行执行版本 CAS，再提交资源、Posting、LedgerEvent、Outbox 与幂等终态。"
     },
     {
       "priority": "high",
-      "question": "Does this evidence authorize a release or funds execution?",
-      "resolved": true,
-      "answer": "No. main remains unprotected and the RC remains prepared_not_released; all external and funds environments retain their separate gates."
+      "question": "ProviderFee 余额不足时如何保留已发生事实？",
+      "answer": "账户级 available 允许成为负数；新 reserve 仍要求足额，负值会自然阻止新增支出。"
     },
     {
       "priority": "medium",
-      "question": "What comes after FP-A02?",
-      "resolved": true,
-      "answer": "Separate capability PRs for account-level funding writes and buyer-side ProviderFee semantics, public Wallet API, then LA-06b external Sandbox/Testnet evidence."
+      "question": "Collection fee 是否本轮扣减？",
+      "answer": "否；Collection 主金额尚未进入账户级运行时余额，单独扣费会制造不对称状态。"
     }
   ],
   "sufficiency": {

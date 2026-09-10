@@ -40,18 +40,19 @@
   },
   "capabilities": [
     "local_ledger_integration",
-    "sqlite_schema_21",
+    "sqlite_schema_22",
     "wallet_read_model_v1",
     "local_wallet_read_cutover",
+    "account_scoped_wallet_writes",
+    "buyer_side_provider_fee_spend_semantics",
     "social_wallet_local_acceptance",
     "wal_and_online_backup_restore",
     "immutable_docker_archive",
     "source_and_evidence_bound_manifest"
   ],
   "explicit_exclusions": [
-    "multi_account_spend_decision_cutover",
-    "buyer_side_provider_fee_spend_semantics",
     "public_wallet_api",
+    "collection_runtime_wallet_credit",
     "hosted_deployment",
     "sandbox_testnet_bilateral_settlement",
     "live_mainnet_execution",

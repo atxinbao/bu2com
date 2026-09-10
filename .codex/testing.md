@@ -582,3 +582,16 @@
 | Graphify | `graphify update .` | PASS；4014 nodes / 6747 edges / 264 communities，源码 freshness 为 `e19bae63` |
 
 本轮为 R0 文档收口，不重复运行 FP-A01 资金/运行时测试。精确 main 合并证据来自 GitHub run `34527198064`；该证据不替代 protected-main、LA-06b、Hosted、Sandbox/Testnet 双向、Live/Mainnet 或真实资金验收。
+
+## 2026-09-11 · FP-08 账户级资金写源与买方 ProviderFee
+
+| 验证项 | 命令 | 结果 |
+|---|---|---|
+| FP-08 专项 | `PATH=/Users/mac/.local/share/mise/installs/node/24.20.0/bin:$PATH node --test sandbox/fp08-account-wallet-writes.test.mjs` | 7/7 通过 |
+| Sandbox 全量 | 同一 Node PATH 下执行 `npm --prefix sandbox test` | 266/266 通过 |
+| RT-01 | 同一 Node PATH 下执行 `node deploy/runtime-assurance.mjs` | PASS；Node 24.20.0、npm 11.19.0、SQLite 3.53.4、Schema 1–22、WAL/FK/备份恢复通过 |
+| LA-06a | 同一 Node PATH 下执行 `node deploy/la06a-local-gate.mjs` | PASS；Sandbox 266/266、边界 4/4、部署/Hosted 23/23、SDK 10/10、63 项 API 不变量/6 MCP 工具及 Prototype lint/build 通过 |
+
+账户钱包数据库约束覆盖安全整数、`reserved >= 0`、账户/币种作用域不可变和禁止删除。故障与并发覆盖账户余额、资源、Posting、LedgerEvent、Outbox、幂等结果和 state revision 的整体回滚及陈旧写入拒绝。
+
+本地门禁在未提交工作树上运行，证据中的 `source_commit=b454dfee...` 是父基线；最终提交与远程 PR 证据尚不存在。未执行公开 Wallet API、Collection runtime wallet credit、Hosted、真实 Sandbox/Testnet 双向结算、LA-06b、Live/Mainnet、Signer、Provider 付款、Tag 或 Release。

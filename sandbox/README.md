@@ -7,11 +7,15 @@
 
 ## FP-06b 隔离 Local 读路径
 
-Schema 21 新增只追加的 migration plan、cutover assessment 与 generation。内部 `getRuntimeWalletView()` 可以在明确 Local scope 选择 WalletReadModel 的候选可支出能力；这不是公开 Wallet API，支出决策仍使用 legacy wallet。stale、过期 Domain revision 和未知/已确认未过账 Attempt 均失败关闭；回滚只追加 generation，不删除资金事实。控制面拒绝 Sandbox/Live，既有环境执行门槛不变。契约与逐步恢复见 [FP-06b Local cutover](../docs/02-product/FP06B_WALLET_READ_CUTOVER_CONTRACT.md)。
+Schema 21 新增只追加的 migration plan、cutover assessment 与 generation。内部 `getRuntimeWalletView()` 可以在明确 Local scope 选择 WalletReadModel 的候选可支出能力；FP-06b 自身不改变资金写源。stale、过期 Domain revision 和未知/已确认未过账 Attempt 均失败关闭；回滚只追加 generation，不删除资金事实。控制面拒绝 Sandbox/Live，既有环境执行门槛不变。契约与逐步恢复见 [FP-06b Local cutover](../docs/02-product/FP06B_WALLET_READ_CUTOVER_CONTRACT.md)。
 
 ## FP-07 Social Wallet Local 验收
 
-`npm run acceptance:social-wallet` 在临时 SQLite 中执行两个 Account / 四个 Agent 的 Local/Simulation 产品接入验收，包括期初、付款、收款、部分退款、seller-side ProviderFee、unknown 重启恢复、对账、投影重建、历史 replay、权限失败关闭与 Online Backup。active cutover 还持续要求 accounting candidate 与 legacy spend source 匹配；buyer-side ProviderFee 支出语义未批准。该命令不调用真实 Provider、不加载 Signer、不创建 Sandbox/Testnet 或 Live 资金证据。完整契约见 [FP-07 Social Wallet baseline](../docs/02-product/FP07_SOCIAL_WALLET_BASELINE_CONTRACT.md)。
+`npm run acceptance:social-wallet` 在临时 SQLite 中执行两个 Account / 四个 Agent 的 Local/Simulation 产品接入验收，包括期初、付款、收款、部分退款、三类 ProviderFee、unknown 重启恢复、对账、投影重建、历史 replay、权限失败关闭与 Online Backup。FP-08 后，active cutover 使用账户级写源，买方 Payment/Refund ProviderFee 从对应账户可用余额只扣减一次。该命令不调用真实 Provider、不加载 Signer、不创建 Sandbox/Testnet 或 Live 资金证据。完整契约见 [FP-07 Social Wallet baseline](../docs/02-product/FP07_SOCIAL_WALLET_BASELINE_CONTRACT.md) 与 [FP-08 account wallet writes](../docs/02-product/FP08_ACCOUNT_WALLET_WRITE_CONTRACT.md)。
+
+## FP-08 账户级资金写源
+
+Schema 22 新增 `account_wallet_balances`。Local cutover 激活时从已重验的会计候选原子初始化账户余额；此后新交易固定保存 `wallet_write_source=account_wallet`，reserve/cancel/settle/refund 和买方 Payment/Refund ProviderFee 都在同一 `ledger_account_id + currency` 行执行安全整数运算与版本 CAS。费用作为已观察事实可以把 available 降为负值，但负值会在 Provider 前阻止新的 reserve。历史未绑定交易继续使用 legacy wallet，Collection 运行时入账与公开 Wallet API 不在本范围。
 
 ## 启动
 
@@ -29,7 +33,7 @@ node sandbox/server.mjs
 
 该入口可启动不代表已获部署或支付授权。完整 Candidate、独立 Activation、双向结算与边缘机器鉴权门槛见 [ENV-07 Hosted Sandbox v1](../docs/03-technical/ENVIRONMENT_HOSTED_SANDBOX_V1.md)。
 
-默认数据库：`sandbox/data/bu2-sandbox.sqlite`。SQLite Schema v15 会为新库写入不可变环境 metadata、持久 Principal/Account/Agent 归属、资金来源、收款目标、版本化 PaymentMandate、PolicyDecision、ExecutionSession、只追加访问决策、租户 credential generation 与 reset 审计、持久化退款尝试以及受保护的平衡 Journal/Posting；错环境数据库拒绝启动。没有 metadata 的旧库必须先鉴别，再用一次性 `BU2_CLAIM_LEGACY_DB_ENVIRONMENT=true` 明确认领，不能默认解释为 Sandbox 或 Live。重启服务后资源、钱包、幂等结果、账本、Receipt、身份归属、钱包绑定、Mandate 决策、ExecutionSession 支出、退款尝试和已过账 Journal 均会恢复。领域写入先登记数据库 `processing` Claim，再以状态版本 CAS 把资源、余额、LedgerEvent、Webhook Outbox 和幂等终态一次提交；退款外部调用前另行持久化 Refund Attempt，未知结果保留可退额度占用，禁止自动重放；财务 Posting 必须经成组借贷平衡校验，已过账事实不可更新或删除。
+默认数据库：`sandbox/data/bu2-sandbox.sqlite`。SQLite Schema v22 会为新库写入不可变环境 metadata、持久 Principal/Account/Agent 归属、资金来源、收款目标、版本化 PaymentMandate、PolicyDecision、ExecutionSession、只追加访问决策、租户 credential generation 与 reset 审计、持久化退款尝试、受保护的平衡 Journal/Posting 以及账户级运行时余额；错环境数据库拒绝启动。没有 metadata 的旧库必须先鉴别，再用一次性 `BU2_CLAIM_LEGACY_DB_ENVIRONMENT=true` 明确认领，不能默认解释为 Sandbox 或 Live。重启服务后资源、钱包、幂等结果、账本、Receipt、身份归属、钱包绑定、Mandate 决策、ExecutionSession 支出、退款尝试和已过账 Journal 均会恢复。领域写入先登记数据库 `processing` Claim，再以状态版本 CAS 把资源、余额、LedgerEvent、Webhook Outbox 和幂等终态一次提交；退款外部调用前另行持久化 Refund Attempt，未知结果保留可退额度占用，禁止自动重放；财务 Posting 必须经成组借贷平衡校验，已过账事实不可更新或删除。
 
 F13 增加 `funds_reserved` 交易的有界取消，以及 `settled` 交易的部分/全额退款事实。取消会原子释放 Wallet reserved 和 active Budget Hold；退款持久化为 `Refund` 资源并维持 `refunded ≤ settled ≤ reserved ≤ authorized`。Provider unknown 只能通过显式 recovery 查询推进；当前 x402 Adapter 没有标准退款原语，因此不会伪造退款成功或自动重付。
 
