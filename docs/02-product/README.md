@@ -48,7 +48,8 @@
 | [LA-05b 历史账务重放与备份追平](LA05B_HISTORY_REPLAY_CATCHUP_CONTRACT.md) | Ledger Assurance Gate 第五项整改的第二个子范围：期初检查点重放、历史缺口与备份追加事实追平 |
 | [LA-06a 本地全量与隔离准入](LA06A_LOCAL_FOUNDATION_GATE_CONTRACT.md) | Ledger Assurance Gate 第六项整改的本地子范围：全量回归、故障/属性/跨租户证据；不接受真实 Sandbox 双向结算 |
 | [RT-01 固定运行时与 SQLite 账本准入](RT01_RUNTIME_ASSURANCE_CONTRACT.md) | 核对固定 Node/SQLite 运行时、WAL、迁移连续性与隔离备份恢复；不改变生产运行时 |
-| [CI-03 有边界账本 Release Candidate 契约](CI03_LEDGER_RELEASE_CANDIDATE_CONTRACT.md) | 从受保护 main 的确定 SHA 准备源码、镜像和证据绑定的 Local/Integration RC；不自动发布 |
+| [CI-03 有边界账本 Release Candidate 契约](CI03_LEDGER_RELEASE_CANDIDATE_CONTRACT.md) | 从精确 main SHA 准备源码、镜像和证据绑定的 Local/Integration RC；记录分支保护状态但不以此阻断，不自动发布 |
+| [单一人工 Owner 治理决定](SINGLE_OWNER_GOVERNANCE_DECISION.md) | 当前早期阶段由 Project Owner 兼任 R2/R3 人工角色；不要求第二位自然人，AI 不得自批 |
 | [CI-04 定时账本韧性与供应链契约](CI04_LEDGER_RESILIENCE_CONTRACT.md) | 定时验证真实模块故障/属性/容量/迁移恢复与锁定依赖风险；不执行资金或自动发布 |
 | [页面与交互规格](INTERACTION_SPEC.md) | Transaction-first P0 的页面、状态、操作和验收标准 |
 | [Transaction-first P0 交易领域基线](P0_TRANSACTION_FIRST_BASELINE.md) | 保留交易对象、状态契约和原型验收语义；不是社交钱包余额接入完成证明 |

@@ -1,4 +1,4 @@
-# CI-03 Ledger Release Candidate 技术说明
+# CI-03 v2 Ledger Release Candidate 技术说明
 
 更新日期：2026-09-11
 维护者：Codex
@@ -10,7 +10,7 @@
 执行顺序：
 
 ```text
-Protected main + exact source SHA
+Exact main ref + exact source SHA
   -> release request admission
   -> LA-06a foundation evidence
   -> host RT-01 evidence
@@ -22,7 +22,7 @@ Protected main + exact source SHA
   -> 90-day GitHub artifact
 ```
 
-准入由 `scripts/ci/validate-release-request.mjs` 执行。它验证 workflow 事件、ref、`github.ref_protected`、三个相同的完整 commit SHA、run/attempt、干净 checkout、版本格式和 tag 未占用。依赖安装与门禁结束后，workflow 还会再次拒绝任何受版本控制文件的差异。
+准入由 `scripts/ci/validate-release-request.mjs` 执行。它验证 workflow 事件、ref、三个相同的完整 commit SHA、run/attempt、干净 checkout、版本格式和 tag 未占用，并把 `github.ref_protected` 作为布尔证据保存。该值不再决定准入。依赖安装与门禁结束后，workflow 还会再次拒绝任何受版本控制文件的差异。
 
 候选由 `scripts/ci/release-candidate.mjs` 生成。`deploy/release-policy.json` 固定 release class、版本格式、七项 CI check、允许能力、排除项和执行边界。生成器会重新验证：
 
@@ -40,7 +40,7 @@ Protected main + exact source SHA
 | `release-candidate.json` | 机器可读候选清单，状态固定 `prepared_not_released` |
 | `release-notes.md` | 能力与明确排除项，不是发布公告 |
 | `ledger-release-image.tar` | 从已验证 image ID 导出的同一 Docker 制品 |
-| `release-request.json` | 受保护 main 与输入 SHA 准入证据 |
+| `release-request.json` | 精确 main、输入 SHA 与实际分支保护状态的准入证据 |
 | `ci-evidence.json` | CI-02 源码与基础门禁绑定 |
 | `runtime-image-assurance.json` | CI-RT01 镜像内运行时证据 |
 | `social-wallet-acceptance.json` | FP-08 两 Account / 四 Agent 的 Local 账户级写入证据，绑定同一 source/image |
@@ -48,7 +48,7 @@ Protected main + exact source SHA
 
 ## 当前执行限制
 
-仓库 API 在 2026-09-10 返回：`Upgrade to GitHub Pro or make this repository public to enable this feature.` 当前不能把 `main` 证明为受保护分支，因此不得执行成功候选。建议保持私有仓库并升级支持分支保护的套餐；启用后再从 GitHub Actions 的 `main` ref 运行：
+仓库 API 在 2026-09-10 返回：`Upgrade to GitHub Pro or make this repository public to enable this feature.` CI-03 v2 不再把该账户套餐能力作为候选阻塞项，而是保存 `ref_protected=false`，并继续依赖精确 main SHA、同一 workflow/checkout、干净树、Tag 唯一性、七项本地门禁和不可变镜像证据。从 GitHub Actions 的 `main` ref 运行：
 
 ```bash
 gh workflow run ledger-release-candidate.yml \
@@ -57,4 +57,4 @@ gh workflow run ledger-release-candidate.yml \
   -f source_commit=<完整 main SHA>
 ```
 
-候选成功后仍停在 artifact。manifest 同时绑定 FP-08 acceptance 与历史 `ledger-rc-local-v0.1 @ 005b3949…`；任何后续晋级都必须验证相同 image/archive/manifest/acceptance hash 并取得独立批准，不得下载源码后重新 build，也不得移动旧标签。
+候选成功后仍停在 artifact。manifest 同时绑定 FP-08 acceptance 与历史 `ledger-rc-local-v0.1 @ 005b3949…`；任何后续晋级都必须验证相同 image/archive/manifest/acceptance hash，并由单人治理下的 Project Owner 以明确人工角色批准，不得由 AI 自批、下载源码后重新 build 或移动旧标签。

@@ -33,7 +33,7 @@ CI-04 在常规 PR 门禁之外持续发现低频故障、账本增长和依赖�
 - nightly 不自动准备或晋级 Release Candidate，不创建 Tag、Release、registry package 或部署。
 - 不加载 Signer、Provider、业务 API/RPC Secret，不执行 Hosted 或 Sandbox/Testnet 双向支付。
 - `LA-06b=not_executed`、E3.1 保持暂停，Live/Mainnet 和真实资金保持关闭。
-- CI-04 通过不能替代独立 R2 审查，也不能解除 CI-03 对受保护 `main` 的准入要求。
+- CI-04 通过不能替代 Project Owner 的 R2 人工批准，也不能解除 CI-03 对精确 `main` ref、同一提交和不可变证据的准入要求。
 
 ## 恢复
 

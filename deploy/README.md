@@ -7,9 +7,9 @@
 
 ## CI-03 有边界账本候选
 
-`ledger-release-candidate.yml` 只从受保护 `main` 的确定 SHA 准备 Social Wallet Local/Integration 候选。它复跑本地门禁与镜像运行时探针，在同一 image ID 上执行 FP-07 Social Wallet Local acceptance，导出同一 Docker archive，并生成绑定源码、制品、产品验收与历史 baseline 的 `ci03.release-candidate.v1`。输出状态始终为 `prepared_not_released`，不会创建 tag、GitHub Release、registry package 或部署；旧 `ledger-rc-local-v0.1` 只校验、不移动。
+`ledger-release-candidate.yml` 只从 `main` 的确定 SHA 准备 Social Wallet Local/Integration 候选。它复跑本地门禁与镜像运行时探针，在同一 image ID 上执行 FP-08 Social Wallet Local acceptance，导出同一 Docker archive，并生成绑定源码、制品、产品验收与历史 baseline 的 `ci03.release-candidate.v2`。GitHub 的 `ref_protected` 状态会进入证据但不再作为准入条件；输入 SHA、workflow SHA 与 checkout SHA 仍必须完全一致。输出状态始终为 `prepared_not_released`，不会创建 tag、GitHub Release、registry package 或部署；旧 `ledger-rc-local-v0.1` 只校验、不移动。
 
-当前私有仓库套餐尚不支持分支保护，候选准入会失败关闭。完整规则、artifact 内容和启用后的触发方式见 [CI-03 技术说明](../docs/03-technical/CI_RELEASE_CANDIDATE.md)。
+当前私有仓库套餐不支持分支保护不会再阻止候选准备。单人治理阶段仍需 Project Owner 以人工身份批准候选晋级，AI 不得自批；完整规则、artifact 内容和触发方式见 [CI-03 技术说明](../docs/03-technical/CI_RELEASE_CANDIDATE.md)。
 
 ## Internal OrbStack Sandbox 一键流程
 

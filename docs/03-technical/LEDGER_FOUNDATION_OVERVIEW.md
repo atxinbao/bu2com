@@ -47,8 +47,8 @@ Simulation 不是对外 Sandbox。CI 成功、代码已合并或存在 Live 配�
 | 运行时余额 | FP-06b Schema 21 以 append-only generation 在 Local 选择读路径；FP-08 Schema 22 初始化并写入账户余额；Public Wallet API 通过认证 Account 返回健康 available/reserved，blocked 时隐藏金额且不 fallback | Collection 运行时净入账、Hosted/Sandbox/Live cutover 与服务准入 | Local 账户级读写；Transaction Core 仍是唯一写者 |
 | 历史重放/恢复 | 只读重放、备份追加事实追平、缺口报告；FP-06b 支持 fully-bound/scoped-exclusion/reconciled-opening 迁移计划及追加 rollback generation | 实际生产数据迁移与外部环境验证 | Local 隔离迁移/恢复证据 |
 | 收款/付款/退款/费用 | Local/Simulation 业务与故障路径、Attempt/对账能力；新格式业务分录已从可信 wallet binding 解析到账簿账户；FP-06a 将 reserved/pending 与账簿余额分开读取 | 历史范围迁移、正式产品 cutover 与真实 Sandbox 证据 | 不扩张到未批准通道 |
-| CI | main `e19bae63…` 的 `BU2 CI` run `34527198064` 已完成，`foundation`、`runtime`、`runtime image`、`BU2 / CI Gate` 四组 job 均 success；FP-02 已绑定 source commit/tree/run/attempt、原始日志和测试统计 | GitHub API 仍报告 `main protected=false`，因此 protected-main RC 准入仍未满足 | 合并后精确源码回归证据；**不是资金授权** |
-| 内部 Release | `ledger-rc-local-v0.1` 保留；FP-07 增加 Social Wallet Local RC 准备机制与 acceptance 绑定 | protected-main 条件满足后的实际新 RC artifact、独立人类批准 | 新候选仍 `prepared_not_released`，仅 Local/Simulation |
+| CI | main 的 `BU2 CI` 持续生成 foundation、runtime、runtime image 与 `BU2 / CI Gate` 证据；FP-02 绑定 source commit/tree/run/attempt、原始日志和测试统计 | CI-03 v2 的实际候选 workflow 与 artifact | `main protected=false` 作为证据记录，不再阻止精确 main SHA 候选；**不是资金授权** |
+| 内部 Release | `ledger-rc-local-v0.1` 保留；FP-07/FP-08 增加 Social Wallet Local RC 准备机制与 acceptance 绑定 | 实际新 RC artifact 与 Project Owner 人工批准 | 新候选仍 `prepared_not_released`，仅 Local/Simulation；不要求第二位自然人审查 |
 
 ### v0.1 与当前 main 的边界
 

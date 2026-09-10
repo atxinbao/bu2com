@@ -2,7 +2,7 @@
 
 日期：2026-09-08
 执行者：Codex
-状态：D2 文档基线，待 R2 独立人工审查
+状态：D2 文档基线；后续 R2 变更适用当前 Project Owner 单人批准规则
 适用范围：Phase 0 Reference Sandbox · Local / Sandbox / Base Sepolia Testnet
 
 ## 1. 目的与非目标
@@ -209,7 +209,7 @@ F08 不调用 Provider、Signer、x402、AP2 或链上 RPC，也不改变 `execu
 - 重启后 Mandate、PolicyDecision、幂等事实和审计事件可恢复；
 - Local / Sandbox / Base Sepolia Testnet 边界继续可见；Live/Mainnet、托管和生产凭证保持关闭。
 
-F08 代码 PR 必须标记 R2，并由独立 Domain 与 Architecture 审查者批准；D2 文档合并不等于 F08 代码获准，也不等于 Testnet 双向收付或 Hosted Sandbox 已验收。
+F08 代码 PR 必须标记 R2。当前单人治理阶段由 Project Owner 明确兼任 Domain 与 Architecture 角色并作出人工批准，AI 不得自批；D2 文档合并不等于 F08 代码获准，也不等于 Testnet 双向收付或 Hosted Sandbox 已验收。
 
 ## 11. 明确不变的边界
 

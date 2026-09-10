@@ -28,7 +28,7 @@ FP-06b 把 FP-06a 的 shadow 模型推进为**可受控选择的 Local 运行时
 | `scoped_exclusion` | 每个 legacy source 都有 `excluded_other_scope` 与独立证据引用 | 机器只验证引用存在，不验证证据真实性 |
 | `reconciled_opening` | 绑定目标 LedgerAccount 的已过账 opening checkpoint；目标历史 source 的最后 Posting 不晚于 effective_at；其余逐项排除 | 不允许用 opening 覆盖 checkpoint 之后的新事实 |
 
-`status=verified` 是**结构/范围机器校验结果**，不是人类批准或生产数据结论。R2 合并仍需独立人类 Domain/Architecture 审查；任何实际生产数据操作另需 R3。
+`status=verified` 是**结构/范围机器校验结果**，不是人类批准或生产数据结论。当前单人治理阶段的 R2 合并由 Project Owner 明确兼任 Domain/Architecture 角色并作出人工批准，AI 不得自批；任何实际生产数据操作另需 R3。
 
 ## 4. Cutover assessment
 
@@ -80,7 +80,7 @@ FP-06b 只在隔离 Local/合成 SQLite 数据上证明：Schema 21 连续迁移
 
 ## 8. 隔离 Local 恢复操作手册
 
-数据与控制事实 Owner 为 Transaction Domain Owner；范围/证据批准由独立 Domain 与 Architecture 人类审查者负责。以下仅适用于已经明确为合成数据的隔离 Local 实例；不得把默认业务库或生产备份代入。
+数据与控制事实 Owner 为 Transaction Domain Owner；当前单人治理阶段的范围/证据由 Project Owner 明确兼任 Domain 与 Architecture 角色并作出人工批准。以下仅适用于已经明确为合成数据的隔离 Local 实例；不得把默认业务库或生产备份代入。
 
 1. 停止接收新的资金请求，等待现有 Domain mutation 完成；保留查询、Attempt 观察与对账。使用 `ledger.backupTo(新的隔离路径)` 取得一致性备份，不覆盖既有文件。
 2. 记录 `getRuntimeWalletView({ ledger_account_id, currency })` 的 generation、blockers、plan ID 与 assessment ID。调用 `walletMigrationPlanState(planId)` 检查 source/checkpoint 漂移；任何未分类事实或未知 Attempt 先处理证据，不得重复付款。

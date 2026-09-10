@@ -611,3 +611,16 @@
 覆盖认证缺失、跨 Account、任意 query/`ledger_account_id` 选择、未初始化 scope 排除、健康余额、cutover rollback 和 stale projection。blocked 响应固定隐藏 `available/reserved` 且不返回 legacy wallet。
 
 本地门禁在未提交工作树上运行，证据中的 `source_commit=f1e7e85...` 是父基线；最终提交与远程 PR 证据尚不存在。未执行 Collection runtime credit、Hosted、真实 Sandbox/Testnet 双向结算、LA-06b、Live/Mainnet、Signer、Provider 付款、Tag、Release 或真实资金。
+
+## 2026-09-11 · GOV-02 单一人工 Owner 与 CI-03 v2
+
+| 验证项 | 命令 | 结果 |
+|---|---|---|
+| CI 脚本全量 | `node --test scripts/ci/*.test.mjs` | 27/27 通过 |
+| CI-03 定向 | `node --test scripts/ci/validate-release-request.test.mjs scripts/ci/release-candidate.test.mjs` | 7/7 通过 |
+| Local Foundation 门禁 | `node deploy/la06a-local-gate.mjs` | Sandbox 269/269；LA-06a 4/4；部署/Hosted 23/23；SDK 11/11；API 63 项不变量/6 MCP 工具；Prototype lint/build 通过 |
+| Policy / Workflow | Node JSON parser + Ruby YAML parser | 通过 |
+| 当前契约漂移扫描 | `rg` 扫描 v1 schema、protected-main 与旧 R2 独立审查措辞 | 无残留 |
+| Patch | `git diff --check` | 通过 |
+
+未执行 Hosted、真实 Base Sepolia 双向收付、LA-06b、Live/Mainnet、Signer、Provider 调用、Tag 或 Release。`ref_protected=false` 只作为来源证据保存，不扩大资金能力。

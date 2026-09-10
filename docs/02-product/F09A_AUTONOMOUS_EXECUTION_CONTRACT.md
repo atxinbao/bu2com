@@ -70,4 +70,4 @@ PaymentIntent created
 - Mandate 暂停、撤销、过期或版本漂移会阻止执行。
 - 既有金额不变量、幂等、并发、故障注入、重启恢复和环境门禁保持通过。
 
-F09a 代码 PR 必须由独立 Domain 与 Architecture 审查者批准；本契约不构成真实资金或生产执行授权。
+F09a 代码 PR 必须标记 R2。当前单人治理阶段由 Project Owner 明确兼任 Domain 与 Architecture 角色并作出人工批准，AI 不得自批；本契约不构成真实资金或生产执行授权。
