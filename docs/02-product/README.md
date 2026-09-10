@@ -70,8 +70,8 @@ Agent 商业账户、信誉与服务网络
 
 ## 当前状态
 
-- 产品阶段：Phase 0 开发（Local / Sandbox / Testnet 边界）；首个 `ledger-rc-local-v0.1` 仅批准为 Local/Simulation 内部账本基线，既有 Release 名称中的 Sandbox 不表示 Testnet 已验收。退款审计阻断与 R63-01 历史回放时间窗口已经后续 PR 关闭；CI-01、CI-02、CI-RT01、CI-03、CI-04 已实现，LA-03d 继续补齐版本化账户投影刷新。当前私有仓库套餐不能证明分支保护，CI-03 必须失败关闭；LA-03 历史迁移/运行时切换、LA-06b 真实 Sandbox 双向证据与 E3.1 仍未放行。
-- 上层产品方向：Social Wallet；当前只冻结接入边界，**尚未把运行时 wallet 或 Schema 19 投影切换成社交钱包正式余额**。
+- 产品阶段：Phase 0 开发（Local / Sandbox / Testnet 边界）；首个 `ledger-rc-local-v0.1` 仅批准为 Local/Simulation 内部账本基线，既有 Release 名称中的 Sandbox 不表示 Testnet 已验收。退款审计阻断与 R63-01 历史回放时间窗口已经后续 PR 关闭；CI-01、CI-02、CI-RT01、CI-03、CI-04 已实现，FP-05 在 Schema 20 收口新业务分录的可信账簿归属。当前私有仓库套餐不能证明分支保护，CI-03 必须失败关闭；历史归属迁移/运行时切换、LA-06b 真实 Sandbox 双向证据与 E3.1 仍未放行。
+- 上层产品方向：Social Wallet；Schema 20 已绑定新格式业务事实，**尚未把运行时 wallet 或 Schema 19 派生投影切换成社交钱包正式余额**。
 - 产品版本：Product v0.3 Transaction-first
 - 对应商业计划：BP v0.1
 - 更新日期：2026-09-10

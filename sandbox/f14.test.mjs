@@ -3,6 +3,7 @@ import test from "node:test";
 import { Bu2Sandbox } from "./domain.mjs";
 import { SimulatedPaymentAdapter } from "./adapter.mjs";
 import { SqliteLedger } from "./persistence.mjs";
+import { bindReceivingTarget } from "./test-ledger-bindings.mjs";
 
 async function settledPayment(sandbox) {
   const quote = await sandbox.createQuote(
@@ -63,6 +64,12 @@ async function postedCollection(sandbox) {
 
 test("F14 records provider fees and creates a matched reconciliation run", async () => {
   const ledger = new SqliteLedger(":memory:");
+  bindReceivingTarget(ledger, {
+    suffix: "f14_collection",
+    account_id: "acct_f14_collection_seller",
+    agent_id: "agt_f14_collection_seller",
+    receiving_target_id: "tgt_f14_collection",
+  });
   const sandbox = new Bu2Sandbox({ ledger, adapter: new SimulatedPaymentAdapter({ ledger }) });
   const payment = await settledPayment(sandbox);
   const collection = await postedCollection(sandbox);
@@ -114,6 +121,12 @@ test("F14 records provider fees and creates a matched reconciliation run", async
 
 test("F14 fails closed on pending sources and reports them as unknown", async () => {
   const ledger = new SqliteLedger(":memory:");
+  bindReceivingTarget(ledger, {
+    suffix: "f14_pending",
+    account_id: "acct_f14_pending_seller",
+    agent_id: "agt_f14_pending_seller",
+    receiving_target_id: "tgt_f14_pending",
+  });
   class PendingCollectionAdapter extends SimulatedPaymentAdapter {
     verifyInboundPayment({ receivable, input }) {
       return {

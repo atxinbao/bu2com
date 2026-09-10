@@ -4,6 +4,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Bu2Sandbox } from "./domain.mjs";
+import { normalizeOnboardingDocument } from "./identity.mjs";
 import { SqliteLedger } from "./persistence.mjs";
 
 const checkpointInput = {
@@ -23,6 +24,14 @@ const checkpointInput = {
 
 async function createCheckpoint(sandbox) {
   return sandbox.createOpeningBalance(checkpointInput, "la05b-opening-key");
+}
+
+function bindCheckpointLedger(ledger) {
+  ledger.registerLedgerAccount({ id: "lga_la05b_owner", environment: "local", tenant_id: "ten_la05b_owner", book_id: checkpointInput.book_id, owner_account_id: checkpointInput.owner_account_id, asset: checkpointInput.asset, network: checkpointInput.network });
+  ledger.bootstrapIdentityTenants(normalizeOnboardingDocument({
+    environment: "local", requested_by: "usr_la05b_operator", idempotency_key: "la05b-opening-binding",
+    tenants: [{ tenant_id: "ten_la05b_owner", principal: { id: "usr_la05b_owner", display_name: "LA05b Owner" }, accounts: [{ id: checkpointInput.account_id, display_name: "LA05b Owner" }], agents: [], credentials: [], funding_sources: [{ id: checkpointInput.funding_source_id, account_id: checkpointInput.account_id, agent_id: null, asset: checkpointInput.asset, network: checkpointInput.network, provider: "simulated", ledger_account_id: "lga_la05b_owner", source_reference: "wallet:la05b-opening" }], receiving_targets: [] }],
+  }, "local"));
 }
 
 test("LA-05b replays an opening checkpoint and immutable correction at a historical time", async () => {
@@ -112,6 +121,7 @@ test("LA-05b produces append-only catch-up evidence after a validated SQLite bac
   const backupPath = join(directory, "backup.sqlite");
   try {
     const sourceLedger = new SqliteLedger(sourcePath);
+    bindCheckpointLedger(sourceLedger);
     const source = new Bu2Sandbox({ ledger: sourceLedger });
     await createCheckpoint(source);
     await sourceLedger.backupTo(backupPath, { rate: 100 });
@@ -158,6 +168,7 @@ test("LA-05b replay survives SQLite restart without replaying a provider", async
   const database = join(directory, "replay.sqlite");
   try {
     const firstLedger = new SqliteLedger(database);
+    bindCheckpointLedger(firstLedger);
     const first = new Bu2Sandbox({ ledger: firstLedger });
     await createCheckpoint(first);
     const before = first.replayLedgerHistory();

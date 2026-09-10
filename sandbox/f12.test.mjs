@@ -6,6 +6,7 @@ import test from "node:test";
 import { Bu2Sandbox } from "./domain.mjs";
 import { SimulatedPaymentAdapter } from "./adapter.mjs";
 import { SqliteLedger } from "./persistence.mjs";
+import { bindReceivingTarget } from "./test-ledger-bindings.mjs";
 
 async function paidCollection(suffix = "f12", ledger = null) {
   const adapter = new SimulatedPaymentAdapter({ ledger });
@@ -109,6 +110,7 @@ test("F12 persists and recovers access grants across SQLite restart", async () =
   const database = join(directory, "access.sqlite");
   try {
     const firstLedger = new SqliteLedger(database);
+    bindReceivingTarget(firstLedger, { suffix: "restart" });
     const { sandbox, collection } = await paidCollection("restart", firstLedger);
     const grant = await sandbox.createAccessGrant(
       collection.id,

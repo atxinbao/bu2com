@@ -100,7 +100,7 @@ test("F07 survives SQLite restart with budgets, holds and postings", async () =>
   const path = `/tmp/bu2-f07-${Date.now()}-${Math.random().toString(16).slice(2)}.sqlite`;
   const first = new SqliteLedger(path);
   await new Bu2Sandbox({ ledger: first }).createBudget(budgetInput, "f07-restart-budget");
-  assert.equal(first.schemaVersion(), 19);
+  assert.equal(first.schemaVersion(), 20);
   first.close();
   const second = new SqliteLedger(path);
   const restored = second.loadState();

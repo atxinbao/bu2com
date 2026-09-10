@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { listen } from "./server.mjs";
+import { bindReceivingTarget } from "./test-ledger-bindings.mjs";
 
 async function request(base, path, { method = "GET", body, key } = {}) {
   const response = await fetch(`${base}${path}`, {
@@ -16,6 +17,12 @@ async function request(base, path, { method = "GET", body, key } = {}) {
 
 test("F10 HTTP exposes account-owned receivables without creating a transaction", async (context) => {
   const running = await listen({ port: 0, dbPath: ":memory:" });
+  bindReceivingTarget(running.ledger, {
+    suffix: "f10_http_seller",
+    account_id: "acct_f10_http_seller",
+    agent_id: "agt_f10_http_seller",
+    receiving_target_id: "tgt_f10_http_seller",
+  });
   context.after(
     () =>
       new Promise((resolve) =>

@@ -40,6 +40,8 @@ FP-01、FP-02、FP-03 可以并行准备，但应分别提交和审查。
 
 验收必须由真实业务流程产生 Posting，而不是只手工构造完整 Posting 后验证查询。暂停账户的新支出拒绝，历史查询/已确认事实恢复保持可解释。
 
+实现状态：Schema 20 已为 FundingSource/ReceivingTarget 增加不可变的可信 `ledger_account_id` 绑定，并校验 environment、tenant、owner Account、asset/network；Quote/Intent/Receivable/Transaction 将该归属快照传入 settlement、collection、refund、ProviderFee，期初与更正按显式账簿/原事实解析。新资金活动要求 active LedgerAccount；已确认事实的补记与历史读取只要求原 LedgerAccount 仍存在。历史 null/unbound 事实不回填，继续交给 FP-06b 的目标账簿迁移/期初核对。
+
 ## 第三批：产品读模型、限定切换与新 RC
 
 ### FP-06a — WalletReadModel 与 shadow comparison

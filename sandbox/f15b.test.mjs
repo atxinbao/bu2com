@@ -9,6 +9,7 @@ import { SimulatedPaymentAdapter } from "./adapter.mjs";
 import { loadEnvironmentConfig } from "./environment-config.mjs";
 import { normalizeOnboardingDocument } from "./identity.mjs";
 import { SqliteLedger } from "./persistence.mjs";
+import { bindReceivingTarget } from "./test-ledger-bindings.mjs";
 
 const now = new Date(Date.now() - 1_000).toISOString();
 
@@ -42,6 +43,24 @@ function mandateInput(suffix) {
 }
 
 async function activateSessionAndMandate(sandbox, suffix) {
+  sandbox.ledger.registerLedgerAccount({
+    id: `lga_f15b_${suffix}`,
+    environment: "local",
+    tenant_id: `ten_f15b_${suffix}`,
+    book_id: "book_primary",
+    owner_account_id: `acct_f15b_${suffix}`,
+    asset: "CNY",
+    network: null,
+  });
+  sandbox.ledger.registerLedgerAccount({
+    id: `lga_f15b_seller_${suffix}`,
+    environment: "local",
+    tenant_id: `ten_f15b_${suffix}`,
+    book_id: "book_primary",
+    owner_account_id: `acct_f15b_seller_${suffix}`,
+    asset: "CNY",
+    network: null,
+  });
   sandbox.ledger.bootstrapIdentityTenants(
     normalizeOnboardingDocument(
       {
@@ -52,8 +71,14 @@ async function activateSessionAndMandate(sandbox, suffix) {
           {
             tenant_id: `ten_f15b_${suffix}`,
             principal: { id: `usr_f15b_${suffix}`, display_name: `F15b ${suffix}` },
-            accounts: [{ id: `acct_f15b_${suffix}`, display_name: `F15b ${suffix}` }],
-            agents: [{ id: `agt_f15b_${suffix}`, display_name: `F15b ${suffix}` }],
+            accounts: [
+              { id: `acct_f15b_${suffix}`, display_name: `F15b ${suffix}` },
+              { id: `acct_f15b_seller_${suffix}`, display_name: `F15b Seller ${suffix}` },
+            ],
+            agents: [
+              { id: `agt_f15b_${suffix}`, display_name: `F15b ${suffix}` },
+              { id: `agt_f15b_seller_${suffix}`, display_name: `F15b Seller ${suffix}` },
+            ],
             credentials: [],
             funding_sources: [
               {
@@ -63,17 +88,19 @@ async function activateSessionAndMandate(sandbox, suffix) {
                 asset: "CNY",
                 network: null,
                 provider: "simulated",
+                ledger_account_id: `lga_f15b_${suffix}`,
                 source_reference: `wallet:f15b-source-${suffix}`,
               },
             ],
             receiving_targets: [
               {
                 id: `tgt_f15b_${suffix}`,
-                account_id: `acct_f15b_${suffix}`,
-                agent_id: `agt_f15b_${suffix}`,
+                account_id: `acct_f15b_seller_${suffix}`,
+                agent_id: `agt_f15b_seller_${suffix}`,
                 asset: "CNY",
                 network: null,
                 provider: "simulated",
+                ledger_account_id: `lga_f15b_seller_${suffix}`,
                 target_reference: `wallet:f15b-target-${suffix}`,
               },
             ],
@@ -164,6 +191,13 @@ test("F15b completes a bounded business load and produces a matched financial re
     6,
   );
 
+  bindReceivingTarget(ledger, {
+    suffix: "f15b_collection",
+    account_id: "acct_f15b_collection_seller",
+    agent_id: "agt_f15b_collection_seller",
+    receiving_target_id: "tgt_f15b_collection",
+  });
+
   const collectionQuote = await sandbox.createQuote(
     {
       seller_agent_id: "agt_f15b_collection_seller",
@@ -242,8 +276,8 @@ test("F15b resumes an interrupted financial workflow after SQLite restart withou
     const { session, mandate } = await activateSessionAndMandate(first, "restart");
     const quote = await first.createQuote(
       {
-        seller_agent_id: "agt_f15b_restart_seller",
-        payee_account_id: "acct_f15b_restart_seller",
+        seller_agent_id: "agt_f15b_seller_restart",
+        payee_account_id: "acct_f15b_seller_restart",
         item: { name: "F15b restart resource", delivery_type: "research_data" },
         amount: { value: 40, currency: "CNY" },
         expires_at: new Date(Date.now() + 86_400_000).toISOString(),

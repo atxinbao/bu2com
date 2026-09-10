@@ -9,6 +9,7 @@ const ID = {
   digest: /^[a-f0-9]{64}$/,
   funding: /^fund_[A-Za-z0-9_-]+$/,
   target: /^tgt_[A-Za-z0-9_-]+$/,
+  ledger: /^lga_[A-Za-z0-9_-]+$/,
 };
 
 const ROLES = new Set(["agent", "developer", "operator"]);
@@ -220,6 +221,11 @@ const normalizeBinding = (
       ? null
       : requiredString(value.network, `${kind}.network`, 120);
   const provider = requiredString(value.provider, `${kind}.provider`, 120);
+  const ledgerAccountId = identifier(
+    value.ledger_account_id,
+    `${kind}.ledger_account_id`,
+    ID.ledger,
+  );
   const reference = requiredString(value[referenceField], `${kind}.${referenceField}`, 512);
   const status = normalizeStatus(value.status, `${kind}.status`, BINDING_STATUSES);
   const verificationStatus = value.verification_status ?? "verified";
@@ -236,6 +242,7 @@ const normalizeBinding = (
     asset,
     network,
     provider,
+    ledger_account_id: ledgerAccountId,
     [referenceField]: reference,
     status,
     verification_status: verificationStatus,

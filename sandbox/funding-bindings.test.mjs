@@ -9,6 +9,16 @@ import { SqliteLedger } from "./persistence.mjs";
 
 const config = loadEnvironmentConfig();
 
+const registerLedgerAccount = (ledger) => ledger.registerLedgerAccount({
+  id: "lga_binding_primary",
+  environment: "local",
+  tenant_id: "ten_binding",
+  book_id: "book_primary",
+  owner_account_id: "acct_binding",
+  asset: "CNY",
+  network: null,
+});
+
 const document = (suffix = "v1") => ({
   environment: "local",
   requested_by: "usr_binding_operator",
@@ -28,6 +38,7 @@ const document = (suffix = "v1") => ({
           asset: "CNY",
           network: null,
           provider: "simulated",
+          ledger_account_id: "lga_binding_primary",
           source_reference: "wallet:binding-source-v1",
         },
       ],
@@ -39,6 +50,7 @@ const document = (suffix = "v1") => ({
           asset: "CNY",
           network: null,
           provider: "simulated",
+          ledger_account_id: "lga_binding_primary",
           target_reference: "wallet:binding-target-v1",
         },
       ],
@@ -51,6 +63,7 @@ test("F06b bindings are normalized, persisted, exposed, and survive restart", ()
   const database = join(directory, "bindings.sqlite");
   try {
     const first = new SqliteLedger(database, { environmentConfig: config });
+    registerLedgerAccount(first);
     const normalized = normalizeOnboardingDocument(document(), "local");
     const result = first.bootstrapIdentityTenants(normalized);
     assert.equal(result.identities[0].funding_sources[0].id, "fund_binding_v1");
@@ -82,7 +95,7 @@ test("F06b bindings are normalized, persisted, exposed, and survive restart", ()
     const identity = second.identityBundle("local", "ten_binding");
     assert.equal(identity.funding_sources[0].generation, 1);
     assert.equal(identity.receiving_targets[0].verification_status, "verified");
-    assert.equal(second.schemaVersion(), 19);
+    assert.equal(second.schemaVersion(), 20);
     second.close();
   } finally {
     rmSync(directory, { recursive: true, force: true });
@@ -114,6 +127,7 @@ test("F06b rejects cross-tenant, environment, asset, network, and target drift",
 
   const ledger = new SqliteLedger(":memory:", { environmentConfig: config });
   try {
+    registerLedgerAccount(ledger);
     ledger.bootstrapIdentityTenants(normalizeOnboardingDocument(document(), "local"));
     assert.throws(
       () =>
@@ -146,6 +160,7 @@ test("F06b rejects cross-tenant, environment, asset, network, and target drift",
 test("F06b onboarding remains idempotent and binding IDs cannot be silently overwritten", () => {
   const ledger = new SqliteLedger(":memory:", { environmentConfig: config });
   try {
+    registerLedgerAccount(ledger);
     const first = ledger.bootstrapIdentityTenants(normalizeOnboardingDocument(document(), "local"));
     assert.deepEqual(
       ledger.bootstrapIdentityTenants(normalizeOnboardingDocument(document(), "local")),

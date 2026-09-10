@@ -29,6 +29,13 @@ export class ApiError extends Error {
 
 const prefix = (value) => `${value}_${randomUUID().replaceAll("-", "").slice(0, 16)}`;
 const clone = (value) => structuredClone(value);
+const publicResourceView = (value) => {
+  const view = clone(value);
+  delete view.ledger_account_id;
+  delete view.funding_ledger_account_id;
+  delete view.receiving_ledger_account_id;
+  return view;
+};
 const hash = (value) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
 const refundRequestFingerprint = (transactionId, amount, reason) =>
   createHash("sha256")
@@ -507,16 +514,20 @@ export class Bu2Sandbox {
         network: input.network ?? this.environmentConfig.network ?? null,
         reference: input.receiving_target_id ?? null,
       });
+      if (this.ledger && input.receiving_target_id && !targetBinding?.bound) {
+        throw new ApiError(409, "authorization_error", "receiving_target_binding_required", "The receiving target must reference an active verified wallet binding.");
+      }
       const quote = {
         id: prefix("quo"),
         ...clone(input),
         receiving_target_binding_id: targetBinding?.binding?.id ?? null,
+        receiving_ledger_account_id: targetBinding?.ledger_account?.id ?? null,
         status: "active",
         created_at: new Date().toISOString(),
       };
       this.quotes.set(quote.id, quote);
       this.event("quote.created", quote);
-      return quote;
+      return publicResourceView(quote);
     });
   }
 
@@ -570,6 +581,9 @@ export class Bu2Sandbox {
         network: quote.network ?? this.environmentConfig.network ?? null,
         reference: input.receiving_target_id,
       });
+      if (this.ledger && !targetBinding?.bound) {
+        throw new ApiError(409, "authorization_error", "receiving_target_binding_required", "The receiving target must reference an active verified wallet binding.");
+      }
       const receivable = {
         id: input.id ?? prefix("rcv"),
         quote_id: quote.id,
@@ -577,6 +591,7 @@ export class Bu2Sandbox {
         agent_id: input.agent_id,
         receiving_target_id: input.receiving_target_id,
         receiving_target_binding_id: targetBinding?.binding?.id ?? quote.receiving_target_binding_id ?? null,
+        receiving_ledger_account_id: targetBinding?.ledger_account?.id ?? quote.receiving_ledger_account_id ?? null,
         amount: clone(quote.amount),
         asset: quote.asset ?? null,
         network: quote.network ?? null,
@@ -599,14 +614,14 @@ export class Bu2Sandbox {
       }
       this.receivables.set(receivable.id, receivable);
       this.event("receivable.created", receivable);
-      return clone(receivable);
+      return publicResourceView(receivable);
     });
   }
 
   listReceivables() {
     return [...this.receivables.values()]
       .sort((left, right) => right.created_at.localeCompare(left.created_at) || right.id.localeCompare(left.id))
-      .map((receivable) => clone(receivable));
+      .map((receivable) => publicResourceView(receivable));
   }
 
   getReceivable(id) {
@@ -614,7 +629,7 @@ export class Bu2Sandbox {
     if (!receivable) {
       throw new ApiError(404, "resource_not_found", "receivable_not_found", "Receivable was not found.");
     }
-    return clone(receivable);
+    return publicResourceView(receivable);
   }
 
   listCollections() {
@@ -638,7 +653,7 @@ export class Bu2Sandbox {
       .sort((left, right) => left.observed_at.localeCompare(right.observed_at) || left.id.localeCompare(right.id))
       .map((attempt) => clone(attempt));
     return {
-      ...clone(collection),
+      ...publicResourceView(collection),
       verification_attempts: verificationAttempts,
     };
   }
@@ -823,6 +838,7 @@ export class Bu2Sandbox {
         amount_value: collection.amount.value,
         currency: collection.amount.currency,
         created_at: event.created_at,
+        ledger_account_id: collection.ledger_account_id ?? null,
       },
       {
         id: prefix("pst"),
@@ -836,6 +852,7 @@ export class Bu2Sandbox {
         amount_value: collection.amount.value,
         currency: collection.amount.currency,
         created_at: event.created_at,
+        ledger_account_id: collection.ledger_account_id ?? null,
       },
     ];
     for (const posting of postings) this.financialPostings.set(posting.id, posting);
@@ -856,6 +873,7 @@ export class Bu2Sandbox {
         amount_value: transaction.settled_amount.value,
         currency: transaction.settled_amount.currency,
         created_at: event.created_at,
+        ledger_account_id: transaction.ledger_account_id ?? null,
       },
       {
         id: prefix("pst"),
@@ -869,6 +887,7 @@ export class Bu2Sandbox {
         amount_value: transaction.settled_amount.value,
         currency: transaction.settled_amount.currency,
         created_at: event.created_at,
+        ledger_account_id: transaction.ledger_account_id ?? null,
       },
     ];
     for (const posting of postings) this.financialPostings.set(posting.id, posting);
@@ -889,6 +908,7 @@ export class Bu2Sandbox {
         amount_value: refund.amount.value,
         currency: refund.amount.currency,
         created_at: event.created_at,
+        ledger_account_id: transaction.ledger_account_id ?? null,
       },
       {
         id: prefix("pst"),
@@ -902,6 +922,7 @@ export class Bu2Sandbox {
         amount_value: refund.amount.value,
         currency: refund.amount.currency,
         created_at: event.created_at,
+        ledger_account_id: transaction.ledger_account_id ?? null,
       },
     ];
     for (const posting of postings) this.financialPostings.set(posting.id, posting);
@@ -922,6 +943,7 @@ export class Bu2Sandbox {
         amount_value: fee.amount.value,
         currency: fee.amount.currency,
         created_at: event.created_at,
+        ledger_account_id: fee.ledger_account_id ?? null,
       },
       {
         id: prefix("pst"),
@@ -935,6 +957,7 @@ export class Bu2Sandbox {
         amount_value: fee.amount.value,
         currency: fee.amount.currency,
         created_at: event.created_at,
+        ledger_account_id: fee.ledger_account_id ?? null,
       },
     ];
     for (const posting of postings) this.financialPostings.set(posting.id, posting);
@@ -966,7 +989,7 @@ export class Bu2Sandbox {
             );
           }
           if (collection.status === "posted" && collection.verification_status === "verified") {
-            return { collection: this.collectionView(collection), receivable: clone(receivable) };
+            return { collection: this.collectionView(collection), receivable: publicResourceView(receivable) };
           }
         }
         if (!collection && receivable.status === "paid") {
@@ -1099,6 +1122,7 @@ export class Bu2Sandbox {
             account_id: receivable.account_id,
             agent_id: receivable.agent_id,
             receiving_target_id: receivable.receiving_target_id,
+            ledger_account_id: receivable.receiving_ledger_account_id ?? null,
             collection_reference: receivable.collection_reference,
             provider: verification.provider ?? this.adapter.name ?? "unknown",
             provider_reference: verification.provider_reference,
@@ -1150,7 +1174,7 @@ export class Bu2Sandbox {
           if (receivable.status !== "expired") receivable.status = "pending";
           this.event("receivable.payment_pending", collection);
         }
-        return { collection: this.collectionView(collection), receivable: clone(receivable) };
+        return { collection: this.collectionView(collection), receivable: publicResourceView(receivable) };
       },
     );
   }
@@ -1264,6 +1288,7 @@ export class Bu2Sandbox {
     validateIdentifier(ledger_account_id, "lga", "ledger_account_id");
     this.ledger?.assertLedgerAccountBinding(ledger_account_id, {
       environment: this.environmentConfig.environment,
+      require_active: false,
     });
     const postings = [...this.financialPostings.values()].filter(
       (posting) => posting.ledger_account_id === ledger_account_id,
@@ -1300,6 +1325,7 @@ export class Bu2Sandbox {
     if (!this.ledger) return null;
     this.ledger.assertLedgerAccountBinding(ledger_account_id, {
       environment: this.environmentConfig.environment,
+      require_active: false,
     });
     return this.ledger.getActiveLedgerAccountProjection({ ledger_account_id, currency });
   }
@@ -1443,25 +1469,25 @@ export class Bu2Sandbox {
   listOpeningBalances() {
     return [...this.openingBalances.values()]
       .sort((left, right) => right.effective_at.localeCompare(left.effective_at) || right.id.localeCompare(left.id))
-      .map((checkpoint) => clone(checkpoint));
+      .map((checkpoint) => publicResourceView(checkpoint));
   }
 
   getOpeningBalance(id) {
     const checkpoint = this.openingBalances.get(id);
     if (!checkpoint) throw new ApiError(404, "resource_not_found", "opening_balance_not_found", "Opening balance checkpoint was not found.");
-    return clone(checkpoint);
+    return publicResourceView(checkpoint);
   }
 
   listLedgerCorrections() {
     return [...this.ledgerCorrections.values()]
       .sort((left, right) => right.created_at.localeCompare(left.created_at) || right.id.localeCompare(left.id))
-      .map((correction) => clone(correction));
+      .map((correction) => publicResourceView(correction));
   }
 
   getLedgerCorrection(id) {
     const correction = this.ledgerCorrections.get(id);
     if (!correction) throw new ApiError(404, "resource_not_found", "ledger_correction_not_found", "Ledger correction was not found.");
-    return clone(correction);
+    return publicResourceView(correction);
   }
 
   addOpeningBalancePostings(event, checkpoint) {
@@ -1478,6 +1504,7 @@ export class Bu2Sandbox {
         amount_value: checkpoint.amount.value,
         currency: checkpoint.amount.currency,
         created_at: event.created_at,
+        ledger_account_id: checkpoint.ledger_account_id ?? null,
       },
       {
         id: prefix("pst"),
@@ -1491,6 +1518,7 @@ export class Bu2Sandbox {
         amount_value: checkpoint.amount.value,
         currency: checkpoint.amount.currency,
         created_at: event.created_at,
+        ledger_account_id: checkpoint.ledger_account_id ?? null,
       },
     ];
     for (const posting of postings) this.financialPostings.set(posting.id, posting);
@@ -1511,6 +1539,7 @@ export class Bu2Sandbox {
         amount_value: correction.amount.value,
         currency: correction.amount.currency,
         created_at: event.created_at,
+        ledger_account_id: correction.ledger_account_id ?? null,
       },
       {
         id: prefix("pst"),
@@ -1524,6 +1553,7 @@ export class Bu2Sandbox {
         amount_value: correction.amount.value,
         currency: correction.amount.currency,
         created_at: event.created_at,
+        ledger_account_id: correction.ledger_account_id ?? null,
       },
     ];
     for (const posting of postings) this.financialPostings.set(posting.id, posting);
@@ -1542,12 +1572,39 @@ export class Bu2Sandbox {
       if (typeof input.network !== "string" || !/^[A-Za-z0-9._:-]{2,80}$/.test(input.network)) throw new ApiError(400, "validation_error", "invalid_network", "network is invalid.");
       validateAmount(input.amount);
       validateDate(input.effective_at, "effective_at");
+      let ledgerAccountId = null;
+      if (this.ledger) {
+        const fundingBinding = this.ledger.assertWalletBindingById(input.environment, {
+          kind: "funding_source",
+          bindingId: input.funding_source_id,
+          asset: input.asset,
+          network: input.network,
+        });
+        if (fundingBinding.binding.account_id !== input.account_id) {
+          throw new ApiError(
+            409,
+            "authorization_error",
+            "opening_balance_funding_source_mismatch",
+            "Opening balance funding source must belong to the checkpoint account.",
+          );
+        }
+        ledgerAccountId = this.ledger.assertLedgerAccountBinding(fundingBinding.ledger_account.id, {
+          environment: input.environment,
+          tenant_id: fundingBinding.binding.tenant_id,
+          book_id: input.book_id,
+          owner_account_id: input.owner_account_id,
+          asset: input.asset,
+          network: input.network,
+          require_active: true,
+        }).id;
+      }
       const checkpoint = {
         id: input.id ?? prefix("obc"),
         book_id: input.book_id,
         account_id: input.account_id,
         owner_account_id: input.owner_account_id,
         funding_source_id: input.funding_source_id,
+        ledger_account_id: ledgerAccountId,
         environment: input.environment,
         asset: input.asset,
         network: input.network,
@@ -1563,7 +1620,7 @@ export class Bu2Sandbox {
       this.openingBalances.set(checkpoint.id, checkpoint);
       const event = this.event("ledger.opening_balance_posted", checkpoint);
       this.addOpeningBalancePostings(event, checkpoint);
-      return clone(checkpoint);
+      return publicResourceView(checkpoint);
     });
   }
 
@@ -1579,11 +1636,44 @@ export class Bu2Sandbox {
       validateLedgerAccount(input.credit_account, "credit_account");
       if (input.debit_account === input.credit_account) throw new ApiError(400, "validation_error", "correction_accounts_identical", "Correction debit and credit accounts must differ.");
       if (input.transaction_id !== undefined && input.transaction_id !== null) validateIdentifier(input.transaction_id, "txn", "transaction_id");
+      let ledgerAccountId = null;
+      if (this.ledger) {
+        const originalPostings = [...this.financialPostings.values()].filter(
+          (posting) => posting.event_id === original.id,
+        );
+        const ledgerAccountIds = new Set(
+          originalPostings.map((posting) => posting.ledger_account_id ?? null),
+        );
+        if (ledgerAccountIds.size !== 1 || ledgerAccountIds.has(null)) {
+          throw new ApiError(
+            409,
+            "financial_constraint",
+            "ledger_correction_ownership_unresolved",
+            "Ledger correction requires one trusted ledger account on the original financial fact.",
+            { original_event_id: original.id },
+          );
+        }
+        const currencies = new Set(originalPostings.map((posting) => posting.currency));
+        if (currencies.size !== 1 || !currencies.has(input.amount.currency)) {
+          throw new ApiError(
+            409,
+            "financial_constraint",
+            "correction_currency_mismatch",
+            "Ledger correction currency must match the original financial fact.",
+          );
+        }
+        ledgerAccountId = this.ledger.assertLedgerAccountBinding([...ledgerAccountIds][0], {
+          environment: input.environment,
+          book_id: input.book_id,
+          require_active: false,
+        }).id;
+      }
       const correction = {
         id: input.id ?? prefix("cor"),
         original_event_id: input.original_event_id,
         book_id: input.book_id,
         environment: input.environment,
+        ledger_account_id: ledgerAccountId,
         transaction_id: input.transaction_id ?? null,
         amount: clone(input.amount),
         debit_account: input.debit_account,
@@ -1599,12 +1689,12 @@ export class Bu2Sandbox {
       this.ledgerCorrections.set(correction.id, correction);
       const event = this.event("ledger.correction_posted", correction);
       this.addCorrectionPostings(event, correction);
-      return clone(correction);
+      return publicResourceView(correction);
     });
   }
 
   providerFeeView(fee) {
-    return clone(fee);
+    return publicResourceView(fee);
   }
 
   listProviderFees() {
@@ -1648,6 +1738,7 @@ export class Bu2Sandbox {
         amount: transaction.settled_amount,
         account_id: this.intents.get(transaction.payment_intent_id)?.payer_account_id ?? null,
         agent_id: this.intents.get(transaction.payment_intent_id)?.buyer_agent_id ?? null,
+        ledger_account_id: transaction.ledger_account_id ?? null,
       };
     }
     if (sourceType === "collection") {
@@ -1662,6 +1753,7 @@ export class Bu2Sandbox {
         amount: collection.amount,
         account_id: collection.account_id,
         agent_id: collection.agent_id,
+        ledger_account_id: collection.ledger_account_id ?? null,
       };
     }
     if (sourceType === "refund") {
@@ -1677,6 +1769,7 @@ export class Bu2Sandbox {
         amount: refund.amount,
         account_id: this.intents.get(transaction?.payment_intent_id)?.payer_account_id ?? null,
         agent_id: this.intents.get(transaction?.payment_intent_id)?.buyer_agent_id ?? null,
+        ledger_account_id: transaction?.ledger_account_id ?? null,
       };
     }
     throw new ApiError(400, "validation_error", "invalid_reconciliation_source", "Provider fee source type is invalid.");
@@ -1728,6 +1821,7 @@ export class Bu2Sandbox {
         amount: clone(input.amount),
         account_id: source.account_id,
         agent_id: source.agent_id,
+        ledger_account_id: source.ledger_account_id ?? null,
         status: "reported",
         observed_at: input.observed_at ?? now,
         metadata: clone(input.metadata ?? {}),
@@ -2463,14 +2557,20 @@ export class Bu2Sandbox {
         network: input.network ?? this.environmentConfig.network ?? null,
         reference: input.funding_source_id ?? null,
       });
+      if (this.ledger && input.funding_source_id && !fundingBinding?.bound) {
+        throw new ApiError(409, "authorization_error", "funding_source_binding_required", "The funding source must reference an active verified wallet binding.");
+      }
       const targetBinding = this.ledger?.assertWalletBinding(this.environmentConfig.environment, {
         kind: "receiving_target",
         accountId: quote.payee_account_id,
         agentId: quote.seller_agent_id,
         asset: quote.asset ?? this.environmentConfig.asset ?? quote.amount.currency,
         network: quote.network ?? this.environmentConfig.network ?? null,
-        reference: quote.receiving_target_id ?? null,
+        reference: input.receiving_target_id ?? quote.receiving_target_id ?? null,
       });
+      if (this.ledger && (input.receiving_target_id ?? quote.receiving_target_id) && !targetBinding?.bound) {
+        throw new ApiError(409, "authorization_error", "receiving_target_binding_required", "The receiving target must reference an active verified wallet binding.");
+      }
       this.assertExecutionSessionForIntent(input);
       const evaluation = this.evaluatePaymentMandate(input, quote);
       const policyDecision = {
@@ -2506,6 +2606,8 @@ export class Bu2Sandbox {
         seller_agent_id: quote.seller_agent_id,
         funding_source_binding_id: fundingBinding?.binding?.id ?? null,
         receiving_target_binding_id: targetBinding?.binding?.id ?? null,
+        funding_ledger_account_id: fundingBinding?.ledger_account?.id ?? null,
+        receiving_ledger_account_id: targetBinding?.ledger_account?.id ?? null,
         status,
         transaction_id: null,
         authorization: {
@@ -2544,7 +2646,7 @@ export class Bu2Sandbox {
       if (!intent) {
         throw new ApiError(404, "resource_not_found", "payment_intent_not_found", "Payment intent was not found.");
       }
-      if (intent.status === "funds_reserved") return clone(intent);
+      if (intent.status === "funds_reserved") return publicResourceView(intent);
       if (intent.status !== "authorized") {
         if (intent.status === "requires_authorization") {
           throw new ApiError(
@@ -2605,7 +2707,7 @@ export class Bu2Sandbox {
         "payment_intent_not_found",
         "Payment intent was not found.",
       );
-    return clone(intent);
+    return publicResourceView(intent);
   }
 
   transactionView(transaction) {
@@ -2629,10 +2731,10 @@ export class Bu2Sandbox {
       `settle:${transaction.id}`,
     );
     return {
-      transaction: clone(transaction),
-      payment_intent: intent ? clone(intent) : null,
+      transaction: publicResourceView(transaction),
+      payment_intent: intent ? publicResourceView(intent) : null,
       execution_session: executionSession ? this.executionSessionView(executionSession) : null,
-      quote: quote ? clone(quote) : null,
+      quote: quote ? publicResourceView(quote) : null,
       delivery: delivery ? clone(delivery) : null,
       receipt: receiptView,
       refunds: this.listRefunds(transaction.id),
@@ -2720,7 +2822,7 @@ export class Bu2Sandbox {
           intent.status = "declined";
           intent.authorization.decision = "denied";
           this.event("payment_intent.declined", intent);
-          return clone(intent);
+          return publicResourceView(intent);
         }
         if (input.decision !== "authorize")
           throw new ApiError(
@@ -2736,7 +2838,7 @@ export class Bu2Sandbox {
           intent.authorization.reason_code = "mandate_not_active";
           this.policyDecisions.get(intent.authorization.policy_decision_id)?.reason_codes.push("mandate_not_active");
           this.event("payment_intent.declined", intent);
-          return clone(intent);
+          return publicResourceView(intent);
         }
         const wasKnownPayee = this.knownPayees.has(intent.payee_account_id);
         intent.status = "authorized";
@@ -2762,6 +2864,22 @@ export class Bu2Sandbox {
   }
 
   async reserve(intent, { emitAuthorization = false } = {}) {
+    if (intent.funding_source_binding_id) {
+      const binding = this.ledger?.assertWalletBindingById(this.environmentConfig.environment, {
+        kind: "funding_source",
+        bindingId: intent.funding_source_binding_id,
+        asset: intent.asset ?? this.environmentConfig.asset ?? intent.amount.currency,
+        network: intent.network ?? this.environmentConfig.network ?? null,
+      });
+      if (binding?.ledger_account?.id !== intent.funding_ledger_account_id) {
+        throw new ApiError(
+          409,
+          "authorization_error",
+          "payment_intent_ledger_account_mismatch",
+          "Payment intent funding ownership changed before funds reservation.",
+        );
+      }
+    }
     if (this.wallet.currency !== intent.amount.currency)
       throw new ApiError(
         409,
@@ -2782,6 +2900,7 @@ export class Bu2Sandbox {
         id: prefix("txn"),
         payment_intent_id: intent.id,
         execution_session_id: intent.execution_session_id ?? null,
+        ledger_account_id: intent.funding_ledger_account_id ?? null,
         status: "funds_reserved",
       authorized_amount: clone(intent.amount),
       reserved_amount: clone(intent.amount),
@@ -2811,7 +2930,7 @@ export class Bu2Sandbox {
     intent.transaction_id = transaction.id;
     intent.status = "funds_reserved";
     this.event("transaction.funds_reserved", transaction);
-    return clone(intent);
+    return publicResourceView(intent);
   }
 
   async submitDelivery(transactionId, input, key) {
@@ -2855,7 +2974,7 @@ export class Bu2Sandbox {
         transaction.status = "delivery_submitted";
         this.intents.get(transaction.payment_intent_id).status = "delivery_submitted";
         this.event("transaction.delivery_submitted", transaction);
-        return { transaction: clone(transaction), delivery: clone(delivery) };
+        return { transaction: publicResourceView(transaction), delivery: clone(delivery) };
       },
     );
   }
@@ -2876,7 +2995,7 @@ export class Bu2Sandbox {
           );
         if (transaction.status === "settled") {
           return {
-            transaction: clone(transaction),
+            transaction: publicResourceView(transaction),
             receipt: clone(this.receipts.get(transaction.receipt_id)),
           };
         }
@@ -2945,7 +3064,7 @@ export class Bu2Sandbox {
           };
         }
         return {
-          transaction: clone(transaction),
+          transaction: publicResourceView(transaction),
           receipt: null,
           recovery: {
             status: "provider_unknown",
@@ -2997,7 +3116,7 @@ export class Bu2Sandbox {
         const intent = this.intents.get(transaction.payment_intent_id);
         if (intent) intent.status = "canceled";
         this.event("transaction.canceled", transaction);
-        return { transaction: clone(transaction), cancellation: {
+        return { transaction: publicResourceView(transaction), cancellation: {
           status: "canceled",
           provider_reference: transaction.cancel_provider_reference,
           reason: transaction.cancel_reason,
@@ -3256,13 +3375,13 @@ export class Bu2Sandbox {
               provider_reference: prepared.provider_reference,
             });
           }
-          return { transaction: clone(transaction), refund: clone(refund) };
+          return { transaction: publicResourceView(transaction), refund: clone(refund) };
         }
         if (prepared.status === "provider_unknown") {
           refund.status = "provider_unknown";
           refund.recovery_required = true;
           refund.failure_reason = prepared.reason_code ?? "refund_result_unknown";
-          return { transaction: clone(transaction), refund: clone(refund) };
+          return { transaction: publicResourceView(transaction), refund: clone(refund) };
         }
         this.transitionRefundAttempt(operationKey, {
           from: ["prepared", "failed"],
@@ -3278,7 +3397,7 @@ export class Bu2Sandbox {
             provider_reference: confirmed.provider_reference,
           });
           this.applyRefund(transaction, refund, provider);
-          return { transaction: clone(transaction), refund: clone(refund) };
+          return { transaction: publicResourceView(transaction), refund: clone(refund) };
         } catch (error) {
           // 只有 Adapter 明确声明未越过外部执行边界时才可确定失败；其余异常
           // （包括超时、AbortError 和响应解析失败）都必须保留额度并进入未知态。
@@ -3299,7 +3418,7 @@ export class Bu2Sandbox {
           refund.recovery_required = true;
           refund.failure_reason = error?.code ?? "refund_result_unknown";
           this.event("refund.provider_unknown", refund);
-          return { transaction: clone(transaction), refund: clone(refund) };
+          return { transaction: publicResourceView(transaction), refund: clone(refund) };
         }
       },
     );
@@ -3319,7 +3438,7 @@ export class Bu2Sandbox {
         if (!refund) throw new ApiError(404, "resource_not_found", "refund_not_found", "Refund was not found.");
         const transaction = this.transactions.get(refund.transaction_id);
         if (!transaction) throw new ApiError(404, "resource_not_found", "transaction_not_found", "Transaction was not found.");
-        if (refund.status === "refunded") return { transaction: clone(this.transactions.get(refund.transaction_id)), refund: clone(refund), recovery: { status: "refunded" } };
+        if (refund.status === "refunded") return { transaction: publicResourceView(this.transactions.get(refund.transaction_id)), refund: clone(refund), recovery: { status: "refunded" } };
         if (refund.status !== "provider_unknown") throw new ApiError(409, "invalid_state_transition", "refund_not_recoverable", "Only a provider_unknown refund can be recovered.", { current_state: refund.status });
         const persistedAttempt = this.refundAttemptById(refund.id);
         if (persistedAttempt?.status === "refunded") {
@@ -3329,7 +3448,7 @@ export class Bu2Sandbox {
             status: "refunded",
             provider_reference: persistedAttempt.provider_reference,
           });
-          return { transaction: clone(transaction), refund: clone(refund), recovery: { status: "refunded" } };
+          return { transaction: publicResourceView(transaction), refund: clone(refund), recovery: { status: "refunded" } };
         }
         if (typeof this.adapter?.recoverRefund !== "function") throw new ApiError(409, "invalid_state_transition", "refund_recovery_unsupported", "The active payment adapter does not support refund recovery.");
         const provider = await this.executeAdapter("recoverRefund", transaction.id, refund.amount, { refund_id: refund.id });
@@ -3345,7 +3464,7 @@ export class Bu2Sandbox {
           refund.recovery_required = true;
           refund.failure_reason = provider?.reason_code ?? "refund_recovery_result_unknown";
           this.event("refund.recovery_unknown", refund);
-          return { transaction: clone(transaction), refund: clone(refund), recovery: { status: "provider_unknown", reason_code: refund.failure_reason } };
+          return { transaction: publicResourceView(transaction), refund: clone(refund), recovery: { status: "provider_unknown", reason_code: refund.failure_reason } };
         }
         const confirmed = this.validateRefundProvider(provider, refund);
         const attempt = this.refundAttemptById(refund.id);
@@ -3357,7 +3476,7 @@ export class Bu2Sandbox {
           });
         }
         this.applyRefund(transaction, refund, provider);
-        return { transaction: clone(transaction), refund: clone(refund), recovery: { status: "refunded" } };
+        return { transaction: publicResourceView(transaction), refund: clone(refund), recovery: { status: "refunded" } };
       },
     );
   }
@@ -3425,7 +3544,7 @@ export class Bu2Sandbox {
     this.receipts.set(receipt.id, receipt);
     transaction.receipt_id = receipt.id;
     this.event("receipt.issued", receipt);
-    return { transaction: clone(transaction), receipt: clone(receipt) };
+    return { transaction: publicResourceView(transaction), receipt: clone(receipt) };
   }
 
   getReceipt(id) {
