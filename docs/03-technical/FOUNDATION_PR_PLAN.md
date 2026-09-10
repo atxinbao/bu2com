@@ -56,6 +56,8 @@ FP-01、FP-02、FP-03 可以并行准备，但应分别提交和审查。
 
 不得 UPDATE 旧 Receipt、Journal 或 Posting，不重新发起已发生外部付款，不双记余额。
 
+实现状态：Schema 21 已增加 append-only migration plan / cutover assessment / cutover generation。FP-06b 仅在 `local` 允许控制面；migration plan 对当前 legacy-unbound source 做完整指纹与逐项分类，可用 fully-bound、scoped exclusion 或绑定已过账期初的 reconciled-opening，但 `verified` 只表示机器结构/范围检查，不替代人类 R2/R3 批准。激活前重新验证 state revision、legacy wallet、fresh assessment snapshot、projection/source hash 与 generation CAS；健康 cutover 的运行时读值取 `available_spending_capacity`，支出决策仍由 legacy Transaction Core wallet 负责。stale/incomplete 时不静默 fallback，而在新 reserve 调用 Adapter 前失败关闭；rollback 追加新的 legacy generation。
+
 ### FP-07 — 社交钱包产品接入基线验收与新 RC
 
 同一候选上完成两个独立 Account、多个 Agent、收付/退款/费用、恢复、历史重放、权限、环境、迁移与备份 E2E；绑定 CI、runtime image、契约和人工审查证据后生成**新的**产品接入基线 RC。旧 `ledger-rc-local-v0.1` 标签保持不动。

@@ -28,7 +28,7 @@ Protected main + exact source SHA
 
 - `bu2.ci.v1` 的 source commit/tree、七项通过结果与 Local/Simulation 边界；
 - `bu2.ci.v1` 的 workflow event/ref/SHA 与准入请求的 run/attempt；
-- `rt01.image.v1` 的 source commit、image ID、固定运行时、Schema 20 和禁用执行状态；
+- `rt01.image.v1` 的 source commit、image ID、固定运行时、当前 Schema 21 和禁用执行状态；
 - Docker archive 非空并计算 SHA-256；
 - request、policy、CI evidence、runtime image evidence 和 image ID 文件哈希。
 

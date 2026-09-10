@@ -55,6 +55,12 @@ FP-06a 已提供内部 `wallet-read-model.v1`，但它仍是**shadow-only** 读�
 
 活动 projection 缺失、源内容变化、派生行漂移、目标 trusted business source 仍有未绑定 Posting、不平衡 Journal、未绑定或异常 pending transaction 必须显式进入 stale/completeness blocker，不以 `0`、固定 Demo 数字或旧 `this.wallet` 值伪装成功。completeness scope 固定为 `trusted_bound_sources`；无法证明属于目标账户的全库 legacy unbound Posting 不得被强行归属，也不得让无关旧 Demo 永久阻断目标 shadow，而是单独返回 `historical_scope=migration_pending`、`cutover_accepted=false`，交给 FP-06b。当前 `stale` 只表示 source/projection 内容漂移，尚未冻结时间型 freshness SLA。`available_spending_capacity.usable_for_spend=false`、`decision_use=forbidden`；shadow comparison 只把 legacy `this.wallet` 标为 `global_single_wallet` 后报告差异，绝不进入新增支出决策。
 
+### FP-06b Local cutover
+
+FP-06b 增加 `wallet-runtime-view.v1`，只允许 Local、明确 LedgerAccount+币种 scope。目标历史必须先建立机器可校验的 migration plan；`verified` 只表示 source 分类完整、scope/期初条件成立与证据引用存在，不代表证据已被 AI 或机器独立证明。cutover assessment 还要求 shadow matched、无 in-flight reserved/pending、目标对账满足、projection 非 stale/complete，并在激活事务中再次比较 state/wallet/snapshot/projection/generation。
+
+激活后 `read_balance` 使用 `available_spending_capacity`，但 `spend_decision_source=legacy_wallet`：Transaction Core 仍用既有 wallet 进行授权后预留、结算和退款。读模型 stale 时不会退回旧数值，而是 blocked/null；匹配该账簿的新 reserve 也在 Provider/Adapter 前失败关闭。rollback 通过追加更高 generation 恢复 legacy 读路径，不修改旧 generation 或资金历史。
+
 ## 5. 生命周期语义
 
 账户暂停的目标是阻止新的资金权限扩大，不是抹掉历史。FP-05 已按以下规则分离新执行与历史/恢复：
@@ -66,7 +72,7 @@ FP-06a 已提供内部 `wallet-read-model.v1`，但它仍是**shadow-only** 读�
 | 已存在不可变事实的幂等重放 | 校验原内容一致性；不得解释成新付款。 |
 | 已确认外部资金事实的受控补记 | 使用恢复权限与原执行证据；不得再次调用 Provider 付款。 |
 
-FP-05 已把 active 校验放在新资金活动的可信 binding 解析处；最终原子落账只要求快照中的 LedgerAccount 仍存在，因此账户在预留后被暂停时，已确认 settlement/refund/collection 等事实仍能按原归属记录。余额 cutover 与目标历史迁移仍属于 FP-06。
+FP-05 已把 active 校验放在新资金活动的可信 binding 解析处；最终原子落账只要求快照中的 LedgerAccount 仍存在，因此账户在预留后被暂停时，已确认 settlement/refund/collection 等事实仍能按原归属记录。FP-06b 进一步保证已切换读路径不健康时只停止**新的 reserve**，不会抹掉或重放已确认事实。
 
 ## 6. 产品实现前的集成门槛
 
