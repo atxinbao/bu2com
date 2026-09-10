@@ -8,6 +8,15 @@ import { AsyncLocalStorage } from "node:async_hooks";
 import { classifyOperationalError } from "./observability.mjs";
 import { buildPostingProjection } from "./ledger-calculations.mjs";
 import {
+  WALLET_AMOUNT_FORMAT_VERSION,
+  WALLET_PROJECTOR_VERSION,
+  WALLET_READ_MODEL_SCHEMA_VERSION,
+  compareWalletShadow,
+  walletBookBalance,
+  walletCandidateCapacity,
+  walletPendingConstraints,
+} from "./wallet-read-model.mjs";
+import {
   CURRENT_RECEIPT_SCHEMA_VERSION,
   RECEIPT_CANONICALIZATION_VERSION,
   RECEIPT_SIGNATURE_ALGORITHM,
@@ -1328,6 +1337,151 @@ export class Bu2Sandbox {
       require_active: false,
     });
     return this.ledger.getActiveLedgerAccountProjection({ ledger_account_id, currency });
+  }
+
+  walletLedgerSourceIds(ledgerAccountId) {
+    const sourceIds = new Set();
+    for (const transaction of this.transactions.values()) {
+      if (transaction.ledger_account_id !== ledgerAccountId) continue;
+      sourceIds.add(transaction.id);
+      for (const refund of this.refunds.values()) {
+        if (refund.transaction_id === transaction.id) sourceIds.add(refund.id);
+      }
+    }
+    for (const collection of this.collections.values()) {
+      if (collection.ledger_account_id === ledgerAccountId) sourceIds.add(collection.id);
+    }
+    for (const fee of this.providerFees.values()) {
+      if (fee.ledger_account_id === ledgerAccountId) sourceIds.add(fee.id);
+    }
+    for (const checkpoint of this.openingBalances.values()) {
+      if (checkpoint.ledger_account_id === ledgerAccountId) sourceIds.add(checkpoint.id);
+    }
+    for (const correction of this.ledgerCorrections.values()) {
+      if (correction.ledger_account_id === ledgerAccountId) sourceIds.add(correction.id);
+    }
+    return [...sourceIds].sort();
+  }
+
+  walletReconciliationStatus(ledgerAccountId, sourceIds = this.walletLedgerSourceIds(ledgerAccountId)) {
+    const sourceIdSet = new Set(sourceIds);
+    const runs = [...this.reconciliationRuns.values()]
+      .sort((left, right) => right.created_at.localeCompare(left.created_at) || right.id.localeCompare(left.id));
+    for (const run of runs) {
+      const relevant = (run.items ?? []).filter((item) => sourceIdSet.has(item.source_id));
+      if (relevant.length === 0) continue;
+      const status = relevant.some((item) => item.status === "exception")
+        ? "exception"
+        : relevant.some((item) => item.status === "unknown")
+          ? "unknown"
+          : "matched";
+      return {
+        status,
+        run_id: run.id,
+        mode: run.mode,
+        as_of: run.as_of,
+        relevant_item_count: relevant.length,
+      };
+    }
+    return { status: "not_observed", run_id: null, mode: null, as_of: null, relevant_item_count: 0 };
+  }
+
+  getWalletReadModel({ ledger_account_id, currency } = {}) {
+    validateIdentifier(ledger_account_id, "lga", "ledger_account_id");
+    if (typeof currency !== "string" || !/^[A-Z]{3}$/.test(currency)) {
+      throw new ApiError(400, "validation_error", "invalid_projection_currency", "Projection currency must be an uppercase three-letter currency.");
+    }
+    if (!this.ledger) {
+      throw new ApiError(503, "service_unavailable", "ledger_persistence_required", "A persistent ledger is required for WalletReadModel.");
+    }
+    const sourceIds = this.walletLedgerSourceIds(ledger_account_id);
+    const inspected = this.ledger.inspectLedgerAccountProjection({
+      ledger_account_id,
+      currency,
+      environment: this.environmentConfig.environment,
+      relevant_source_ids: sourceIds,
+      buildProjection: (postings) => postingProjection(postings, currency),
+    });
+    const active = inspected.active_projection;
+    const bookBalance = active ? walletBookBalance(active.accounts, currency) : null;
+    const pending = walletPendingConstraints([...this.transactions.values()], ledger_account_id, currency);
+    const blockers = [...new Set([
+      ...inspected.completeness_blockers,
+      ...pending.blockers,
+    ])].sort();
+    const capacity = walletCandidateCapacity({
+      bookBalance: bookBalance?.amount ?? null,
+      reserved: pending.reserved,
+      pendingOutbound: pending.pending_outbound,
+      blockers,
+    });
+    return {
+      schema_version: WALLET_READ_MODEL_SCHEMA_VERSION,
+      ledger_account_id,
+      owner_account_id: inspected.ledger_account.owner_account_id,
+      tenant_id: inspected.ledger_account.tenant_id,
+      book_id: inspected.ledger_account.book_id,
+      account_status: inspected.ledger_account.status,
+      environment: inspected.ledger_account.environment,
+      asset: inspected.ledger_account.asset,
+      network: inspected.ledger_account.network,
+      accounting_currency: currency,
+      asset_decimals: this.environmentConfig.asset === inspected.ledger_account.asset
+        ? this.environmentConfig.asset_decimals
+        : null,
+      amount_format_version: WALLET_AMOUNT_FORMAT_VERSION,
+      book_balance: bookBalance,
+      provider_balance: {
+        status: "not_observed",
+        amount: null,
+        observed_at: null,
+        evidence_refs: [],
+        reason: "No provider account-balance observation fact exists in the current Foundation contract.",
+      },
+      reserved: pending.reserved,
+      pending_outbound: pending.pending_outbound,
+      available_spending_capacity: capacity,
+      projection_id: active?.id ?? null,
+      projector_version: WALLET_PROJECTOR_VERSION,
+      generation: active?.version ?? null,
+      source_sequence: inspected.source_sequence,
+      source_sequence_kind: "ledger_account_currency_journal_count",
+      projected_at: active?.activated_at ?? active?.created_at ?? null,
+      source_content_hash: inspected.current_content_hash,
+      projection_content_hash: active?.content_hash ?? null,
+      stale: inspected.stale_reasons.length > 0,
+      stale_reasons: inspected.stale_reasons,
+      completeness: {
+        status: blockers.length === 0 ? "complete" : "blocked",
+        scope: "trusted_bound_sources",
+        blockers,
+        unbound_posting_count: inspected.unbound_posting_count,
+        global_unbound_posting_count: inspected.global_unbound_posting_count,
+        unbalanced_journal_count: inspected.current_projection.unbalanced_journal_count,
+        unbound_pending_transaction_count: pending.unbound_pending_transaction_count,
+        current_posting_count: inspected.current_projection.posting_count,
+        projected_posting_count: active?.posting_count ?? null,
+      },
+      historical_scope: {
+        status: inspected.global_unbound_posting_count > 0 ? "migration_pending" : "no_global_unbound_detected",
+        cutover_accepted: false,
+        global_unbound_posting_count: inspected.global_unbound_posting_count,
+      },
+      reconciliation_status: this.walletReconciliationStatus(ledger_account_id, sourceIds),
+      execution_status: this.environmentConfig.execution_status,
+      supported_operations: ["read", "reconcile", "shadow_compare"],
+      decision_use: "forbidden",
+    };
+  }
+
+  shadowCompareWalletReadModel(input = {}) {
+    const model = this.getWalletReadModel(input);
+    return {
+      ...compareWalletShadow({ model, legacyWallet: this.wallet }),
+      model,
+      legacy_wallet_id: this.wallet?.id ?? null,
+      legacy_scope: "global_single_wallet",
+    };
   }
 
   exportLedgerReplayEvidence({ as_of = null } = {}) {

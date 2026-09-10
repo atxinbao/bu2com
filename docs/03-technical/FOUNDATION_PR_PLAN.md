@@ -48,6 +48,8 @@ FP-01、FP-02、FP-03 可以并行准备，但应分别提交和审查。
 
 冻结科目映射、余额字段、投影算法版本、源水位、stale/completeness 与 generation；对目标账簿只读 shadow 比较旧运行时和新账务结果。差异只报告，不自动补造 Posting，新投影不参与支出决策。
 
+实现状态：`wallet-read-model.v1` 以 `ledger_account_id + accounting_currency` 为范围，`wallet-posting-liquidity.v1` 只汇总 `asset.cash* / cash.wallet:* / cash.receiving_target:* / cash.account:*` 流动性科目；`source_sequence` 固定为该范围不可变 Journal 数水位并同时输出 source/projection content hash。活动 projection 缺失、源内容变化、派生行漂移、目标 trusted business source 仍存在未绑定 Posting、不平衡 Journal、未绑定/异常 pending transaction 都显式进入 stale/completeness blocker。全库同币种但无法证明属于目标账户的 legacy unbound Posting 只记录为 `historical_scope=migration_pending` 与 `cutover_accepted=false`，不污染目标 shadow，也不被当成迁移完成。`provider_balance` 在缺少账户级 Provider balance observation 时返回 `not_observed/null`，不得用交易对账金额伪造。shadow 只比较 legacy 单钱包和候选模型，固定 `decision_use=forbidden` / `writes_performed=false`，不接入 `reserve()` 或任何资金状态转换。
+
 ### FP-06b — 目标产品账簿迁移与运行时切换
 
 独立 R2：为目标范围追加可证明归属或建立已核对期初，进行版本化切换并提供停止新执行、继续观察/对账、前滚补记和恢复 runbook。实际生产数据操作仍需独立 R3 授权。

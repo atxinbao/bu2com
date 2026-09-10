@@ -1346,6 +1346,111 @@ export class SqliteLedger {
     };
   }
 
+  inspectLedgerAccountProjection({
+    ledger_account_id,
+    currency,
+    environment = null,
+    relevant_source_ids = [],
+    buildProjection,
+  }) {
+    if (typeof currency !== "string" || !/^[A-Z]{3}$/.test(currency)) {
+      throw new ApiError(400, "validation_error", "invalid_projection_currency", "Projection currency must be an uppercase three-letter currency.");
+    }
+    if (typeof buildProjection !== "function") throw new TypeError("buildProjection must be a function");
+    const ledgerAccount = this.assertLedgerAccountBinding(ledger_account_id, {
+      environment,
+      require_active: false,
+    });
+    const active = this.getActiveLedgerAccountProjection({ ledger_account_id, currency });
+    const globalUnboundPostingCount = Number(this.db.prepare(`
+      SELECT COUNT(*) AS count FROM financial_postings
+      WHERE ledger_account_id IS NULL AND currency=?
+    `).get(currency).count);
+    const relevantSourceIds = [...new Set(relevant_source_ids ?? [])]
+      .filter((value) => typeof value === "string" && value.length > 0)
+      .sort();
+    const relevantUnboundPostingCount = relevantSourceIds.length === 0
+      ? 0
+      : Number(this.db.prepare(`
+          SELECT COUNT(*) AS count FROM financial_postings
+          WHERE ledger_account_id IS NULL AND currency=?
+            AND source_id IN (${relevantSourceIds.map(() => "?").join(",")})
+        `).get(currency, ...relevantSourceIds).count);
+    const postings = this.db.prepare(`
+      SELECT * FROM financial_postings
+      WHERE ledger_account_id=? AND currency=?
+      ORDER BY created_at, id
+    `).all(ledger_account_id, currency).map((row) => ({ ...row, amount_value: Number(row.amount_value) }));
+    const projection = buildProjection(postings);
+    if (
+      !projection
+      || !Array.isArray(projection.accounts)
+      || !Number.isSafeInteger(projection.posting_count)
+      || !Number.isSafeInteger(projection.journal_count)
+      || !Number.isSafeInteger(projection.unbalanced_journal_count)
+    ) {
+      throw new ApiError(500, "internal_error", "ledger_projection_invalid", "Ledger projection builder returned an invalid result.");
+    }
+    const contentHash = requestFingerprint({
+      ownership: {
+        ledger_account_id,
+        environment: ledgerAccount.environment,
+        tenant_id: ledgerAccount.tenant_id,
+        book_id: ledgerAccount.book_id,
+        owner_account_id: ledgerAccount.owner_account_id,
+        asset: ledgerAccount.asset,
+        network: ledgerAccount.network,
+        ledger_account_version: Number(ledgerAccount.version),
+        currency,
+      },
+      postings: postings.map((posting) => ({
+        id: posting.id,
+        event_id: posting.event_id,
+        journal_id: posting.journal_id,
+        direction: posting.direction,
+        account: posting.account,
+        amount_value: posting.amount_value,
+        currency: posting.currency,
+        created_at: posting.created_at,
+      })),
+    });
+    // FinancialPosting/Journal 是不可变追加事实；账户+币种范围内的 Journal 数可作为
+    // 单调源水位，而不假定所有低层/迁移 Posting 都必须拥有 LedgerEvent sequence。
+    const sourceSequence = projection.journal_count;
+    const staleReasons = [];
+    if (!active) {
+      staleReasons.push("missing_active_projection");
+    } else {
+      if (active.content_hash !== contentHash) staleReasons.push("source_content_changed");
+      const comparable = (row) => ({
+        account: row.account,
+        balance_minor: Number(row.balance_minor),
+        currency: row.currency,
+        ledger_account_id: row.ledger_account_id,
+        posting_count: Number(row.posting_count),
+      });
+      const expected = projection.accounts.map(comparable).sort((left, right) => left.account.localeCompare(right.account));
+      const actual = active.accounts.map(comparable).sort((left, right) => left.account.localeCompare(right.account));
+      if (canonical(expected) !== canonical(actual)) staleReasons.push("projection_rows_drift");
+    }
+    const completenessBlockers = [];
+    if (relevantUnboundPostingCount > 0) completenessBlockers.push("unbound_postings_present");
+    if (projection.unbalanced_journal_count > 0) completenessBlockers.push("unbalanced_journals_present");
+    if (!active) completenessBlockers.push("active_projection_missing");
+    if (staleReasons.length > 0) completenessBlockers.push("active_projection_stale");
+    return {
+      ledger_account: ledgerAccount,
+      active_projection: active,
+      current_projection: projection,
+      current_content_hash: contentHash,
+      source_sequence: sourceSequence,
+      unbound_posting_count: relevantUnboundPostingCount,
+      global_unbound_posting_count: globalUnboundPostingCount,
+      stale_reasons: [...new Set(staleReasons)].sort(),
+      completeness_blockers: [...new Set(completenessBlockers)].sort(),
+    };
+  }
+
   listLedgerAccountProjectionVersions({ ledger_account_id, currency }) {
     return this.db.prepare(`
       SELECT * FROM ledger_projection_versions

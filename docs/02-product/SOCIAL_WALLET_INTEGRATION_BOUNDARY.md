@@ -41,19 +41,19 @@ stable business id
 
 `ledger_account_id` 必须由服务端可信的环境、租户、账簿、Account、Funding Source/Receiving Target、资产与网络关系解析。Schema 20 已把该 ID 固定进受信 FundingSource/ReceivingTarget onboarding 记录，并在持久化时校验 environment、tenant、owner Account、asset/network 与 active LedgerAccount 一致；ownership 字段不可通过后续 SQLite UPDATE 偷换。产品请求仍不能任选该 ID。新格式事实无法解析时拒绝；历史 null binding / 未绑定 Posting 保持可读但不能用于新的资金活动，也不能伪造归属。
 
-## 4. WalletReadModel（后续 FP-06a 冻结）
+## 4. WalletReadModel（FP-06a shadow 契约）
 
-当前仓库**尚未提供**下面的正式产品读模型。FP-06a 至少应定义：
+FP-06a 已提供内部 `wallet-read-model.v1`，但它仍是**shadow-only** 读模型，不是已经切换的产品余额 API。模型定义：
 
 - `ledger_account_id / owner_account_id / environment / asset / network`；
 - `accounting_currency / asset_decimals / amount_format_version`；
-- `book_balance`：明确科目范围后的账务净额，不等同于无限制可支付金额；
-- `provider_balance`：外部观察值，并携带 `observed_at` 与 Provider/网络证据引用；
+- `book_balance`：`wallet-posting-liquidity.v1` 只汇总 `asset.cash* / cash.wallet:* / cash.receiving_target:* / cash.account:*`，不把整个双式账簿净和当余额；
+- `provider_balance`：只有账户级 Provider balance observation 才能填写；当前 Foundation 没有该事实时固定 `not_observed/null`，交易级 reconciliation amount 不能替代；
 - `reserved / pending_outbound / available_spending_capacity`：互相分离的约束；
-- `projection_id / projector_version / generation / source_sequence / projected_at / stale / completeness`；
+- `projection_id / projector_version / generation / source_sequence / projected_at / stale / completeness`；其中 `source_sequence` 是账簿账户+币种范围内不可变 Journal 数水位，同时携带 source/projection content hash；
 - `reconciliation_status / execution_status / supported_operations`。
 
-未建立、过期、存在缺口或对账不一致时必须显式返回相应状态，不以 `0`、固定 Demo 数字或旧 `this.wallet` 值伪装新模型成功。shadow 阶段的新投影不得参与新增支出决策。
+活动 projection 缺失、源内容变化、派生行漂移、目标 trusted business source 仍有未绑定 Posting、不平衡 Journal、未绑定或异常 pending transaction 必须显式进入 stale/completeness blocker，不以 `0`、固定 Demo 数字或旧 `this.wallet` 值伪装成功。completeness scope 固定为 `trusted_bound_sources`；无法证明属于目标账户的全库 legacy unbound Posting 不得被强行归属，也不得让无关旧 Demo 永久阻断目标 shadow，而是单独返回 `historical_scope=migration_pending`、`cutover_accepted=false`，交给 FP-06b。当前 `stale` 只表示 source/projection 内容漂移，尚未冻结时间型 freshness SLA。`available_spending_capacity.usable_for_spend=false`、`decision_use=forbidden`；shadow comparison 只把 legacy `this.wallet` 标为 `global_single_wallet` 后报告差异，绝不进入新增支出决策。
 
 ## 5. 生命周期语义
 
