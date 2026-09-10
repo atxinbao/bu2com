@@ -1120,3 +1120,13 @@ F06b 让 Quote 和 PaymentIntent 能够保留可验证的资金来源与收款�
 - 综合评分：96/100，建议提交 Draft R2 PR，等待独立 Domain / Architecture 审查与最终提交远端 CI。
 - 遗留风险：最新 reconciliation run 依赖既有追加式 Map 的持久插入顺序；正式账户级资金写模型、公开 Wallet API、LA-06b、Hosted、Sandbox/Testnet 双向与 Live/Mainnet 均仍未完成或未执行。
 - 恢复：异常时保持新 reserve 关闭，追加完整正规对账或 append-only legacy read rollback；禁止删除旧证据、改写 Posting 或重新付款。
+
+## 2026-09-11 · FP-A02 Foundation 状态与合并证据收口自主审查
+
+- 审查者：Codex（文档 Contributor / Verifier）。
+- 技术评分：96/100。固定 main 合并 SHA、PR #82 与同 SHA 的 push CI run，移除三条过期“进行中”状态，并保留 `main protected=false` 与 `prepared_not_released` 的准入边界。
+- 战略评分：97/100。把已关闭的 FP-A01 与后续账户级资金写/费用语义、公开 Wallet API、LA-06b 分离，避免继续修复已关闭问题或把 Local CI 扩张为外部资金验收。
+- 验证评分：95/100。11 个相对链接、9 项证据事实、Changelog 4 项必需字段、Chrome headless 渲染、范围检查和 patch 检查均通过；Graphify 源码 freshness 已更新到 main 合并提交。
+- 综合评分：96/100，建议通过并提交 R0 文档 PR。
+- 残余风险：GitHub main 仍未保护，Social Wallet RC 不能进入正式 release；账户级资金写/ProviderFee、公开 Wallet API 和 LA-06b 均未实现或未执行。本轮没有代码级行为变化，也没有独立复跑 PR #82 的全量测试，而是引用其精确 main CI 证据。
+- 恢复：revert FP-A02 文档提交；无数据库、外部系统、交易或资金事实需要恢复。

@@ -568,3 +568,17 @@
 | LA-06a | `mise x node@24.20.0 -- node deploy/la06a-local-gate.mjs` | PASS；Sandbox 259/259、边界 4/4、部署 23/23、SDK 10/10、契约与 Prototype lint/build 通过 |
 
 本地门禁在未提交工作树上运行，证据中的 `source_commit=7bbb0cd...` 是父基线，不是最终候选提交或远端 CI。未执行 Hosted、真实 Sandbox/Testnet 双向结算、LA-06b、Live/Mainnet、Signer、Provider 付款、Tag 或 Release。
+
+## 2026-09-11 · FP-A02 Foundation 状态与合并证据收口
+
+| 验证项 | 命令 / 场景 | 结果 |
+|---|---|---|
+| Markdown 相对链接 | Node 只读扫描两个修改后的 Foundation Markdown | PASS；11/11 路径存在 |
+| 状态与证据一致性 | Node 检查 SHA、PR、run、四个 job、保护状态、RC 边界及过期文字 | PASS；9 项事实存在，3 条过期状态不存在 |
+| Changelog 结构 | Node 检查 FP-A02 条目的风险、验证、金融不变量与恢复字段 | PASS；4/4 字段存在 |
+| 静态页面渲染 | Google Chrome headless `--dump-dom file:///Users/mac/Documents/bu2com/CHANGELOG.html` | PASS；FP-A02 条目可见 |
+| 变更范围 | `git diff --name-only` 与允许列表 | PASS；仅 Foundation/Changelog/审计记录及 Graphify 派生文档 |
+| Patch | `git diff --check` | PASS |
+| Graphify | `graphify update .` | PASS；4014 nodes / 6747 edges / 264 communities，源码 freshness 为 `e19bae63` |
+
+本轮为 R0 文档收口，不重复运行 FP-A01 资金/运行时测试。精确 main 合并证据来自 GitHub run `34527198064`；该证据不替代 protected-main、LA-06b、Hosted、Sandbox/Testnet 双向、Live/Mainnet 或真实资金验收。

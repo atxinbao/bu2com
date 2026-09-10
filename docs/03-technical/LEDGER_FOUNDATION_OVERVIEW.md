@@ -1,8 +1,8 @@
 # Ledger Foundation 当前能力与产品接入基线
 
 日期：2026-09-11
-状态：FP-07 后 current-capability baseline；FP-A01 修复进行中
-固定整理基线：`7bbb0cd01af1abd18207e6ce5d4d1315416d1b6e`
+状态：FP-07 后 current-capability baseline；FP-A01 已由 PR #82 关闭
+固定整理基线：`e19bae63f29604554bcca9e10151d5363341ac07`
 
 本页是当前能力入口，不替代 [`AGENTS.md`](../../AGENTS.md)、[`PROJECT.html`](../../PROJECT.html)、[`ARCHITECTURE.html`](../../ARCHITECTURE.html)、[`GOVERNANCE.html`](../../GOVERNANCE.html) 或具体版本化契约。它不授予资金执行、Sandbox/Testnet 验收、Live/Mainnet、生产迁移或发布权限。
 
@@ -47,7 +47,7 @@ Simulation 不是对外 Sandbox。CI 成功、代码已合并或存在 Live 配�
 | 运行时余额 | legacy `wallet_accounts` / `this.wallet` 仍是资金写/支出决策源；FP-06b Schema 21 以 append-only generation 在 Local 选择 `legacy_wallet` 或 WalletReadModel `available_spending_capacity` 作为读值；FP-A01 统一摘要、assessment 和 active guard 的严格对账覆盖 | 正式产品 API、真实多账户写模型、Sandbox/Live cutover | Local 受控读路径；spend decision 仍为 legacy wallet |
 | 历史重放/恢复 | 只读重放、备份追加事实追平、缺口报告；FP-06b 支持 fully-bound/scoped-exclusion/reconciled-opening 迁移计划及追加 rollback generation | 实际生产数据迁移与外部环境验证 | Local 隔离迁移/恢复证据 |
 | 收款/付款/退款/费用 | Local/Simulation 业务与故障路径、Attempt/对账能力；新格式业务分录已从可信 wallet binding 解析到账簿账户；FP-06a 将 reserved/pending 与账簿余额分开读取 | 历史范围迁移、正式产品 cutover 与真实 Sandbox 证据 | 不扩张到未批准通道 |
-| CI | main `7bbb0cd…` 的 `BU2 CI` run `34518611473` 已完成且四组 job success；FP-02 已绑定 source commit/tree/run/attempt、原始日志和测试统计 | 私有仓库当前套餐仍未启用 protected-main；FP-A01 新候选仍需自己的完整 CI | 回归证据；**不是资金授权** |
+| CI | main `e19bae63…` 的 `BU2 CI` run `34527198064` 已完成，`foundation`、`runtime`、`runtime image`、`BU2 / CI Gate` 四组 job 均 success；FP-02 已绑定 source commit/tree/run/attempt、原始日志和测试统计 | GitHub API 仍报告 `main protected=false`，因此 protected-main RC 准入仍未满足 | 合并后精确源码回归证据；**不是资金授权** |
 | 内部 Release | `ledger-rc-local-v0.1` 保留；FP-07 增加 Social Wallet Local RC 准备机制与 acceptance 绑定 | protected-main 条件满足后的实际新 RC artifact、独立人类批准 | 新候选仍 `prepared_not_released`，仅 Local/Simulation |
 
 ### v0.1 与当前 main 的边界
@@ -98,4 +98,4 @@ python3 scripts/ledger/ledger_inventory.py \
 
 ## 7. 后续依赖
 
-执行顺序及已交付状态见 [`FOUNDATION_PR_PLAN.md`](FOUNDATION_PR_PLAN.md)。FP-07 已完成有限 Local 产品接入验收，FP-A01 正在关闭持续对账健康性缺口；其后应把账户级资金写源/费用语义与公开 Wallet API 拆为独立能力 PR。真实产品数据迁移、Sandbox/Testnet、Hosted 或 Live 准入仍不由本页授予。
+执行顺序及已交付状态见 [`FOUNDATION_PR_PLAN.md`](FOUNDATION_PR_PLAN.md)。FP-07 已完成有限 Local 产品接入验收，FP-A01 已由 PR #82 关闭持续对账健康性缺口，并由 main run `34527198064` 取得精确合并提交的四组成功检查。下一阶段应把账户级资金写源与 buyer-side ProviderFee 支出语义、公开 Wallet API 拆为独立能力 PR；LA-06b 继续负责外部 Sandbox/Testnet 双向证据。真实产品数据迁移、Hosted、Live/Mainnet 或资金准入仍不由本页授予。

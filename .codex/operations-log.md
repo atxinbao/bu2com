@@ -567,3 +567,14 @@
 - Tool: `mise x node@24.20.0 -- node --test`; result: 红色反例 0/5 后实现转绿，FP-A01 + FP-06a/06b/07 专项 35/35，Sandbox 全量 259/259。
 - Tool: `runtime-assurance.mjs`, `la06a-local-gate.mjs`; result: RT-01 PASS；LA-06a 聚合 Sandbox 259/259、边界 4/4、部署 23/23、SDK 10/10、契约及 Prototype lint/build PASS。dirty-tree source commit 仅为父基线，不冒充最终候选证据。
 - Tool: `graphify update .`, `git diff --check`; result: 代码图更新为 4011 nodes / 6744 edges / 271 communities，补丁空白检查通过；Graphify 文档语义缓存未在本轮重建。
+
+## 2026-09-11 · FP-A02 Foundation 状态与合并证据收口
+
+- Scope: PR #82 合并后删除本地 `fix/wallet-reconciliation-guards`，从 main `e19bae63f29604554bcca9e10151d5363341ac07` 创建 `docs/fpa02-foundation-evidence`；只修正文档状态漂移，不继续修改 FP-A01 代码。
+- Tool: `git`, `gh pr view`, `gh run view`, `gh api`; result: PR #82 已合并；main run `34527198064` 的 `foundation`、`runtime`、`runtime image`、`BU2 / CI Gate` 四项均 success；开放 PR 为 0；GitHub API 仍返回 `main protected=false`。
+- Tool: `graphify query`, `rg`, `sed`; result: Foundation overview、PR plan 与 Changelog 是本轮状态/证据收口点；下一能力依赖为账户级资金写与 buyer-side ProviderFee 语义、公开 Wallet API、LA-06b。
+- Tool: `apply_patch`; result: 将 Foundation 固定基线更新为 main 合并提交，关闭 FP-A01 进行中状态，新增 FP-A02 R0 状态段与 Changelog 记录；不修改代码、Schema、API 或执行配置。
+- Tool: Node 文档检查、Chrome headless、`git diff --check`; result: 11 个相对链接、9 项证据事实、3 条过期状态、Changelog 必需字段和本地渲染均通过。
+- Tool: `graphify update .`; result: 知识图源码 freshness 更新到 `e19bae63`，输出为 4014 nodes / 6747 edges / 264 communities；工具提示文档语义变更需后续由 AI-assisted full update 处理，本轮不把该输出解释为新的业务能力证据。
+- Verification correction: 首次图谱统计断言误读不存在的 `.edges` 字段而提前退出；按实际 Graphify JSON 的 `.links` 字段修正只读检查后完整复跑通过，未修改业务或文档结论。
+- Boundary: RC 保持 `prepared_not_released`；不配置 branch protection，不执行 Tag/Release、Hosted、Sandbox/Testnet 双向、Live/Mainnet、Signer、Provider 或真实资金操作。
