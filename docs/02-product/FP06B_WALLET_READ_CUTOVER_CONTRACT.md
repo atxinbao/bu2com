@@ -38,7 +38,7 @@ ready 至少要求：
 - `available_spending_capacity` 可计算；
 - `reserved=0` 且 `pending_outbound=0`，没有持久化未知或已确认未过账的 Payment/Refund Attempt；
 - legacy `wallet.available/reserved` 与 shadow candidate matched；其中 legacy `reserved` 的候选等价值是 WalletReadModel 的 `reserved + pending_outbound`，不能因状态拆分把同一预留重复或遗漏；
-- 目标已有需对账的 settled/refunded/posted/fee source 时，同一最新相关 reconciliation 必须完整且唯一地覆盖全部 required source，并全部 matched；缺项、重复、unknown 或 exception 均阻断。
+- 目标已有需 Provider 对账的 settled/refunded payment、已确认 refund、posted collection 或 provider fee 时，同一最新相关 reconciliation 必须在相同 LedgerAccount+币种 scope 内完整且唯一地覆盖全部 required source，并全部 matched；缺项、重复、未知 item status、错币种、unknown 或 exception 均阻断。开账与内部更正不属于 Provider required source；目标没有此类外部事实时明确返回 `not_required`。
 
 assessment 创建后不自动获得激活资格。激活时必须重新计算 fresh assessment，并与保存的 snapshot hash 完全一致；同时 SQLite 再比较 state revision、legacy wallet、projection/source hash 和 generation CAS。assessment 幂等只绑定调用者的账簿、币种、计划 ID；同键同请求返回原快照，后续状态变化不会伪装成请求冲突，但原快照不能因此跳过激活重验。
 
@@ -61,13 +61,13 @@ read_balance_semantics = available_spending_capacity
 spend_decision_source = legacy_wallet
 ```
 
-因此正常 reserve 后，projection 的 `book_balance` 尚未变化时，reserved/pending 仍会从 candidate available 中扣除；在已核对的同一隔离 scope 中，读值不会因漏减该预留而高估。active cutover 每次读取还必须重新执行 shadow equivalence；即使 projection 已刷新，只要 accounting candidate 与实际 `legacy_wallet` 支出决策状态分叉，也以 `wallet_shadow_mismatch` blocked，不返回候选余额。全局 legacy wallet 尚不具备真正多账户资金写隔离，不能据此宣称跨账户读值与旧 wallet 永远一致。真正 settlement/collection/refund/fee 产生新 Posting 后，如果活动 projection 尚未刷新，则 runtime view 立即 `blocked`，不会返回旧值或静默 fallback。
+因此正常 reserve 后，projection 的 `book_balance` 尚未变化时，reserved/pending 仍会从 candidate available 中扣除；在已核对的同一隔离 scope 中，读值不会因漏减该预留而高估。active cutover 每次读取还必须重新执行 shadow equivalence 和同一共享 reconciliation coverage 判定；即使 Posting、projection 与 shadow 都未变化，只要最新相关对账变为 incomplete/unknown/exception，也立即 blocked/null 并在 Adapter 前阻止新 reserve。全局 legacy wallet 尚不具备真正多账户资金写隔离，不能据此宣称跨账户读值与旧 wallet 永远一致。真正 settlement/collection/refund/fee 产生新 Posting 后，如果活动 projection 尚未刷新，则 runtime view 同样 `blocked`，不会返回旧值或静默 fallback。
 
 ## 6. 停止与恢复
 
-- active cutover stale/incomplete、Domain 内存 revision 落后于数据库、存在未完成 Payment/Refund Attempt、持久 `provider_unknown/payment_*` settlement Adapter operation 或持续 shadow mismatch：`read_balance=null`、`fallback_performed=false`；匹配 LedgerAccount 的新 reserve 在 Adapter 前拒绝。该 guard 仅适用于 Local，其他环境原有 execution/authorization/binding 门槛不变，cutover 控制面仍拒绝 Sandbox/Live。
+- active cutover stale/incomplete、Domain 内存 revision 落后于数据库、存在未完成 Payment/Refund Attempt、持久 `provider_unknown/payment_*` settlement Adapter operation、持续 shadow mismatch，或 required reconciliation 为 not_observed/incomplete/unknown/exception：`read_balance=null`、`fallback_performed=false`；匹配 LedgerAccount 的新 reserve 在 Adapter 前拒绝。该 guard 仅适用于 Local，其他环境原有 execution/authorization/binding 门槛不变，cutover 控制面仍拒绝 Sandbox/Live。
 - 已预留/已确认外部事实不因读路径故障被删除或重复付款；继续按 Transaction Core/provider_unknown/reconciliation 恢复。
-- 安全恢复可选择：使用同一个仍 current 的 migration plan 刷新 projection 后重新 assessment；或追加 `legacy_wallet` rollback generation。
+- 对账异常通过追加更新且完整的正规 reconciliation evidence 恢复；不删除旧 run、不修改 Posting、不重新付款。其他异常可使用同一个仍 current 的 migration plan 刷新 projection 后重新 assessment，或追加 `legacy_wallet` rollback generation。
 - rollback 后重新切换必须使用新的 assessment 和更高 generation；旧 plan/assessment/generation 永不改写。
 
 ## 7. 验收边界

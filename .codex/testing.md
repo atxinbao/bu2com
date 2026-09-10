@@ -557,3 +557,14 @@
 | 外部 Sandbox 双向证据 | LA-06b | 未执行，`accepted=false` |
 
 首次专项执行有 1 个测试证据断言错误：直接写 Journal 的夹具不会写领域 LedgerEvent。修正为验证刷新前后 LedgerEvent 数不变后，专项与完整门禁均通过；未放宽实现约束。
+## 2026-09-11 · FP-A01 钱包对账完整性与运行检查统一
+
+| 验证项 | 命令 | 结果 |
+|---|---|---|
+| 红色反例 | `mise x node@24.20.0 -- node --test sandbox/fp-a01-wallet-reconciliation.test.mjs` | 修改前 0/5；部分/重复/错币种/无 required source 和激活后异常均复现预期失败 |
+| FP-A01 + FP-06a/06b/07 | `mise x node@24.20.0 -- node --test sandbox/fp-a01-wallet-reconciliation.test.mjs sandbox/fp06a-wallet-read-model.test.mjs sandbox/fp06b-wallet-cutover.test.mjs sandbox/fp07-social-wallet-acceptance.test.mjs` | 35/35 通过 |
+| Sandbox 全量 | `mise x node@24.20.0 -- npm --prefix sandbox test` | 259/259 通过 |
+| RT-01 | `mise x node@24.20.0 -- node deploy/runtime-assurance.mjs` | PASS；Node 24.20.0、npm 11.19.0、SQLite 3.53.4、Schema 1–21、WAL/FK/备份恢复通过 |
+| LA-06a | `mise x node@24.20.0 -- node deploy/la06a-local-gate.mjs` | PASS；Sandbox 259/259、边界 4/4、部署 23/23、SDK 10/10、契约与 Prototype lint/build 通过 |
+
+本地门禁在未提交工作树上运行，证据中的 `source_commit=7bbb0cd...` 是父基线，不是最终候选提交或远端 CI。未执行 Hosted、真实 Sandbox/Testnet 双向结算、LA-06b、Live/Mainnet、Signer、Provider 付款、Tag 或 Release。

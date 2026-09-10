@@ -578,7 +578,11 @@ test("FP-06b cutover assessment fails closed on in-flight funds, reconciliation 
       status: "matched",
       as_of: "2026-09-10T02:00:00.000Z",
       created_at: "2026-09-10T02:00:01.000Z",
-      items: [{ source_id: "txn_fp06b_settled_unreconciled", status: "matched" }],
+      items: [{
+        source_id: "txn_fp06b_settled_unreconciled",
+        status: "matched",
+        expected_amount: { value: 0, currency: CURRENCY },
+      }],
     });
     const partial = await reconciliation.sandbox.prepareWalletCutoverAssessment({
       ledger_account_id: reconciliation.ledgerAccountId,

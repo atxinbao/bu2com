@@ -1161,3 +1161,13 @@ npm --prefix sandbox run test:hosted-deployment
 - `node deploy/runtime-assurance.mjs`: passed with SQLite WAL, foreign keys, continuous migrations 1–19 and isolated Online Backup/restore.
 - `node deploy/la06a-local-gate.mjs`: passed with Sandbox 213/213, LA-06a boundary 4/4, deployment/Hosted contract 23/23, TypeScript SDK 10/10, API/MCP contract validation and Prototype lint/build.
 - Boundary: `external_sandbox_bilateral.accepted=false`; no historical ownership migration, runtime balance cutover, Provider, Signer, Hosted execution, Sandbox/Testnet bilateral settlement, Live/Mainnet, real funds or E3.1.
+## 2026-09-11 · FP-A01 wallet reconciliation coverage and active-read guards
+
+- Red regression first reproduced 5/5 audit counterexamples against the baseline: partial/duplicate/wrong-currency coverage, `not_required`, and post-activation reconciliation degradation.
+- `node --test sandbox/fp-a01-wallet-reconciliation.test.mjs sandbox/fp06a-wallet-read-model.test.mjs sandbox/fp06b-wallet-cutover.test.mjs sandbox/fp07-social-wallet-acceptance.test.mjs`: 35/35 passed on Node v24.20.0.
+- `npm --prefix sandbox test`: 259/259 passed.
+- `node deploy/runtime-assurance.mjs`: passed with Node v24.20.0, npm 11.19.0, SQLite 3.53.4, migrations 1–21, WAL, foreign keys and isolated Online Backup/restore.
+- `node deploy/la06a-local-gate.mjs`: passed with Sandbox 259/259, LA-06a 4/4, deployment/Hosted contracts 23/23, SDK 10/10, API/MCP contract validation and Prototype lint/build.
+- Runtime fault/recovery coverage proves a later exception/unknown returns `blocked` and `read_balance=null`, rejects reserve before Adapter invocation, survives SQLite restart, and recovers from a newer complete run without another payment or Posting.
+- Evidence caveat: local dirty-tree gates report parent `source_commit=7bbb0cd...`; final commit and remote PR CI require separate evidence and are not claimed here.
+- Boundary: no Schema, public Wallet API, historical Posting, refund, multi-account spend source, Hosted, Sandbox/Testnet bilateral settlement, Live/Mainnet, Signer, real funds, Tag or Release change.
