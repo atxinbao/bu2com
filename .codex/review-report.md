@@ -1150,3 +1150,13 @@ F06b 让 Quote 和 PaymentIntent 能够保留可验证的资金来源与收款�
 - 综合评分：96/100，建议提交 R2 PR，等待独立 Domain / Architecture 审查和最终提交对应的远程证据。
 - 遗留风险：当前接口仅获 Local/Simulation 证据；底层负余额通过 blocked/null 隐藏，产品仍需设计负余额的受控恢复体验。LA-06b、Hosted、真实 Sandbox/Testnet 双向、Live/Mainnet 和真实资金未执行。
 - 恢复：停止暴露路由即可回退应用；不删除 Schema 22、账户钱包、历史交易或 cutover generation。异常余额沿用追加式 reconciliation/projection/cutover 恢复。
+
+## 2026-09-11 · GOV-02 单一人工 Owner 与 CI-03 v2 自主审查
+
+- 审查者：Codex（Contributor / Verifier，非 R2 Approver）。
+- 技术评分：96/100。CI-03 v2 仍严格绑定 `refs/heads/main`、输入/workflow/checkout SHA、干净树、唯一版本、七项门禁和不可变制品；`ref_protected` 只保存真实布尔证据。
+- 战略评分：97/100。治理规则适配当前单一人类 Owner 的实际条件，同时保留人工晋级决定、AI 自批禁止及资金环境边界。
+- 验证评分：96/100。CI 脚本 27/27、CI-03 7/7、LA-06a 完整本地门禁、JSON/YAML 与 patch 检查均通过。
+- 综合评分：96/100，建议通过并提交 R2 Draft PR，由 Project Owner 以人工身份完成合并批准。
+- 残余风险：未保护 main 的强制合并控制不可用，替代控制依赖精确来源绑定和人工 Owner 判断；LA-06b、Hosted、Testnet、Live/Mainnet 与真实资金仍未执行或授权。
+- 恢复：revert 本治理提交可恢复 CI-03 v1；不涉及数据库、交易、外部 Provider 或资金事实迁移。

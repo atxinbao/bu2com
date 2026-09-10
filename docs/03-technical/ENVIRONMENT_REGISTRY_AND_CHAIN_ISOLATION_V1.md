@@ -76,7 +76,7 @@ SQLite Schema v8 新增单行 `environment_metadata`：
 
 ## 7. 兼容与恢复
 
-- ENV-02 合并时 API contract、事件、MCP、SDK 与 Receipt schema/version 均不变；后续 ENV-03 通过独立 R2 变更迁移这些客户端契约。
+- ENV-02 合并时 API contract、事件、MCP、SDK 与 Receipt schema/version 均不变；后续 ENV-03 通过 R2 变更迁移这些客户端契约，并由单人治理下的 Project Owner 兼任所需批准角色。
 - `/health.environment` 已由 ENV-03 切换为 `local/sandbox/live`，详细环境信息由版本化 `GET /v1/environment` 返回。
 - Schema v8 为纯新增；旧数据不重写。若本实现未获批准，停止新版本服务并恢复到旧制品。已写入的 metadata 保留为审计事实，旧版本会忽略新表。
 - ENV-03 必须复用本注册表输出 `GET /v1/environment`，不得重新定义第二套环境映射。

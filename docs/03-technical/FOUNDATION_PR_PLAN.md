@@ -3,7 +3,7 @@
 日期：2026-09-11
 状态：Execution plan；工作包编号不是 GitHub PR 编号
 
-目标不是重写已经验证的 Transaction Core，而是让“已实现能力、真实业务接线、产品读模型、迁移/切换和发布准入”形成可追溯且互不混淆的链路。资金/契约行为修改仍须按各自 R2/R3 门槛独立审查。
+目标不是重写已经验证的 Transaction Core，而是让“已实现能力、真实业务接线、产品读模型、迁移/切换和发布准入”形成可追溯且互不混淆的链路。资金/契约行为修改仍须按各自 R2/R3 门槛由 Project Owner 以明确人工角色审查。
 
 ## 第一批：当前基线与工程保障
 
@@ -52,7 +52,7 @@ FP-01、FP-02、FP-03 可以并行准备，但应分别提交和审查。
 
 ### FP-06b — 目标产品账簿迁移与运行时切换
 
-独立 R2：为目标范围追加可证明归属或建立已核对期初，进行版本化切换并提供停止新执行、继续观察/对账、前滚补记和恢复 runbook。实际生产数据操作仍需独立 R3 授权。
+R2：为目标范围追加可证明归属或建立已核对期初，进行版本化切换并提供停止新执行、继续观察/对账、前滚补记和恢复 runbook。当前单人治理由 Project Owner 兼任 Domain/Architecture 批准；实际生产数据操作仍需单独 R3 授权。
 
 不得 UPDATE 旧 Receipt、Journal 或 Posting，不重新发起已发生外部付款，不双记余额。
 
@@ -62,17 +62,17 @@ FP-01、FP-02、FP-03 可以并行准备，但应分别提交和审查。
 
 同一候选上完成两个独立 Account、多个 Agent、收付/退款/费用、恢复、历史重放、权限、环境、迁移与备份 E2E；绑定 CI、runtime image、契约和人工审查证据后生成**新的**产品接入基线 RC。旧 `ledger-rc-local-v0.1` 标签保持不动。
 
-实现状态：新增 `fp07.social-wallet-acceptance.v1`，在隔离 Local/Simulation SQLite 上组合两个 Account、四个 Agent、可信绑定、可核对期初、付款/收款/部分退款/seller-side Collection fee、持久 unknown→重启→recovery、完整对账、projection 删除重建、历史 replay 和 Online Backup。active cutover 增加持续 shadow-match guard，并把 delivery-submitted pending 纳入 legacy reserved 等价比较。buyer-side Payment/Refund ProviderFee 的 spending-capacity 语义仍未批准。CI-03 RC class 更新为 `social_wallet_local_integration_rc`，绑定同 source/image 的 FP-07 acceptance 与旧 `ledger-rc-local-v0.1` 历史基线；候选仍是 `prepared_not_released`，当前 protected-main 套餐阻塞不被绕过。
+实现状态：新增 `fp07.social-wallet-acceptance.v1`，在隔离 Local/Simulation SQLite 上组合两个 Account、四个 Agent、可信绑定、可核对期初、付款/收款/部分退款/seller-side Collection fee、持久 unknown→重启→recovery、完整对账、projection 删除重建、历史 replay 和 Online Backup。active cutover 增加持续 shadow-match guard，并把 delivery-submitted pending 纳入 legacy reserved 等价比较。buyer-side Payment/Refund ProviderFee 的 spending-capacity 语义仍未批准。CI-03 v2 RC class 为 `social_wallet_local_integration_rc`，绑定同 source/image 的 acceptance 与旧 `ledger-rc-local-v0.1` 历史基线；候选仍是 `prepared_not_released`，分支保护状态仅记录，精确 main SHA 和不可变证据继续强制。
 
 ### FP-08 — 账户级资金写源与买方费用语义
 
-独立 R2：Schema 22 增加 `ledger_account_id + currency` 账户余额。健康 Local cutover 激活从重验后的会计候选原子初始化写源；新交易固定保存 `wallet_write_source`，reserve/cancel/settle/refund 与买方 Payment/Refund ProviderFee 在 Transaction Core 既有强事务内通过账户余额版本 CAS 提交。
+R2：Schema 22 增加 `ledger_account_id + currency` 账户余额。健康 Local cutover 激活从重验后的会计候选原子初始化写源；新交易固定保存 `wallet_write_source`，reserve/cancel/settle/refund 与买方 Payment/Refund ProviderFee 在 Transaction Core 既有强事务内通过账户余额版本 CAS 提交。当前单人治理由 Project Owner 兼任所需批准角色。
 
 实现状态：`fp08.social-wallet-acceptance.v1` 取代旧 FP-07 证据语义，明确 `spend_decision_source=account_scoped_wallet` 且 buyer-side fee 已授权；旧 v1 证据不被静默重新解释。费用作为已观察外部事实可以使 available 为负，但新 reserve 在 Adapter 前失败关闭。历史交易继续使用 legacy wallet；公开 Wallet API、Collection 运行时净入账、Sandbox/Testnet/Live 和真实资金不在本范围。
 
 ### Public Wallet API — 认证账户钱包读取
 
-独立 R2：新增 `GET /v1/accounts/{account_id}/wallets` 与 TypeScript SDK `listAccountWallets()`。服务端只从认证 Account/tenant 解析已初始化账户钱包，不接受调用方选择 `ledger_account_id`；健康时返回账户级 available/reserved，不健康时返回 blocked/null 且不回退 legacy wallet。
+R2：新增 `GET /v1/accounts/{account_id}/wallets` 与 TypeScript SDK `listAccountWallets()`。服务端只从认证 Account/tenant 解析已初始化账户钱包，不接受调用方选择 `ledger_account_id`；健康时返回账户级 available/reserved，不健康时返回 blocked/null 且不回退 legacy wallet。当前单人治理由 Project Owner 兼任所需批准角色。
 
 实现状态：Access Contract 升级到 1.1 并为 Agent、Developer、Operator 增加 `wallets:read`。当前只完成 Local/Simulation 接口、契约和回归；Collection 运行时净入账、Hosted、Sandbox/Testnet、Live/Mainnet 与真实资金继续独立关闭。
 
@@ -86,7 +86,7 @@ PR [#82](https://github.com/atxinbao/bu2com/pull/82) 已合并到 main `e19bae63
 
 ### FP-A02 — Foundation 状态与合并证据收口
 
-本工作包只对齐 FP-A01 合并后的文档状态、固定 main 基线和 CI 证据，风险等级为 **R0**。它不修改代码、Schema、API、交易/账务状态、环境配置或资金执行。GitHub API 当前仍报告 `main protected=false`，Social Wallet RC 继续保持 `prepared_not_released`；该运营门槛不能由 PR #82 的成功检查替代。
+本工作包只对齐 FP-A01 合并后的文档状态、固定 main 基线和 CI 证据，风险等级为 **R0**。它不修改代码、Schema、API、交易/账务状态、环境配置或资金执行。CI-03 v2 将 GitHub API 的 `main protected=false` 保存为候选证据，但不再作为准入条件；Social Wallet RC 继续保持 `prepared_not_released`，且不能由普通 PR 检查替代 Project Owner 人工晋级批准。
 
 FP-A02 后的功能建设顺序为：FP-08 账户级资金写源与 buyer-side ProviderFee 支出语义、Public Wallet API、LA-06b 外部 Sandbox/Testnet 双向验收。Public Wallet API 当前候选通过后再进入 LA-06b；每项必须按自身 R2/R3 边界单独设计、验证和批准，不把 Local/Simulation 证据扩张为 Hosted、Live/Mainnet 或真实资金准入。
 

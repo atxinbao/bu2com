@@ -28,11 +28,11 @@ const createFixtures = async () => {
     ]),
   );
   const request = {
-    schema_version: "ci03.release-request.v1",
+    schema_version: "ci03.release-request.v2",
     status: "accepted",
     candidate_version: "social-wallet-v0.1.0-rc.1",
     release_class: "social_wallet_local_integration_rc",
-    source: { commit, tree, ref: "refs/heads/main", ref_protected: true, workflow_commit: commit },
+    source: { commit, tree, ref: "refs/heads/main", ref_protected: false, workflow_commit: commit },
     workflow_run: { id: "12345", attempt: "1" },
     boundary: {
       environment: "local",
@@ -112,10 +112,13 @@ test("CI-03 binds source, image archive and Social Wallet evidence into a non-au
       notesPath: fixture.paths.notesPath,
     });
     assert.equal(manifest.status, "prepared_not_released");
+    assert.equal(manifest.schema_version, "ci03.release-candidate.v2");
     assert.equal(manifest.source.commit, commit);
     assert.equal(manifest.artifact.image_id, imageId);
     assert.deepEqual(manifest.workflow_run, { id: "12345", attempt: "1", job: "prepare" });
     assert.equal(manifest.approval.candidate_promotion_authorized, false);
+    assert.equal(manifest.approval.separate_human_reviewer_required, false);
+    assert.equal(manifest.approval.ai_self_approval, "forbidden");
     assert.equal(manifest.product_acceptance.status, "passed");
     assert.equal(manifest.product_acceptance.simulated_payment_flow_executed, true);
     assert.equal(manifest.product_acceptance.schema_version, "fp08.social-wallet-acceptance.v1");
@@ -126,6 +129,7 @@ test("CI-03 binds source, image archive and Social Wallet evidence into a non-au
     assert.equal(manifest.historical_baseline.commit, "005b3949de4672a5aae301bd9b511e47b8be89fa");
     assert.ok(manifest.explicit_exclusions.includes("real_funds"));
     assert.match(readFileSync(fixture.paths.notesPath, "utf8"), /Prepared, not released/);
+    assert.match(readFileSync(fixture.paths.notesPath, "utf8"), /Source ref protected: `false`/);
   } finally {
     rmSync(fixture.directory, { recursive: true, force: true });
   }
@@ -158,6 +162,9 @@ test("CI-03 detects archive, runtime, and Social Wallet evidence drift after can
       socialWalletEvidencePath: fixture.paths.socialWalletPath,
     });
     assert.equal(validation(), true);
+    manifest.source.ref_protected = null;
+    assert.equal(validation(), false);
+    manifest.source.ref_protected = false;
     writeFileSync(fixture.paths.archivePath, "tampered archive");
     assert.equal(validation(), false);
     writeFileSync(fixture.paths.archivePath, "immutable docker archive fixture");

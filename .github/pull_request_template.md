@@ -2,7 +2,7 @@
 
 <!--
 本模板适用于 BU2 全部变更。请保留适用章节；不适用项填写“不适用”并说明原因，禁止直接删除。
-涉及真实资金、生产数据、主网、密钥或不可逆操作时，PR 合并本身不代表生产执行授权；Project Owner 可以在执行前提供独立、明确且限定范围的授权。
+涉及真实资金、生产数据、主网、密钥或不可逆操作时，PR 合并本身不代表生产执行授权；Project Owner 可以在执行前提供明确且限定范围的授权。
 -->
 
 ## 1. 变更摘要
@@ -197,20 +197,20 @@ Changelog 条目名称：
 
 ## 13. 审查与批准
 
-<!-- AI Agent 可以起草、实现和验证，但不得成为 R2/R3 的批准者；R3 必须由 Project Owner 明确人工批准。 -->
+<!-- AI Agent 可以起草、实现和验证，但不得成为 R2/R3 的批准者；当前单人治理由 Project Owner 明确兼任所需 Owner 角色。 -->
 
 - Product Owner：
 - Transaction Domain Owner：
 - Architecture Owner：
 - Operations Owner：
 - Compliance / Legal Owner：
-- 独立审查者：
+- Project Owner（单人治理时兼任角色与结论）：
 
 审批要求：
 
 - [ ] R0：Owner 或维护者已审查。
 - [ ] R1：模块 Owner 已审查，Lint、测试和构建通过。
-- [ ] R2：至少一名独立人类审查者批准，Domain 与 Architecture 证据完整。
+- [ ] R2：Project Owner 已以人工身份明确批准，并记录兼任的 Domain / Architecture 角色、目标提交、范围和结论。
 - [ ] R3：Project Owner 已明确人工批准；如包含生产执行，授权范围、执行窗口、停止条件和恢复方式已经记录。
 - [ ] R3 操作符合 `PROJECT.html` 当前阶段准入门槛；如需扩大能力边界，项目总纲已先行更新并批准。
 

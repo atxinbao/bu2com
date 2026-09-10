@@ -23,8 +23,9 @@ const validRequest = {
   tagExists: false,
 };
 
-test("CI-03 accepts only a clean protected-main request bound to the workflow commit", () => {
+test("CI-03 accepts a clean main request bound to the workflow commit", () => {
   const request = validateReleaseRequest(validRequest);
+  assert.equal(request.schema_version, "ci03.release-request.v2");
   assert.equal(request.status, "accepted");
   assert.equal(request.source.commit, commit);
   assert.equal(request.source.ref_protected, true);
@@ -34,10 +35,16 @@ test("CI-03 accepts only a clean protected-main request bound to the workflow co
   assert.equal(request.authorization.payment_execution, false);
 });
 
-test("CI-03 rejects unprotected refs, commit drift, dirty trees and occupied versions", () => {
+test("CI-03 records an unprotected main ref without treating it as an admission failure", () => {
+  const request = validateReleaseRequest({ ...validRequest, workflowRefProtected: false });
+  assert.equal(request.status, "accepted");
+  assert.equal(request.source.ref_protected, false);
+});
+
+test("CI-03 rejects missing ref evidence, commit drift, dirty trees and occupied versions", () => {
   assert.throws(
-    () => validateReleaseRequest({ ...validRequest, workflowRefProtected: false }),
-    /not protected/,
+    () => validateReleaseRequest({ ...validRequest, workflowRefProtected: undefined }),
+    /must be recorded as a boolean/,
   );
   assert.throws(
     () => validateReleaseRequest({ ...validRequest, workflowCommit: "c".repeat(40) }),
@@ -59,32 +66,6 @@ test("CI-03 rejects unprotected refs, commit drift, dirty trees and occupied ver
     () => validateReleaseRequest({ ...validRequest, workflowRunAttempt: "0" }),
     /positive integers/,
   );
-});
-
-test("CI-03 CLI fails closed when the current checkout is presented as an unprotected main ref", () => {
-  const repositoryRoot = fileURLToPath(new URL("../..", import.meta.url));
-  const actualCommit = execFileSync("git", ["rev-parse", "HEAD"], {
-    cwd: repositoryRoot,
-    encoding: "utf8",
-  }).trim();
-  const result = spawnSync(process.execPath, [fileURLToPath(new URL("./validate-release-request.mjs", import.meta.url))], {
-    cwd: repositoryRoot,
-    encoding: "utf8",
-    env: {
-      ...process.env,
-      BU2_CANDIDATE_VERSION: "social-wallet-v0.1.0-rc.1",
-      BU2_CANDIDATE_SOURCE_COMMIT: actualCommit,
-      BU2_WORKFLOW_SOURCE_COMMIT: actualCommit,
-      BU2_WORKFLOW_REF: "refs/heads/main",
-      BU2_WORKFLOW_REF_PROTECTED: "false",
-      BU2_WORKFLOW_EVENT: "workflow_dispatch",
-      BU2_WORKFLOW_RUN_ID: "12345",
-      BU2_WORKFLOW_RUN_ATTEMPT: "1",
-    },
-  });
-  assert.equal(result.status, 1);
-  assert.match(result.stderr, /main ref is not protected/);
-  assert.equal(result.stdout, "");
 });
 
 test("CI-03 CLI writes its request file only after validating a clean checkout", () => {
@@ -115,7 +96,7 @@ test("CI-03 CLI writes its request file only after validating a clean checkout",
         BU2_CANDIDATE_SOURCE_COMMIT: actualCommit,
         BU2_WORKFLOW_SOURCE_COMMIT: actualCommit,
         BU2_WORKFLOW_REF: "refs/heads/main",
-        BU2_WORKFLOW_REF_PROTECTED: "true",
+        BU2_WORKFLOW_REF_PROTECTED: "false",
         BU2_WORKFLOW_EVENT: "workflow_dispatch",
         BU2_WORKFLOW_RUN_ID: "12345",
         BU2_WORKFLOW_RUN_ATTEMPT: "1",
@@ -123,7 +104,9 @@ test("CI-03 CLI writes its request file only after validating a clean checkout",
     });
     assert.equal(result.status, 0, result.stderr);
     assert.equal(result.stdout, "");
-    assert.equal(JSON.parse(readFileSync(outputPath, "utf8")).status, "accepted");
+    const request = JSON.parse(readFileSync(outputPath, "utf8"));
+    assert.equal(request.status, "accepted");
+    assert.equal(request.source.ref_protected, false);
     assert.match(
       execFileSync("git", ["status", "--porcelain"], { cwd: directory, encoding: "utf8" }),
       /\?\? release-request\.json/,

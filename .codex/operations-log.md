@@ -604,3 +604,14 @@
 - Tool: `node --check`, JSON parser, Ruby YAML parser, Markdown link scanner, sensitive-value scan, `git diff --check`; result: 语法、5 个 JSON、OpenAPI YAML、13 个修改 Markdown 的相对链接、敏感值与 patch 格式全部通过；首次 Ruby `safe_load_file` 因本机 Psych API 版本不支持而退出，改用同一解析器的 `load_file` 后通过。
 - Review: 最终范围为 Public Wallet Domain/HTTP/Access/OpenAPI/SDK、回归、文档与 Graphify 派生图；未包含 Schema、依赖、钱包 mutation、部署或资金执行变更。
 - Staged check: 首次 `git diff --cached --check` 发现新产品契约头部两处 Markdown 行尾空格；清理后重新暂存并复检，不改变契约语义。
+
+## 2026-09-11 · GOV-02 单一人工 Owner 与 CI-03 v2
+
+- Scope: 当前早期阶段改为单一人工 Project Owner 治理；移除第二位自然人和 `main protected=true` 作为 Local/Simulation 候选准备的硬阻塞。
+- Tool: `rg` / `sed` / `git`; result: 核对治理、CI-03、FP-07/FP-08、PR 模板与当前活动契约，保留历史 Changelog/verification 事实及 LA-06b 独立 Activation 边界。
+- Tool: `apply_patch`; result: CI-03 policy/request/candidate 升级 v2，`ref_protected` 改为真实布尔证据；Project Owner 可兼任 R2/R3 角色，AI 自批继续禁止。
+- Tool: `node --test scripts/ci/*.test.mjs`; result: 27/27 passed，包含未保护 main 正向准入和来源/提交/脏树/Tag 负向测试。
+- Tool: `node deploy/la06a-local-gate.mjs`; result: Sandbox 269/269、LA-06a 4/4、部署/Hosted 契约 23/23、SDK 11/11、API 63 项不变量/6 MCP 工具、Prototype lint/build 全部通过。
+- Tool: Node JSON / Ruby YAML / `git diff --check`; result: policy、workflow 与补丁格式通过。
+- Tool: `graphify update .`; result: 无新的代码拓扑漂移；现有派生图保持更新状态。
+- Boundary: 候选仍为 `prepared_not_released`；不创建 Tag/Release，不开放 Hosted、Testnet、Live/Mainnet、Signer、Provider 或真实资金。

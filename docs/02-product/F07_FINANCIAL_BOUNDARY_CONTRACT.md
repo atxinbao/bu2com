@@ -2,7 +2,7 @@
 
 日期：2026-09-08
 执行者：Codex
-状态：D1 文档基线，待 R2 独立人工审查
+状态：D1 文档基线；后续 R2 变更适用当前 Project Owner 单人批准规则
 适用范围：Phase 0 Reference Sandbox · Local / Sandbox / Base Sepolia Testnet
 
 ## 1. 目的与非目标
@@ -175,7 +175,7 @@ D1 只冻结契约，不引入迁移。F07 实现阶段优先追加表和索引�
 - Transaction Detail 能从授权追踪到 Hold、Ledger、Posting、结算和 Receipt。
 - Local / Sandbox / Base Sepolia Testnet 的执行边界继续可见；Live/Mainnet、托管和生产凭证保持关闭。
 
-F07 通过 D1 后才允许开始代码实现；代码 PR 必须标记 R2，并由独立 Domain 与 Architecture 审查者批准。
+F07 通过 D1 后才允许开始代码实现；代码 PR 必须标记 R2。当前单人治理阶段由 Project Owner 明确兼任 Domain 与 Architecture 角色并作出人工批准，AI 不得自批。
 
 ## 11. 明确不变的边界
 

@@ -8,7 +8,7 @@ on:
         required: true
         type: string
       source_commit:
-        description: Full protected-main commit SHA selected for the candidate
+        description: Full main commit SHA selected for the candidate
         required: true
         type: string
 
@@ -39,7 +39,7 @@ jobs:
           baseline_tag="$(node -p "require('./deploy/release-policy.json').historical_baseline.tag")"
           baseline_commit="$(node -p "require('./deploy/release-policy.json').historical_baseline.commit")"
           test "$(git rev-list -n 1 "$baseline_tag")" = "$baseline_commit"
-      - name: Admit protected main request
+      - name: Admit exact main request
         env:
           BU2_CANDIDATE_VERSION: ${{ inputs.candidate_version }}
           BU2_CANDIDATE_SOURCE_COMMIT: ${{ inputs.source_commit }}

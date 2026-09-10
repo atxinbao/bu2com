@@ -35,13 +35,13 @@ export function prepareReleaseCandidate({
   const socialWallet = readJson(socialWalletEvidencePath);
   const imageId = readFileSync(runtimeImageIdPath, "utf8").trim();
 
-  if (request.schema_version !== "ci03.release-request.v1" || request.status !== "accepted") {
-    throw new Error("Release request was not accepted by the protected-main gate");
+  if (request.schema_version !== "ci03.release-request.v2" || request.status !== "accepted") {
+    throw new Error("Release request was not accepted by the exact-main gate");
   }
   if (
     request.release_class !== policy.release_class ||
     request.source?.ref !== policy.source.ref ||
-    request.source?.ref_protected !== true ||
+    typeof request.source?.ref_protected !== "boolean" ||
     request.source?.workflow_commit !== request.source?.commit ||
     !/^[1-9][0-9]*$/.test(request.workflow_run?.id ?? "") ||
     !/^[1-9][0-9]*$/.test(request.workflow_run?.attempt ?? "") ||
@@ -52,7 +52,7 @@ export function prepareReleaseCandidate({
     request.authorization?.registry_publish !== false ||
     request.authorization?.payment_execution !== false
   ) {
-    throw new Error("Release request class or protected-ref evidence is invalid");
+    throw new Error("Release request class or source evidence is invalid");
   }
   if (!new RegExp(policy.candidate_version_pattern).test(request.candidate_version ?? "")) {
     throw new Error("Release request candidate version is invalid");
@@ -107,7 +107,7 @@ export function prepareReleaseCandidate({
   if (!archive.isFile() || archive.size <= 0) throw new Error("Release image archive is empty");
 
   const manifest = {
-    schema_version: "ci03.release-candidate.v1",
+    schema_version: "ci03.release-candidate.v2",
     status: "prepared_not_released",
     candidate_version: request.candidate_version,
     release_class: policy.release_class,
@@ -145,8 +145,9 @@ export function prepareReleaseCandidate({
     explicit_exclusions: policy.explicit_exclusions,
     boundary: policy.boundary,
     approval: {
-      independent_r2_review: "pending",
       project_owner_release_approval: "pending",
+      separate_human_reviewer_required: false,
+      ai_self_approval: "forbidden",
       candidate_promotion_authorized: false,
     },
   };
@@ -184,14 +185,15 @@ export function validateReleaseCandidate(manifest, {
   socialWalletEvidencePath,
 }) {
   return (
-    manifest?.schema_version === "ci03.release-candidate.v1" &&
+    manifest?.schema_version === "ci03.release-candidate.v2" &&
     manifest.status === "prepared_not_released" &&
     manifest.candidate_version === request.candidate_version &&
     manifest.release_class === policy.release_class &&
     manifest.source?.commit === request.source.commit &&
     manifest.source?.tree === request.source.tree &&
     manifest.source?.ref === policy.source.ref &&
-    manifest.source?.ref_protected === true &&
+    typeof manifest.source?.ref_protected === "boolean" &&
+    manifest.source?.ref_protected === request.source?.ref_protected &&
     manifest.workflow_run?.id === ci.run?.id &&
     manifest.workflow_run?.attempt === ci.run?.attempt &&
     request.workflow_run?.id === ci.run?.id &&
@@ -245,8 +247,9 @@ export function validateReleaseCandidate(manifest, {
     sameArray(manifest.capabilities, policy.capabilities) &&
     sameArray(manifest.explicit_exclusions, policy.explicit_exclusions) &&
     JSON.stringify(manifest.boundary) === JSON.stringify(policy.boundary) &&
-    manifest.approval?.independent_r2_review === "pending" &&
     manifest.approval?.project_owner_release_approval === "pending" &&
+    manifest.approval?.separate_human_reviewer_required === false &&
+    manifest.approval?.ai_self_approval === "forbidden" &&
     manifest.approval?.candidate_promotion_authorized === false
   );
 }
@@ -256,6 +259,7 @@ function releaseNotes(manifest) {
     `Status: **Prepared, not released**\n\n` +
     `Release class: \`${manifest.release_class}\`\n\n` +
     `Source commit: \`${manifest.source.commit}\`\n\n` +
+    `Source ref protected: \`${manifest.source.ref_protected}\` (recorded evidence, not an admission requirement)\n\n` +
     `Image ID: \`${manifest.artifact.image_id}\`\n\n` +
     `Social Wallet acceptance: \`${manifest.product_acceptance.status}\` (2 Accounts / 4 Agents, spend decision: \`${manifest.product_acceptance.spend_decision_source}\`)\n\n` +
     `Historical baseline: \`${manifest.historical_baseline.tag}\` -> \`${manifest.historical_baseline.commit}\`\n\n` +

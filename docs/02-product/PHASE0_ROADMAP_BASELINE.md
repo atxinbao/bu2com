@@ -75,7 +75,7 @@ BU2 继续定位为嵌入式 Agent AI 收付平台。外部 Agent 在自己的�
 
 ## 6. 当前下一步
 
-D0/D1/D2 文档基线与 F07 代码实现已合并。F08 运行时与 F09a 已完成版本化授权、确定性 PolicyDecision、绑定校验、幂等状态转换和 Agent 执行命令；F15a 已增加独立激活、15 分钟窗口和会话级支出边界，当前进入独立 R2 Domain 与 Architecture 审查。
+D0/D1/D2 文档基线与 F07 代码实现已合并。F08 运行时与 F09a 已完成版本化授权、确定性 PolicyDecision、绑定校验、幂等状态转换和 Agent 执行命令；F15a 已增加独立激活、15 分钟窗口和会话级支出边界，当前由 Project Owner 以 R2 Domain 与 Architecture 角色审查。
 
 LA-03d 已冻结多账户所有权、余额投影切换和历史迁移契约，并按 Schema/归属约束、写入原语/投影刷新、可信业务接线、迁移/切换证据拆分推进。
 

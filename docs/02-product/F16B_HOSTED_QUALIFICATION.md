@@ -30,7 +30,7 @@ npm --prefix sandbox run test:f16b-hosted
 
 1. 公网 HTTPS、DNS、TLS 与稳定 API origin。
 2. 托管 Secret 注入与轮换；不允许把本地文件或测试值当成托管凭证。
-3. 独立审查人签发、绑定候选摘要和时间窗口的 Activation。
+3. Project Owner 单独签发、绑定候选摘要和时间窗口的 Activation；该签发必须与候选生成分离记录，不能由 AI 代签。
 4. 外部机器无浏览器挑战的鉴权与边缘行为。
 5. Base Sepolia 买方到卖方、卖方到买方的真实双向结算，以及重复提交、丢响应和恢复证据。
 

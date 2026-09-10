@@ -36,8 +36,8 @@ export function validateReleaseRequest({
   }
   if (workflowEvent !== policy.source.event) throw new Error("Release candidates require workflow_dispatch");
   if (workflowRef !== policy.source.ref) throw new Error("Release candidates must run from refs/heads/main");
-  if (workflowRefProtected !== policy.source.ref_protected) {
-    throw new Error("The main ref is not protected; candidate preparation is denied");
+  if (typeof workflowRefProtected !== "boolean") {
+    throw new Error("Workflow ref protection state must be recorded as a boolean");
   }
   if (!/^[1-9][0-9]*$/.test(workflowRunId ?? "") || !/^[1-9][0-9]*$/.test(workflowRunAttempt ?? "")) {
     throw new Error("Workflow run ID and attempt must be positive integers");
@@ -49,7 +49,7 @@ export function validateReleaseRequest({
   if (tagExists) throw new Error("Candidate version already exists as a tag");
 
   return Object.freeze({
-    schema_version: "ci03.release-request.v1",
+    schema_version: "ci03.release-request.v2",
     status: "accepted",
     candidate_version: candidateVersion,
     release_class: policy.release_class,
@@ -57,7 +57,7 @@ export function validateReleaseRequest({
       commit: actualCommit,
       tree: actualTree,
       ref: workflowRef,
-      ref_protected: true,
+      ref_protected: workflowRefProtected,
       workflow_commit: workflowCommit,
     },
     workflow_run: {
@@ -79,12 +79,17 @@ export function createReleaseRequestFromEnvironment({ cwd = process.cwd(), env =
   const candidateVersion = env.BU2_CANDIDATE_VERSION;
   const tag = candidateVersion ? `refs/tags/${candidateVersion}` : "refs/tags/invalid";
   const tagExists = spawnSync("git", ["show-ref", "--verify", "--quiet", tag], { cwd }).status === 0;
+  const workflowRefProtected = env.BU2_WORKFLOW_REF_PROTECTED === "true"
+    ? true
+    : env.BU2_WORKFLOW_REF_PROTECTED === "false"
+      ? false
+      : undefined;
   return validateReleaseRequest({
     candidateVersion,
     requestedCommit: env.BU2_CANDIDATE_SOURCE_COMMIT,
     workflowCommit: env.BU2_WORKFLOW_SOURCE_COMMIT,
     workflowRef: env.BU2_WORKFLOW_REF,
-    workflowRefProtected: env.BU2_WORKFLOW_REF_PROTECTED === "true",
+    workflowRefProtected,
     workflowEvent: env.BU2_WORKFLOW_EVENT,
     workflowRunId: env.BU2_WORKFLOW_RUN_ID,
     workflowRunAttempt: env.BU2_WORKFLOW_RUN_ATTEMPT,

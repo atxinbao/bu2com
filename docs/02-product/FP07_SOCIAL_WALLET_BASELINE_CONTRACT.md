@@ -43,22 +43,22 @@ Reconciliation 必须看到同一 settlement operation 的金额、币种和 pro
 现有 CI-03 发布链继续作为唯一候选系统，不新增第二套 release 流程：
 
 ```text
-protected main request
+exact main request + recorded protection state
 → CI-02 / LA-06a / RT-01
 → one immutable Docker image + archive
 → fp08.social-wallet-acceptance.v1 on the same source/image
-→ ci03.release-candidate.v1
+→ ci03.release-candidate.v2
 ```
 
 RC class 为 `social_wallet_local_integration_rc`，版本格式为 `social-wallet-vX.Y.Z-rc.N`。manifest 必须绑定 acceptance SHA-256，并直接披露：2 Account / 4 Agent、`spend_decision_source=account_scoped_wallet`、公开 Wallet API 未授权、buyer-side ProviderFee 支出语义已在 Local 获验收、真实 Sandbox bilateral 未执行。
 
 旧 `ledger-rc-local-v0.1` 必须继续指向 `005b3949de4672a5aae301bd9b511e47b8be89fa`。workflow 会在准备新候选前验证该历史 tag，没有权限移动、覆盖或重打它。
 
-候选状态始终是 `prepared_not_released`。独立 R2 审查和 Project Owner release approval 都保持 pending，`candidate_promotion_authorized=false`。
+候选状态始终是 `prepared_not_released`。单人治理下的 Project Owner release approval 保持 pending，`separate_human_reviewer_required=false`、`ai_self_approval=forbidden`、`candidate_promotion_authorized=false`。
 
 ## 6. 当前外部阻塞
 
-CI-03 仍要求 `refs/heads/main` 是受保护分支。当前私有仓库套餐不能证明该条件，因此本 PR 可以验证候选机制和本地 fixture，但**不能制造一个成功的 protected-main 产品 RC**。不得删除 `github.ref_protected` 断言绕过该阻塞。
+CI-03 v2 仍要求 `refs/heads/main`、输入 SHA、workflow SHA 和实际 checkout SHA 完全一致，并保存 `github.ref_protected` 的真实布尔值。当前私有仓库的 `false` 不再阻止候选准备，但不得伪装为受保护；候选仍需完整门禁、不可变制品和 Project Owner 人工晋级批准。
 
 真实 Hosted/Base Sepolia 双向证据、LA-06b、E3.1、Live/Mainnet 与生产数据迁移继续独立，不由 Local Social Wallet RC 替代。
 

@@ -2,7 +2,7 @@
 
 日期：2026-09-09  
 执行者：Codex  
-状态：运行时实现，待独立 R2 Domain 与 Architecture 审查  
+状态：运行时实现，待 Project Owner 以 Domain 与 Architecture 角色审查
 适用范围：Phase 0 · Local Simulation / 内部 Sandbox-Testnet
 
 ## 1. 目的

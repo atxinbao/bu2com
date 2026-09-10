@@ -1210,3 +1210,15 @@ Conclusion: FP-08 is **GO for R2 review** within the Local/Simulation boundary. 
 - Boundary: Local/Simulation only. No wallet mutation, Collection runtime credit, LA-06b, Hosted, Sandbox/Testnet bilateral settlement, Live/Mainnet, Signer, Provider payment, real funds, Tag or Release was performed.
 
 Conclusion: Public Wallet API is **GO for R2 review** within the Local/Simulation boundary. Independent Domain / Architecture review and final-SHA evidence remain required before merge.
+
+## 2026-09-11 · GOV-02 single-owner governance and CI-03 v2
+
+- Project Owner instruction changes the current early-stage model to one human Owner who may explicitly act as Product, Transaction Domain, Architecture, Operations and Release Approver. AI remains Contributor/Verifier and cannot approve R2/R3.
+- `node --test scripts/ci/*.test.mjs`: 27/27 passed on Node v24.20.0. The CI-03 subset is 7/7 and proves unprotected main admission, mandatory boolean protection evidence, exact commit/ref binding, clean checkout, occupied-tag rejection and candidate tamper detection.
+- `node deploy/la06a-local-gate.mjs`: passed with Sandbox 269/269, LA-06a 4/4, deployment/Hosted contracts 23/23, SDK 11/11, 63 API invariants / 6 MCP tools and Prototype lint/build.
+- `graphify update .`: completed with 4078 nodes, 6889 edges and 263 communities; documentation semantic cache was not rebuilt because no Gemini backend is configured.
+- CI-03 schemas advance to `ci03.release-policy.v2`, `ci03.release-request.v2` and `ci03.release-candidate.v2`. `ref_protected=false` is recorded rather than rejected; exact `refs/heads/main`, identical requested/workflow/checkout SHA, clean source, unique tag, immutable image/archive and Project Owner promotion approval remain required.
+- Evidence caveat: the local dirty-tree gate reports parent `source_commit=6e615511...`; final-commit and remote PR evidence remain separate and are not claimed here.
+- Boundary: no Transaction Core, Schema, balance, Ledger, Provider, Signer or payment behavior changed. LA-06b, Hosted, real Base Sepolia bilateral settlement, Live/Mainnet and production custody remain unauthorized. The existing `social-wallet-v0.2.0-rc.1` pre-release is not retroactively upgraded with a missing candidate artifact.
+
+Conclusion: GOV-02 is **GO for Project Owner R2 review** within the Local/Simulation governance scope. A second human reviewer is not required under the proposed single-owner policy; merge is the Project Owner decision point.
