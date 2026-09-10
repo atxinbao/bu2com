@@ -73,6 +73,7 @@ const accessGrantStatuses = new Set(["active", "expired", "revoked"]);
 const reconciliationFeeSources = new Set(["payment", "collection", "refund"]);
 const reconciliationObservationKinds = new Set(["payment", "collection", "refund", "fee"]);
 const reconciliationObservationStatuses = new Set(["verified", "pending", "unknown"]);
+const reconciliationItemStatuses = new Set(["matched", "exception", "unknown"]);
 const replayableLedgerEventTypes = new Set([
   "ledger.opening_balance_posted",
   "ledger.correction_posted",
@@ -1365,27 +1366,84 @@ export class Bu2Sandbox {
     return [...sourceIds].sort();
   }
 
-  walletReconciliationStatus(ledgerAccountId, sourceIds = this.walletLedgerSourceIds(ledgerAccountId)) {
-    const sourceIdSet = new Set(sourceIds);
-    const runs = [...this.reconciliationRuns.values()]
-      .sort((left, right) => right.created_at.localeCompare(left.created_at) || right.id.localeCompare(left.id));
+  walletReconciliationStatus(ledgerAccountId, currency, requiredSourceIds = this.walletReconciledSourceIds(ledgerAccountId, currency)) {
+    const required = [...new Set(requiredSourceIds ?? [])].sort();
+    const emptyResult = (status, missingSourceIds = []) => ({
+      status,
+      run_id: null,
+      mode: null,
+      as_of: null,
+      ledger_account_id: ledgerAccountId,
+      accounting_currency: currency,
+      required_source_count: required.length,
+      matched_source_count: 0,
+      relevant_item_count: 0,
+      missing_source_ids: missingSourceIds,
+      duplicate_source_ids: [],
+      invalid_status_source_ids: [],
+      currency_mismatch_source_ids: [],
+    });
+    if (required.length === 0) return emptyResult("not_required");
+
+    const requiredSet = new Set(required);
+    // 对账批次只追加且会保留 Map 插入顺序；逆序读取可稳定处理同毫秒批次，且不扩张公开契约。
+    const runs = [...this.reconciliationRuns.values()].reverse();
     for (const run of runs) {
-      const relevant = (run.items ?? []).filter((item) => sourceIdSet.has(item.source_id));
+      const relevant = (run.items ?? []).filter((item) => requiredSet.has(item.source_id));
       if (relevant.length === 0) continue;
-      const status = relevant.some((item) => item.status === "exception")
-        ? "exception"
-        : relevant.some((item) => item.status === "unknown")
-          ? "unknown"
-          : "matched";
+
+      const counts = new Map();
+      for (const item of relevant) counts.set(item.source_id, (counts.get(item.source_id) ?? 0) + 1);
+      const duplicateSourceIds = [...counts.entries()]
+        .filter(([, count]) => count !== 1)
+        .map(([sourceId]) => sourceId)
+        .sort();
+      const currencyMismatchSourceIds = [...new Set(relevant
+        .filter((item) => item.expected_amount?.currency !== currency)
+        .map((item) => item.source_id))]
+        .sort();
+      const inScope = relevant.filter((item) => item.expected_amount?.currency === currency);
+      const present = new Set(inScope.map((item) => item.source_id));
+      const missingSourceIds = required.filter((sourceId) => !present.has(sourceId));
+      const invalidStatusSourceIds = [...new Set(inScope
+        .filter((item) => !reconciliationItemStatuses.has(item.status))
+        .map((item) => item.source_id))]
+        .sort();
+      const matchedSourceIds = new Set(inScope
+        .filter((item) => item.status === "matched")
+        .map((item) => item.source_id));
+      const hasException = inScope.some((item) => item.status === "exception");
+      const hasUnknown = inScope.some((item) => item.status === "unknown");
+      const coverageIncomplete = missingSourceIds.length > 0
+        || duplicateSourceIds.length > 0
+        || invalidStatusSourceIds.length > 0
+        || currencyMismatchSourceIds.length > 0;
+      const status = coverageIncomplete
+        ? "incomplete"
+        : hasException
+          ? "exception"
+          : hasUnknown
+            ? "unknown"
+            : matchedSourceIds.size === required.length
+              ? "matched"
+              : "incomplete";
       return {
         status,
         run_id: run.id,
         mode: run.mode,
         as_of: run.as_of,
+        ledger_account_id: ledgerAccountId,
+        accounting_currency: currency,
+        required_source_count: required.length,
+        matched_source_count: matchedSourceIds.size,
         relevant_item_count: relevant.length,
+        missing_source_ids: missingSourceIds,
+        duplicate_source_ids: duplicateSourceIds,
+        invalid_status_source_ids: invalidStatusSourceIds,
+        currency_mismatch_source_ids: currencyMismatchSourceIds,
       };
     }
-    return { status: "not_observed", run_id: null, mode: null, as_of: null, relevant_item_count: 0 };
+    return emptyResult("not_observed", required);
   }
 
   getWalletReadModel({ ledger_account_id, currency } = {}) {
@@ -1397,6 +1455,7 @@ export class Bu2Sandbox {
       throw new ApiError(503, "service_unavailable", "ledger_persistence_required", "A persistent ledger is required for WalletReadModel.");
     }
     const sourceIds = this.walletLedgerSourceIds(ledger_account_id);
+    const reconciledSourceIds = this.walletReconciledSourceIds(ledger_account_id, currency);
     const inspected = this.ledger.inspectLedgerAccountProjection({
       ledger_account_id,
       currency,
@@ -1469,7 +1528,7 @@ export class Bu2Sandbox {
         cutover_accepted: false,
         global_unbound_posting_count: inspected.global_unbound_posting_count,
       },
-      reconciliation_status: this.walletReconciliationStatus(ledger_account_id, sourceIds),
+      reconciliation_status: this.walletReconciliationStatus(ledger_account_id, currency, reconciledSourceIds),
       execution_status: this.environmentConfig.execution_status,
       supported_operations: ["read", "reconcile", "shadow_compare"],
       decision_use: "forbidden",
@@ -1486,82 +1545,27 @@ export class Bu2Sandbox {
     };
   }
 
-  walletReconciledSourceIds(ledgerAccountId) {
+  walletReconciledSourceIds(ledgerAccountId, currency) {
     const sourceIds = new Set();
     for (const transaction of this.transactions.values()) {
       if (transaction.ledger_account_id !== ledgerAccountId || !["settled", "refunded"].includes(transaction.status)) continue;
+      if ((transaction.settled_amount?.currency ?? transaction.reserved_amount?.currency) !== currency) continue;
       sourceIds.add(transaction.id);
       for (const refund of this.refunds.values()) {
-        if (refund.transaction_id === transaction.id && refund.status === "refunded") sourceIds.add(refund.id);
+        if (refund.transaction_id === transaction.id && refund.status === "refunded" && refund.amount?.currency === currency) sourceIds.add(refund.id);
       }
     }
     for (const collection of this.collections.values()) {
-      if (collection.ledger_account_id === ledgerAccountId && collection.status === "posted") sourceIds.add(collection.id);
+      if (collection.ledger_account_id === ledgerAccountId && collection.status === "posted" && collection.amount?.currency === currency) sourceIds.add(collection.id);
     }
     for (const fee of this.providerFees.values()) {
-      if (fee.ledger_account_id === ledgerAccountId) sourceIds.add(fee.id);
+      if (fee.ledger_account_id === ledgerAccountId && fee.amount?.currency === currency) sourceIds.add(fee.id);
     }
     return [...sourceIds].sort();
   }
 
-  walletCutoverReconciliationStatus(requiredSourceIds) {
-    const required = [...new Set(requiredSourceIds ?? [])].sort();
-    if (required.length === 0) {
-      return {
-        status: "not_required",
-        run_id: null,
-        mode: null,
-        as_of: null,
-        required_source_count: 0,
-        matched_source_count: 0,
-        missing_source_ids: [],
-        duplicate_source_ids: [],
-      };
-    }
-    const requiredSet = new Set(required);
-    const runs = [...this.reconciliationRuns.values()]
-      .sort((left, right) => right.created_at.localeCompare(left.created_at) || right.id.localeCompare(left.id));
-    for (const run of runs) {
-      const relevant = (run.items ?? []).filter((item) => requiredSet.has(item.source_id));
-      if (relevant.length === 0) continue;
-      const counts = new Map();
-      for (const item of relevant) counts.set(item.source_id, (counts.get(item.source_id) ?? 0) + 1);
-      const duplicateSourceIds = [...counts.entries()].filter(([, count]) => count !== 1).map(([sourceId]) => sourceId).sort();
-      const present = new Set(relevant.map((item) => item.source_id));
-      const missingSourceIds = required.filter((sourceId) => !present.has(sourceId));
-      const matchedSourceIds = relevant.filter((item) => item.status === "matched").map((item) => item.source_id);
-      const hasException = relevant.some((item) => item.status === "exception");
-      const hasUnknown = relevant.some((item) => item.status === "unknown");
-      const status = missingSourceIds.length > 0 || duplicateSourceIds.length > 0
-        ? "incomplete"
-        : hasException
-          ? "exception"
-          : hasUnknown
-            ? "unknown"
-            : matchedSourceIds.length === required.length
-              ? "matched"
-              : "incomplete";
-      return {
-        status,
-        run_id: run.id,
-        mode: run.mode,
-        as_of: run.as_of,
-        required_source_count: required.length,
-        matched_source_count: new Set(matchedSourceIds).size,
-        missing_source_ids: missingSourceIds,
-        duplicate_source_ids: duplicateSourceIds,
-      };
-    }
-    return {
-      status: "not_observed",
-      run_id: null,
-      mode: null,
-      as_of: null,
-      required_source_count: required.length,
-      matched_source_count: 0,
-      missing_source_ids: required,
-      duplicate_source_ids: [],
-    };
+  walletCutoverReconciliationStatus(ledgerAccountId, currency, requiredSourceIds) {
+    return this.walletReconciliationStatus(ledgerAccountId, currency, requiredSourceIds);
   }
 
   getWalletMigrationPlan(id) {
@@ -1638,8 +1642,8 @@ export class Bu2Sandbox {
     }
     const model = this.getWalletReadModel({ ledger_account_id, currency });
     const shadow = this.shadowCompareWalletReadModel({ ledger_account_id, currency });
-    const reconciledSourceIds = this.walletReconciledSourceIds(ledger_account_id);
-    const cutoverReconciliation = this.walletCutoverReconciliationStatus(reconciledSourceIds);
+    const reconciledSourceIds = this.walletReconciledSourceIds(ledger_account_id, currency);
+    const cutoverReconciliation = this.walletCutoverReconciliationStatus(ledger_account_id, currency, reconciledSourceIds);
     const unresolvedAttempts = this.walletCutoverUnresolvedAttempts(ledger_account_id, currency);
     const blockers = [];
     if (this.stateRevision !== this.ledger.domainStateRevision()) blockers.push("wallet_domain_state_stale");
@@ -1788,6 +1792,9 @@ export class Bu2Sandbox {
     if (model.stale) blockers.push("wallet_read_model_stale");
     if (model.completeness.status !== "complete") blockers.push("wallet_read_model_incomplete");
     if (model.available_spending_capacity.status !== "candidate" || model.available_spending_capacity.amount === null) blockers.push("candidate_capacity_unavailable");
+    if (!["matched", "not_required"].includes(model.reconciliation_status.status)) {
+      blockers.push(`wallet_reconciliation_${model.reconciliation_status.status}`);
+    }
     const shadow = compareWalletShadow({ model, legacyWallet: this.wallet });
     if (shadow.status !== "matched") blockers.push("wallet_shadow_mismatch");
     const uniqueBlockers = [...new Set(blockers)].sort();
@@ -1807,7 +1814,7 @@ export class Bu2Sandbox {
       shadow_status: shadow.status,
       blockers: uniqueBlockers,
       fallback_performed: false,
-      recovery: status === "blocked" ? "refresh_projection_or_append_legacy_rollback_generation" : null,
+      recovery: status === "blocked" ? "append_complete_reconciliation_refresh_projection_or_append_legacy_rollback_generation" : null,
       spend_decision_source: "legacy_wallet",
     };
   }

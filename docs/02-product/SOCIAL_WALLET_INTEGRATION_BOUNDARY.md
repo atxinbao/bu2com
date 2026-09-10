@@ -51,7 +51,7 @@ FP-06a 已提供内部 `wallet-read-model.v1`，但它仍是**shadow-only** 读�
 - `provider_balance`：只有账户级 Provider balance observation 才能填写；当前 Foundation 没有该事实时固定 `not_observed/null`，交易级 reconciliation amount 不能替代；
 - `reserved / pending_outbound / available_spending_capacity`：互相分离的约束；
 - `projection_id / projector_version / generation / source_sequence / projected_at / stale / completeness`；其中 `source_sequence` 是账簿账户+币种范围内不可变 Journal 数水位，同时携带 source/projection content hash；
-- `reconciliation_status / execution_status / supported_operations`。
+- `reconciliation_status / execution_status / supported_operations`；其中 reconciliation 只要求目标 LedgerAccount+币种下确实需要 Provider 对账的 settled/refunded payment、confirmed refund、posted collection 与 provider fee，必须由最新相关 run 完整、唯一、同币种覆盖。无外部事实为 `not_required`，部分、重复、未知状态、错币种、unknown 或 exception 均不得显示 matched。
 
 活动 projection 缺失、源内容变化、派生行漂移、目标 trusted business source 仍有未绑定 Posting、不平衡 Journal、未绑定或异常 pending transaction 必须显式进入 stale/completeness blocker，不以 `0`、固定 Demo 数字或旧 `this.wallet` 值伪装成功。completeness scope 固定为 `trusted_bound_sources`；无法证明属于目标账户的全库 legacy unbound Posting 不得被强行归属，也不得让无关旧 Demo 永久阻断目标 shadow，而是单独返回 `historical_scope=migration_pending`、`cutover_accepted=false`，交给 FP-06b。当前 `stale` 只表示 source/projection 内容漂移，尚未冻结时间型 freshness SLA。`available_spending_capacity.usable_for_spend=false`、`decision_use=forbidden`；shadow comparison 只把 legacy `this.wallet` 标为 `global_single_wallet` 后报告差异，绝不进入新增支出决策。
 
@@ -59,7 +59,7 @@ FP-06a 已提供内部 `wallet-read-model.v1`，但它仍是**shadow-only** 读�
 
 FP-06b 增加 `wallet-runtime-view.v1`，只允许 Local、明确 LedgerAccount+币种 scope。目标历史必须先建立机器可校验的 migration plan；`verified` 只表示 source 分类完整、scope/期初条件成立与证据引用存在，不代表证据已被 AI 或机器独立证明。cutover assessment 还要求 shadow matched、无 in-flight reserved/pending、目标对账满足、projection 非 stale/complete，并在激活事务中再次比较 state/wallet/snapshot/projection/generation。
 
-激活后 `read_balance` 使用 `available_spending_capacity`，但 `spend_decision_source=legacy_wallet`：Transaction Core 仍用既有 wallet 进行授权后预留、结算和退款。读模型 stale 时不会退回旧数值，而是 blocked/null；匹配该账簿的新 reserve 也在 Provider/Adapter 前失败关闭。rollback 通过追加更高 generation 恢复 legacy 读路径，不修改旧 generation 或资金历史。
+激活后 `read_balance` 使用 `available_spending_capacity`，但 `spend_decision_source=legacy_wallet`：Transaction Core 仍用既有 wallet 进行授权后预留、结算和退款。读模型 stale 或最新 required reconciliation 不再完整 matched 时不会退回旧数值，而是 blocked/null；匹配该账簿的新 reserve 也在 Provider/Adapter 前失败关闭。正规新对账证据可以恢复 active read，不会触发新支付；rollback 通过追加更高 generation 恢复 legacy 读路径，不修改旧 generation 或资金历史。
 
 FP-07 进一步要求 active cutover 在每次读取持续保持 shadow equivalence；legacy `wallet.reserved` 与候选比较时使用 `reserved + pending_outbound` 的等价暴露。若会计事实（例如 buyer-side ProviderFee）已经改变候选可用能力、但 legacy spend-decision wallet 未同步表达该语义，则必须 `wallet_shadow_mismatch` 并停止新 reserve，不能只刷新 projection 后继续使用。当前 buyer-side Payment/Refund ProviderFee 的支出语义未获产品准入。
 

@@ -1111,3 +1111,12 @@ F06b 让 Quote 和 PaymentIntent 能够保留可验证的资金来源与收款�
 - 验证评分：96/100。专项 20/20；LA-06a 完整门禁中 Sandbox 213/213、边界 4/4、部署/Hosted 23/23、SDK 10/10、契约校验和 Prototype lint/build 通过；Runtime assurance 证明 Schema 1–19 连续及备份恢复。
 - 遗留风险：历史未绑定 Posting 当前阻止刷新，需后续隔离迁移解决；运行时余额 cutover 尚未实施；SQLite 单写者并发语义仍需独立 R2 Domain / Architecture 人工审查。LA-06b 未执行。
 - 综合评分：96/100，建议提交 R2 Draft PR。作者自审不能替代独立 Approver；E3.1、Provider、Signer、Hosted、Sandbox/Testnet 双向结算、Live/Mainnet 和真实资金保持关闭。
+## 2026-09-11 · FP-A01 钱包对账完整性与运行检查统一自主审查
+
+- 审查者：Codex（Contributor / Verifier，非独立 R2 Approver）。
+- 技术评分：95/100。摘要、assessment 与 active runtime 共用 LedgerAccount+币种 scoped required-source 判定；完整性、重复、非法状态、错币种和同毫秒追加顺序具备稳定诊断，SQLite 重启后语义一致。
+- 战略评分：97/100。直接关闭审计 FP-A01，不触碰退款、历史 Posting、真实多账户资金写或公开 Wallet API，不把 Local 证据扩张为 Sandbox/Testnet/Live 结论。
+- 验证评分：96/100。红色反例先复现 5 项缺陷；专项 35/35、Sandbox 259/259、RT-01、LA-06a、SDK、契约及 Prototype lint/build 均通过。阻断路径 Adapter 调用为 0，正规新证据恢复不新增支付或 Posting。
+- 综合评分：96/100，建议提交 Draft R2 PR，等待独立 Domain / Architecture 审查与最终提交远端 CI。
+- 遗留风险：最新 reconciliation run 依赖既有追加式 Map 的持久插入顺序；正式账户级资金写模型、公开 Wallet API、LA-06b、Hosted、Sandbox/Testnet 双向与 Live/Mainnet 均仍未完成或未执行。
+- 恢复：异常时保持新 reserve 关闭，追加完整正规对账或 append-only legacy read rollback；禁止删除旧证据、改写 Posting 或重新付款。

@@ -1,37 +1,62 @@
 {
-  "date": "2026-09-10",
+  "date": "2026-09-11",
   "executor": "Codex",
+  "task": "FP-A01 wallet reconciliation coverage and active-read guard repair",
   "location": [
-    "sandbox/persistence.mjs",
     "sandbox/domain.mjs",
-    "sandbox/la03d.test.mjs",
-    "sandbox/la03d-posting.test.mjs",
-    "deploy/runtime-assurance.mjs",
-    "deploy/runtime-policy.json",
-    "docs/02-product/LA03D_MULTI_ACCOUNT_OWNERSHIP_CONTRACT.md"
+    "sandbox/fp06a-wallet-read-model.test.mjs",
+    "sandbox/fp06b-wallet-cutover.test.mjs",
+    "docs/02-product/FP06B_WALLET_READ_CUTOVER_CONTRACT.md",
+    "docs/03-technical/LEDGER_FOUNDATION_OVERVIEW.md",
+    "CHANGELOG.html"
   ],
   "current_state": {
-    "schema_version": 18,
-    "ownership": "Schema 16 ledger_accounts",
-    "posting_binding": "Schema 17 financial_postings.ledger_account_id",
-    "projection": "Bu2Sandbox.rebuildLedgerAccountProjection 仅在内存中只读重算，不持久化版本或活动指针"
+    "wallet_summary": "walletReconciliationStatus accepts the latest run containing any target source and can report matched without complete or unique coverage",
+    "cutover_assessment": "walletCutoverReconciliationStatus already checks missing and duplicate required sources during initial assessment",
+    "active_runtime": "getRuntimeWalletView checks projection, pending attempts, capacity and shadow but does not re-evaluate reconciliation after activation",
+    "persistence": "reconciliation runs are persisted in the existing domain snapshot and restored from SQLite"
   },
   "similar_patterns": [
-    "immediateTransaction 使用 BEGIN IMMEDIATE/COMMIT/ROLLBACK 保护 SQLite 写边界",
-    "transitionLedgerAccount 使用 version 条件检查提供 CAS 冲突语义",
-    "writeBalancedJournals 使用确定性 canonical SHA-256 内容指纹和数据库约束"
+    "walletCutoverReconciliationStatus computes a deterministic required-source set and fails closed on missing or duplicate entries",
+    "getRuntimeWalletView derives stable blockers and returns read_balance=null without fallback when an active Local cutover is unhealthy",
+    "FP-06b restart tests reopen the same SQLite file and validate append-only cutover generations and restored domain state"
   ],
   "observations": [
-    "投影必须在同一 BEGIN IMMEDIATE 快照内读取 Posting、构建派生行并激活，避免计算后到提交前发生漂移",
-    "financial_postings 不包含 tenant/network 列，其归属由 ledger_account_id 解析；因此刷新必须重新验证账户环境、状态和所有权元组",
-    "历史未绑定 Posting 不能被静默忽略；当前子范围采取失败关闭，不执行历史迁移",
-    "投影是可删除派生数据，不新增 LedgerEvent，也不改变不可变 Posting、Journal 或运行时 wallet"
+    "Opening balances and internal corrections are ledger facts but do not require Provider reconciliation and must not permanently block a wallet scope",
+    "Required external sources are settled/refunded payments, confirmed refunds, posted collections and provider fees for the target LedgerAccount and currency",
+    "A reconciliation item must not satisfy coverage when its amount currency is absent or differs from the requested accounting currency",
+    "A new exception or unknown reconciliation run can appear without changing financial Posting, so projection freshness and shadow equality do not imply reconciliation health"
   ],
   "questions": [
-    {"priority": "high", "question": "如何保证读取 Posting 与激活投影属于同一一致快照？", "resolved": true, "answer": "在 SqliteLedger 的 BEGIN IMMEDIATE 事务内查询、构建、写入并 CAS 激活。"},
-    {"priority": "high", "question": "相同 Posting 集合如何幂等，新增事实如何产生新版本？", "resolved": true, "answer": "对所有权元组、币种和排序后的不可变 Posting 计算 SHA-256；活动版本哈希一致时直接返回，否则递增版本。"},
-    {"priority": "high", "question": "刷新是否改变交易运行时余额？", "resolved": true, "answer": "否；新表仅作为派生读模型，Bu2Sandbox.wallet 和既有交易状态路径不读取它。"},
-    {"priority": "medium", "question": "如何处理未绑定历史 Posting？", "resolved": true, "answer": "匹配刷新币种的未绑定 Posting 产生稳定错误并阻止激活；迁移留给后续独立 PR。"}
+    {
+      "priority": "high",
+      "question": "Which facts require reconciliation for a wallet scope?",
+      "resolved": true,
+      "answer": "Only externally reconcilable settled/refunded payments, confirmed refunds, posted collections and provider fees bound to the target LedgerAccount and accounting currency."
+    },
+    {
+      "priority": "high",
+      "question": "How should partial, duplicate, unknown or malformed evidence affect runtime reads?",
+      "resolved": true,
+      "answer": "A shared strict evaluator returns incomplete, exception, unknown or not_observed; an active Local cutover becomes blocked with read_balance=null and new reserve fails before Adapter invocation."
+    },
+    {
+      "priority": "high",
+      "question": "How does recovery avoid another payment?",
+      "resolved": true,
+      "answer": "Recovery appends a newer complete reconciliation run; no Transaction, Posting, wallet or Adapter operation is rewritten or repeated."
+    },
+    {
+      "priority": "medium",
+      "question": "Does this require Schema or API migration?",
+      "resolved": true,
+      "answer": "No. The change reinterprets existing reconciliation run items using fields already persisted by F14 and adds compatible diagnostic fields to internal read models."
+    }
   ],
-  "sufficiency": {"interface_contract": true, "technical_choice": true, "risks_identified": true, "verification_known": true}
+  "sufficiency": {
+    "interface_contract": true,
+    "technical_choice": true,
+    "risks_identified": true,
+    "verification_known": true
+  }
 }

@@ -232,6 +232,9 @@ test("FP-06a keeps transaction reconciliation separate from an unobserved provid
   const { ledger, account, sandbox } = freshContext("reconciliation");
   try {
     const transactionId = "txn_fp06a_reserved_reconciliation";
+    const transaction = sandbox.transactions.get(transactionId);
+    transaction.status = "settled";
+    transaction.settled_amount = { value: 100, currency: "CNY" };
     sandbox.reconciliationRuns.set("rec_fp06a_external", {
       id: "rec_fp06a_external",
       mode: "external",

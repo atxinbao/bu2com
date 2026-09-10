@@ -558,3 +558,12 @@
 - Tool: `node deploy/la06a-local-gate.mjs`; result: Sandbox 213/213、边界 4/4、部署/Hosted 23/23、SDK 10/10、契约校验、Prototype lint/build passed；外部双向 Sandbox `accepted=false`。
 - Tool: `graphify update .`; result: 知识图更新为 3799 nodes / 6218 edges；社区集合变化提示保留，不影响代码图生成。
 - Tool: `git diff --check` / `git commit`; result: patch 检查通过，创建本地提交 `1d626cd`，随后仅为补齐本条操作日志 amend；未 push、未创建 PR。
+## 2026-09-11 · FP-A01 钱包对账完整性与运行检查统一
+
+- Scope: 阅读固定基线 `7bbb0cd` 的 Foundation 验收审计与 R2 Brief，修复 WalletReadModel 摘要、首次 cutover assessment 与激活后 Local runtime guard 的对账判定不一致。
+- Tool: `graphify query`, `rg`, `sed`, `unzip`, `shasum`, `git`; result: 确认审计附件校验和一致，定位共享判定、领域状态、SQLite 恢复和 FP-06a/06b/07 验收入口。
+- Financial boundary: Transaction Core 继续拥有交易和 wallet 写状态；reconciliation run 仍为追加证据。本 PR 只允许异常对账阻止新的 Local reserve，不修改历史 Posting、退款、Provider 结果或已发生资金事实，不自动重付。
+- Tool: `apply_patch`; result: 新增共享严格对账覆盖判定、追加式 run 顺序选择、active Local guard、6 项真实模块/SQLite 回归，并同步 FP-06b、Social Wallet、Foundation current-state 与 Changelog；不新增公开 ReconciliationRun 字段。
+- Tool: `mise x node@24.20.0 -- node --test`; result: 红色反例 0/5 后实现转绿，FP-A01 + FP-06a/06b/07 专项 35/35，Sandbox 全量 259/259。
+- Tool: `runtime-assurance.mjs`, `la06a-local-gate.mjs`; result: RT-01 PASS；LA-06a 聚合 Sandbox 259/259、边界 4/4、部署 23/23、SDK 10/10、契约及 Prototype lint/build PASS。dirty-tree source commit 仅为父基线，不冒充最终候选证据。
+- Tool: `graphify update .`, `git diff --check`; result: 代码图更新为 4011 nodes / 6744 edges / 271 communities，补丁空白检查通过；Graphify 文档语义缓存未在本轮重建。
