@@ -1,10 +1,10 @@
-name: BU2 Ledger Release Candidate
+name: BU2 Social Wallet Release Candidate
 
 on:
   workflow_dispatch:
     inputs:
       candidate_version:
-        description: Immutable RC label, for example ledger-v0.1.0-rc.1
+        description: Immutable RC label, for example social-wallet-v0.1.0-rc.1
         required: true
         type: string
       source_commit:
@@ -16,12 +16,12 @@ permissions:
   contents: read
 
 concurrency:
-  group: bu2-ledger-rc-${{ inputs.source_commit }}
+  group: bu2-social-wallet-rc-${{ inputs.source_commit }}
   cancel-in-progress: false
 
 jobs:
   prepare:
-    name: prepare bounded ledger RC
+    name: prepare bounded Social Wallet RC
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
@@ -34,6 +34,11 @@ jobs:
         with:
           node-version: 24.20.0
           package-manager-cache: false
+      - name: Verify historical ledger baseline tag
+        run: |
+          baseline_tag="$(node -p "require('./deploy/release-policy.json').historical_baseline.tag")"
+          baseline_commit="$(node -p "require('./deploy/release-policy.json').historical_baseline.commit")"
+          test "$(git rev-list -n 1 "$baseline_tag")" = "$baseline_commit"
       - name: Admit protected main request
         env:
           BU2_CANDIDATE_VERSION: ${{ inputs.candidate_version }}
@@ -66,6 +71,13 @@ jobs:
             > runtime-image-assurance.json 2> runtime-image-assurance.stderr
           node deploy/validate-runtime-image.mjs runtime-image-assurance.json runtime-image-id
           docker save --output ledger-release-image.tar "$image_id"
+      - name: Run Social Wallet Local integration acceptance
+        env:
+          BU2_SOURCE_COMMIT: ${{ github.sha }}
+        run: |
+          image_id="$(cat runtime-image-id)"
+          BU2_IMAGE_ID="$image_id" node sandbox/social-wallet-acceptance.mjs \
+            > social-wallet-acceptance.json 2> social-wallet-acceptance.stderr
       - name: Bind CI evidence to candidate source
         run: >-
           node scripts/ci/validate-evidence.mjs
@@ -80,13 +92,13 @@ jobs:
         run: >-
           node scripts/ci/release-candidate.mjs
           release-request.json ci-evidence.json
-          runtime-image-assurance.json runtime-image-id
+          runtime-image-assurance.json runtime-image-id social-wallet-acceptance.json
           ledger-release-image.tar release-candidate.json release-notes.md
           > release-candidate.stdout
       - name: Upload validated candidate
         uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808
         with:
-          name: bu2-ledger-rc-${{ github.run_id }}-${{ github.run_attempt }}
+          name: bu2-social-wallet-rc-${{ github.run_id }}-${{ github.run_attempt }}
           retention-days: 90
           compression-level: 0
           path: |
@@ -102,12 +114,14 @@ jobs:
             runtime-image-id
             runtime-image-assurance.json
             runtime-image-assurance.stderr
+            social-wallet-acceptance.json
+            social-wallet-acceptance.stderr
           if-no-files-found: error
       - name: Upload failed candidate diagnostics
         if: failure()
         uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808
         with:
-          name: bu2-ledger-rc-failure-${{ github.run_id }}-${{ github.run_attempt }}
+          name: bu2-social-wallet-rc-failure-${{ github.run_id }}-${{ github.run_attempt }}
           retention-days: 14
           path: |
             *.json

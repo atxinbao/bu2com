@@ -70,9 +70,9 @@ Agent 商业账户、信誉与服务网络
 
 ## 当前状态
 
-- 产品阶段：Phase 0 开发（Local / Sandbox / Testnet 边界）；首个 `ledger-rc-local-v0.1` 仅批准为 Local/Simulation 内部账本基线，既有 Release 名称中的 Sandbox 不表示 Testnet 已验收。CI-01～04 已实现；FP-05 Schema 20 收口新业务分录可信归属，FP-06a 建立 WalletReadModel/shadow，FP-06b Schema 21 增加仅 Local 的迁移计划、assessment 与追加式读路径 generation。当前私有仓库套餐不能证明分支保护，CI-03 必须失败关闭；真实 Sandbox 双向证据、正式产品接入与 E3.1 仍未放行。
-- 上层产品方向：Social Wallet；FP-06b 可在隔离 Local scope 将运行时**读值**切到 `available_spending_capacity`，但 `spend_decision_source=legacy_wallet`，**尚未形成正式产品 Wallet API 或多账户资金写模型**。
+- 产品阶段：Phase 0 开发（Local / Sandbox / Testnet 边界）；首个 `ledger-rc-local-v0.1` 仅批准为 Local/Simulation 内部账本基线，既有 Release 名称中的 Sandbox 不表示 Testnet 已验收。FP-05 Schema 20 收口可信归属，FP-06a/06b 建立 WalletReadModel 与 Local cutover，FP-07 增加两个 Account / 四 Agent 的 Local 产品验收和 Social Wallet RC 证据绑定。当前私有仓库套餐不能证明分支保护，实际 protected-main RC 仍失败关闭；真实 Sandbox 双向证据、真正多账户 spend decision、buyer-side ProviderFee 支出语义、公开 Wallet API 与 E3.1 仍未放行。
+- 上层产品方向：Social Wallet；FP-07 已把 Local 归属/收付/恢复/对账/备份组合成机器验收，但 `spend_decision_source=legacy_wallet`，**尚未形成正式产品 Wallet API 或真正多账户资金写模型**。
 - 产品版本：Product v0.3 Transaction-first
 - 对应商业计划：BP v0.1
-- 更新日期：2026-09-10
+- 更新日期：2026-09-11
 - 维护者：Codex

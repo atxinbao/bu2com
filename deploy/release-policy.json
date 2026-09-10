@@ -1,7 +1,7 @@
 {
   "schema_version": "ci03.release-policy.v1",
-  "release_class": "ledger_core_local_integration_rc",
-  "candidate_version_pattern": "^ledger-v[0-9]+\\.[0-9]+\\.[0-9]+-rc\\.[1-9][0-9]*$",
+  "release_class": "social_wallet_local_integration_rc",
+  "candidate_version_pattern": "^social-wallet-v[0-9]+\\.[0-9]+\\.[0-9]+-rc\\.[1-9][0-9]*$",
   "source": {
     "event": "workflow_dispatch",
     "ref": "refs/heads/main",
@@ -13,6 +13,11 @@
     "format": "docker_archive",
     "immutable_reference_required": true,
     "retention_days": 90
+  },
+  "historical_baseline": {
+    "tag": "ledger-rc-local-v0.1",
+    "commit": "005b3949de4672a5aae301bd9b511e47b8be89fa",
+    "immutable": true
   },
   "required_ci_checks": [
     "sandbox_full_regression",
@@ -35,12 +40,18 @@
   },
   "capabilities": [
     "local_ledger_integration",
-    "sqlite_schema_19",
+    "sqlite_schema_21",
+    "wallet_read_model_v1",
+    "local_wallet_read_cutover",
+    "social_wallet_local_acceptance",
     "wal_and_online_backup_restore",
     "immutable_docker_archive",
     "source_and_evidence_bound_manifest"
   ],
   "explicit_exclusions": [
+    "multi_account_spend_decision_cutover",
+    "buyer_side_provider_fee_spend_semantics",
+    "public_wallet_api",
     "hosted_deployment",
     "sandbox_testnet_bilateral_settlement",
     "live_mainnet_execution",

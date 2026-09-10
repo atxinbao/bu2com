@@ -9,6 +9,10 @@
 
 Schema 21 新增只追加的 migration plan、cutover assessment 与 generation。内部 `getRuntimeWalletView()` 可以在明确 Local scope 选择 WalletReadModel 的候选可支出能力；这不是公开 Wallet API，支出决策仍使用 legacy wallet。stale、过期 Domain revision 和未知/已确认未过账 Attempt 均失败关闭；回滚只追加 generation，不删除资金事实。控制面拒绝 Sandbox/Live，既有环境执行门槛不变。契约与逐步恢复见 [FP-06b Local cutover](../docs/02-product/FP06B_WALLET_READ_CUTOVER_CONTRACT.md)。
 
+## FP-07 Social Wallet Local 验收
+
+`npm run acceptance:social-wallet` 在临时 SQLite 中执行两个 Account / 四个 Agent 的 Local/Simulation 产品接入验收，包括期初、付款、收款、部分退款、seller-side ProviderFee、unknown 重启恢复、对账、投影重建、历史 replay、权限失败关闭与 Online Backup。active cutover 还持续要求 accounting candidate 与 legacy spend source 匹配；buyer-side ProviderFee 支出语义未批准。该命令不调用真实 Provider、不加载 Signer、不创建 Sandbox/Testnet 或 Live 资金证据。完整契约见 [FP-07 Social Wallet baseline](../docs/02-product/FP07_SOCIAL_WALLET_BASELINE_CONTRACT.md)。
+
 ## 启动
 
 ```bash

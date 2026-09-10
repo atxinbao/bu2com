@@ -42,6 +42,7 @@
     "demo:external": "node external-agents/demo.mjs",
     "demo:x402": "node demo-x402-agents.mjs",
     "acceptance:clean-room": "node clean-room.mjs",
+    "acceptance:social-wallet": "node social-wallet-acceptance.mjs",
     "sandbox:build": "node ../deploy/local-sandbox.mjs build",
     "sandbox:up": "node ../deploy/local-sandbox.mjs up",
     "sandbox:doctor": "node ../deploy/local-sandbox.mjs doctor",

@@ -15,7 +15,7 @@ const openingInput = {
   funding_source_id: "fund_la03b_primary",
   environment: "local",
   asset: "CNY",
-  network: "local-simulation",
+  network: null,
   amount: { value: 100_000, currency: "CNY" },
   effective_at: "2026-09-01T00:00:00.000Z",
   source_reference: "reconciled-bank-statement-2026-09-01",

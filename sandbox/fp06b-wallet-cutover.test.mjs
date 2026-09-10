@@ -8,7 +8,7 @@ import { normalizeOnboardingDocument } from "./identity.mjs";
 import { SqliteLedger } from "./persistence.mjs";
 
 const CURRENCY = "CNY";
-const NETWORK = "local-simulation";
+const NETWORK = null;
 const OPENING_VALUE = 100_000;
 
 function bindTargetLedger(ledger, suffix) {
@@ -663,6 +663,40 @@ test("FP-06b active runtime read follows available spending capacity during a re
     assert.equal(runtime.model.book_balance.amount.value, OPENING_VALUE);
     assert.equal(runtime.model.reserved.value, 250);
     assert.equal(runtime.spend_decision_source, "legacy_wallet");
+  } finally {
+    ledger.close();
+  }
+});
+
+test("FP-06b active runtime read blocks when accounting capacity diverges from the legacy spend source", async () => {
+  const { ledger, sandbox, ledgerAccountId, assessment, plan } = await readyContext("shadow_drift");
+  try {
+    await sandbox.activateWalletReadCutover({
+      assessment_id: assessment.id,
+      expected_active_generation: 0,
+      reason: "activate shadow drift guard",
+    }, "fp06b-activate-shadow-drift");
+    postJournal(ledger, {
+      suffix: 91,
+      sourceId: "fee_fp06b_shadow_drift",
+      ledgerAccountId,
+      debitAccount: "expense.provider_fee:simulated",
+      creditAccount: "cash.account:acct_fp06b_shadow_drift",
+      amount: 3,
+    });
+    const active = sandbox.getActiveLedgerAccountProjection({ ledger_account_id: ledgerAccountId, currency: CURRENCY });
+    sandbox.refreshLedgerAccountProjection({
+      ledger_account_id: ledgerAccountId,
+      currency: CURRENCY,
+      expected_active_version: active.version,
+      migration_plan_id: plan.id,
+    });
+    const runtime = sandbox.getRuntimeWalletView({ ledger_account_id: ledgerAccountId, currency: CURRENCY });
+    assert.equal(runtime.status, "blocked");
+    assert.equal(runtime.shadow_status, "difference");
+    assert.equal(runtime.read_balance, null);
+    assert.ok(runtime.blockers.includes("wallet_shadow_mismatch"));
+    assert.equal(runtime.fallback_performed, false);
   } finally {
     ledger.close();
   }

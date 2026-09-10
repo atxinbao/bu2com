@@ -1607,7 +1607,9 @@ export class Bu2Sandbox {
       if (attempt.status === "refunded" && refund?.status === "refunded" && postedSources.has(refund.id)) continue;
       unresolved.push(attempt.id);
     }
+    const paymentAttemptOperationKeys = new Set();
     for (const attempt of this.ledger.paymentAttempts()) {
+      paymentAttemptOperationKeys.add(attempt.operation_key);
       if (attempt.status === "rejected") continue;
       const transaction = this.transactions.get(attempt.transaction_id);
       if (belongsElsewhere(transaction)) continue;
@@ -1616,6 +1618,15 @@ export class Bu2Sandbox {
       if (attempt.status === "settled" && ["settled", "refunded"].includes(transaction?.status)
         && postedSources.has(transaction.id)) continue;
       unresolved.push(attempt.id);
+    }
+    for (const operation of this.ledger.adapterOperations()) {
+      if (paymentAttemptOperationKeys.has(operation.idempotency_key)) continue;
+      if (operation.operation !== "settle") continue;
+      if (!["payment_prepared", "payment_submitting", "provider_unknown"].includes(operation.status)) continue;
+      if (operation.currency !== currency) continue;
+      const transaction = this.transactions.get(operation.transaction_id);
+      if (belongsElsewhere(transaction)) continue;
+      unresolved.push(`adapter:${operation.idempotency_key}`);
     }
     return [...new Set(unresolved)].sort();
   }
@@ -1777,6 +1788,8 @@ export class Bu2Sandbox {
     if (model.stale) blockers.push("wallet_read_model_stale");
     if (model.completeness.status !== "complete") blockers.push("wallet_read_model_incomplete");
     if (model.available_spending_capacity.status !== "candidate" || model.available_spending_capacity.amount === null) blockers.push("candidate_capacity_unavailable");
+    const shadow = compareWalletShadow({ model, legacyWallet: this.wallet });
+    if (shadow.status !== "matched") blockers.push("wallet_shadow_mismatch");
     const uniqueBlockers = [...new Set(blockers)].sort();
     const status = uniqueBlockers.length === 0 ? "active" : "blocked";
     return {
@@ -1791,6 +1804,7 @@ export class Bu2Sandbox {
       read_balance: status === "active" ? clone(model.available_spending_capacity.amount) : null,
       read_balance_semantics: "available_spending_capacity",
       model,
+      shadow_status: shadow.status,
       blockers: uniqueBlockers,
       fallback_performed: false,
       recovery: status === "blocked" ? "refresh_projection_or_append_legacy_rollback_generation" : null,
@@ -2049,14 +2063,14 @@ export class Bu2Sandbox {
 
   async createOpeningBalance(input, key) {
     return this.runIdempotentAsync("opening_balances", key, input, async () => {
-      requireFields(input, ["book_id", "account_id", "owner_account_id", "funding_source_id", "environment", "asset", "network", "amount", "effective_at", "source_reference", "reason"]);
+      requireFields(input, ["book_id", "account_id", "owner_account_id", "funding_source_id", "environment", "asset", "amount", "effective_at", "source_reference", "reason"]);
       validateIdentifier(input.account_id, "acct", "account_id");
       validateIdentifier(input.owner_account_id, "acct", "owner_account_id");
       validateIdentifier(input.funding_source_id, "fund", "funding_source_id");
       if (!/^[A-Za-z0-9_-]{2,120}$/.test(input.book_id)) throw new ApiError(400, "validation_error", "invalid_book_id", "book_id is invalid.");
       if (input.environment !== this.environmentConfig.environment) throw new ApiError(409, "environment_error", "opening_balance_environment_mismatch", "Opening balance environment must match the active runtime.");
       if (typeof input.asset !== "string" || !/^[A-Za-z0-9._-]{2,32}$/.test(input.asset)) throw new ApiError(400, "validation_error", "invalid_asset", "asset is invalid.");
-      if (typeof input.network !== "string" || !/^[A-Za-z0-9._:-]{2,80}$/.test(input.network)) throw new ApiError(400, "validation_error", "invalid_network", "network is invalid.");
+      if (input.network !== this.environmentConfig.network) throw new ApiError(409, "environment_error", "opening_balance_network_mismatch", "Opening balance network must match the active environment contract.", { expected: this.environmentConfig.network, actual: input.network ?? null });
       validateAmount(input.amount);
       validateDate(input.effective_at, "effective_at");
       let ledgerAccountId = null;

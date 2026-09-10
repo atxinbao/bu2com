@@ -3,6 +3,7 @@ import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { validateRuntimeImageEvidence } from "../../deploy/validate-runtime-image.mjs";
+import { validateSocialWalletAcceptance } from "../../sandbox/social-wallet-acceptance.mjs";
 
 const policyPath = fileURLToPath(new URL("../../deploy/release-policy.json", import.meta.url));
 const policy = JSON.parse(readFileSync(policyPath, "utf8"));
@@ -20,16 +21,18 @@ export function prepareReleaseCandidate({
   ciEvidencePath,
   runtimeImageEvidencePath,
   runtimeImageIdPath,
+  socialWalletEvidencePath,
   imageArchivePath,
   manifestPath,
   notesPath,
 }) {
-  for (const path of [requestPath, ciEvidencePath, runtimeImageEvidencePath, runtimeImageIdPath, imageArchivePath]) {
+  for (const path of [requestPath, ciEvidencePath, runtimeImageEvidencePath, runtimeImageIdPath, socialWalletEvidencePath, imageArchivePath]) {
     if (!path || !existsSync(path)) throw new Error(`Required release input is missing: ${path ?? "undefined"}`);
   }
   const request = readJson(requestPath);
   const ci = readJson(ciEvidencePath);
   const runtimeImage = readJson(runtimeImageEvidencePath);
+  const socialWallet = readJson(socialWalletEvidencePath);
   const imageId = readFileSync(runtimeImageIdPath, "utf8").trim();
 
   if (request.schema_version !== "ci03.release-request.v1" || request.status !== "accepted") {
@@ -94,6 +97,12 @@ export function prepareReleaseCandidate({
   })) {
     throw new Error("Runtime image evidence does not match the candidate source or image");
   }
+  if (!validateSocialWalletAcceptance(socialWallet, {
+    expectedSourceCommit: request.source.commit,
+    expectedImageId: imageId,
+  })) {
+    throw new Error("Social Wallet acceptance evidence does not match the candidate source, image, or Local product boundary");
+  }
   const archive = statSync(imageArchivePath);
   if (!archive.isFile() || archive.size <= 0) throw new Error("Release image archive is empty");
 
@@ -115,8 +124,23 @@ export function prepareReleaseCandidate({
       runtime_image_sha256: sha256(runtimeImageEvidencePath),
       runtime_image_id_sha256: sha256(runtimeImageIdPath),
       release_request_sha256: sha256(requestPath),
+      social_wallet_acceptance_sha256: sha256(socialWalletEvidencePath),
       release_policy_sha256: sha256(policyPath),
     },
+    product_acceptance: {
+      schema_version: socialWallet.schema_version,
+      status: socialWallet.status,
+      account_count: socialWallet.scope.account_count,
+      agent_count: socialWallet.scope.agent_count,
+      ledger_account_count: socialWallet.scope.ledger_account_count,
+      external_sandbox_bilateral: socialWallet.external_sandbox_bilateral.status,
+      simulated_payment_flow_executed: socialWallet.authorization.simulated_payment_flow_executed,
+      spend_decision_source: socialWallet.product_boundary.multi_account_spend_decision_source,
+      public_wallet_api_authorized: socialWallet.product_boundary.public_wallet_api_authorized,
+      buyer_side_provider_fee_spend_semantics_authorized: socialWallet.product_boundary.buyer_side_provider_fee_spend_semantics_authorized,
+      product_promotion_authorized: socialWallet.product_boundary.product_promotion_authorized,
+    },
+    historical_baseline: policy.historical_baseline,
     capabilities: policy.capabilities,
     explicit_exclusions: policy.explicit_exclusions,
     boundary: policy.boundary,
@@ -130,12 +154,14 @@ export function prepareReleaseCandidate({
     request,
     ci,
     runtimeImage,
+    socialWallet,
     imageId,
     imageArchivePath,
     requestPath,
     ciEvidencePath,
     runtimeImageEvidencePath,
     runtimeImageIdPath,
+    socialWalletEvidencePath,
   })) {
     throw new Error("Generated release candidate manifest failed self-validation");
   }
@@ -148,12 +174,14 @@ export function validateReleaseCandidate(manifest, {
   request,
   ci,
   runtimeImage,
+  socialWallet,
   imageId,
   imageArchivePath,
   requestPath,
   ciEvidencePath,
   runtimeImageEvidencePath,
   runtimeImageIdPath,
+  socialWalletEvidencePath,
 }) {
   return (
     manifest?.schema_version === "ci03.release-candidate.v1" &&
@@ -194,9 +222,26 @@ export function validateReleaseCandidate(manifest, {
     manifest.evidence?.runtime_image_sha256 === sha256(runtimeImageEvidencePath) &&
     manifest.evidence?.runtime_image_id_sha256 === sha256(runtimeImageIdPath) &&
     manifest.evidence?.release_request_sha256 === sha256(requestPath) &&
+    manifest.evidence?.social_wallet_acceptance_sha256 === sha256(socialWalletEvidencePath) &&
     manifest.evidence?.release_policy_sha256 === sha256(policyPath) &&
     runtimeImage.source_commit === request.source.commit &&
     runtimeImage.image_id === imageId &&
+    validateSocialWalletAcceptance(socialWallet, {
+      expectedSourceCommit: request.source.commit,
+      expectedImageId: imageId,
+    }) &&
+    manifest.product_acceptance?.schema_version === socialWallet.schema_version &&
+    manifest.product_acceptance?.status === "passed" &&
+    manifest.product_acceptance?.account_count === 2 &&
+    manifest.product_acceptance?.agent_count === 4 &&
+    manifest.product_acceptance?.ledger_account_count === 2 &&
+    manifest.product_acceptance?.external_sandbox_bilateral === "not_executed" &&
+    manifest.product_acceptance?.simulated_payment_flow_executed === true &&
+    manifest.product_acceptance?.spend_decision_source === "legacy_global_wallet" &&
+    manifest.product_acceptance?.public_wallet_api_authorized === false &&
+    manifest.product_acceptance?.buyer_side_provider_fee_spend_semantics_authorized === false &&
+    manifest.product_acceptance?.product_promotion_authorized === false &&
+    JSON.stringify(manifest.historical_baseline) === JSON.stringify(policy.historical_baseline) &&
     sameArray(manifest.capabilities, policy.capabilities) &&
     sameArray(manifest.explicit_exclusions, policy.explicit_exclusions) &&
     JSON.stringify(manifest.boundary) === JSON.stringify(policy.boundary) &&
@@ -212,6 +257,8 @@ function releaseNotes(manifest) {
     `Release class: \`${manifest.release_class}\`\n\n` +
     `Source commit: \`${manifest.source.commit}\`\n\n` +
     `Image ID: \`${manifest.artifact.image_id}\`\n\n` +
+    `Social Wallet acceptance: \`${manifest.product_acceptance.status}\` (2 Accounts / 4 Agents, spend decision: \`${manifest.product_acceptance.spend_decision_source}\`)\n\n` +
+    `Historical baseline: \`${manifest.historical_baseline.tag}\` -> \`${manifest.historical_baseline.commit}\`\n\n` +
     `## Capabilities\n\n${manifest.capabilities.map((value) => `- ${value}`).join("\n")}\n\n` +
     `## Explicit exclusions\n\n${manifest.explicit_exclusions.map((value) => `- ${value}`).join("\n")}\n\n` +
     `This candidate does not authorize a tag, GitHub Release, registry publication, deployment, signing, Provider call, or payment execution.\n`;
@@ -219,12 +266,13 @@ function releaseNotes(manifest) {
 
 if (resolve(process.argv[1] ?? "") === fileURLToPath(import.meta.url)) {
   try {
-    const [requestPath, ciEvidencePath, runtimeImageEvidencePath, runtimeImageIdPath, imageArchivePath, manifestPath, notesPath] = process.argv.slice(2);
+    const [requestPath, ciEvidencePath, runtimeImageEvidencePath, runtimeImageIdPath, socialWalletEvidencePath, imageArchivePath, manifestPath, notesPath] = process.argv.slice(2);
     const manifest = prepareReleaseCandidate({
       requestPath,
       ciEvidencePath,
       runtimeImageEvidencePath,
       runtimeImageIdPath,
+      socialWalletEvidencePath,
       imageArchivePath,
       manifestPath,
       notesPath,

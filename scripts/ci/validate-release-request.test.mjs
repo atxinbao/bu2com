@@ -9,7 +9,7 @@ import { validateReleaseRequest } from "./validate-release-request.mjs";
 
 const commit = "a".repeat(40);
 const validRequest = {
-  candidateVersion: "ledger-v0.1.0-rc.1",
+  candidateVersion: "social-wallet-v0.1.0-rc.1",
   requestedCommit: commit,
   workflowCommit: commit,
   workflowRef: "refs/heads/main",
@@ -72,7 +72,7 @@ test("CI-03 CLI fails closed when the current checkout is presented as an unprot
     encoding: "utf8",
     env: {
       ...process.env,
-      BU2_CANDIDATE_VERSION: "ledger-v0.1.0-rc.1",
+      BU2_CANDIDATE_VERSION: "social-wallet-v0.1.0-rc.1",
       BU2_CANDIDATE_SOURCE_COMMIT: actualCommit,
       BU2_WORKFLOW_SOURCE_COMMIT: actualCommit,
       BU2_WORKFLOW_REF: "refs/heads/main",
@@ -111,7 +111,7 @@ test("CI-03 CLI writes its request file only after validating a clean checkout",
       encoding: "utf8",
       env: {
         ...process.env,
-        BU2_CANDIDATE_VERSION: "ledger-v0.1.0-rc.1",
+        BU2_CANDIDATE_VERSION: "social-wallet-v0.1.0-rc.1",
         BU2_CANDIDATE_SOURCE_COMMIT: actualCommit,
         BU2_WORKFLOW_SOURCE_COMMIT: actualCommit,
         BU2_WORKFLOW_REF: "refs/heads/main",
