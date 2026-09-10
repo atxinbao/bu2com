@@ -36,6 +36,7 @@
 | [F16a 内部 Sandbox 自主双向收付 Beta 验收契约](F16A_INTERNAL_BETA_ACCEPTANCE.md) | 验证预授权 Agent 无逐笔批准完成付款、收款、权益恢复、退款、故障恢复与对账 |
 | [F16b Hosted Sandbox 外部集成基础准入](F16B_HOSTED_QUALIFICATION.md) | 验证 Candidate、Activation、Evidence 和部署边界；不代表公网 ENV-07B 已验收 |
 | [FP-08 账户级资金写源与买方 ProviderFee 契约](FP08_ACCOUNT_WALLET_WRITE_CONTRACT.md) | 将健康 Local cutover 的新付款写入账户级余额，并固定买方费用、并发与恢复语义 |
+| [Public Wallet API 产品契约](PUBLIC_WALLET_API_CONTRACT.md) | 通过认证 Account 读取已初始化账户钱包，并在运行异常时隐藏金额且禁止 legacy fallback |
 | [LA-01 持久化退款尝试与未决额度占用](LA01_REFUND_ATTEMPT_CONTRACT.md) | Ledger Assurance Gate 第一项整改：退款前持久化、未知结果占用、同键恢复、已确认未入账额度保护与新请求防重复 |
 | [LA-02 成组 Journal / Posting 保护](LA02_JOURNAL_POSTING_CONTRACT.md) | Ledger Assurance Gate 第二项整改：严格金额、来源引用、借贷平衡和已过账不可变 |
 | [LA-03a 业务资金事实分录](LA03_BUSINESS_POSTINGS_CONTRACT.md) | Ledger Assurance Gate 第三项整改的首个子范围：结算、确认退款与 ProviderFee 接入受保护 Journal/Posting |
@@ -71,8 +72,8 @@ Agent 商业账户、信誉与服务网络
 
 ## 当前状态
 
-- 产品阶段：Phase 0 开发（Local / Sandbox / Testnet 边界）；首个 `ledger-rc-local-v0.1` 仅批准为 Local/Simulation 内部账本基线。FP-08 Schema 22 已在候选分支把健康 Local cutover 的新付款和买方 Payment/Refund ProviderFee 接到账户级余额，并升级 Social Wallet RC 证据语义；真实 Sandbox 双向证据、公开 Wallet API、Collection 运行时净入账与 E3.1 仍未放行。
-- 上层产品方向：Social Wallet；当前 `spend_decision_source=account_wallet` 仅在 Local/Simulation、已完成 FP-06b cutover 的账户范围成立，**不等于正式公开 Wallet API 或外部 Testnet 产品已交付**。
+- 产品阶段：Phase 0 开发（Local / Sandbox / Testnet 边界）；首个 `ledger-rc-local-v0.1` 仅批准为 Local/Simulation 内部账本基线。FP-08 Schema 22 已把健康 Local cutover 的新付款和买方 Payment/Refund ProviderFee 接到账户级余额；Public Wallet API 进一步提供认证 Account 的 Local/Simulation 只读接口。真实 Sandbox 双向证据、Collection 运行时净入账与 E3.1 仍未放行。
+- 上层产品方向：Social Wallet；`spend_decision_source=account_wallet` 与 `GET /v1/accounts/{account_id}/wallets` 当前只在 Local/Simulation、已完成 FP-06b cutover 的账户范围成立，**不等于 Hosted 或外部 Testnet 产品已交付**。
 - 产品版本：Product v0.3 Transaction-first
 - 对应商业计划：BP v0.1
 - 更新日期：2026-09-11

@@ -595,3 +595,19 @@
 账户钱包数据库约束覆盖安全整数、`reserved >= 0`、账户/币种作用域不可变和禁止删除。故障与并发覆盖账户余额、资源、Posting、LedgerEvent、Outbox、幂等结果和 state revision 的整体回滚及陈旧写入拒绝。
 
 本地门禁在未提交工作树上运行，证据中的 `source_commit=b454dfee...` 是父基线；最终提交与远程 PR 证据尚不存在。未执行公开 Wallet API、Collection runtime wallet credit、Hosted、真实 Sandbox/Testnet 双向结算、LA-06b、Live/Mainnet、Signer、Provider 付款、Tag 或 Release。
+
+## 2026-09-11 · Public Wallet API
+
+| 验证项 | 命令 | 结果 |
+|---|---|---|
+| Wallet HTTP + Access | `PATH=/Users/mac/.local/share/mise/installs/node/24.20.0/bin:$PATH node --test sandbox/public-wallet-api.test.mjs sandbox/access-control.test.mjs` | 8/8 通过 |
+| TypeScript SDK | 同一 Node PATH 下执行 `npm --prefix packages/typescript-sdk test` | 11/11 通过；生成检查、格式、Lint、类型和构建均通过 |
+| API / MCP 契约 | 同一 Node PATH 下执行 `node docs/03-technical/validate-contract.mjs` | 63 项不变量、6 个 MCP 工具通过 |
+| Sandbox 全量 | 同一 Node PATH 下执行 `npm --prefix sandbox test` | 269/269 通过 |
+| RT-01 | 同一 Node PATH 下执行 `node deploy/runtime-assurance.mjs` | PASS；SQLite 3.53.4、Schema 1–22、WAL/FK/Online Backup/restore 通过 |
+| LA-06a | 同一 Node PATH 下执行 `node deploy/la06a-local-gate.mjs` | PASS；Sandbox 269/269、边界 4/4、部署/Hosted 23/23、SDK 11/11、契约与 Prototype lint/build 通过 |
+| Graphify | `graphify update .` | PASS；4071 nodes / 6882 edges / 272 communities |
+
+覆盖认证缺失、跨 Account、任意 query/`ledger_account_id` 选择、未初始化 scope 排除、健康余额、cutover rollback 和 stale projection。blocked 响应固定隐藏 `available/reserved` 且不返回 legacy wallet。
+
+本地门禁在未提交工作树上运行，证据中的 `source_commit=f1e7e85...` 是父基线；最终提交与远程 PR 证据尚不存在。未执行 Collection runtime credit、Hosted、真实 Sandbox/Testnet 双向结算、LA-06b、Live/Mainnet、Signer、Provider 付款、Tag、Release 或真实资金。

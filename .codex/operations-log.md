@@ -589,3 +589,18 @@
 - Tool: `git diff --check`, JSON 解析、Node 语法与范围审查; result: 补丁格式通过，未发现秘密或 FP-08 之外的业务改动。
 - Evidence caveat: 未提交工作树中的本地 JSON 记录父 `source_commit=b454dfee...`，不冒充最终提交或远程 CI 证据。
 - Boundary: 仅 Local/Simulation 实现与验证；公开 Wallet API、Collection runtime credit、Hosted、真实 Sandbox/Testnet 双向结算、Live/Mainnet、Signer、Provider 付款和真实资金均未执行或未授权。
+
+## 2026-09-11 · Public Wallet API
+
+- Scope: PR #84 合并后清理到 `main@f1e7e85`，创建 `feat/public-wallet-read-api`；仅公开认证、账户归属、只读的钱包集合。
+- Tool: `graphify query`, `rg`, `sed`, `git`; result: 定位 `getRuntimeWalletView`、`listLedgerAccounts`、AccessController、三个相似 GET 路由、OpenAPI 与 TypeScript SDK 契约。
+- Contract: `GET /v1/accounts/{account_id}/wallets` 只从已初始化 account wallet scope 生成结果；调用方不能提交 `ledger_account_id`。不健康时金额为 null，禁止 legacy fallback 或 fake zero。
+- Versioning: 新增 `wallets:read` 会扩大角色权限，Access Contract 显式从 1.0 升到 1.1；Agent Payment API 保持 0.3.0。
+- Boundary: Local/Simulation implementation only; no wallet mutation, Collection runtime credit, Hosted, Sandbox/Testnet, Live/Mainnet, Provider, Signer, real funds, Tag, Release or deployment.
+- Tool: `apply_patch`; result: 新增 Domain 聚合、HTTP 路由、Access 权限、OpenAPI、TypeScript SDK、真实 SQLite/HTTP 回归及产品/技术文档；公开 Amount 保持非负，底层负余额通过 blocked/null 失败关闭。
+- Tool: Node 24.20.0 定向与全量门禁; result: Public Wallet + Access 8/8、SDK 11/11、Sandbox 269/269、Contract 63 invariants / 6 MCP tools、RT-01 与 LA-06a 聚合全部通过。
+- Tool: `graphify update .`; result: 最终代码图更新为 4071 nodes / 6882 edges / 272 communities；未配置 Gemini，文档语义缓存未重建。
+- Evidence caveat: 未提交工作树门禁绑定父提交 `f1e7e85...`，不冒充最终提交或远程 CI 证据；LA-06b 外部双向验收仍为 `not_executed`。
+- Tool: `node --check`, JSON parser, Ruby YAML parser, Markdown link scanner, sensitive-value scan, `git diff --check`; result: 语法、5 个 JSON、OpenAPI YAML、13 个修改 Markdown 的相对链接、敏感值与 patch 格式全部通过；首次 Ruby `safe_load_file` 因本机 Psych API 版本不支持而退出，改用同一解析器的 `load_file` 后通过。
+- Review: 最终范围为 Public Wallet Domain/HTTP/Access/OpenAPI/SDK、回归、文档与 Graphify 派生图；未包含 Schema、依赖、钱包 mutation、部署或资金执行变更。
+- Staged check: 首次 `git diff --cached --check` 发现新产品契约头部两处 Markdown 行尾空格；清理后重新暂存并复检，不改变契约语义。

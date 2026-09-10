@@ -1195,3 +1195,18 @@ Conclusion: FP-A02 is **GO for R0 documentation review**. It closes Foundation s
 - Boundary: no public Wallet API, Collection runtime wallet credit, Hosted, real Sandbox/Testnet bilateral settlement, LA-06b, Live/Mainnet, Signer, Provider payment, Tag, Release or real-funds action was performed.
 
 Conclusion: FP-08 is **GO for R2 review** within the Local/Simulation boundary. Independent Domain / Architecture review and final-SHA CI evidence remain required before merge.
+
+## 2026-09-11 · Public Wallet API
+
+- `node --test sandbox/public-wallet-api.test.mjs sandbox/access-control.test.mjs`: 8/8 passed on Node v24.20.0.
+- `npm --prefix packages/typescript-sdk test`: 11/11 passed, including generated OpenAPI drift, formatting, lint, strict types and build.
+- `node docs/03-technical/validate-contract.mjs`: 63 invariants / 6 MCP tools passed.
+- `npm --prefix sandbox test`: 269/269 passed.
+- `node deploy/runtime-assurance.mjs`: passed with SQLite 3.53.4, migrations 1–22, WAL, foreign keys and isolated Online Backup/restore.
+- `node deploy/la06a-local-gate.mjs`: passed with Sandbox 269/269, LA-06a 4/4, deployment/Hosted contracts 23/23, SDK 11/11, contract validation and Prototype lint/build.
+- Coverage includes missing credentials, cross-account access, query/ledger-account injection, initialized-scope filtering, healthy balances, rollback and stale projection. Blocked responses expose null amounts and never a legacy wallet fallback.
+- `graphify update .`: completed with 4071 nodes, 6882 edges and 272 communities; document semantic cache was not rebuilt because no Gemini backend is configured.
+- Evidence caveat: dirty-tree gates report parent `source_commit=f1e7e85...`; final-commit and remote PR evidence do not exist yet.
+- Boundary: Local/Simulation only. No wallet mutation, Collection runtime credit, LA-06b, Hosted, Sandbox/Testnet bilateral settlement, Live/Mainnet, Signer, Provider payment, real funds, Tag or Release was performed.
+
+Conclusion: Public Wallet API is **GO for R2 review** within the Local/Simulation boundary. Independent Domain / Architecture review and final-SHA evidence remain required before merge.

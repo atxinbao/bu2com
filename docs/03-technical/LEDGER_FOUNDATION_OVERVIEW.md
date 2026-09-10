@@ -1,14 +1,14 @@
 # Ledger Foundation 当前能力与产品接入基线
 
 日期：2026-09-11
-状态：FP-08 account-scoped write candidate；FP-A01 已由 PR #82 关闭
-固定起点：`b454dfee4f3ce6a217aa50bd9f4df78692d57b00`
+状态：Public Wallet API candidate；FP-08 已由 PR #84 合并
+固定起点：`f1e7e85d212e51affedb2d0cf400b9a0f3c81d1b`
 
 本页是当前能力入口，不替代 [`AGENTS.md`](../../AGENTS.md)、[`PROJECT.html`](../../PROJECT.html)、[`ARCHITECTURE.html`](../../ARCHITECTURE.html)、[`GOVERNANCE.html`](../../GOVERNANCE.html) 或具体版本化契约。它不授予资金执行、Sandbox/Testnet 验收、Live/Mainnet、生产迁移或发布权限。
 
 ## 1. 定位
 
-BU2 Ledger Foundation 是多个上层业务产品共享的收付、授权、账务、恢复与证据基础，不单独作为收费产品。**社交钱包是首个上层产品方向**；FP-07 已完成有限 Local/Simulation 产品接入验收，FP-08 进一步在健康 Local cutover 下交付账户级写余额与买方 Payment/Refund ProviderFee 支出语义。公开 Wallet API、Collection 运行时净入账及外部资金环境尚未交付，产品不得把 Local 能力包装成完整公网社交钱包。
+BU2 Ledger Foundation 是多个上层业务产品共享的收付、授权、账务、恢复与证据基础，不单独作为收费产品。**社交钱包是首个上层产品方向**；FP-07 已完成有限 Local/Simulation 产品接入验收，FP-08 进一步交付账户级写余额与买方 Payment/Refund ProviderFee 支出语义，Public Wallet API 当前候选把健康余额以认证 Account 只读接口交给上层产品。Collection 运行时净入账及外部资金环境尚未交付，产品不得把 Local 能力包装成完整公网社交钱包。
 
 Transaction-first v0.3 继续作为交易领域语义基线：授权、预留、交付、结算、退款和争议保持独立事实。它不等同于上层产品的信息架构或余额读模型。
 
@@ -44,7 +44,7 @@ Simulation 不是对外 Sandbox。CI 成功、代码已合并或存在 Live 配�
 | Journal / Posting | 平衡校验、已过账不可变、业务资金事实分录；FP-04 将纯计算提到内部 helper；FP-05 让新格式 settlement/collection/refund/fee/opening/correction Posting 继承可信 `ledger_account_id` | 历史未绑定事实的目标范围迁移/期初核对 | 内部账务事实 |
 | LedgerAccount | Schema 16 所有权注册、Schema 17 Posting 绑定；Schema 20 将 FundingSource/ReceivingTarget 固定到 environment/tenant/owner/asset/network 一致的 LedgerAccount，并在 SQLite 层保护归属不可变 | 历史 null binding 的归属迁移与产品范围 cutover | 内部所有权边界 |
 | 账户投影 | Schema 19、确定性内容哈希、显式期望版本、条件激活、可重建；FP-06a 增加只读 source watermark、source/projection hash、stale/completeness inspection；FP-06b 允许经 current Local migration plan 的目标投影刷新 | 时间型 freshness SLA、Sandbox/Live cutover | Local 受控派生读路径；**不是支付授权** |
-| 运行时余额 | FP-06b Schema 21 以 append-only generation 在 Local 选择读路径；FP-08 Schema 22 为活动 cutover 初始化 `ledger_account_id + currency` 余额，新交易固定写源并以版本 CAS 更新；历史未切换交易继续使用 legacy wallet | 公开 Wallet API、Collection 运行时净入账、Sandbox/Live cutover | Local 账户级写入；Transaction Core 仍是唯一写者 |
+| 运行时余额 | FP-06b Schema 21 以 append-only generation 在 Local 选择读路径；FP-08 Schema 22 初始化并写入账户余额；Public Wallet API 通过认证 Account 返回健康 available/reserved，blocked 时隐藏金额且不 fallback | Collection 运行时净入账、Hosted/Sandbox/Live cutover 与服务准入 | Local 账户级读写；Transaction Core 仍是唯一写者 |
 | 历史重放/恢复 | 只读重放、备份追加事实追平、缺口报告；FP-06b 支持 fully-bound/scoped-exclusion/reconciled-opening 迁移计划及追加 rollback generation | 实际生产数据迁移与外部环境验证 | Local 隔离迁移/恢复证据 |
 | 收款/付款/退款/费用 | Local/Simulation 业务与故障路径、Attempt/对账能力；新格式业务分录已从可信 wallet binding 解析到账簿账户；FP-06a 将 reserved/pending 与账簿余额分开读取 | 历史范围迁移、正式产品 cutover 与真实 Sandbox 证据 | 不扩张到未批准通道 |
 | CI | main `e19bae63…` 的 `BU2 CI` run `34527198064` 已完成，`foundation`、`runtime`、`runtime image`、`BU2 / CI Gate` 四组 job 均 success；FP-02 已绑定 source commit/tree/run/attempt、原始日志和测试统计 | GitHub API 仍报告 `main protected=false`，因此 protected-main RC 准入仍未满足 | 合并后精确源码回归证据；**不是资金授权** |
@@ -68,7 +68,7 @@ FP-05 已完成**新格式业务事实**的可信归属接线；FP-06a 已建立
 
 - 对目标产品账簿的历史未绑定事实建立可证明归属或已核对期初，不可确定的事实继续保持 unresolved；
 - 在真实目标产品范围内完成人工审查的历史归属/期初证据，并持续取得完整 shadow/reconciliation 差异证据；
-- FP-08 当前候选已完成不新增公开 Wallet API 的 Local 账户级写入；正式产品 API、Collection 运行时净入账与 Sandbox/Testnet/Live cutover 仍需独立准入；
+- Public Wallet API 当前候选只向认证 Account 暴露已初始化且健康的 Local 账户余额；Collection 运行时净入账与 Hosted/Sandbox/Testnet/Live 服务准入仍需独立验收；
 - 证明暂停账户仍可查询历史和对账，而新增支出保持失败关闭；
 - 保持 Journal/Posting 与 Provider 已发生事实不可改写，不用重新付款掩盖差异。
 
@@ -98,4 +98,4 @@ python3 scripts/ledger/ledger_inventory.py \
 
 ## 7. 后续依赖
 
-执行顺序及已交付状态见 [`FOUNDATION_PR_PLAN.md`](FOUNDATION_PR_PLAN.md)。FP-08 当前候选完成账户级资金写源与 buyer-side ProviderFee 支出语义；下一项能力应独立推进公开 Wallet API，Collection 运行时净入账另行冻结。LA-06b 继续负责外部 Sandbox/Testnet 双向证据。真实产品数据迁移、Hosted、Live/Mainnet 或资金准入仍不由本页授予。
+执行顺序及已交付状态见 [`FOUNDATION_PR_PLAN.md`](FOUNDATION_PR_PLAN.md)。Public Wallet API 当前候选完成认证账户的 Local/Simulation 只读余额；Collection 运行时净入账另行冻结。下一项仍由 LA-06b 负责外部 Sandbox/Testnet 双向证据。真实产品数据迁移、Hosted、Live/Mainnet 或资金准入仍不由本页授予。

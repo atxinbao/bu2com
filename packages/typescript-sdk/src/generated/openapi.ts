@@ -19,6 +19,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/accounts/{account_id}/wallets": {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path: {
+                account_id: components["parameters"]["AccountId"];
+            };
+            cookie?: never;
+        };
+        /** List initialized wallets owned by one authenticated account */
+        get: operations["listAccountWallets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/budgets": {
         parameters: {
             query?: never;
@@ -1254,6 +1276,33 @@ export interface components {
             /** Format: date-time */
             created_at: string;
         };
+        AccountWallet: {
+            /** @constant */
+            schema_version: "wallet.v1";
+            account_id: string;
+            ledger_account_id: string;
+            book_id: string;
+            asset: string;
+            network: string | null;
+            currency: string;
+            /** @enum {string} */
+            account_status: "active" | "suspended" | "retired";
+            /** @enum {string} */
+            status: "active" | "blocked";
+            available: components["schemas"]["Amount"] | null;
+            reserved: components["schemas"]["Amount"] | null;
+            /** @constant */
+            balance_source: "account_wallet";
+            /** @enum {string} */
+            read_mode: "ledger_projection" | "legacy_wallet";
+            cutover_generation: number;
+            blockers: string[];
+            /** @constant */
+            fallback_performed: false;
+        };
+        AccountWalletList: {
+            data: components["schemas"]["AccountWallet"][];
+        };
         EnvironmentInfo: {
             /** @constant */
             service: "bu2-reference-server";
@@ -1274,7 +1323,7 @@ export interface components {
             /** @enum {string} */
             execution_status: "execution_disabled" | "execution_enabled";
             /** @constant */
-            access_contract_version: "1.0";
+            access_contract_version: "1.1";
             /** @enum {string} */
             access_mode: "development_open" | "authenticated";
             public_capabilities: string[];
@@ -2115,6 +2164,7 @@ export interface components {
         /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
         TraceId: string;
         IdempotencyKey: string;
+        AccountId: string;
         PaymentIntentId: string;
         TransactionId: string;
         ReceiptId: string;
@@ -2163,6 +2213,36 @@ export interface operations {
                 };
             };
             400: components["responses"]["BadRequest"];
+        };
+    };
+    listAccountWallets: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Optional caller-supplied trace identifier; BU2 generates one when omitted. */
+                "X-Trace-Id"?: components["parameters"]["TraceId"];
+            };
+            path: {
+                account_id: components["parameters"]["AccountId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Account-scoped wallet balances and runtime health */
+            200: {
+                headers: {
+                    "X-Request-Id": components["headers"]["RequestId"];
+                    "X-Trace-Id": components["headers"]["TraceId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountWalletList"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
         };
     };
     listBudgets: {

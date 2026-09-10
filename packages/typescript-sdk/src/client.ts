@@ -10,6 +10,7 @@ import {
 } from "./errors.js";
 import type {
   AccessIdentity,
+  AccountWallet,
   AuthorizationDecision,
   Budget,
   BudgetHold,
@@ -238,7 +239,7 @@ export class Bu2Client {
       info.chain_id !== expected.chain_id ? "chain_id" : null,
       info.network !== expected.network ? "network" : null,
       info.execution_backend !== expected.payment_adapter ? "execution_backend" : null,
-      info.access_contract_version !== "1.0" ? "access_contract_version" : null,
+      info.access_contract_version !== "1.1" ? "access_contract_version" : null,
       this.environment !== "local" && info.access_mode !== "authenticated" ? "access_mode" : null,
       this.environment === "local" &&
       !["development_open", "authenticated"].includes(info.access_mode)
@@ -354,6 +355,18 @@ export class Bu2Client {
     return this.execute({ name: "getAccessIdentity", mutation: false }, options, (signal) =>
       this.api.GET("/access", {
         params: { header: traceHeaders(options) },
+        signal,
+      }),
+    );
+  }
+
+  listAccountWallets(
+    accountId: string,
+    options: Bu2RequestOptions = {},
+  ): Promise<{ data: AccountWallet[] }> {
+    return this.execute({ name: "listAccountWallets", mutation: false }, options, (signal) =>
+      this.api.GET("/accounts/{account_id}/wallets", {
+        params: { path: { account_id: accountId }, header: traceHeaders(options) },
         signal,
       }),
     );

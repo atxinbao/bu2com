@@ -70,6 +70,12 @@ FP-01、FP-02、FP-03 可以并行准备，但应分别提交和审查。
 
 实现状态：`fp08.social-wallet-acceptance.v1` 取代旧 FP-07 证据语义，明确 `spend_decision_source=account_scoped_wallet` 且 buyer-side fee 已授权；旧 v1 证据不被静默重新解释。费用作为已观察外部事实可以使 available 为负，但新 reserve 在 Adapter 前失败关闭。历史交易继续使用 legacy wallet；公开 Wallet API、Collection 运行时净入账、Sandbox/Testnet/Live 和真实资金不在本范围。
 
+### Public Wallet API — 认证账户钱包读取
+
+独立 R2：新增 `GET /v1/accounts/{account_id}/wallets` 与 TypeScript SDK `listAccountWallets()`。服务端只从认证 Account/tenant 解析已初始化账户钱包，不接受调用方选择 `ledger_account_id`；健康时返回账户级 available/reserved，不健康时返回 blocked/null 且不回退 legacy wallet。
+
+实现状态：Access Contract 升级到 1.1 并为 Agent、Developer、Operator 增加 `wallets:read`。当前只完成 Local/Simulation 接口、契约和回归；Collection 运行时净入账、Hosted、Sandbox/Testnet、Live/Mainnet 与真实资金继续独立关闭。
+
 ## 审计修复与当前状态
 
 ### FP-A01 — 钱包对账完整性与激活后运行检查统一
@@ -82,7 +88,7 @@ PR [#82](https://github.com/atxinbao/bu2com/pull/82) 已合并到 main `e19bae63
 
 本工作包只对齐 FP-A01 合并后的文档状态、固定 main 基线和 CI 证据，风险等级为 **R0**。它不修改代码、Schema、API、交易/账务状态、环境配置或资金执行。GitHub API 当前仍报告 `main protected=false`，Social Wallet RC 继续保持 `prepared_not_released`；该运营门槛不能由 PR #82 的成功检查替代。
 
-FP-A02 后的功能建设顺序为：FP-08 账户级资金写源与 buyer-side ProviderFee 支出语义、公开 Wallet API、LA-06b 外部 Sandbox/Testnet 双向验收。FP-08 当前候选通过后再进入公开 Wallet API；每项必须按自身 R2/R3 边界单独设计、验证和批准，不把 Local/Simulation 证据扩张为 Hosted、Live/Mainnet 或真实资金准入。
+FP-A02 后的功能建设顺序为：FP-08 账户级资金写源与 buyer-side ProviderFee 支出语义、Public Wallet API、LA-06b 外部 Sandbox/Testnet 双向验收。Public Wallet API 当前候选通过后再进入 LA-06b；每项必须按自身 R2/R3 边界单独设计、验证和批准，不把 Local/Simulation 证据扩张为 Hosted、Live/Mainnet 或真实资金准入。
 
 ## 依赖关系
 

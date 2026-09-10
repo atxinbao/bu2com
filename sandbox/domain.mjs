@@ -1849,6 +1849,71 @@ export class Bu2Sandbox {
     }));
   }
 
+  listAccountWalletViews({ account_id, tenant_id = null } = {}) {
+    validateIdentifier(account_id, "acct", "account_id");
+    if (tenant_id !== null) validateIdentifier(tenant_id, "ten", "tenant_id");
+    if (!this.ledger) {
+      throw new ApiError(
+        503,
+        "service_unavailable",
+        "ledger_persistence_required",
+        "A persistent ledger is required for account wallet reads.",
+      );
+    }
+    const ledgerAccounts = new Map(
+      this.ledger
+        .listLedgerAccounts({
+          environment: this.environmentConfig.environment,
+          tenant_id,
+          owner_account_id: account_id,
+        })
+        .map((ledgerAccount) => [ledgerAccount.id, ledgerAccount]),
+    );
+    return [...this.accountWallets.values()]
+      .filter((wallet) => ledgerAccounts.has(wallet.ledger_account_id))
+      .map((wallet) => {
+        const ledgerAccount = ledgerAccounts.get(wallet.ledger_account_id);
+        const runtime = this.getRuntimeWalletView({
+          ledger_account_id: wallet.ledger_account_id,
+          currency: wallet.currency,
+        });
+        const active =
+          runtime.status === "active" && runtime.spend_decision_source === "account_wallet";
+        const blockers = [];
+        if (!active && runtime.read_mode === "legacy_wallet") {
+          blockers.push("account_wallet_cutover_not_active");
+        } else if (!active) {
+          blockers.push(...(runtime.blockers ?? []));
+          if (runtime.spend_decision_source !== "account_wallet") {
+            blockers.push("account_wallet_spend_source_unavailable");
+          }
+        }
+        return {
+          schema_version: "wallet.v1",
+          account_id,
+          ledger_account_id: ledgerAccount.id,
+          book_id: ledgerAccount.book_id,
+          asset: ledgerAccount.asset,
+          network: ledgerAccount.network,
+          currency: wallet.currency,
+          account_status: ledgerAccount.status,
+          status: active ? "active" : "blocked",
+          available: active ? { value: wallet.available, currency: wallet.currency } : null,
+          reserved: active ? { value: wallet.reserved, currency: wallet.currency } : null,
+          balance_source: "account_wallet",
+          read_mode: runtime.read_mode,
+          cutover_generation: runtime.cutover_generation,
+          blockers: [...new Set(blockers)].sort(),
+          fallback_performed: false,
+        };
+      })
+      .sort(
+        (left, right) =>
+          left.ledger_account_id.localeCompare(right.ledger_account_id) ||
+          left.currency.localeCompare(right.currency),
+      );
+  }
+
   getRuntimeWalletView({ ledger_account_id, currency } = {}) {
     validateIdentifier(ledger_account_id, "lga", "ledger_account_id");
     if (typeof currency !== "string" || !/^[A-Z]{3}$/.test(currency)) throw new ApiError(400, "validation_error", "invalid_projection_currency", "Projection currency must be an uppercase three-letter currency.");

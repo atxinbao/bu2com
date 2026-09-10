@@ -180,6 +180,9 @@ export function permissionForRequest(method, pathname) {
   }
   if (method === "GET" && /^\/v1\/receipts\/[^/]+\/verify$/.test(pathname)) return null;
   if (method === "GET" && pathname === "/v1/access") return "identity:read";
+  if (method === "GET" && /^\/v1\/accounts\/[^/]+\/wallets$/.test(pathname)) {
+    return "wallets:read";
+  }
   if (method === "GET" && pathname === "/v1/execution_sessions") return "execution_sessions:read";
   if (method === "POST" && pathname === "/v1/execution_sessions") return "execution_sessions:create";
   if (method === "GET" && /^\/v1\/execution_sessions\/[^/]+$/.test(pathname)) return "execution_sessions:read";

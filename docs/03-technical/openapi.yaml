@@ -26,6 +26,25 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/EnvironmentInfo' }
         '400': { $ref: '#/components/responses/BadRequest' }
+  /accounts/{account_id}/wallets:
+    parameters:
+      - $ref: '#/components/parameters/TraceId'
+      - $ref: '#/components/parameters/AccountId'
+    get:
+      operationId: listAccountWallets
+      summary: List initialized wallets owned by one authenticated account
+      responses:
+        '200':
+          description: Account-scoped wallet balances and runtime health
+          headers:
+            X-Request-Id: { $ref: '#/components/headers/RequestId' }
+            X-Trace-Id: { $ref: '#/components/headers/TraceId' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AccountWalletList' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
   /budgets:
     parameters:
       - $ref: '#/components/parameters/TraceId'
@@ -1208,6 +1227,11 @@ components:
       in: header
       required: true
       schema: { type: string, minLength: 8, maxLength: 255 }
+    AccountId:
+      name: account_id
+      in: path
+      required: true
+      schema: { type: string, pattern: '^acct_[A-Za-z0-9_-]+$', maxLength: 255 }
     PaymentIntentId:
       name: payment_intent_id
       in: path
@@ -1502,6 +1526,43 @@ components:
           type: array
           items: { $ref: '#/components/schemas/ReconciliationItem' }
         created_at: { type: string, format: date-time }
+    AccountWallet:
+      type: object
+      additionalProperties: false
+      required: [schema_version, account_id, ledger_account_id, book_id, asset, network, currency, account_status, status, available, reserved, balance_source, read_mode, cutover_generation, blockers, fallback_performed]
+      properties:
+        schema_version: { type: string, const: wallet.v1 }
+        account_id: { type: string, pattern: '^acct_[A-Za-z0-9_-]+$' }
+        ledger_account_id: { type: string, pattern: '^lga_[A-Za-z0-9_-]+$' }
+        book_id: { type: string, minLength: 1, maxLength: 255 }
+        asset: { type: string, minLength: 1, maxLength: 120 }
+        network: { type: [string, 'null'], maxLength: 120 }
+        currency: { type: string, pattern: '^[A-Z]{3}$' }
+        account_status: { type: string, enum: [active, suspended, retired] }
+        status: { type: string, enum: [active, blocked] }
+        available:
+          oneOf:
+            - { $ref: '#/components/schemas/Amount' }
+            - { type: 'null' }
+        reserved:
+          oneOf:
+            - { $ref: '#/components/schemas/Amount' }
+            - { type: 'null' }
+        balance_source: { type: string, const: account_wallet }
+        read_mode: { type: string, enum: [ledger_projection, legacy_wallet] }
+        cutover_generation: { type: integer, minimum: 0 }
+        blockers:
+          type: array
+          items: { type: string }
+        fallback_performed: { type: boolean, const: false }
+    AccountWalletList:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/AccountWallet' }
     EnvironmentInfo:
       type: object
       additionalProperties: false
@@ -1523,7 +1584,7 @@ components:
           minItems: 2
           items: { type: string, enum: ['0.2', '0.3'] }
         execution_status: { type: string, enum: [execution_disabled, execution_enabled] }
-        access_contract_version: { type: string, const: '1.0' }
+        access_contract_version: { type: string, const: '1.1' }
         access_mode: { type: string, enum: [development_open, authenticated] }
         public_capabilities:
           type: array

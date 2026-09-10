@@ -1,11 +1,12 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "credential_type": "bearer_api_key",
   "token_digest": "sha256",
   "modes": ["development_open", "authenticated"],
   "roles": {
     "agent": [
       "identity:read",
+      "wallets:read",
       "execution_sessions:read",
       "execution_sessions:create",
       "mandates:read",
@@ -28,6 +29,7 @@
     ],
     "developer": [
       "identity:read",
+      "wallets:read",
       "execution_sessions:read",
       "execution_sessions:create",
       "execution_sessions:manage",
@@ -55,6 +57,7 @@
     ],
     "operator": [
       "identity:read",
+      "wallets:read",
       "execution_sessions:read",
       "execution_sessions:manage",
       "mandates:read",

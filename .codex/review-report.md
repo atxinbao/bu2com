@@ -1140,3 +1140,13 @@ F06b 让 Quote 和 PaymentIntent 能够保留可验证的资金来源与收款�
 - 综合评分：96/100，建议提交 R2 PR，等待独立 Domain / Architecture 审查和最终提交对应的 CI 证据。
 - 遗留风险：现有 legacy transaction 继续使用全局钱包；Collection runtime credit 尚未切换；未提交门禁仅绑定父 SHA。LA-06b、Hosted、真实 Sandbox/Testnet 双向结算、Live/Mainnet 和真实资金均未执行。
 - 恢复：账户状态尚未分歧时可追加 legacy rollback generation；发生账户级资金变动后保持停止新执行并以前滚修复，禁止删除账户钱包行、改写历史 Posting 或重新调用 Provider。
+
+## 2026-09-11 · Public Wallet API 自主审查
+
+- 审查者：Codex（Contributor / Verifier，非独立 R2 Approver）。
+- 技术评分：96/100。HTTP 只接受业务 Account ID，认证 claims 与数据库 tenant/owner 双重限定 LedgerAccount；结果只来自已初始化 account wallet，运行异常时金额为 null、稳定 blocker 且不回退 legacy wallet。OpenAPI、Access Contract 1.1 与 SDK 契约一致。
+- 战略评分：97/100。把 FP-08 内部余额以最小只读接口交给上层产品，不新增第二个资金写者，不提前开放 Collection runtime credit、Hosted、Sandbox/Testnet 或 Live/Mainnet。
+- 验证评分：96/100。Public Wallet + Access 8/8、SDK 11/11、Sandbox 269/269、RT-01、LA-06a、63 项 API 不变量/6 MCP 工具及 Prototype lint/build 均通过；Graphify 更新到 4071 nodes / 6882 edges。
+- 综合评分：96/100，建议提交 R2 PR，等待独立 Domain / Architecture 审查和最终提交对应的远程证据。
+- 遗留风险：当前接口仅获 Local/Simulation 证据；底层负余额通过 blocked/null 隐藏，产品仍需设计负余额的受控恢复体验。LA-06b、Hosted、真实 Sandbox/Testnet 双向、Live/Mainnet 和真实资金未执行。
+- 恢复：停止暴露路由即可回退应用；不删除 Schema 22、账户钱包、历史交易或 cutover generation。异常余额沿用追加式 reconciliation/projection/cutover 恢复。

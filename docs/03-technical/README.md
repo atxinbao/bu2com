@@ -44,7 +44,7 @@ LA-03d 已冻结多账户账簿所有权、余额投影切换和历史迁移契�
 - [ENV-04 隔离 Sandbox / Live 部署单元 v1](ENVIRONMENT_DEPLOYMENT_UNITS_V1.md)
 - [ENV-04 Docker / Compose 参考实现](../../deploy/README.md)
 - [ENV-05 受控开发者与运维入口 v1](ENVIRONMENT_CONTROLLED_ACCESS_V1.md)
-- [Access Contract v1](access-contract.json)
+- [Access Contract v1.1](access-contract.json)
 - [F06a 持久身份与内部 Sandbox onboarding](../../sandbox/onboarding.mjs)
 - [F06b 资金来源与收款目标绑定](F06B_FUNDING_TARGET_BINDINGS_V1.md)
 - [ENV-06 制品提升、监控、备份与恢复演练 v1](ENVIRONMENT_OPERATIONS_V1.md)
@@ -72,6 +72,7 @@ LA-03d 已冻结多账户账簿所有权、余额投影切换和历史迁移契�
 - [F15b 业务负载、停机与财务恢复验收契约](../02-product/F15B_OPERATIONS_ACCEPTANCE.md)
 - [F16a 内部 Sandbox 自主双向收付 Beta 验收契约](../02-product/F16A_INTERNAL_BETA_ACCEPTANCE.md)
 - [F16b Hosted Sandbox 外部集成基础准入](../02-product/F16B_HOSTED_QUALIFICATION.md)
+- [Public Wallet API 产品契约](../02-product/PUBLIC_WALLET_API_CONTRACT.md)
 - [LA-01 持久化退款尝试与未决额度占用](../02-product/LA01_REFUND_ATTEMPT_CONTRACT.md)
 - [LA-02 成组 Journal / Posting 保护](../02-product/LA02_JOURNAL_POSTING_CONTRACT.md)
 - [LA-03a 业务资金事实分录](../02-product/LA03_BUSINESS_POSTINGS_CONTRACT.md)
@@ -86,6 +87,6 @@ LA-03d 已冻结多账户账簿所有权、余额投影切换和历史迁移契�
 - [CI-03 Ledger Release Candidate 技术说明](CI_RELEASE_CANDIDATE.md)
 - [CI-04 Ledger Nightly 技术说明](CI_LEDGER_NIGHTLY.md)
 
-Contract v0.3.0 已具备本地 SQLite Reference Server、幂等/CAS、Ledger/Outbox、授权/预留/结算/退款、受保护 Journal/Posting、期初/更正、版本化账户投影、历史重放/备份追平、外部观察对账、Receipt、MCP/x402 等既有能力；FP-05 Schema 20 将新业务事实接到可信 LedgerAccount，FP-06a 建立 WalletReadModel/shadow，FP-06b Schema 21 增加 Local-only append-only migration plan / assessment / cutover generation 与 stale reserve guard，FP-08 Schema 22 增加账户级写余额和固定交易写源。Transaction Core 仍是唯一写入者。
+Contract v0.3.0 已具备本地 SQLite Reference Server、幂等/CAS、Ledger/Outbox、授权/预留/结算/退款、受保护 Journal/Posting、期初/更正、版本化账户投影、历史重放/备份追平、外部观察对账、Receipt、MCP/x402 等既有能力；FP-05 Schema 20 将新业务事实接到可信 LedgerAccount，FP-06a 建立 WalletReadModel/shadow，FP-06b Schema 21 增加 Local-only append-only migration plan / assessment / cutover generation 与 stale reserve guard，FP-08 Schema 22 增加账户级写余额和固定交易写源，Public Wallet API 以 Access Contract v1.1 暴露认证 Account 的只读余额。Transaction Core 仍是唯一写入者。
 
-F01/ENV-01 至 ENV-06 已分别由 PR #18–#23 批准。ENV-07A/07B 本地部署准备已实现；真实托管 Sandbox、Base Sepolia 双向收付与边缘 E2E 仍为 Not yet accepted。FP-08 只完成隔离 Local 的账户级写入与买方费用语义；公开 Wallet API、Collection 运行时净入账、LA-06b 外部双向证据、E3.1 与 Live/Mainnet/生产数据仍未经独立准入。
+F01/ENV-01 至 ENV-06 已分别由 PR #18–#23 批准。ENV-07A/07B 本地部署准备已实现；真实托管 Sandbox、Base Sepolia 双向收付与边缘 E2E 仍为 Not yet accepted。Public Wallet API 只完成隔离 Local 的认证账户读取；Collection 运行时净入账、LA-06b 外部双向证据、E3.1 与 Live/Mainnet/生产数据仍未经独立准入。

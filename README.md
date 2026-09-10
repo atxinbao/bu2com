@@ -13,7 +13,7 @@ BU2.com 是 Agent 的 AI 收付平台。它把身份、授权、交易编排、�
 | 项目阶段 | Phase 0 · Local execution / Sandbox architecture |
 | 上层产品方向 | Social Wallet · FP-07 Local 两账户产品接入验收与 RC 证据机制已进入 `main` |
 | 交易领域基线 | Product v0.3 · Transaction-first |
-| API / SDK / MCP | Agent Payment API v0.3.0 · `@bu2/sdk` v0.3 · MCP stdio v0.3 |
+| API / SDK / MCP | Agent Payment API v0.3.0 · Access Contract v1.1 · `@bu2/sdk` v0.3 · MCP stdio v0.3 |
 | Reference Server | v0.17 · Node.js + SQLite WAL · Schema 22 |
 | 支付通道 | Local Simulated Adapter + x402 Base Sepolia Adapter |
 | 运行时基线 | Node 24.20.0 · npm 11.19.0 · SQLite 3.53.4 |
@@ -41,7 +41,7 @@ BU2.com 是 Agent 的 AI 收付平台。它把身份、授权、交易编排、�
 - **交易闭环**：Quote → PaymentIntent → Authorization → Funds Reserved → DeliveryEvidence → Settlement → Receipt，并保持退款与争议为独立事实。
 - **Agent 原生授权**：Account / AgentIdentity / Credential / PaymentMandate / ExecutionSession 形成可撤销、可限额、可审计的授权链。
 - **账务基础**：不可变 LedgerEvent / Journal / FinancialPosting、可信 LedgerAccount ownership、Schema 22 版本化 projection 与账户级运行时余额、历史 replay、Reconciliation 与 Online Backup/restore。
-- **Social Wallet Local 基线**：FP-06a/06b 建立 WalletReadModel、shadow comparison 与 Local-only read cutover；FP-07 组合验证两账户产品闭环；FP-08 把已切换的新付款写入 `ledger_account_id + currency` 账户余额，并让买方 Payment/Refund ProviderFee 只扣减一次。
+- **Social Wallet Local 基线**：FP-06a/06b 建立 WalletReadModel、shadow comparison 与 Local-only read cutover；FP-07 组合验证两账户产品闭环；FP-08 把已切换的新付款写入账户余额；Public Wallet API 通过认证 Account 只读返回健康的账户级 available/reserved，异常时隐藏金额且不回退 legacy wallet。
 - **恢复与未知结果**：Provider 超时或结果未知不会自动重复支付；状态通过持久 Attempt/Adapter operation、显式 recovery 和 reconciliation 收敛。
 - **Agent 接入**：HTTP、TypeScript SDK、MCP stdio、外部 Buyer/Seller Agent 样例和三路径 clean-room 验收均已有 Local 证据。
 - **环境与运维**：环境自描述、运行时 preflight、Webhook Outbox、租约/重试/死信、结构化日志、SQLite WAL、固定运行时和隔离恢复证据已建立。
@@ -50,8 +50,8 @@ BU2.com 是 Agent 的 AI 收付平台。它把身份、授权、交易编排、�
 
 以下能力仍不是当前产品或资金准入的一部分：
 
-- 面向产品用户的公开 Wallet API。
 - Collection 主金额与 Collection-side ProviderFee 的账户级运行时净入账语义。
+- Public Wallet API 的 Hosted、Sandbox/Testnet 或 Live 对外服务准入。
 - 真实 Hosted/Base Sepolia 双向结算证据（LA-06b）与 Phase 0 Epic 3 的 E3.1 Pilot Manifest。
 - Live/Mainnet 资金执行、客户资金托管、法币钱包、提现、换汇、跨境和跨链。
 - 成功的 Social Wallet protected-main RC artifact；CI-03 继续要求 `main` 可证明受保护，当前仓库条件不满足时必须失败关闭。
