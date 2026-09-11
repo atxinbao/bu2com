@@ -241,6 +241,11 @@ test("CI-03 promotion workflow only downloads, validates, tags, and creates a pr
   assert.match(workflow, /permissions:\n  actions: read\n  contents: write/);
   assert.match(workflow, /actions\/checkout@11bd71901bbe5b1630ceea73d27597364c9af683/);
   assert.match(workflow, /actions\/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093/);
+  assert.match(workflow, /npm --prefix sandbox ci/);
+  assert.ok(
+    workflow.indexOf("npm --prefix sandbox ci") <
+      workflow.indexOf("node scripts/ci/release-promotion.mjs"),
+  );
   assert.match(workflow, /node scripts\/ci\/release-promotion\.mjs/);
   assert.match(workflow, /git tag -a/);
   assert.match(workflow, /gh release create/);

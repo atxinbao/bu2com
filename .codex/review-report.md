@@ -1,3 +1,34 @@
+# CI-03 v3 晋级依赖修复自主审查报告
+
+日期：2026-09-11
+审查者：Codex（Contributor / Verifier，非 R2 Approver）
+分支：`fix/release-promotion-dependencies`
+
+## 审查清单
+
+- [x] 根因由真实失败 Run `34608355719` 的 job log 证明，不依赖推测。
+- [x] 使用已有 `sandbox/package-lock.json` 和标准 `npm ci`，没有新增依赖或自研加载机制。
+- [x] 安装顺序固定在 promotion 校验之前，证据、Owner、批准文本和 Tag 唯一性校验未放宽。
+- [x] 变更不重建候选，不触碰 Transaction Core、账本、Provider、Signer 或资金路径。
+- [x] 专项、CI 脚本全量、YAML 和补丁检查均通过。
+
+## 评分与结论
+
+| 维度 | 得分 | 结论 |
+| --- | ---: | --- |
+| 需求覆盖 | 20/20 | 直接关闭干净 Runner 缺少运行时依赖的发布阻塞 |
+| 技术实现 | 20/20 | 复用锁文件与标准 npm 安装流程 |
+| 金融边界 | 20/20 | 不改变任何交易或资金事实 |
+| 自动化验证 | 19/20 | 本地 34/34；待合并后真实 promotion 复验 |
+| 文档与恢复 | 18/20 | Changelog 与证据已同步；失败 Run 保留审计记录 |
+| 综合 | **97/100** | GO for Project Owner R2 review |
+
+## 残余风险
+
+1. 修复必须合并到 `main` 后才能复用候选 Run `34608084833` 执行真实晋级。
+2. GitHub Actions 对旧 Node action runtime 的弃用警告仍存在，但 Runner 已强制 Node 24，未影响本次失败根因。
+3. Release 仍只限 Local/Simulation prerelease，不授权 Hosted、Testnet/Mainnet 或真实资金。
+
 # F16a 内部 Sandbox 自主双向收付 Beta 候选自主审查报告
 
 # CI-04 定时账本韧性与供应链检查自主审查报告

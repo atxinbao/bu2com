@@ -1223,6 +1223,16 @@ Conclusion: Public Wallet API is **GO for R2 review** within the Local/Simulatio
 
 Conclusion: GOV-02 is **GO for Project Owner R2 review** within the Local/Simulation governance scope. A second human reviewer is not required under the proposed single-owner policy; merge is the Project Owner decision point.
 
+## 2026-09-11 · CI-03 v3 promotion clean-runner dependency fix
+
+- Evidence source: GitHub candidate Run `34608084833` completed successfully for `main@fb06585ee31875c246ae0c68c422e42b3a92bf20`; promotion Run `34608355719` failed before Tag/Release creation with `ERR_MODULE_NOT_FOUND` for `canonicalize`.
+- Root cause: `scripts/ci/release-promotion.mjs` reuses the candidate validation graph, which imports the receipt contract dependency tree, while the clean promotion Runner did not install `sandbox/package-lock.json`.
+- Fix: `.github/workflows/social-wallet-release-promotion.yml` now runs `npm --prefix sandbox ci` before evidence validation; the workflow contract test fixes both presence and ordering.
+- Local evidence on Node 24.20.0: locked install passed with 0 vulnerabilities; promotion tests 4/4; all CI script tests 34/34; YAML parse and `git diff --check` passed.
+- Release boundary: `social-wallet-v0.2.0-rc.2` remains untagged and unreleased until this fix is merged and the existing immutable candidate is successfully promoted. No Hosted, LA-06b, Sandbox/Testnet, Live/Mainnet, Provider, Signer or real-funds action was executed.
+
+Conclusion: the minimal workflow fix is **GO for Project Owner R2 review**. It restores the approved validation path without weakening source, artifact, Owner or approval checks.
+
 ## 2026-09-11 · CI-03 v3 Public Wallet、LA-06a 观测与 Release 晋级
 
 - `mise x node@24.20.0 -- node --test scripts/ci/*.test.mjs deploy/la06a-local-gate.test.mjs sandbox/fp07-social-wallet-acceptance.test.mjs`: 39/39 通过；覆盖 Public Wallet 认证、候选 v3、LA-06a failed 真实保留、Project Owner 身份/精确声明、候选 run 与 archive 篡改拒绝，以及晋级 workflow 边界。
