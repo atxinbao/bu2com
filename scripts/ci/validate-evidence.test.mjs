@@ -86,7 +86,13 @@ const scenario = (name, fn) => test(name, () => {
 
 scenario("CI-02 accepts same-source evidence and generated untracked artifacts", (value) => {
   const result = value.run();
-  assert.equal(result.schema_version, "bu2.ci.v1");
+  assert.equal(result.schema_version, "bu2.ci.v2");
+  assert.deepEqual(result.observations.la06a, {
+    status: "passed",
+    required_to_run: true,
+    required_to_pass: false,
+    failed_check_ids: [],
+  });
   assert.equal(result.source.commit, value.sha);
   assert.deepEqual(result.checks.map((check) => check.id), ids);
 });
@@ -122,6 +128,30 @@ scenario("CI-02 rejects null, failed, incomplete, or zero mandatory test summari
   value.foundation.checks[0].test_summary = { tests: 0, passed: 0, failed: 0 };
   assert.throws(value.run, /test/i);
   value.foundation.checks[0].test_summary = summary;
+});
+
+scenario("CI-02 accepts a failed LA-06a observation without calling it passed", (value) => {
+  value.foundation.status = "failed";
+  value.foundation.checks[1] = {
+    ...value.foundation.checks[1],
+    status: "failed",
+    exit_code: 1,
+    test_summary: { tests: 2, passed: 1, failed: 1 },
+  };
+  const result = value.run();
+  assert.equal(result.status, "accepted");
+  assert.deepEqual(result.observations.la06a, {
+    status: "failed",
+    required_to_run: true,
+    required_to_pass: false,
+    failed_check_ids: ["la06a_targeted_boundary_tests"],
+  });
+  assert.equal(result.checks[1].status, "failed");
+});
+
+scenario("CI-02 rejects LA-06a status that contradicts its checks", (value) => {
+  value.foundation.status = "failed";
+  assert.throws(value.run, /contradicts/i);
 });
 
 scenario("CI-02 accepts null summaries for command-only checks", (value) => {

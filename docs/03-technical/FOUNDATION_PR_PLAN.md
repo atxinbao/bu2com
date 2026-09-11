@@ -62,7 +62,7 @@ R2：为目标范围追加可证明归属或建立已核对期初，进行版本
 
 同一候选上完成两个独立 Account、多个 Agent、收付/退款/费用、恢复、历史重放、权限、环境、迁移与备份 E2E；绑定 CI、runtime image、契约和人工审查证据后生成**新的**产品接入基线 RC。旧 `ledger-rc-local-v0.1` 标签保持不动。
 
-实现状态：新增 `fp07.social-wallet-acceptance.v1`，在隔离 Local/Simulation SQLite 上组合两个 Account、四个 Agent、可信绑定、可核对期初、付款/收款/部分退款/seller-side Collection fee、持久 unknown→重启→recovery、完整对账、projection 删除重建、历史 replay 和 Online Backup。active cutover 增加持续 shadow-match guard，并把 delivery-submitted pending 纳入 legacy reserved 等价比较。buyer-side Payment/Refund ProviderFee 的 spending-capacity 语义仍未批准。CI-03 v2 RC class 为 `social_wallet_local_integration_rc`，绑定同 source/image 的 acceptance 与旧 `ledger-rc-local-v0.1` 历史基线；候选仍是 `prepared_not_released`，分支保护状态仅记录，精确 main SHA 和不可变证据继续强制。
+实现状态：原始 `fp07.social-wallet-acceptance.v1` 已由 FP-08 v2 接替，在隔离 Local/Simulation SQLite 上组合两个 Account、四个 Agent、可信绑定、可核对期初、付款/收款/部分退款、费用、持久 unknown→重启→recovery、完整对账、projection 删除重建、历史 replay、Online Backup 和认证 Public Wallet API。CI-03 v3 RC class 为 `social_wallet_local_integration_rc`，绑定同 source/image 的 acceptance 与旧 `ledger-rc-local-v0.1` 历史基线；候选准备仍是 `prepared_not_released`，分支保护与 LA-06a 状态均如实记录但不单独阻断 Local/Simulation prerelease，精确 main SHA、不可变证据和 Project Owner 手工晋级继续强制。
 
 ### FP-08 — 账户级资金写源与买方费用语义
 
@@ -86,9 +86,9 @@ PR [#82](https://github.com/atxinbao/bu2com/pull/82) 已合并到 main `e19bae63
 
 ### FP-A02 — Foundation 状态与合并证据收口
 
-本工作包只对齐 FP-A01 合并后的文档状态、固定 main 基线和 CI 证据，风险等级为 **R0**。它不修改代码、Schema、API、交易/账务状态、环境配置或资金执行。CI-03 v2 将 GitHub API 的 `main protected=false` 保存为候选证据，但不再作为准入条件；Social Wallet RC 继续保持 `prepared_not_released`，且不能由普通 PR 检查替代 Project Owner 人工晋级批准。
+本工作包只对齐 FP-A01 合并后的文档状态、固定 main 基线和 CI 证据，风险等级为 **R0**。它不修改代码、Schema、API、交易/账务状态、环境配置或资金执行。后续 CI-03 v3 将 GitHub API 的 `main protected=false` 与 LA-06a 结果保存为候选观测，但不把两者作为 Local/Simulation prerelease 的单独阻断条件；普通 PR 检查仍不能替代 Project Owner 人工晋级批准。
 
-FP-A02 后的功能建设顺序为：FP-08 账户级资金写源与 buyer-side ProviderFee 支出语义、Public Wallet API、LA-06b 外部 Sandbox/Testnet 双向验收。Public Wallet API 当前候选通过后再进入 LA-06b；每项必须按自身 R2/R3 边界单独设计、验证和批准，不把 Local/Simulation 证据扩张为 Hosted、Live/Mainnet 或真实资金准入。
+FP-A02 后已完成 FP-08 账户级资金写源、buyer-side ProviderFee 支出语义与 Local Public Wallet API。当前先收口 CI-03 v3 候选和手工 prerelease 晋级；LA-06b 外部 Sandbox/Testnet 双向验收仍按用户要求暂停，不把 Local/Simulation 证据扩张为 Hosted、Live/Mainnet 或真实资金准入。
 
 ## 依赖关系
 

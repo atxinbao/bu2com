@@ -615,3 +615,15 @@
 - Tool: Node JSON / Ruby YAML / `git diff --check`; result: policy、workflow 与补丁格式通过。
 - Tool: `graphify update .`; result: 无新的代码拓扑漂移；现有派生图保持更新状态。
 - Boundary: 候选仍为 `prepared_not_released`；不创建 Tag/Release，不开放 Hosted、Testnet、Live/Mainnet、Signer、Provider 或真实资金。
+
+## 2026-09-11 · CI-03 v3 Public Wallet 与手工 Release 晋级
+
+- Scope: 从 `main@39d4d761854752428d36e425b4fbaa13494e11ea` 创建 `feat/release-promotion-readiness`；将 Public Wallet API 纳入 Social Wallet 候选，LA-06a 与 `main protected` 改为必须真实记录但不单独阻断 Local/Simulation prerelease，并增加 Project Owner 手工晋级。
+- Tool: Graphify query（前序上下文）与 `rg` / `sed` / `git`; result: 定位 CI-02/CI-03、FP-08 acceptance、发布策略、workflow 和 Public Wallet 身份绑定；确认现有候选没有 Tag/Release 晋级入口。
+- Tool: `apply_patch`; result: 候选策略/request/evidence/manifest 升级 v3/v2，LA-06a 完整执行全部检查，Public Wallet 使用持久化 Owner principal + Agent scope，新增证据重验、精确 Owner 批准、annotated Tag 与 GitHub prerelease workflow；同步产品、技术、README 和 Changelog。
+- Tool: `node --test`; result: 首次 Public Wallet 凭据把 Agent 当 principal 导致身份绑定冲突；按现有身份模型改为 Owner principal 后定向 6/6，再完成晋级负向测试，固定 Node 下最终定向 39/39。
+- Tool: `node deploy/la06a-local-gate.mjs`; result: 宿主 Node v23.11.0 首次如实得到 Sandbox 261/269、失败项 `sandbox_full_regression`；确认 8 项均为 Doctor 的 Node floor 拒绝。使用固定 Node 24.20.0 复跑后 LA-06a `passed`：Sandbox 269/269、边界 5/5、部署/Hosted 23/23、SDK 11/11、契约/lint/build 通过。
+- Tool: `node deploy/runtime-assurance.mjs`; result: RT-01 通过，Node 24.20.0、npm 11.19.0、SQLite 3.53.4、Schema 1–22、WAL/FK/Online Backup 正常。
+- Tool: Ruby YAML / Node JSON / `git diff --check`; result: workflow、policy 与补丁格式通过。
+- Tool: `graphify . --update`; result: 因未配置语义 LLM 后端停止且未覆盖现有图；`--code-only` 增量与 `cluster-only` 随后完成 3974 nodes / 6925 edges / 230 communities，文档语义索引未重建。
+- Boundary: `Sandbox` 继续专指 Testnet，因此 Release 命名修正为 `Local/Simulation prerelease`。没有创建 Tag/Release，没有 registry、Hosted、LA-06b、Signer、Provider、Testnet/Mainnet 或真实资金动作。

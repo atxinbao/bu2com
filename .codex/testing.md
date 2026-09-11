@@ -624,3 +624,14 @@
 | Patch | `git diff --check` | 通过 |
 
 未执行 Hosted、真实 Base Sepolia 双向收付、LA-06b、Live/Mainnet、Signer、Provider 调用、Tag 或 Release。`ref_protected=false` 只作为来源证据保存，不扩大资金能力。
+
+## 2026-09-11 · CI-03 v3 release promotion readiness
+
+- Fixed runtime: Node v24.20.0 / npm 11.19.0 via `mise x node@24.20.0`.
+- Targeted CI, LA-06a and Social Wallet suite: 39/39 passed.
+- Full LA-06a: passed; Sandbox 269/269, targeted boundary 5/5, deployment/Hosted contracts 23/23, SDK 11/11, contract validation, Prototype lint and build all passed.
+- RT-01: passed with SQLite 3.53.4, Schema 1–22, WAL, foreign keys and isolated Online Backup/restore.
+- Negative coverage: LA-06a failed status remains admissible but visible; wrong Project Owner, imprecise approval statement, failed candidate run, run/attempt drift and modified archive are rejected.
+- Workflow/policy checks: Ruby YAML parse, Node JSON parse and `git diff --check` passed.
+- Runtime caveat: an initial host Node v23.11.0 run truthfully failed 8 Doctor cases at `node_runtime`; this was an unsupported runner, not treated as a product pass. The fixed project runtime rerun is the acceptance result.
+- Boundary: Local/Simulation only. No Tag, Release, registry, deployment, Provider, Signer, LA-06b, Sandbox/Testnet, Live/Mainnet or real-funds action executed.

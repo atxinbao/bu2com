@@ -49,7 +49,7 @@ export function validateReleaseRequest({
   if (tagExists) throw new Error("Candidate version already exists as a tag");
 
   return Object.freeze({
-    schema_version: "ci03.release-request.v2",
+    schema_version: "ci03.release-request.v3",
     status: "accepted",
     candidate_version: candidateVersion,
     release_class: policy.release_class,

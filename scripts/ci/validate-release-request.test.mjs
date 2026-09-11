@@ -25,7 +25,7 @@ const validRequest = {
 
 test("CI-03 accepts a clean main request bound to the workflow commit", () => {
   const request = validateReleaseRequest(validRequest);
-  assert.equal(request.schema_version, "ci03.release-request.v2");
+  assert.equal(request.schema_version, "ci03.release-request.v3");
   assert.equal(request.status, "accepted");
   assert.equal(request.source.commit, commit);
   assert.equal(request.source.ref_protected, true);

@@ -110,11 +110,16 @@ export function validateLa06aEvidence(evidence) {
   );
 }
 
-export function runLa06aLocalGate({ cwd = root, env = process.env, writeLog = null } = {}) {
+export function runLa06aLocalGate({
+  cwd = root,
+  env = process.env,
+  writeLog = null,
+  execute = spawnSync,
+} = {}) {
   const checks = [];
   for (const check of CHECKS) {
     const startedAt = Date.now();
-    const result = spawnSync(check.program, check.args, {
+    const result = execute(check.program, check.args, {
       cwd,
       env,
       encoding: "utf8",
@@ -133,22 +138,23 @@ export function runLa06aLocalGate({ cwd = root, env = process.env, writeLog = nu
     };
     if (result.status !== 0) {
       entry.output_tail = tail(output);
-      throw Object.assign(new Error(`LA-06a check failed: ${check.id}`), {
-        code: "la06a_check_failed",
-        evidence: { status: "failed", failed_check: entry, checks },
-      });
     }
     checks.push(entry);
   }
+  const failedChecks = checks.filter((check) => check.status === "failed");
   return {
     schema_version: "la06a.v1",
     gate: "ledger_assurance_local_foundation",
-    status: "passed",
-    source_commit: process.env.BU2_SOURCE_COMMIT ?? currentCommit(cwd),
+    status: failedChecks.length === 0 ? "passed" : "failed",
+    source_commit: env.BU2_SOURCE_COMMIT ?? currentCommit(cwd),
     workflow_run: {
       id: env.GITHUB_RUN_ID ?? null,
       attempt: env.GITHUB_RUN_ATTEMPT ?? null,
       job: env.GITHUB_JOB ?? null,
+    },
+    observation: {
+      admission_required: false,
+      failed_check_ids: failedChecks.map((check) => check.id),
     },
     environment: "local",
     execution_status: "execution_disabled",
@@ -179,9 +185,9 @@ if (resolve(process.argv[1] ?? "") === fileURLToPath(import.meta.url)) {
   try {
     const evidence = runLa06aLocalGate({ writeLog: (value) => process.stderr.write(value) });
     process.stdout.write(`${JSON.stringify(evidence, null, 2)}\n`);
+    if (evidence.status !== "passed") process.exitCode = 1;
   } catch (error) {
     process.stderr.write(`${error.message}\n`);
-    if (error.evidence) process.stderr.write(`${JSON.stringify(error.evidence, null, 2)}\n`);
     process.exitCode = 1;
   }
 }

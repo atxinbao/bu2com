@@ -55,8 +55,16 @@ jobs:
           npm --prefix sandbox ci
           npm --prefix packages/typescript-sdk ci
           npm --prefix prototype ci
-      - name: Run local foundation evidence
-        run: node deploy/la06a-local-gate.mjs > foundation.json 2> foundation.stderr
+      - name: Record local foundation observation
+        id: la06a
+        shell: bash
+        run: |
+          set +e
+          node deploy/la06a-local-gate.mjs > foundation.json 2> foundation.stderr
+          la06a_exit_code="$?"
+          set -e
+          test -s foundation.json
+          echo "exit_code=$la06a_exit_code" >> "$GITHUB_OUTPUT"
       - name: Run host runtime evidence
         run: node deploy/runtime-assurance.mjs > runtime-assurance.json 2> runtime-assurance.stderr
       - name: Build and verify candidate image
