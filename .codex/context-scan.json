@@ -1,18 +1,31 @@
 {
   "date": "2026-09-11",
   "executor": "Codex",
-  "work_package": "GOV-02 single-owner governance and CI-03 v2",
-  "location": ["AGENTS.md", "GOVERNANCE.html", "deploy/release-policy.json", "scripts/ci/validate-release-request.mjs", "scripts/ci/release-candidate.mjs", ".github/workflows/ledger-release-candidate.yml"],
-  "current_state": {
-    "governance": "Project Owner 可兼任 Product、Domain、Architecture、Operations 与 Release Approver；AI 不得自批",
-    "source_control": "CI-03 只接受 refs/heads/main 和完全一致的输入/workflow/checkout SHA；ref_protected 只记录真实布尔值",
-    "candidate": "候选仍为 prepared_not_released，需 Project Owner 对同一不可变候选作人工晋级批准"
-  },
-  "similar_patterns": ["CI-02 将来源提交、tree 与 workflow run 绑定", "CI-03 v1 将候选准备与 Tag/Release/部署分离", "FP-07/FP-08 将产品验收绑定不可变镜像和候选 manifest"],
-  "observations": ["当前私有仓库套餐无法启用 GitHub main 分支保护，继续要求 protected=true 会永久阻塞 Local/Simulation 候选", "移除第二位自然人要求不能等同于允许 AI 自批或取消 Project Owner 人工批准", "Hosted/Testnet 的独立 Activation 属于 LA-06b 执行边界，本变更不移除"],
+  "work_package": "CI-03 v3 release readiness and promotion",
+  "locations": [
+    "sandbox/social-wallet-acceptance.mjs",
+    "sandbox/public-wallet-api.test.mjs",
+    "deploy/la06a-local-gate.mjs",
+    "scripts/ci/validate-evidence.mjs",
+    "scripts/ci/release-candidate.mjs",
+    "scripts/ci/release-promotion.mjs",
+    ".github/workflows/ledger-release-candidate.yml",
+    ".github/workflows/social-wallet-release-promotion.yml"
+  ],
+  "similar_patterns": [
+    "CI-02 source/run/evidence binding",
+    "CI-03 immutable candidate generation",
+    "ENV-06 immutable artifact promotion manifest"
+  ],
+  "observations": [
+    "Public Wallet HTTP/Access/SDK 已在 main，但 fp08 acceptance 与 release policy 仍明确拒绝该能力",
+    "LA-06a CLI 在首个失败时中断且只向 stderr 输出部分证据，无法满足失败也如实记录",
+    "仓库只有候选 workflow，没有验证同一候选后创建 Git Tag/GitHub prerelease 的入口"
+  ],
   "questions": [
-    {"priority": "high", "question": "未保护 main 如何保持来源约束？", "answer": "精确 main ref、输入/workflow/checkout SHA 一致、干净树、Tag 唯一、完整门禁与不可变制品共同约束。"},
-    {"priority": "high", "question": "单人治理是否允许自动晋级？", "answer": "不允许；Project Owner 必须以人工身份对同一候选作明确批准，AI 自批继续禁止。"}
+    {"priority": "high", "question": "如何证明 Public Wallet API 属于候选？", "answer": "在产品 acceptance 中执行认证 HTTP 正向与越权/任意 selector 负向路径，并把结果绑定 source/image。"},
+    {"priority": "high", "question": "LA-06a failed 如何不被伪装？", "answer": "始终运行全部检查、输出完整 JSON 和失败退出码；候选捕获退出码并将状态/失败项写入 CI 和候选 manifest。"},
+    {"priority": "high", "question": "如何创建正式 Tag/Release？", "answer": "单独手工 workflow 下载成功候选 artifact，核对 run/source/hash/Owner 身份与批准声明后创建 GitHub prerelease。"}
   ],
   "sufficiency": {"interface_contract": true, "technical_choice": true, "risks_identified": true, "verification_known": true}
 }

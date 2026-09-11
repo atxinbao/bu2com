@@ -34,8 +34,12 @@ export function validateEvidence({ foundationPath, runtimePath, foundationLogPat
   } catch (error) {
     throw new Error(`Evidence JSON is invalid: ${error.message}`);
   }
-  if (foundation.status !== "passed" || foundation.environment !== "local" || foundation.execution_status !== "execution_disabled") {
-    throw new Error("Foundation evidence is not a passed local execution-disabled gate");
+  if (
+    !["passed", "failed"].includes(foundation.status) ||
+    foundation.environment !== "local" ||
+    foundation.execution_status !== "execution_disabled"
+  ) {
+    throw new Error("Foundation evidence is not a recorded local execution-disabled observation");
   }
   if (
     foundation.external_sandbox_bilateral?.accepted !== false ||
@@ -60,11 +64,18 @@ export function validateEvidence({ foundationPath, runtimePath, foundationLogPat
     }
   }
   for (const check of checks) {
-    if (check.status !== "passed" || check.exit_code !== 0) throw new Error(`Check did not pass: ${check.id}`);
+    if (
+      !["passed", "failed"].includes(check.status) ||
+      !Number.isInteger(check.exit_code) ||
+      (check.status === "passed" && check.exit_code !== 0) ||
+      (check.status === "failed" && check.exit_code === 0)
+    ) {
+      throw new Error(`Check result is invalid: ${check.id}`);
+    }
     if (check.test_summary?.tests !== null && (!Number.isInteger(check.test_summary?.tests) || check.test_summary.tests <= 0)) {
       throw new Error(`Check has no executed tests: ${check.id}`);
     }
-    if (REQUIRED_TEST_CHECKS.has(check.id)) {
+    if (REQUIRED_TEST_CHECKS.has(check.id) && check.status === "passed") {
       const summary = check.test_summary;
       if (
         !summary ||
@@ -78,6 +89,12 @@ export function validateEvidence({ foundationPath, runtimePath, foundationLogPat
         throw new Error(`Required test summary is missing, failed, or incomplete: ${check.id}`);
       }
     }
+  }
+  const failedCheckIds = checks
+    .filter((check) => check.status === "failed")
+    .map((check) => check.id);
+  if ((foundation.status === "passed") !== (failedCheckIds.length === 0)) {
+    throw new Error("Foundation status contradicts its recorded check results");
   }
   if (
     runtime.status !== "passed" ||
@@ -121,7 +138,8 @@ export function validateEvidence({ foundationPath, runtimePath, foundationLogPat
     if (path && existsSync(path)) artifacts[name] = hashFile(path);
   }
   return {
-    schema_version: "bu2.ci.v1",
+    schema_version: "bu2.ci.v2",
+    status: "accepted",
     source: {
       repository: env.GITHUB_REPOSITORY ?? null,
       commit,
@@ -144,6 +162,14 @@ export function validateEvidence({ foundationPath, runtimePath, foundationLogPat
       provider_call: false,
       live_enabled: false,
       la06b: "not_executed",
+    },
+    observations: {
+      la06a: {
+        status: foundation.status,
+        required_to_run: true,
+        required_to_pass: false,
+        failed_check_ids: failedCheckIds,
+      },
     },
     checks: checks.map((check) => ({ id: check.id, command: check.command, exit_code: check.exit_code, status: check.status, test_summary: check.test_summary })),
     artifacts,

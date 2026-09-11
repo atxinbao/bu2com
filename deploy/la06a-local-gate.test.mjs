@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { validateLa06aEvidence } from "./la06a-local-gate.mjs";
+import { runLa06aLocalGate, validateLa06aEvidence } from "./la06a-local-gate.mjs";
 
 const evidence = {
   schema_version: "la06a.v1",
@@ -44,4 +44,29 @@ test("LA-06a evidence rejects an incomplete local check set", () => {
     }),
     false,
   );
+});
+
+test("LA-06a runs every check and truthfully records failures", () => {
+  let calls = 0;
+  const result = runLa06aLocalGate({
+    cwd: process.cwd(),
+    env: { BU2_SOURCE_COMMIT: "a".repeat(40) },
+    execute: (_program, args) => {
+      calls += 1;
+      const failed = args.includes("test:la06a");
+      return {
+        status: failed ? 1 : 0,
+        stdout: "ℹ tests 2\nℹ pass 2\nℹ fail 0\n",
+        stderr: failed ? "recorded failure\n" : "",
+      };
+    },
+  });
+  assert.equal(calls, 7);
+  assert.equal(result.status, "failed");
+  assert.deepEqual(result.observation, {
+    admission_required: false,
+    failed_check_ids: ["la06a_targeted_boundary_tests"],
+  });
+  assert.equal(result.checks.length, 7);
+  assert.equal(validateLa06aEvidence(result), false);
 });

@@ -9,6 +9,7 @@ import { ApiError, Bu2Sandbox } from "./domain.mjs";
 import { loadEnvironmentConfig } from "./environment-config.mjs";
 import { normalizeOnboardingDocument } from "./identity.mjs";
 import { SqliteLedger } from "./persistence.mjs";
+import { listen } from "./server.mjs";
 
 const CURRENCY = "CNY";
 const BOOK_ID = "book_social_wallet";
@@ -16,6 +17,107 @@ const BUYER_OPENING = 100_000;
 const SELLER_OPENING = 25_000;
 
 const sha256Json = (value) => createHash("sha256").update(JSON.stringify(value)).digest("hex");
+const tokenSha256 = (value) => createHash("sha256").update(value).digest("hex");
+
+const accessCredential = ({ id, secret, tenantId, principalId, accountId, agentId }) => ({
+  id,
+  token_sha256: tokenSha256(secret),
+  environment: "local",
+  tenant_id: tenantId,
+  principal_id: principalId,
+  role: "agent",
+  account_ids: [accountId],
+  agent_ids: [agentId],
+  generation: 1,
+  expires_at: null,
+  status: "active",
+});
+
+async function walletRequest(baseUrl, path, secret = null) {
+  const response = await fetch(`${baseUrl}${path}`, {
+    headers: secret ? { authorization: `Bearer ${secret}` } : {},
+  });
+  return { status: response.status, body: await response.json() };
+}
+
+async function verifyPublicWalletApi(ledger) {
+  const buyerSecret = "bu2_fp09_buyer_wallet_acceptance";
+  const sellerSecret = "bu2_fp09_seller_wallet_acceptance";
+  const credentials = [
+    accessCredential({
+      id: "key_fp09_buyer_wallet",
+      secret: buyerSecret,
+      tenantId: "ten_fp07_buyer",
+      principalId: "usr_fp07_buyer",
+      accountId: "acct_fp07_buyer",
+      agentId: "agt_fp07_buyer_pay",
+    }),
+    accessCredential({
+      id: "key_fp09_seller_wallet",
+      secret: sellerSecret,
+      tenantId: "ten_fp07_seller",
+      principalId: "usr_fp07_seller",
+      accountId: "acct_fp07_seller",
+      agentId: "agt_fp07_seller_sales",
+    }),
+  ];
+  const running = await listen({
+    port: 0,
+    ledger,
+    accessMode: "authenticated",
+    accessCredentialsJson: JSON.stringify(credentials),
+  });
+  try {
+    const unauthenticated = await walletRequest(
+      running.url,
+      "/v1/accounts/acct_fp07_buyer/wallets",
+    );
+    const owner = await walletRequest(
+      running.url,
+      "/v1/accounts/acct_fp07_buyer/wallets",
+      buyerSecret,
+    );
+    const crossAccount = await walletRequest(
+      running.url,
+      "/v1/accounts/acct_fp07_buyer/wallets",
+      sellerSecret,
+    );
+    const arbitrarySelector = await walletRequest(
+      running.url,
+      "/v1/accounts/acct_fp07_buyer/wallets?ledger_account_id=lga_fp07_buyer",
+      buyerSecret,
+    );
+    assert.equal(unauthenticated.status, 401);
+    assert.equal(owner.status, 200);
+    assert.equal(owner.body.data.length, 1);
+    assert.equal(owner.body.data[0].schema_version, "wallet.v1");
+    assert.equal(owner.body.data[0].account_id, "acct_fp07_buyer");
+    assert.equal(owner.body.data[0].ledger_account_id, "lga_fp07_buyer");
+    assert.equal(owner.body.data[0].status, "active");
+    assert.equal(owner.body.data[0].balance_source, "account_wallet");
+    assert.equal(owner.body.data[0].fallback_performed, false);
+    assert.equal(crossAccount.status, 403);
+    assert.equal(crossAccount.body.error.code, "resource_scope_denied");
+    assert.equal(arbitrarySelector.status, 400);
+    assert.equal(arbitrarySelector.body.error.code, "invalid_query_parameters");
+    return {
+      authorized: true,
+      schema_version: owner.body.data[0].schema_version,
+      owner_status: owner.status,
+      wallet_count: owner.body.data.length,
+      balance_source: owner.body.data[0].balance_source,
+      fallback_performed: owner.body.data[0].fallback_performed,
+      unauthenticated_denied: unauthenticated.status === 401,
+      cross_account_denied: crossAccount.body.error.code === "resource_scope_denied",
+      arbitrary_ledger_selector_denied:
+        arbitrarySelector.body.error.code === "invalid_query_parameters",
+    };
+  } finally {
+    await new Promise((resolveClose, rejectClose) => {
+      running.server.close((error) => error ? rejectClose(error) : resolveClose());
+    });
+  }
+}
 
 class RecoverableUnknownSettlementAdapter extends SimulatedPaymentAdapter {
   settle(transactionId, amount) {
@@ -74,10 +176,10 @@ function onboardingDocument() {
     tenants: [
       {
         tenant_id: "ten_fp07_buyer",
-        principal: { id: "usr_fp07_buyer", display_name: "FP07 Buyer" },
-        accounts: [{ id: "acct_fp07_buyer", display_name: "FP07 Buyer Account" }],
+        principal: { id: "usr_fp07_buyer", display_name: "usr_fp07_buyer" },
+        accounts: [{ id: "acct_fp07_buyer", display_name: "acct_fp07_buyer" }],
         agents: [
-          { id: "agt_fp07_buyer_pay", display_name: "FP07 Buyer Pay Agent" },
+          { id: "agt_fp07_buyer_pay", display_name: "agt_fp07_buyer_pay" },
           { id: "agt_fp07_buyer_collect", display_name: "FP07 Buyer Collection Agent" },
         ],
         credentials: [],
@@ -104,10 +206,10 @@ function onboardingDocument() {
       },
       {
         tenant_id: "ten_fp07_seller",
-        principal: { id: "usr_fp07_seller", display_name: "FP07 Seller" },
-        accounts: [{ id: "acct_fp07_seller", display_name: "FP07 Seller Account" }],
+        principal: { id: "usr_fp07_seller", display_name: "usr_fp07_seller" },
+        accounts: [{ id: "acct_fp07_seller", display_name: "acct_fp07_seller" }],
         agents: [
-          { id: "agt_fp07_seller_sales", display_name: "FP07 Seller Sales Agent" },
+          { id: "agt_fp07_seller_sales", display_name: "agt_fp07_seller_sales" },
           { id: "agt_fp07_seller_collect", display_name: "FP07 Seller Collection Agent" },
         ],
         credentials: [],
@@ -300,7 +402,7 @@ async function rejectedCode(operation) {
 
 function validateAcceptanceShape(evidence, { expectedSourceCommit = null, expectedImageId = null } = {}) {
   return Boolean(
-    evidence?.schema_version === "fp08.social-wallet-acceptance.v1"
+    evidence?.schema_version === "fp08.social-wallet-acceptance.v2"
     && evidence.status === "passed"
     && evidence.environment?.service === "local"
     && evidence.environment?.execution_backend === "simulated"
@@ -320,6 +422,15 @@ function validateAcceptanceShape(evidence, { expectedSourceCommit = null, expect
     && evidence.wallet_read?.buyer_runtime_status === "active"
     && evidence.wallet_read?.buyer_spend_decision_source === "account_wallet"
     && evidence.wallet_read?.seller_shadow_status === "difference"
+    && evidence.public_wallet_api?.authorized === true
+    && evidence.public_wallet_api?.schema_version === "wallet.v1"
+    && evidence.public_wallet_api?.owner_status === 200
+    && evidence.public_wallet_api?.wallet_count === 1
+    && evidence.public_wallet_api?.balance_source === "account_wallet"
+    && evidence.public_wallet_api?.fallback_performed === false
+    && evidence.public_wallet_api?.unauthenticated_denied === true
+    && evidence.public_wallet_api?.cross_account_denied === true
+    && evidence.public_wallet_api?.arbitrary_ledger_selector_denied === true
     && evidence.backup_restore?.integrity === "ok"
     && evidence.backup_restore?.same_financial_fact_hash === true
     && evidence.backup_restore?.receipt_valid === true
@@ -338,7 +449,7 @@ function validateAcceptanceShape(evidence, { expectedSourceCommit = null, expect
     && evidence.external_sandbox_bilateral?.status === "not_executed"
     && evidence.external_sandbox_bilateral?.accepted === false
     && evidence.product_boundary?.multi_account_spend_decision_source === "account_scoped_wallet"
-    && evidence.product_boundary?.public_wallet_api_authorized === false
+    && evidence.product_boundary?.public_wallet_api_authorized === true
     && evidence.product_boundary?.product_promotion_authorized === false
     && evidence.product_boundary?.buyer_side_provider_fee_spend_semantics_authorized === true
     && (!expectedSourceCommit || evidence.source?.commit === expectedSourceCommit)
@@ -533,6 +644,7 @@ export async function runSocialWalletAcceptance({
     assert.deepEqual(runtimeAfterReconciliation.read_balance, { value: 99_837, currency: CURRENCY });
     const sellerShadow = sandbox.shadowCompareWalletReadModel({ ledger_account_id: "lga_fp07_seller", currency: CURRENCY });
     assert.equal(sellerShadow.status, "difference");
+    const publicWalletApi = await verifyPublicWalletApi(ledger);
 
     const factsBeforeProjectionFault = financialFactSnapshot(ledger);
     const activeBeforeDelete = sandbox.getActiveLedgerAccountProjection({ ledger_account_id: "lga_fp07_buyer", currency: CURRENCY });
@@ -616,7 +728,7 @@ export async function runSocialWalletAcceptance({
 
     const sandboxEnvironment = loadEnvironmentConfig({ environment: "sandbox", paymentAdapter: "x402" }, {});
     const evidence = {
-      schema_version: "fp08.social-wallet-acceptance.v1",
+      schema_version: "fp08.social-wallet-acceptance.v2",
       status: "passed",
       source: { commit: sourceCommit, image_id: imageId },
       environment: {
@@ -661,6 +773,7 @@ export async function runSocialWalletAcceptance({
         seller_candidate_available: sellerShadow.candidate_available,
         seller_cutover_activated: false,
       },
+      public_wallet_api: publicWalletApi,
       projection: {
         delete_rebuild_verified: projectionFactsPreserved,
         source_facts_rewritten: false,
@@ -705,7 +818,7 @@ export async function runSocialWalletAcceptance({
       },
       product_boundary: {
         multi_account_spend_decision_source: "account_scoped_wallet",
-        public_wallet_api_authorized: false,
+        public_wallet_api_authorized: true,
         product_promotion_authorized: false,
         seller_shadow_difference_expected: true,
         buyer_side_provider_fee_spend_semantics_authorized: true,
@@ -716,6 +829,7 @@ export async function runSocialWalletAcceptance({
         flows: evidence.flows,
         recovery: evidence.recovery,
         wallet_read: evidence.wallet_read,
+        public_wallet_api: evidence.public_wallet_api,
         projection: evidence.projection,
         history: evidence.history,
         backup_restore: evidence.backup_restore,

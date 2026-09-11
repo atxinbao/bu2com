@@ -1160,3 +1160,13 @@ F06b 让 Quote 和 PaymentIntent 能够保留可验证的资金来源与收款�
 - 综合评分：96/100，建议通过并提交 R2 Draft PR，由 Project Owner 以人工身份完成合并批准。
 - 残余风险：未保护 main 的强制合并控制不可用，替代控制依赖精确来源绑定和人工 Owner 判断；LA-06b、Hosted、Testnet、Live/Mainnet 与真实资金仍未执行或授权。
 - 恢复：revert 本治理提交可恢复 CI-03 v1；不涉及数据库、交易、外部 Provider 或资金事实迁移。
+
+## 2026-09-11 · CI-03 v3 Release readiness 自主审查
+
+- 审查者：Codex（Contributor / Verifier，非 Project Owner Approver）。
+- 技术评分：96/100。候选保留 LA-06a 全部真实结果并继续绑定 exact main、run/attempt、source/tree、image/archive/evidence hashes；Public Wallet 验收包含认证正向、未认证、跨账户与任意 selector 负向路径；晋级只消费成功候选的原 artifact。
+- 战略评分：98/100。解决当前单人治理下正式 Tag/GitHub prerelease 的可执行路径，同时严格使用 `Local/Simulation`，不把 Sandbox/Testnet、LA-06b 或真实资金包装进 Release。
+- 验证评分：97/100。定向 39/39、LA-06a 完整本地门禁、RT-01、YAML/JSON 和 patch 检查通过；错误 Owner、批准文本、失败候选 run、run/attempt 漂移与 archive 篡改均被拒绝。
+- 综合评分：97/100，建议提交 R2 PR 供 Project Owner 审查。合并后仍需在确定 main SHA 上先运行候选 workflow，再由 Project Owner 手工运行 promotion workflow；本次代码变更本身不创建 Release。
+- 遗留风险：GitHub Token 权限和 artifact 下载/Tag/Release 的真实平台行为只能在合并后的 workflow_dispatch 中验证；当前 `main protected=false` 可接受但必须披露。LA-06a 未来失败也可晋级，但 Release notes 必须保留其状态和失败 ID。
+- 恢复：合并前 revert 代码即可；晋级中断后只允许同版本 Tag 指向同 source SHA 时恢复创建 Release，禁止移动或覆盖既有 Tag/Release。

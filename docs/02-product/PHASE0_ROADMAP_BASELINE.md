@@ -83,4 +83,4 @@ LA-03d 的第一实现子范围已增加 Schema 16 账簿账户所有权注册�
 
 D2 只改文档；F08/F09a/F10/F11/F12 代码 PR 不启用真实 Testnet 双向收付、Hosted Sandbox、Live/Mainnet、托管或生产凭证，必须独立完成 Domain 与 Architecture R2 审查。F09b 的历史实现已覆盖持久化 payment attempt、unknown-result 冻结和显式 recovery 查询，本轮不重复引入第二套恢复实现。
 
-F12～F16b 已完成本地支付/恢复/候选基础，LA-01～LA-06a 已完成退款、Journal、投影、重放、对账与本地机器门禁；FP-05～FP-08 已依次建立可信归属、WalletReadModel、Local cutover 与账户级写源。FP-08 不 UPDATE 历史 Posting，不迁移历史交易，也不新增公开 Wallet API 或 Collection 运行时净入账。真实 Base Sepolia 双向证据继续属于 LA-06b，Hosted/E3.1/Live/Mainnet/生产数据均未放行；任何本地 cutover 结果不得被解释为真实 Provider、生产财务结算或外部 Beta 准入。
+F12～F16b 已完成本地支付/恢复/候选基础，LA-01～LA-06a 已完成退款、Journal、投影、重放、对账与本地机器门禁；FP-05～FP-08 已依次建立可信归属、WalletReadModel、Local cutover 与账户级写源。FP-08 本身不新增公开 Wallet API，后续独立 R2 已完成 Local 认证 Public Wallet API；Collection 运行时净入账仍未完成。真实 Base Sepolia 双向证据继续属于 LA-06b 且当前暂停，Hosted/E3.1/Live/Mainnet/生产数据均未放行；任何本地 cutover 或 prerelease 不得被解释为真实 Provider、生产财务结算或外部 Beta 准入。

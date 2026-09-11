@@ -28,7 +28,7 @@ const createFixtures = async () => {
     ]),
   );
   const request = {
-    schema_version: "ci03.release-request.v2",
+    schema_version: "ci03.release-request.v3",
     status: "accepted",
     candidate_version: "social-wallet-v0.1.0-rc.1",
     release_class: "social_wallet_local_integration_rc",
@@ -53,7 +53,8 @@ const createFixtures = async () => {
     },
   };
   const ci = {
-    schema_version: "bu2.ci.v1",
+    schema_version: "bu2.ci.v2",
+    status: "accepted",
     source: {
       commit,
       tree,
@@ -71,6 +72,14 @@ const createFixtures = async () => {
       la06b: "not_executed",
     },
     checks,
+    observations: {
+      la06a: {
+        status: "passed",
+        required_to_run: true,
+        required_to_pass: false,
+        failed_check_ids: [],
+      },
+    },
   };
   const runtimeImage = {
     schema_version: "rt01.image.v1",
@@ -112,7 +121,7 @@ test("CI-03 binds source, image archive and Social Wallet evidence into a non-au
       notesPath: fixture.paths.notesPath,
     });
     assert.equal(manifest.status, "prepared_not_released");
-    assert.equal(manifest.schema_version, "ci03.release-candidate.v2");
+    assert.equal(manifest.schema_version, "ci03.release-candidate.v3");
     assert.equal(manifest.source.commit, commit);
     assert.equal(manifest.artifact.image_id, imageId);
     assert.deepEqual(manifest.workflow_run, { id: "12345", attempt: "1", job: "prepare" });
@@ -121,9 +130,10 @@ test("CI-03 binds source, image archive and Social Wallet evidence into a non-au
     assert.equal(manifest.approval.ai_self_approval, "forbidden");
     assert.equal(manifest.product_acceptance.status, "passed");
     assert.equal(manifest.product_acceptance.simulated_payment_flow_executed, true);
-    assert.equal(manifest.product_acceptance.schema_version, "fp08.social-wallet-acceptance.v1");
+    assert.equal(manifest.product_acceptance.schema_version, "fp08.social-wallet-acceptance.v2");
     assert.equal(manifest.product_acceptance.spend_decision_source, "account_scoped_wallet");
-    assert.equal(manifest.product_acceptance.public_wallet_api_authorized, false);
+    assert.equal(manifest.product_acceptance.public_wallet_api_authorized, true);
+    assert.equal(manifest.quality_observation.la06a.status, "passed");
     assert.equal(manifest.product_acceptance.buyer_side_provider_fee_spend_semantics_authorized, true);
     assert.equal(manifest.historical_baseline.tag, "ledger-rc-local-v0.1");
     assert.equal(manifest.historical_baseline.commit, "005b3949de4672a5aae301bd9b511e47b8be89fa");
@@ -175,6 +185,38 @@ test("CI-03 detects archive, runtime, and Social Wallet evidence drift after can
     tampered.product_boundary.product_promotion_authorized = true;
     writeFileSync(fixture.paths.socialWalletPath, `${JSON.stringify(tampered, null, 2)}\n`);
     assert.equal(validation(), false);
+  } finally {
+    rmSync(fixture.directory, { recursive: true, force: true });
+  }
+});
+
+test("CI-03 preserves a failed LA-06a observation without blocking the candidate", async () => {
+  const fixture = await createFixtures();
+  try {
+    fixture.ci.checks[1] = {
+      ...fixture.ci.checks[1],
+      status: "failed",
+      exit_code: 1,
+    };
+    fixture.ci.observations.la06a = {
+      status: "failed",
+      required_to_run: true,
+      required_to_pass: false,
+      failed_check_ids: ["la06a_targeted_boundary_tests"],
+    };
+    writeFileSync(fixture.paths.ciPath, `${JSON.stringify(fixture.ci, null, 2)}\n`);
+    const manifest = prepareReleaseCandidate({
+      requestPath: fixture.paths.requestPath,
+      ciEvidencePath: fixture.paths.ciPath,
+      runtimeImageEvidencePath: fixture.paths.runtimePath,
+      runtimeImageIdPath: fixture.paths.imageIdPath,
+      socialWalletEvidencePath: fixture.paths.socialWalletPath,
+      imageArchivePath: fixture.paths.archivePath,
+      manifestPath: fixture.paths.manifestPath,
+      notesPath: fixture.paths.notesPath,
+    });
+    assert.deepEqual(manifest.quality_observation.la06a, fixture.ci.observations.la06a);
+    assert.match(readFileSync(fixture.paths.notesPath, "utf8"), /LA-06a observation: `failed`/);
   } finally {
     rmSync(fixture.directory, { recursive: true, force: true });
   }

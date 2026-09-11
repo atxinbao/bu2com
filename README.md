@@ -18,7 +18,7 @@ BU2.com 是 Agent 的 AI 收付平台。它把身份、授权、交易编排、�
 | 支付通道 | Local Simulated Adapter + x402 Base Sepolia Adapter |
 | 运行时基线 | Node 24.20.0 · npm 11.19.0 · SQLite 3.53.4 |
 | 历史内部 RC | `ledger-rc-local-v0.1`，仅 Local/Simulation 历史基线 |
-| 当前 RC 边界 | Social Wallet Local RC 机制已升级为 CI-03 v2；私有仓库的 `main protected=false` 作为证据记录，不再阻止精确 main SHA 的候选生成 |
+| 当前 RC 边界 | CI-03 v3 将 `main protected` 与 LA-06a 作为必须如实记录、但不单独阻断 Local prerelease 的观测；Public Wallet API 已纳入产品验收，Project Owner 可手工晋级同一不可变候选 |
 | 生产边界 | Live 初始 `execution_disabled`；真实资金托管、法币、跨境、换汇与跨链能力未开放 |
 
 ## 从这里开始
@@ -54,7 +54,7 @@ BU2.com 是 Agent 的 AI 收付平台。它把身份、授权、交易编排、�
 - Public Wallet API 的 Hosted、Sandbox/Testnet 或 Live 对外服务准入。
 - 真实 Hosted/Base Sepolia 双向结算证据（LA-06b）与 Phase 0 Epic 3 的 E3.1 Pilot Manifest。
 - Live/Mainnet 资金执行、客户资金托管、法币钱包、提现、换汇、跨境和跨链。
-- 成功的 Social Wallet exact-main RC artifact；CI-03 v2 要求 `refs/heads/main`、输入 SHA、workflow SHA 与 checkout SHA 完全一致，并记录但不要求 `main` 受保护。
+- 成功的 Social Wallet exact-main RC artifact 与对应 Project Owner 晋级记录；CI-03 v3 要求 `refs/heads/main`、输入 SHA、workflow SHA 与 checkout SHA 完全一致，并如实记录 `main protected` 和 LA-06a 结果。二者不单独阻断 Local prerelease，任何失败仍必须在 Release 中披露。
 
 ### 环境矩阵
 

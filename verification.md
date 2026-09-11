@@ -1222,3 +1222,15 @@ Conclusion: Public Wallet API is **GO for R2 review** within the Local/Simulatio
 - Boundary: no Transaction Core, Schema, balance, Ledger, Provider, Signer or payment behavior changed. LA-06b, Hosted, real Base Sepolia bilateral settlement, Live/Mainnet and production custody remain unauthorized. The existing `social-wallet-v0.2.0-rc.1` pre-release is not retroactively upgraded with a missing candidate artifact.
 
 Conclusion: GOV-02 is **GO for Project Owner R2 review** within the Local/Simulation governance scope. A second human reviewer is not required under the proposed single-owner policy; merge is the Project Owner decision point.
+
+## 2026-09-11 · CI-03 v3 Public Wallet、LA-06a 观测与 Release 晋级
+
+- `mise x node@24.20.0 -- node --test scripts/ci/*.test.mjs deploy/la06a-local-gate.test.mjs sandbox/fp07-social-wallet-acceptance.test.mjs`: 39/39 通过；覆盖 Public Wallet 认证、候选 v3、LA-06a failed 真实保留、Project Owner 身份/精确声明、候选 run 与 archive 篡改拒绝，以及晋级 workflow 边界。
+- `mise x node@24.20.0 -- node deploy/la06a-local-gate.mjs`: `passed`；Sandbox 269/269、LA-06a 定向 5/5、部署/Hosted 契约 23/23、SDK 11/11，API/MCP 契约、Prototype lint/build 通过。证据位于 `.codex/release-promotion-la06a.json` 与 `.codex/release-promotion-la06a.log`。
+- 使用宿主 Node v23.11.0 执行时，Doctor 的 8 项用例按固定运行时规则失败，LA-06a 如实输出 `failed` 与 `sandbox_full_regression`；失败证据保存于 `.codex/release-promotion-la06a-node23.json` / `.log`。切换项目固定 Node 24.20.0 后同一门禁通过，失败没有被吞掉或改写。
+- `mise x node@24.20.0 -- node deploy/runtime-assurance.mjs`: 通过；Node 24.20.0、npm 11.19.0、SQLite 3.53.4、Schema 1–22、WAL、foreign keys 与隔离 Online Backup/restore 均符合 RT-01。
+- Ruby YAML、Node JSON 与 `git diff --check`: 四个 workflow、release policy 和补丁格式通过。
+- Graphify: 完整语义增量因未配置 LLM 后端停止且未覆盖旧图；随后 `graphify . --update --code-only` 与 `graphify cluster-only .` 完成代码图更新，结果为 3974 nodes / 6925 edges / 230 communities。文档语义索引未重建，已如实记录。
+- 当前本地门禁运行在未提交工作树，`source_commit=39d4d761...` 是父 main 基线，不冒充合并后候选 SHA 或真实 GitHub artifact。尚未创建 Tag、GitHub Release，也未执行 LA-06b、Hosted、Sandbox/Testnet、Live/Mainnet、Signer、Provider 或真实资金操作。
+
+结论：CI-03 v3 变更达到 **GO for Project Owner R2 review**。`main protected=false` 与 LA-06a 均必须如实记录但不单独阻断 Local/Simulation prerelease；当前这次 LA-06a 实际为 `passed`。

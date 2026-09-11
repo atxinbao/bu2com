@@ -1,0 +1,121 @@
+name: BU2 Social Wallet Release Promotion
+
+on:
+  workflow_dispatch:
+    inputs:
+      candidate_version:
+        description: Exact RC version from the prepared candidate
+        required: true
+        type: string
+      source_commit:
+        description: Full main commit SHA bound to the candidate
+        required: true
+        type: string
+      candidate_run_id:
+        description: Successful BU2 Social Wallet Release Candidate workflow run ID
+        required: true
+        type: string
+      candidate_run_attempt:
+        description: Candidate workflow run attempt
+        required: true
+        default: "1"
+        type: string
+      approval_statement:
+        description: Exact Project Owner approval statement documented by CI-03
+        required: true
+        type: string
+
+permissions:
+  actions: read
+  contents: write
+
+concurrency:
+  group: bu2-social-wallet-release-${{ inputs.candidate_version }}
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    name: promote approved Local/Simulation prerelease
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+          persist-credentials: true
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: 24.20.0
+          package-manager-cache: false
+      - name: Read candidate workflow run
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BU2_CANDIDATE_RUN_ID: ${{ inputs.candidate_run_id }}
+        run: gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${BU2_CANDIDATE_RUN_ID}" > candidate-run.json
+      - name: Download exact candidate artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: bu2-social-wallet-rc-${{ inputs.candidate_run_id }}-${{ inputs.candidate_run_attempt }}
+          path: candidate
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ inputs.candidate_run_id }}
+      - name: Validate evidence and record Project Owner approval
+        env:
+          BU2_CANDIDATE_VERSION: ${{ inputs.candidate_version }}
+          BU2_SOURCE_COMMIT: ${{ inputs.source_commit }}
+          BU2_CANDIDATE_RUN_ID: ${{ inputs.candidate_run_id }}
+          BU2_CANDIDATE_RUN_ATTEMPT: ${{ inputs.candidate_run_attempt }}
+          BU2_APPROVAL_STATEMENT: ${{ inputs.approval_statement }}
+        run: >-
+          node scripts/ci/release-promotion.mjs
+          candidate candidate-run.json release-approval.json github-release-notes.md
+          > release-promotion.stdout
+      - name: Reject an occupied release and verify any recoverable tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BU2_CANDIDATE_VERSION: ${{ inputs.candidate_version }}
+          BU2_SOURCE_COMMIT: ${{ inputs.source_commit }}
+        shell: bash
+        run: |
+          if gh release view "$BU2_CANDIDATE_VERSION" >/dev/null 2>&1; then
+            echo "GitHub Release already exists for $BU2_CANDIDATE_VERSION" >&2
+            exit 1
+          fi
+          if git show-ref --verify --quiet "refs/tags/$BU2_CANDIDATE_VERSION"; then
+            test "$(git rev-list -n 1 "$BU2_CANDIDATE_VERSION")" = "$BU2_SOURCE_COMMIT"
+          fi
+      - name: Create immutable tag and GitHub prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BU2_CANDIDATE_VERSION: ${{ inputs.candidate_version }}
+          BU2_SOURCE_COMMIT: ${{ inputs.source_commit }}
+        shell: bash
+        run: |
+          if ! git show-ref --verify --quiet "refs/tags/$BU2_CANDIDATE_VERSION"; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag -a "$BU2_CANDIDATE_VERSION" "$BU2_SOURCE_COMMIT" -m "BU2 Social Wallet Local/Simulation prerelease $BU2_CANDIDATE_VERSION"
+            git push origin "refs/tags/$BU2_CANDIDATE_VERSION"
+          fi
+          gh release create "$BU2_CANDIDATE_VERSION" \
+            candidate/ledger-release-image.tar \
+            candidate/release-candidate.json \
+            release-approval.json \
+            --verify-tag \
+            --prerelease \
+            --title "BU2 Social Wallet Local/Simulation ${BU2_CANDIDATE_VERSION}" \
+            --notes-file github-release-notes.md
+      - name: Upload promotion record
+        if: always()
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808
+        with:
+          name: bu2-social-wallet-promotion-${{ github.run_id }}-${{ github.run_attempt }}
+          retention-days: 90
+          path: |
+            candidate-run.json
+            release-approval.json
+            github-release-notes.md
+            release-promotion.stdout
+          if-no-files-found: warn
