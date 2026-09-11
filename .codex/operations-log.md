@@ -627,3 +627,12 @@
 - Tool: Ruby YAML / Node JSON / `git diff --check`; result: workflow、policy 与补丁格式通过。
 - Tool: `graphify . --update`; result: 因未配置语义 LLM 后端停止且未覆盖现有图；`--code-only` 增量与 `cluster-only` 随后完成 3974 nodes / 6925 edges / 230 communities，文档语义索引未重建。
 - Boundary: `Sandbox` 继续专指 Testnet，因此 Release 命名修正为 `Local/Simulation prerelease`。没有创建 Tag/Release，没有 registry、Hosted、LA-06b、Signer、Provider、Testnet/Mainnet 或真实资金动作。
+
+## 2026-09-11 · CI-03 v3 晋级依赖修复
+
+- Release candidate Run `34608084833` 在 `main@fb06585ee31875c246ae0c68c422e42b3a92bf20` 成功生成 `social-wallet-v0.2.0-rc.2` 候选 artifact。
+- Promotion Run `34608355719` 在证据校验阶段失败；GitHub job log 明确报告 `ERR_MODULE_NOT_FOUND: canonicalize`，失败发生在 Tag/Release 创建之前。
+- 通过 `rg`、`sed` 和源码读取确认 `release-promotion.mjs` 复用 `release-candidate.mjs` 的完整校验链，后者间接依赖 `sandbox/receipt-contract.mjs`；promotion workflow 只设置 Node，未安装 `sandbox/package-lock.json`。
+- 使用 `apply_patch` 在校验前增加 `npm --prefix sandbox ci`，并增加命令存在及执行顺序的 workflow 契约断言；同步 Changelog 与本地审计记录。
+- 本地验证：锁定安装成功且 0 vulnerabilities；晋级专项 4/4；CI 脚本全量 34/34；Ruby YAML 解析与 `git diff --check` 通过。首次 YAML 命令使用当前 Ruby 2.6 不支持的 `aliases:` 参数失败，改用兼容的同解析器入口后通过。
+- Boundary: 未创建或移动 Tag/Release，未重建候选，不修改交易、账本、Provider、Signer、环境或资金行为；修复合并后复用既有成功候选进行晋级。

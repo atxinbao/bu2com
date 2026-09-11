@@ -1,31 +1,28 @@
 {
   "date": "2026-09-11",
   "executor": "Codex",
-  "work_package": "CI-03 v3 release readiness and promotion",
+  "work_package": "CI-03 v3 promotion clean-runner dependency fix",
   "locations": [
-    "sandbox/social-wallet-acceptance.mjs",
-    "sandbox/public-wallet-api.test.mjs",
-    "deploy/la06a-local-gate.mjs",
-    "scripts/ci/validate-evidence.mjs",
-    "scripts/ci/release-candidate.mjs",
     "scripts/ci/release-promotion.mjs",
-    ".github/workflows/ledger-release-candidate.yml",
-    ".github/workflows/social-wallet-release-promotion.yml"
+    "scripts/ci/release-promotion.test.mjs",
+    ".github/workflows/social-wallet-release-promotion.yml",
+    "sandbox/package.json",
+    "sandbox/package-lock.json"
   ],
   "similar_patterns": [
-    "CI-02 source/run/evidence binding",
-    "CI-03 immutable candidate generation",
-    "ENV-06 immutable artifact promotion manifest"
+    "候选 workflow 在执行 Node 校验前使用 sandbox 锁文件安装依赖",
+    "CI-03 promotion 契约测试直接读取 workflow 并约束危险操作",
+    "GitHub Actions setup-node 后显式 npm ci 的可重复 Runner 模式"
   ],
   "observations": [
-    "Public Wallet HTTP/Access/SDK 已在 main，但 fp08 acceptance 与 release policy 仍明确拒绝该能力",
-    "LA-06a CLI 在首个失败时中断且只向 stderr 输出部分证据，无法满足失败也如实记录",
-    "仓库只有候选 workflow，没有验证同一候选后创建 Git Tag/GitHub prerelease 的入口"
+    "候选 Run 34608084833 已成功并生成 social-wallet-v0.2.0-rc.2 artifact",
+    "晋级 Run 34608355719 在 Tag 创建前失败，错误为缺少 sandbox 依赖 canonicalize",
+    "promotion workflow 设置了 Node 24.20.0，但未安装 release-candidate 校验链的运行时依赖"
   ],
   "questions": [
-    {"priority": "high", "question": "如何证明 Public Wallet API 属于候选？", "answer": "在产品 acceptance 中执行认证 HTTP 正向与越权/任意 selector 负向路径，并把结果绑定 source/image。"},
-    {"priority": "high", "question": "LA-06a failed 如何不被伪装？", "answer": "始终运行全部检查、输出完整 JSON 和失败退出码；候选捕获退出码并将状态/失败项写入 CI 和候选 manifest。"},
-    {"priority": "high", "question": "如何创建正式 Tag/Release？", "answer": "单独手工 workflow 下载成功候选 artifact，核对 run/source/hash/Owner 身份与批准声明后创建 GitHub prerelease。"}
+    {"priority": "high", "question": "缺少依赖应在哪里修复？", "answer": "在 promotion workflow 校验前执行 npm --prefix sandbox ci，使用现有锁文件而不增加新依赖或自研加载器。"},
+    {"priority": "high", "question": "如何防止回归？", "answer": "workflow 契约测试同时断言锁定安装命令存在且顺序早于 release-promotion.mjs。"},
+    {"priority": "medium", "question": "失败是否污染发布状态？", "answer": "失败发生在证据校验步骤，远端不存在 rc.2 Tag 或 Release；成功候选可在修复合并后复用。"}
   ],
   "sufficiency": {"interface_contract": true, "technical_choice": true, "risks_identified": true, "verification_known": true}
 }

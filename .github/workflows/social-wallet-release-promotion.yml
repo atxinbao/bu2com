@@ -48,6 +48,8 @@ jobs:
         with:
           node-version: 24.20.0
           package-manager-cache: false
+      - name: Install locked promotion validation dependencies
+        run: npm --prefix sandbox ci
       - name: Read candidate workflow run
         env:
           GH_TOKEN: ${{ github.token }}

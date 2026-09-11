@@ -635,3 +635,13 @@
 - Workflow/policy checks: Ruby YAML parse, Node JSON parse and `git diff --check` passed.
 - Runtime caveat: an initial host Node v23.11.0 run truthfully failed 8 Doctor cases at `node_runtime`; this was an unsupported runner, not treated as a product pass. The fixed project runtime rerun is the acceptance result.
 - Boundary: Local/Simulation only. No Tag, Release, registry, deployment, Provider, Signer, LA-06b, Sandbox/Testnet, Live/Mainnet or real-funds action executed.
+
+## 2026-09-11 · CI-03 v3 promotion dependency fix
+
+- `mise x node@24.20.0 -- npm --prefix sandbox ci`: passed; 117 packages installed from lockfile, 0 vulnerabilities.
+- `mise x node@24.20.0 -- node --test scripts/ci/release-promotion.test.mjs`: 4/4 passed.
+- `mise x node@24.20.0 -- node --test scripts/ci/*.test.mjs`: 34/34 passed.
+- `ruby -e "require 'yaml'; YAML.load_file('.github/workflows/social-wallet-release-promotion.yml')"`: passed.
+- `git diff --check`: passed.
+- Initial Ruby invocation with `aliases:` failed because the host Ruby 2.6 Psych API does not accept that keyword; the compatible parser invocation passed without changing the workflow.
+- Remote reproduction: candidate Run `34608084833` succeeded; promotion Run `34608355719` failed before Tag creation because `canonicalize` was absent on the clean Runner. No `social-wallet-v0.2.0-rc.2` Tag or Release exists yet.
